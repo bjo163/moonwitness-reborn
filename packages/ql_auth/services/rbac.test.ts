@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createQlOrm, QlModelRegistry, type QlAddonManifest, type QlOrm } from "ql_orm";
+import {
+  createQlOrm,
+  QlConflictError,
+  QlModelRegistry,
+  type QlAddonManifest,
+  type QlOrm,
+} from "ql_orm";
 import authManifest from "../__manifest__.js";
 import {
   DEFAULT_ROLE,
@@ -21,7 +27,7 @@ const baseStub: QlAddonManifest = {
   views: [],
 };
 
-async function memoryOrm(): Promise<{ orm: QlOrm; close: () => void }> {
+async function memoryOrm(): Promise<{ orm: QlOrm; close(): void }> {
   return createQlOrm("file::memory:", [baseStub, authManifest]);
 }
 
@@ -99,6 +105,7 @@ void test("res.users defaults to member and hides the private role column", asyn
       active: true,
     });
     assert.equal(created.role, DEFAULT_ROLE);
+    assert.equal(created.preferred_locale, "id");
 
     const readable = await orm.findMany("res.users", {
       id: String(created.id),
@@ -107,7 +114,13 @@ void test("res.users defaults to member and hides the private role column", asyn
     assert.equal(readable.length, 1);
     assert.equal("role" in readable[0], false);
     assert.equal("password_hash" in readable[0], false);
+    assert.equal(readable[0].preferred_locale, "id");
     assert.equal(readable[0].email, "rani@example.com");
+    assert.ok(
+      authManifest.views
+        ?.find((view) => view.name === "res.users.list")
+        ?.fields.includes("preferred_locale"),
+    );
 
     await assert.rejects(
       orm.update("res.users", { id: String(created.id), groups: ["user", "admin"] }, String(created.id), {
@@ -123,6 +136,52 @@ void test("res.users defaults to member and hides the private role column", asyn
         role: "root_overlord",
       }),
       /known role code/,
+    );
+    await assert.rejects(
+      orm.createRecordForService("res.users", {
+        name: "Bogus",
+        email: "bogus-locale@example.com",
+        password_hash: "scrypt$1$2",
+        preferred_locale: "fr",
+      }),
+      /must be 'id' or 'en'/,
+    );
+  } finally {
+    close();
+  }
+});
+
+void test("the initial setup claim is private and unique", async () => {
+  const { orm, close } = await memoryOrm();
+  try {
+    const userModel = authManifest.models.find((model) => model.name === "res.users");
+    assert.ok(userModel);
+    assert.equal(userModel.fields.setup_claim?.unique, true);
+    assert.equal(userModel.fields.setup_claim?.private, true);
+
+    const firstOwner = await orm.createRecordForService("res.users", {
+      name: "Initial Owner",
+      email: "initial-owner@example.com",
+      password_hash: "scrypt$1$2",
+      role: "super_admin",
+      setup_claim: "initial_super_admin",
+    });
+    const readable = await orm.findMany("res.users", {
+      id: String(firstOwner.id),
+      groups: ["user", "admin"],
+    });
+    assert.equal(readable.length, 1);
+    assert.equal("setup_claim" in readable[0], false);
+
+    await assert.rejects(
+      orm.createRecordForService("res.users", {
+        name: "Second Owner",
+        email: "second-owner@example.com",
+        password_hash: "scrypt$1$2",
+        role: "super_admin",
+        setup_claim: "initial_super_admin",
+      }),
+      QlConflictError,
     );
   } finally {
     close();

@@ -10,6 +10,7 @@
   "dependencies": {
     "@moonwitness/moonclient": "workspace:*",
     "@moonwitness/ui": "workspace:*",
+    "ql_i18n": "workspace:*",
     "lucide-react": "catalog:",
     "next": "catalog:",
     "react": "catalog:",

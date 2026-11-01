@@ -1,4 +1,5 @@
 import type { QlOrm, QlRecord } from "ql_orm";
+import type { UiLocale } from "@moonwitness/types";
 
 export interface User {
   id: string;
@@ -7,6 +8,7 @@ export interface User {
   passwordHash: string;
   active: boolean;
   role: string;
+  preferredLocale: UiLocale;
   createdAt: Date;
 }
 
@@ -43,7 +45,10 @@ export interface Message {
   createdAt: Date;
 }
 
-export type PublicUser = Pick<User, "id" | "name" | "email" | "role">;
+export type PublicUser = Pick<
+  User,
+  "id" | "name" | "email" | "role" | "preferredLocale"
+>;
 
 export interface ConversationStore {
   createUser(input: {
@@ -51,9 +56,15 @@ export interface ConversationStore {
     email: string;
     passwordHash: string;
     role?: string;
+    initialSetupOwner?: boolean;
+    preferredLocale?: UiLocale;
   }): Promise<User>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserById(id: string): Promise<User | undefined>;
+  updateUserPreferredLocale(
+    id: string,
+    preferredLocale: UiLocale,
+  ): Promise<User | undefined>;
   createSession(
     userId: string,
     tokenHash: string,
@@ -119,12 +130,14 @@ function requiredBoolean(record: QlRecord, key: string): boolean {
 
 function requiredDate(record: QlRecord, key: string): Date {
   const value = record[key];
-  const date =
-    typeof value === "number"
-      ? new Date(value)
-      : typeof value === "string"
-        ? new Date(value)
-        : undefined;
+  let date: Date | undefined;
+  if (typeof value === "number") {
+    date = new Date(value);
+  } else if (typeof value === "string") {
+    date = new Date(value);
+  } else {
+    date = undefined;
+  }
   if (!date || Number.isNaN(date.getTime())) {
     throw new Error(`Stored record field '${key}' must be a valid datetime.`);
   }
@@ -139,6 +152,14 @@ function optionalRole(record: QlRecord): string {
   return typeof value === "string" && value.trim() ? value : LEAST_PRIVILEGE_ROLE;
 }
 
+function requiredLocale(record: QlRecord): UiLocale {
+  const value = requiredString(record, "preferred_locale");
+  if (value !== "id" && value !== "en") {
+    throw new Error("Stored user preferred_locale is invalid.");
+  }
+  return value;
+}
+
 function userFromRecord(record: QlRecord): User {
   return {
     id: requiredString(record, "id"),
@@ -147,6 +168,7 @@ function userFromRecord(record: QlRecord): User {
     passwordHash: requiredString(record, "password_hash"),
     active: requiredBoolean(record, "active"),
     role: optionalRole(record),
+    preferredLocale: requiredLocale(record),
     createdAt: requiredDate(record, "created_at"),
   };
 }
@@ -196,6 +218,12 @@ export function createConversationStore(orm: QlOrm): ConversationStore {
           password_hash: input.passwordHash,
           active: true,
           ...(input.role ? { role: input.role } : {}),
+          ...(input.initialSetupOwner
+            ? { setup_claim: "initial_super_admin" }
+            : {}),
+          ...(input.preferredLocale
+            ? { preferred_locale: input.preferredLocale }
+            : {}),
         }),
       );
     },
@@ -214,6 +242,15 @@ export function createConversationStore(orm: QlOrm): ConversationStore {
         active: true,
       });
       return record ? userFromRecord(record) : undefined;
+    },
+
+    async updateUserPreferredLocale(id, preferredLocale) {
+      const updated = await orm.updateRecordsForService(
+        "res.users",
+        { id },
+        { preferred_locale: preferredLocale },
+      );
+      return updated ? this.getUserById(id) : undefined;
     },
 
     async createSession(userId, tokenHash, expiresAt) {

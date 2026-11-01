@@ -14,9 +14,12 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "ql_base": "workspace:*",
-    "ql_auth": "workspace:*",
-    "ql_chat": "workspace:*",
+    "@moonwitness/types": "workspace:*",
     "ql_orm": "workspace:*"
+  },
+  "devDependencies": {
+    "ql_auth": "workspace:*",
+    "ql_base": "workspace:*",
+    "ql_chat": "workspace:*"
   }
 }

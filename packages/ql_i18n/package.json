@@ -1,0 +1,44 @@
+{
+  "name": "ql_i18n",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./__manifest__": {
+      "types": "./dist/__manifest__.d.ts",
+      "import": "./dist/__manifest__.js"
+    },
+    "./models": {
+      "types": "./dist/models/index.d.ts",
+      "import": "./dist/models/index.js"
+    },
+    "./services/catalog-service": {
+      "types": "./dist/services/catalog-service.d.ts",
+      "import": "./dist/services/catalog-service.js"
+    },
+    "./services/po": {
+      "types": "./dist/services/po.d.ts",
+      "import": "./dist/services/po.js"
+    },
+    "./catalogs": {
+      "types": "./dist/catalogs.d.ts",
+      "import": "./dist/catalogs.js"
+    },
+    "./views": {
+      "types": "./dist/views/index.d.ts",
+      "import": "./dist/views/index.js"
+    }
+  },
+  "scripts": {
+    "build": "node scripts/copy-catalogs.mjs && tsc -p tsconfig.json",
+    "test": "tsx --test models/index.test.ts services/catalog-service.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@moonwitness/types": "workspace:*",
+    "gettext-parser": "^10.0.0",
+    "ql_orm": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/gettext-parser": "^9.0.0"
+  }
+}

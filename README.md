@@ -1,8 +1,14 @@
-# MoonWitness
+# A-L-L-A-H.COM — EMPIRE OF THE LIGHT
 
-MoonWitness adalah fondasi workspace AI yang dibangun bertahap: runtime TypeScript, provider model OpenAI-compatible, memori percakapan, dan sistem addon model-first. Ini tahap awal platform—bukan klaim bahwa AGI sudah tercapai.
+A-L-L-A-H.COM adalah identitas publik dan gerbang ekosistem **EMPIRE OF THE LIGHT**. **MoonWitness** adalah platform perangkat lunak terintegrasi dan fondasi implementasinya di dalam ekosistem tersebut. Akronim, visi publik, janji, batas ekosistem, dan prinsip editorial ditetapkan dalam [Official Canon & Ecosystem Constitution](./docs/vision/ALLAH_COM_OFFICIAL_CANON.md).
+
+Repositori ini saat ini mengimplementasikan fondasi workspace AI MoonWitness secara bertahap: runtime TypeScript, provider model OpenAI-compatible, memori percakapan, dan sistem addon model-first. Itu adalah kondisi implementasi saat ini, bukan klaim bahwa seluruh visi A-L-L-A-H.COM/MoonWitness telah selesai atau AGI telah tercapai.
 
 Nama dan arah visual mengambil inspirasi umum dari narasi sci-fi kosmik dan arsitektur model-first di [repo MoonWitness](https://github.com/bjo163/moonwitness). Implementasi ini tetap berfokus pada asisten AI; domain dan fitur khusus dari repo referensi tidak diasumsikan sebagai kebutuhan produk.
+
+## Project identity & governance
+
+A-L-L-A-H.COM / EMPIRE OF THE LIGHT identity, public narrative, ecosystem boundaries and editorial principles are defined in the [Official Canon & Ecosystem Constitution](./docs/vision/ALLAH_COM_OFFICIAL_CANON.md). This canon governs identity and narrative; product scope, architecture, delivery status and production claims remain governed by their respective canonical documents and evidence.
 
 ## Mulai
 
@@ -15,6 +21,18 @@ pnpm dev
 ```
 
 Landing page publik berjalan di `http://localhost:3001`; dashboard terlindungi login berada di `/command-center`, dan API di `http://localhost:3000`. Data lokal disimpan di `data/moonwitness.db`; schema dibuat otomatis dari manifest addon saat API mulai—tidak perlu generate atau menjalankan migration.
+
+Instruksi agent workspace ada di [`AGENTS.md`](./AGENTS.md), agent implementasi khusus ada di [`.github/agents/`](./.github/agents/), dan workflow pengembangan ada di [`.github/skills/moonwitness-development/`](./.github/skills/moonwitness-development/). Skill [`task-tracker`](./.github/skills/task-tracker/SKILL.md) wajib dipakai sebelum dan sesudah pekerjaan coding.
+
+### Mini UI task tracker lokal
+
+Untuk melihat dan mengubah status task dari browser lokal:
+
+```powershell
+python -B docs/audit/tools/task_tracker_server.py
+```
+
+Buka URL `127.0.0.1` yang dicetak server. Server hanya mengikat loopback, tidak menerima koneksi jaringan publik, dan berhenti dengan `Ctrl+C`. Perubahan status memperbarui `docs/governance/task-tracker.json` dan menghasilkan ulang `TODO.md`.
 
 Web menggunakan rewrite Next.js ke API. Akun memiliki sesi cookie `HttpOnly`, password di-hash dengan scrypt, dan data percakapan dibatasi per akun. `POST /chat` menerima `{ "conversationId": "...", "input": "..." }`.
 
@@ -37,27 +55,6 @@ Base URL wajib HTTPS; HTTP hanya diizinkan untuk localhost. Jangan commit `PROVI
 Untuk instalasi sederhana atau kompatibilitas sebelumnya, konfigurasi opsional `MODEL_BASE_URL`, `MODEL_API_KEY`, dan `MODEL_NAME` tetap tersedia sebagai provider fallback server-wide. Konfigurasi provider per akun lebih disarankan.
 
 Gateway ini adalah fondasi internal untuk routing chat MoonWitness, bukan clone fitur penuh FreeLLMAPI: katalog/model discovery otomatis, pengelolaan kuota dan biaya, rate limiting, serta endpoint publik OpenAI-compatible belum termasuk. Provider dan model ditambahkan manual memakai kredensial yang memang kamu miliki.
-
-### Email transaksional (atur ulang kata sandi)
-
-`/auth/forgot-password` mengirim email reset lewat adapter SMTP di `apps/api/src/mail` (nodemailer pool, 1 koneksi, timeout 5 s kirim/greeting dan 10 s socket, 1 percobaan, batas 10 s). Tidak ada `ql_mail` dan tidak ada message store: server SMTP (Stalwart) yang mengelola antrian dan retry. Kegagalan kirim mengembalikan `200 {sent:false}` yang sama dengan email yang tidak terdaftar, jadi endpoint ini tidak bisa mengonfirmasi keberadaan akun. Tanpa `SMTP_HOST`/`SMTP_USERNAME`/`SMTP_PASSWORD`/`SMTP_FROM`, API tetap boot dan email dinonaktifkan.
-
-```dotenv
-# Transactional email (password reset). Leave SMTP_HOST empty to keep mail disabled;
-# /auth/forgot-password then answers 200 {sent:false} instead of failing.
-SMTP_HOST=
-SMTP_PORT=465
-# true = implicit TLS (port 465). Leave unset to infer from the port; STARTTLS is forced on 587/2525.
-SMTP_SECURE=
-SMTP_USERNAME=
-SMTP_PASSWORD=
-# Display name is allowed: "MoonWitness <app@a-l-l-a-h.com>". DKIM must sign for that domain.
-SMTP_FROM=
-# Public web origin used inside reset links. Keep it pointed at the web app, not the API.
-APP_BASE_URL=http://localhost:3001
-```
-
-Link reset dibuat `/?mode=reset&token=<43-char-token>`, berlaku 30 menit dan sekali pakai (row di-delete, jadi dua request bersamaan tidak bisa mengklaim token yang sama). Setelah reset, semua sesi pemilik diinvalidasi dan login dengan kata sandi lama ditolak.
 
 ## Struktur
 

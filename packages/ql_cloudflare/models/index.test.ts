@@ -2,26 +2,17 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import integrationManifest from "ql_integration/__manifest__";
 import {
-  createQlOrm,
   loadAddons,
   QlAccessError,
   QlValidationError,
-  type QlAddonManifest,
 } from "ql_orm";
+import { stubAddonManifest, withMemoryOrm } from "ql_orm/testing";
 import cloudflareManifest from "../__manifest__.js";
 
 const owner = { id: "owner-1", groups: ["user"] };
 const intruder = { id: "owner-2", groups: ["user"] };
 
-const stub = (name: string): QlAddonManifest => ({
-  name,
-  version: "1.0.0",
-  description: name,
-  depends: [],
-  models: [],
-  access: [],
-  views: [],
-});
+const stub = stubAddonManifest;
 
 const manifests = [
   stub("ql_base"),
@@ -59,20 +50,17 @@ void test("mirror rows are read-only through generic CRUD", async () => {
     assert.equal(rule?.create, false);
     assert.equal(rule?.unlink, false);
   }
-  const runtime = await createQlOrm("file::memory:", manifests);
-  try {
+  await withMemoryOrm(manifests, async (orm) => {
     await assert.rejects(
-      () => runtime.orm.create("cloudflare.record", owner, recordValues()),
+      () => orm.create("cloudflare.record", owner, recordValues()),
       QlAccessError,
     );
-    await runtime.orm.createRecordForService("cloudflare.record", recordValues());
-    const rows = await runtime.orm.findMany("cloudflare.record", owner);
+    await orm.createRecordForService("cloudflare.record", recordValues());
+    const rows = await orm.findMany("cloudflare.record", owner);
     assert.equal(rows.length, 1);
     assert.equal("owner_id" in rows[0], false);
-    assert.deepEqual(await runtime.orm.findMany("cloudflare.record", intruder), []);
-  } finally {
-    runtime.close();
-  }
+    assert.deepEqual(await orm.findMany("cloudflare.record", intruder), []);
+  });
 });
 
 void test("no published view exposes a private field", () => {
@@ -90,11 +78,10 @@ void test("no published view exposes a private field", () => {
 });
 
 void test("record type and ttl bounds are enforced by the model", async () => {
-  const runtime = await createQlOrm("file::memory:", manifests);
-  try {
+  await withMemoryOrm(manifests, async (orm) => {
     await assert.rejects(
       () =>
-        runtime.orm.createRecordForService(
+        orm.createRecordForService(
           "cloudflare.record",
           recordValues({ type: "PTR" }),
         ),
@@ -102,13 +89,13 @@ void test("record type and ttl bounds are enforced by the model", async () => {
     );
     await assert.rejects(
       () =>
-        runtime.orm.createRecordForService(
+        orm.createRecordForService(
           "cloudflare.record",
           recordValues({ ttl: 99999999 }),
         ),
       QlValidationError,
     );
-    const stored = await runtime.orm.createRecordForService(
+    const stored = await orm.createRecordForService(
       "cloudflare.record",
       recordValues(),
     );
@@ -116,7 +103,5 @@ void test("record type and ttl bounds are enforced by the model", async () => {
     assert.equal(stored.proxied, false);
     assert.equal(stored.stale, false);
     assert.equal(stored.managed, false);
-  } finally {
-    runtime.close();
-  }
+  });
 });

@@ -1,0 +1,1755 @@
+{
+  "schema_version": 1,
+  "description": "Canonical project task tracker. TODO.md is generated from this file. Task completion is not a release claim.",
+  "tasks": [
+    {
+      "id": "MW-0501",
+      "title": "RBAC roles in `ql_auth` (`res.role`, `res.users.role`, boot seeding that repairs drift)",
+      "section": "Workstream MW-0500 — External service integration (Cloudflare DNS)",
+      "state": "done",
+      "status_label": "Implemented; tests green",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "`pnpm --filter ql_auth test` passes; role groups come from the compiled catalog; anti-lockout guard keeps one super_admin",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0502",
+      "title": "Bootstrap root account via `BOOTSTRAP_ADMIN_EMAIL`/`BOOTSTRAP_ADMIN_TOKEN`",
+      "section": "Workstream MW-0500 — External service integration (Cloudflare DNS)",
+      "state": "done",
+      "status_label": "Implemented; one-time-use",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Grants root only while zero super_admins exist; env must be removed after first owner login",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0503",
+      "title": "`/admin/users` role management (API guard + UI)",
+      "section": "Workstream MW-0500 — External service integration (Cloudflare DNS)",
+      "state": "done",
+      "status_label": "Implemented",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "`admin` group gate; own-account and last-super_admin protections; role list from `res.role`",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0504",
+      "title": "`ql_integration` addon: `integration.connector`, `integration.audit`, kind catalog",
+      "section": "Workstream MW-0500 — External service integration (Cloudflare DNS)",
+      "state": "done",
+      "status_label": "Implemented; no secret column",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Manifest ACL + model tests pass; catalog marks `cloudflare_read` read-only",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0505",
+      "title": "`ql_cloudflare` addon: zone/record mirror, API client, sync, DNS mutations",
+      "section": "Workstream MW-0500 — External service integration (Cloudflare DNS)",
+      "state": "done",
+      "status_label": "Implemented; tests green",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Client/sync/record-rule suites pass; mirror rows are owner-scoped",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0506",
+      "title": "moonclient contract + 12 API connector routes",
+      "section": "Workstream MW-0500 — External service integration (Cloudflare DNS)",
+      "state": "done",
+      "status_label": "Implemented; tests green",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Routes stay under `/settings/connectors`; no contract field can carry a token; group gates fire before body reads",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0507",
+      "title": "Web `/connectors` and `/connectors/[id]/dns` workspaces",
+      "section": "Workstream MW-0500 — External service integration (Cloudflare DNS)",
+      "state": "done",
+      "status_label": "Implemented; not yet exercised in a browser",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "No token input anywhere; \"Sumber token\" displayed; typed confirmations for destructive actions; nav entry gated on `connector`/`operator`",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0551",
+      "title": "`ql_workflow` addon skeleton + registration in `apps/api` bootstrap",
+      "section": "Workstream MW-0550 — CAB / Project Management via `ql_workflow`",
+      "state": "done",
+      "status_label": "Implemented; `turbo run build --filter=@moonwitness/api...` green",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "`loadAddons` accepts the manifest with `depends: [\"ql_base\",\"ql_auth\"]`; `ql_workflow` is a `dependency` (not devDep) of `apps/api` so the Docker `--filter=@moonwitness/api...` closure includes it",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0552",
+      "title": "PM tracker models `workflow.project` + `workflow.task` (view-driven, zero new UI)",
+      "section": "Workstream MW-0550 — CAB / Project Management via `ql_workflow`",
+      "state": "done",
+      "status_label": "Implemented; tests green",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Both models appear in `/models` metadata via the existing generic handler; ACL allows user CRUD; `owner_id` is `private:true`; test asserts no view lists a private field",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0553",
+      "title": "CAB state machine service (`canTransition` table transcribed 1:1 from spec)",
+      "section": "Workstream MW-0550 — CAB / Project Management via `ql_workflow`",
+      "state": "done",
+      "status_label": "Implemented; tests green",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Table-driven test verifies every legal edge from `docs/workflows/WORKFLOW_AND_PUBLISHING_SPECIFICATION.md:8-12`; every other pair rejects; `submit` requires the change owner; `approve`/`reject`/`publish`/`supersede` require the `admin`/`operator` reviewer group AND forbid self-approval (`QlConflictError`)",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0554",
+      "title": "`workflow.change` + `workflow.transition` models with bypass-lockdown ACL",
+      "section": "Workstream MW-0550 — CAB / Project Management via `ql_workflow`",
+      "state": "done",
+      "status_label": "Implemented; tests green",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "ACL declares `write:false, create:false, unlink:false` for every group on `workflow.change` (only `user` group's `create:true` stays, and the ORM auto-stamps `owner_id`); the bypass-lock regression test asserts `orm.update(\"workflow.change\", ownerA, id, {state:\"approved\"})` throws `QlAccessError`; `workflow.transition` has zero write/unlink ACL in every group (append-only audit)",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0555",
+      "title": "moonclient contract: `workflow.*` DTOs, `/workflow/*` routes, transition/queue SDK",
+      "section": "Workstream MW-0550 — CAB / Project Management via `ql_workflow`",
+      "state": "done",
+      "status_label": "Implemented; `pnpm --filter @moonwitness/moonclient test` green",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "`apiRoutes.workflow` is a sibling appended after `connectors`; existing routes untouched; new `workflow routes stay under the /workflow prefix` test passes alongside the credential scanner (8/8 moonclient tests)",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0556",
+      "title": "API boundary: `handleWorkflowRequest` + one dispatch `if` block",
+      "section": "Workstream MW-0550 — CAB / Project Management via `ql_workflow`",
+      "state": "done",
+      "status_label": "Implemented; apps/api suite green (7 workflow tests + 38 existing)",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Handler returns `Promise<boolean>` and follows the `handleConnectorRequest` shape; `requireGroup(user, \"admin\", \"operator\")` gates the queue and reviewer transitions; error path uses existing `handleRequestError` (unchanged) which already maps `QlAccessError→403`, `QlConflictError→409`, `QlValidationError→400`, `QlNotFoundError→404`",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0557",
+      "title": "Web `/workflow` review-queue screen + gated sidebar entry",
+      "section": "Workstream MW-0550 — CAB / Project Management via `ql_workflow`",
+      "state": "done",
+      "status_label": "Implemented; `pnpm exec turbo run build --filter=@moonwitness/web` green",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Screen imports only `@moonwitness/moonclient` + `@moonwitness/ui` (root browser-boundary lint rule from MW-ADR-016 stays clean); nav link and dashboard card are gated on a `moonClient.listModels()` probe finding a `workflow.*` model — remove the bootstrap line in `apps/api/src/index.ts` and every surface disappears at once",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0558",
+      "title": "Manual browser click-through evidence (member submit → admin approve → PATCH bypass refused)",
+      "section": "Workstream MW-0550 — CAB / Project Management via `ql_workflow`",
+      "state": "pending",
+      "status_label": "Pending owner browser verification",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "MW-0507 precedent applies — must not be reported as \"done\" until verified in a real browser. Automated tests already cover the bypass refusal and self-approval refusal (MW-0553/0554/0556); only the end-to-end UI flow needs manual capture",
+      "table_headers": [
+        "ID",
+        "Subject",
+        "Status",
+        "Owner",
+        "Acceptance Criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0601",
+      "title": "Audit implementation against the canon and all 12 pillars",
+      "section": "Planning gaps and audit goals",
+      "state": "done",
+      "status_label": "Done",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "The audit report records the dirty-worktree scope and committed baseline `40c04f172ff91d8002c8d51c4922c8abc6b59a37`. All 1,891 catalog rows now have an explicit status and review basis: 369 `GAP`, 267 `PARTIAL`, 1,255 `UNKNOWN`, zero `UNVERIFIED`; TODO links are retained and gates validate the inventory. Current lint/typecheck/test/build and traceability checks pass. This closes audit triage only—not implementation, owner ratification, production certification, or release approval.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PILLAR 01–12; acceptance A–I; D01–D31"
+      },
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0602",
+      "title": "Reconcile product identity references to the official canon",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Audit references to A-L-L-A-H.COM and MoonWitness; canonical wording links to `docs/vision/ALLAH_COM_OFFICIAL_CANON.md`; no companion document redefines identity or confers religious authority.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PILLAR 01; STEP 6"
+      },
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0603",
+      "title": "Complete repository and GitHub permission inventory",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Record account, organization, repository, team, role, and inaccessible/unknown scopes with evidence and exact observation time; distinguish verified access from unavailable data.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PHASE 0: GitHub permissions; PILLAR 02"
+      },
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0604",
+      "title": "Specify search and indexing boundaries",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Define `ql_search` inputs, source-of-truth boundary, indexing/update/delete lifecycle, rights/private-field exclusions, query API, ownership, failure behavior, and tests; no canonical content is owned by indexes.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PHASE 3: Search; PILLAR 10 §10.4"
+      },
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0605",
+      "title": "Decide storage scope and write its security contract",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Decide whether external/object storage is in the approved scope; if yes, specify ownership, access, encryption, rights, retention/deletion, limits, threat model, and verification; if no, record the deferral and trigger.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PHASE 3: Storage; PILLAR 10 §10.5"
+      },
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0606",
+      "title": "Complete the visual brand specification under the official identity",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0602"
+      ],
+      "acceptance_criteria": "Define approved wordmark/identity usage, voice, palette ownership, and tenant-brand boundary in the canonical design document; preserve the official canon and label concept art as illustrative until approved.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PHASE 5: Brand; PILLAR 08 §§8.5–8.7"
+      },
+      "completed_at": null,
+      "dependency_label": "MW-0602"
+    },
+    {
+      "id": "MW-0607",
+      "title": "Inventory and name design tokens",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0606"
+      ],
+      "acceptance_criteria": "Publish semantic token names and values for light/dark themes, typography, spacing, elevation, borders/radii, focus, and status; verify every token has one canonical owner in `@moonwitness/ui`.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PHASE 5: Design Tokens; PILLAR 08 §8.5"
+      },
+      "completed_at": null,
+      "dependency_label": "MW-0606"
+    },
+    {
+      "id": "MW-0608",
+      "title": "Decide and specify the tenant and workspace model",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Record whether and how tenants exist, membership/ownership rules, isolation and sharing boundaries, identity/ACL effects, and migration implications; add cross-tenant negative tests to the acceptance plan.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PHASE 6: Tenant Model; PILLAR 08 §8.7; PILLAR 09"
+      },
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0609",
+      "title": "Set measurable performance and reliability targets",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Owner-approved targets cover latency, throughput, corpus/search scale, availability, and recovery where applicable; each target names measurement method, environment, and release gate.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PHASE 6: Performance Requirements; PILLAR 10 §§10.8, 10.10"
+      },
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0610",
+      "title": "Specify per-domain contracts and events/notifications",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Select a single contract-depth policy; define the previously missing events/notifications contract, then map every required §4.4 attribute to its canonical owner and a test/evidence source.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PILLAR 04 §4.4; R-46/R-48"
+      },
+      "completed_at": null,
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-0611",
+      "title": "Resolve domains without estate-source material",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0610"
+      ],
+      "acceptance_criteria": "Owner disposition exists for `ql_creative`, `ql_journey`, `ql_org`, `ql_person`, and `ql_search`; in-scope domains have first-principles scope, entities, dependencies, and acceptance criteria rather than invented source data.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PILLAR 04 §4.3; PILLAR 11"
+      },
+      "completed_at": null,
+      "dependency_label": "MW-0610"
+    },
+    {
+      "id": "MW-0612",
+      "title": "Define task dependency and domain DoD rules",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0601"
+      ],
+      "acceptance_criteria": "Every proposed task has explicit prerequisite task IDs or `—`; every approved domain has a bounded DoD covering manifest, models/views, ACL, contract, and tests; the task graph is acyclic.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PHASE 7: Dependencies and Microtask breakdown; PILLAR 12 §12.4"
+      },
+      "completed_at": null,
+      "dependency_label": "MW-0601"
+    },
+    {
+      "id": "MW-0613",
+      "title": "Define the GitHub label taxonomy",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0612"
+      ],
+      "acceptance_criteria": "Document a small label set for task ID, domain, type, priority, and status with definitions and usage rules; no label is created until owner approval.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PHASE 7: Labels; PILLAR 12 §12.4"
+      },
+      "completed_at": null,
+      "dependency_label": "MW-0612"
+    },
+    {
+      "id": "MW-0614",
+      "title": "Map GitHub Issues, Projects, and Milestones to TODO goals",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0612",
+        "MW-0613"
+      ],
+      "acceptance_criteria": "Define one-to-one issue/task linking, required issue fields, project fields, and milestone mapping; prepare the mapping without creating platform objects.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PHASE 7: Issues, Project, Milestones; PILLAR 12 §12.4"
+      },
+      "completed_at": null,
+      "dependency_label": "MW-0612, MW-0613"
+    },
+    {
+      "id": "MW-0615",
+      "title": "Reconcile TODO phase numbering with the legacy phase catalog",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0612"
+      ],
+      "acceptance_criteria": "Owner-approved mapping uses the D30 catalog's phase IDs; Cloudflare MW-0500 workstream is explicitly cross-referenced without mislabeling it as catalog PHASE 12.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PHASE 0–12; R-45"
+      },
+      "completed_at": null,
+      "dependency_label": "MW-0612"
+    },
+    {
+      "id": "MW-0616",
+      "title": "Ratify a stable planning baseline and disposition prior work",
+      "section": "Planning gaps and audit goals",
+      "state": "proposed",
+      "status_label": "Proposed; owner action",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0601",
+        "MW-0602",
+        "MW-0603",
+        "MW-0604",
+        "MW-0605",
+        "MW-0606",
+        "MW-0607",
+        "MW-0608",
+        "MW-0609",
+        "MW-0610",
+        "MW-0611",
+        "MW-0612",
+        "MW-0613",
+        "MW-0614",
+        "MW-0615"
+      ],
+      "acceptance_criteria": "Owner records accept/amend decisions against an exact commit SHA, including already-landed work and its evidence; the release/implementation gate is explicit and reproducible.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PILLAR 12; acceptance I; R-42/R-49/R-52"
+      },
+      "completed_at": null,
+      "dependency_label": "MW-0601, MW-0602, MW-0603, MW-0604, MW-0605, MW-0606, MW-0607, MW-0608, MW-0609, MW-0610, MW-0611, MW-0612, MW-0613, MW-0614, MW-0615"
+    },
+    {
+      "id": "MW-0617",
+      "title": "Create approved GitHub governance records",
+      "section": "Planning gaps and audit goals",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0613",
+        "MW-0614",
+        "MW-0616"
+      ],
+      "acceptance_criteria": "Only after owner approval, create agreed labels, task-linked Issues, Project fields, and milestone records; verify each external record maps to exactly one TODO task and no duplicate scope exists.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PHASE 7; PILLAR 12 §12.4"
+      },
+      "completed_at": null,
+      "dependency_label": "MW-0613, MW-0614, MW-0616"
+    },
+    {
+      "id": "MW-0618",
+      "title": "Retire the legacy master prompt after requirement migration",
+      "section": "Planning gaps and audit goals",
+      "state": "done",
+      "status_label": "Done",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0601",
+        "MW-0612",
+        "MW-0616"
+      ],
+      "acceptance_criteria": "All 1,891 source statements are preserved in D30 with one canonical document and task link; implementation status is triaged separately (369 GAP, 267 PARTIAL, 1,255 UNKNOWN; none UNVERIFIED), not certified; both catalog-backed gates and their prompt-free regression tests pass; no live authority or tooling reads the retired file.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "PILLAR 12 §12.1–12.2; D30"
+      },
+      "completed_at": null,
+      "dependency_label": "MW-0601, MW-0612, MW-0616"
+    },
+    {
+      "id": "MW-0801",
+      "title": "Repository foundation",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0616"
+      ],
+      "acceptance_criteria": "Approved repository structure, scripts, and ownership rules are documented and verified by clean install and baseline checks.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0616"
+    },
+    {
+      "id": "MW-0802",
+      "title": "Unified Web/API bootstrap",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0801"
+      ],
+      "acceptance_criteria": "One web and one API bootstrap start successfully; no duplicate application or identity authority is introduced.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0801"
+    },
+    {
+      "id": "MW-0803",
+      "title": "Routing",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0802"
+      ],
+      "acceptance_criteria": "Approved routes resolve in the unified app, with role gates and localized route behavior tested.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0802"
+    },
+    {
+      "id": "MW-0804",
+      "title": "Application shell",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0803",
+        "MW-0606"
+      ],
+      "acceptance_criteria": "One accessible shell supports required navigation, profile/context controls, and truthful loading/error/empty states.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0803, MW-0606"
+    },
+    {
+      "id": "MW-0805",
+      "title": "Design system",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0804",
+        "MW-0607"
+      ],
+      "acceptance_criteria": "`@moonwitness/ui` owns reusable components and semantic tokens; required control states and theme variants pass component tests.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0804, MW-0607"
+    },
+    {
+      "id": "MW-0806",
+      "title": "I18N",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0803",
+        "MW-0607"
+      ],
+      "acceptance_criteria": "Indonesian and English catalogs have type-safe keys, parity tests, route persistence, and locale-aware formatting.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0803, MW-0607"
+    },
+    {
+      "id": "MW-0807",
+      "title": "Database",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0801",
+        "MW-0610"
+      ],
+      "acceptance_criteria": "Addon models synchronize through QlOrm; no Drizzle schema or migration files; integrity and ownership tests pass.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0801, MW-0610"
+    },
+    {
+      "id": "MW-0808",
+      "title": "Authentication",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0802",
+        "MW-0807"
+      ],
+      "acceptance_criteria": "Approved identity/session flow works end-to-end; session lifecycle and negative authentication tests pass.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0802, MW-0807"
+    },
+    {
+      "id": "MW-0809",
+      "title": "Authorization",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0808",
+        "MW-0608"
+      ],
+      "acceptance_criteria": "Deny-by-default route/model ACL and owner/tenant isolation pass cross-owner and cross-tenant negative tests.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0808, MW-0608"
+    },
+    {
+      "id": "MW-0810",
+      "title": "Logging and error handling",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0802"
+      ],
+      "acceptance_criteria": "Structured errors/logs are actionable, correlation-aware, and contain no secrets or private payloads in tests.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0802"
+    },
+    {
+      "id": "MW-0811",
+      "title": "API contracts",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0802",
+        "MW-0610"
+      ],
+      "acceptance_criteria": "DTOs, paths, and SDK calls have one owner in `@moonwitness/moonclient`; contract tests cover success and invalid input.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0802, MW-0610"
+    },
+    {
+      "id": "MW-0812",
+      "title": "Tests",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0803",
+        "MW-0804",
+        "MW-0805",
+        "MW-0806",
+        "MW-0807",
+        "MW-0808",
+        "MW-0809",
+        "MW-0810",
+        "MW-0811"
+      ],
+      "acceptance_criteria": "Relevant unit, addon, API, UI, accessibility, and negative security tests pass on a clean run.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0803, MW-0804, MW-0805, MW-0806, MW-0807, MW-0808, MW-0809, MW-0810, MW-0811"
+    },
+    {
+      "id": "MW-0813",
+      "title": "Docker",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0802",
+        "MW-0810"
+      ],
+      "acceptance_criteria": "Clean build and container startup succeed from the documented compose/deployment path without undeclared local state.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0802, MW-0810"
+    },
+    {
+      "id": "MW-0814",
+      "title": "Health checks",
+      "section": "PHASE 8 — Single Application Foundation",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0813"
+      ],
+      "acceptance_criteria": "Readiness/liveness behavior is documented and verified for healthy, starting, and unavailable dependencies.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0813"
+    },
+    {
+      "id": "MW-0901",
+      "title": "Source-to-publication lifecycle: select and identify an approved source/edition",
+      "section": "PHASE 9–10 — First Vertical Slice and Domain Expansion",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0814",
+        "MW-0605"
+      ],
+      "acceptance_criteria": "Selected source and edition have recorded owner, rights basis, version, provenance, and stable identifiers.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0814, MW-0605"
+    },
+    {
+      "id": "MW-0902",
+      "title": "Source-to-publication lifecycle: validate rights and stage content",
+      "section": "PHASE 9–10 — First Vertical Slice and Domain Expansion",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0901"
+      ],
+      "acceptance_criteria": "Import rejects or quarantines records without required rights/provenance; repeat import is idempotent and reports rejected rows.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0901"
+    },
+    {
+      "id": "MW-0903",
+      "title": "Source-to-publication lifecycle: create sourced claim and attach evidence",
+      "section": "PHASE 9–10 — First Vertical Slice and Domain Expansion",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0902",
+        "MW-0610"
+      ],
+      "acceptance_criteria": "Claim, evidence, interpretation, and exact source text remain distinct and traceable; cross-owner/private-field tests pass.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0902, MW-0610"
+    },
+    {
+      "id": "MW-0904",
+      "title": "Source-to-publication lifecycle: human review and publication decision",
+      "section": "PHASE 9–10 — First Vertical Slice and Domain Expansion",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0903"
+      ],
+      "acceptance_criteria": "Reviewer decisions capture actor, timestamp, reason, and state; unapproved or rights-incompatible records are not public.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0903"
+    },
+    {
+      "id": "MW-0905",
+      "title": "Source-to-publication lifecycle: end-to-end acceptance",
+      "section": "PHASE 9–10 — First Vertical Slice and Domain Expansion",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0904",
+        "MW-0812"
+      ],
+      "acceptance_criteria": "The complete approved Horizon 1 journey passes in `id` and `en`, keyboard-accessibly, with auditable provenance and honest failure states.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0904, MW-0812"
+    },
+    {
+      "id": "MW-1001",
+      "title": "Expand only approved domains in dependency order",
+      "section": "PHASE 9–10 — First Vertical Slice and Domain Expansion",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0905",
+        "MW-0611",
+        "MW-0612"
+      ],
+      "acceptance_criteria": "Each approved domain has its own TODO task and DoD; dependencies follow the ratified domain graph; each addon passes manifest/model/ACL/view/contract tests before integration.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0905, MW-0611, MW-0612"
+    },
+    {
+      "id": "MW-1101",
+      "title": "Verify domain boundaries",
+      "section": "PHASE 11 — Integration and Hardening",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-1001"
+      ],
+      "acceptance_criteria": "Ownership, dependency, and prohibited-write tests pass; no duplicate canonical owner or forbidden dependency remains.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-1001"
+    },
+    {
+      "id": "MW-1102",
+      "title": "Verify API consistency",
+      "section": "PHASE 11 — Integration and Hardening",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0905",
+        "MW-1001"
+      ],
+      "acceptance_criteria": "All routes and DTOs match shared moonclient contracts; contract tests pass for each shipped route.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0905, MW-1001"
+    },
+    {
+      "id": "MW-1103",
+      "title": "Verify database integrity",
+      "section": "PHASE 11 — Integration and Hardening",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0807",
+        "MW-1001"
+      ],
+      "acceptance_criteria": "Constraints, QlOrm sync, referential integrity, isolation, and rollback tests pass on a clean database.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0807, MW-1001"
+    },
+    {
+      "id": "MW-1104",
+      "title": "Verify rights",
+      "section": "PHASE 11 — Integration and Hardening",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0905",
+        "MW-1001"
+      ],
+      "acceptance_criteria": "Every displayed, indexed, exported, or published source has current rights and attribution evidence; denied rights fail closed.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0905, MW-1001"
+    },
+    {
+      "id": "MW-1105",
+      "title": "Verify security",
+      "section": "PHASE 11 — Integration and Hardening",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0809",
+        "MW-1001"
+      ],
+      "acceptance_criteria": "Auth, ACL, ownership, private fields, secrets, input limits, and abuse cases pass documented negative tests.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0809, MW-1001"
+    },
+    {
+      "id": "MW-1106",
+      "title": "Verify UX",
+      "section": "PHASE 11 — Integration and Hardening",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0804",
+        "MW-0905"
+      ],
+      "acceptance_criteria": "Primary journeys and all functional controls are verified at supported viewport sizes; no dead controls or misleading states.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0804, MW-0905"
+    },
+    {
+      "id": "MW-1107",
+      "title": "Verify I18N",
+      "section": "PHASE 11 — Integration and Hardening",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0806",
+        "MW-0905"
+      ],
+      "acceptance_criteria": "Translation parity, long-string layout, date/number formatting, locale switching, and fallback tests pass.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0806, MW-0905"
+    },
+    {
+      "id": "MW-1108",
+      "title": "Verify accessibility",
+      "section": "PHASE 11 — Integration and Hardening",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0805",
+        "MW-0905"
+      ],
+      "acceptance_criteria": "Keyboard, focus, labels, contrast, screen-reader semantics, and reduced-motion checks pass against the agreed standard.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0805, MW-0905"
+    },
+    {
+      "id": "MW-1109",
+      "title": "Verify performance",
+      "section": "PHASE 11 — Integration and Hardening",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0609",
+        "MW-0905",
+        "MW-1001"
+      ],
+      "acceptance_criteria": "Benchmarks meet owner-approved targets and include reproducible environment, workload, and measured results.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0609, MW-0905, MW-1001"
+    },
+    {
+      "id": "MW-1110",
+      "title": "Verify backup",
+      "section": "PHASE 11 — Integration and Hardening",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0813",
+        "MW-0605"
+      ],
+      "acceptance_criteria": "Backup completes for approved persistent data; integrity and retention evidence are recorded without exposing secrets.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0813, MW-0605"
+    },
+    {
+      "id": "MW-1111",
+      "title": "Verify restore",
+      "section": "PHASE 11 — Integration and Hardening",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-1110"
+      ],
+      "acceptance_criteria": "Restore is executed in an isolated environment and meets approved recovery-point/time targets with evidence.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-1110"
+    },
+    {
+      "id": "MW-1112",
+      "title": "Verify Docker deployment",
+      "section": "PHASE 11 — Integration and Hardening",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-0813",
+        "MW-1105"
+      ],
+      "acceptance_criteria": "Clean deployment, health checks, configuration validation, and rollback are exercised using the documented container path.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-0813, MW-1105"
+    },
+    {
+      "id": "MW-1113",
+      "title": "Verify failure recovery",
+      "section": "PHASE 11 — Integration and Hardening",
+      "state": "blocked",
+      "status_label": "Blocked by ratification",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-1111",
+        "MW-1112"
+      ],
+      "acceptance_criteria": "Injected dependency and process failures recover or fail closed as specified; data integrity and user-visible errors are verified.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-1111, MW-1112"
+    },
+    {
+      "id": "MW-1201",
+      "title": "Merge to `dev`",
+      "section": "PHASE 12 — Release and Continuous Improvement",
+      "state": "blocked",
+      "status_label": "Blocked by release gates",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-1101",
+        "MW-1102",
+        "MW-1103",
+        "MW-1104",
+        "MW-1105",
+        "MW-1106",
+        "MW-1107",
+        "MW-1108",
+        "MW-1109",
+        "MW-1110",
+        "MW-1111",
+        "MW-1112",
+        "MW-1113",
+        "MW-0616"
+      ],
+      "acceptance_criteria": "Approved PR targets `dev`; required review and checks pass on the exact merge SHA.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-1101, MW-1102, MW-1103, MW-1104, MW-1105, MW-1106, MW-1107, MW-1108, MW-1109, MW-1110, MW-1111, MW-1112, MW-1113, MW-0616"
+    },
+    {
+      "id": "MW-1202",
+      "title": "Verify integration",
+      "section": "PHASE 12 — Release and Continuous Improvement",
+      "state": "blocked",
+      "status_label": "Blocked by release gates",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-1201"
+      ],
+      "acceptance_criteria": "Integration suite, build, and acceptance evidence pass on the exact `dev` SHA.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-1201"
+    },
+    {
+      "id": "MW-1203",
+      "title": "Promote to `main`",
+      "section": "PHASE 12 — Release and Continuous Improvement",
+      "state": "blocked",
+      "status_label": "Blocked by release gates",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-1202"
+      ],
+      "acceptance_criteria": "Only verified `dev` is promoted through the approved protected-branch process; resulting SHA is recorded.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-1202"
+    },
+    {
+      "id": "MW-1204",
+      "title": "Generate version",
+      "section": "PHASE 12 — Release and Continuous Improvement",
+      "state": "blocked",
+      "status_label": "Blocked by release gates",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-1203"
+      ],
+      "acceptance_criteria": "Version follows the approved release policy and uniquely identifies the promoted source SHA.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-1203"
+    },
+    {
+      "id": "MW-1205",
+      "title": "Update changelog",
+      "section": "PHASE 12 — Release and Continuous Improvement",
+      "state": "blocked",
+      "status_label": "Blocked by release gates",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-1204"
+      ],
+      "acceptance_criteria": "Changelog matches included work and links each shipped task/decision to evidence.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-1204"
+    },
+    {
+      "id": "MW-1206",
+      "title": "Publish release",
+      "section": "PHASE 12 — Release and Continuous Improvement",
+      "state": "blocked",
+      "status_label": "Blocked by release gates",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-1205"
+      ],
+      "acceptance_criteria": "Release artifact/tag is published from the verified SHA and passes post-publish checks.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-1205"
+    },
+    {
+      "id": "MW-1207",
+      "title": "Update documentation",
+      "section": "PHASE 12 — Release and Continuous Improvement",
+      "state": "blocked",
+      "status_label": "Blocked by release gates",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-1206"
+      ],
+      "acceptance_criteria": "User, API, architecture, and operations docs match the released behavior; no proposal is described as shipped.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-1206"
+    },
+    {
+      "id": "MW-1208",
+      "title": "Begin the next approved milestone",
+      "section": "PHASE 12 — Release and Continuous Improvement",
+      "state": "blocked",
+      "status_label": "Blocked by release gates",
+      "owner": "Owner",
+      "depends_on": [
+        "MW-1207",
+        "MW-0614",
+        "MW-0617"
+      ],
+      "acceptance_criteria": "Next milestone is owner-approved, has unique TODO task IDs, dependencies, acceptance evidence, and no duplicate GitHub issues.",
+      "table_headers": [
+        "ID",
+        "Prompt item",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {},
+      "completed_at": null,
+      "dependency_label": "MW-1207, MW-0614, MW-0617"
+    },
+    {
+      "id": "MW-1209",
+      "title": "Add mandatory task-tracker workflow and a local status editor",
+      "section": "Developer tooling — canonical project task tracker",
+      "state": "done",
+      "status_label": "Implemented; focused tests and browser verification pass",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "A mandatory repository skill maps every coding task to the canonical register; a Python stdlib localhost-only UI safely edits task state, preserves custom status labels, records known completion times, and regenerates TODO.md; focused tests and tracker gates pass.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "D26 — Master TODO with Microtasks"
+      },
+      "completed_at": "2026-11-01T13:08:16Z",
+      "dependency_label": "—"
+    },
+    {
+      "id": "MW-1210",
+      "title": "Automate CI-gated promotion and release from dev",
+      "section": "Developer tooling — protected CI/CD delivery",
+      "state": "in_progress",
+      "status_label": "Workflow validated locally; review 22-commit initial release before activation",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Direct pushes to dev run CI without a required-check bypass warning; only a successful CI run for the latest green dev SHA can promote through a protected PR to main; the exact candidate is validated before auto-merge; a unique patch tag and GitHub Release are published from the merged main SHA; failed or stale runs do not promote or release; manual dry-run remains available; main still requires a PR and validate; focused workflow and tracker checks pass.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "D30 — CI/CD and release governance"
+      },
+      "completed_at": null,
+      "dependency_label": "—"
+    }
+  ]
+}

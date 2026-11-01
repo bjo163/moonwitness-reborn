@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  MoonClientError,
   moonClient,
   type AuthUserDto as AuthUser,
   type CloudflareRecordDto as DnsRecord,
@@ -42,6 +43,9 @@ import {
   X,
 } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { apiErrorMessage } from "../locale/api-error-message";
+import { useTranslationCatalog } from "../locale/translation-catalog";
+import { useLocalePreference } from "../locale/use-locale-preference";
 
 interface RecordRow {
   [column: string]: string;
@@ -74,23 +78,6 @@ interface AuditRow {
   detail: string;
 }
 
-const recordColumns: readonly DataTableColumn<RecordRow>[] = [
-  { key: "name", label: "Nama" },
-  { key: "type", label: "Tipe" },
-  { key: "content", label: "Content" },
-  { key: "ttl", label: "TTL" },
-  { key: "proxied", label: "Proxied" },
-  { key: "flags", label: "Catatan" },
-];
-
-const auditColumns: readonly DataTableColumn<AuditRow>[] = [
-  { key: "createdAt", label: "Waktu" },
-  { key: "action", label: "Aksi" },
-  { key: "outcome", label: "Hasil" },
-  { key: "target", label: "Target" },
-  { key: "detail", label: "Detail" },
-];
-
 function emptyDraft(zoneName: string, types: readonly string[]): RecordDraft {
   return {
     name: zoneName,
@@ -102,10 +89,13 @@ function emptyDraft(zoneName: string, types: readonly string[]): RecordDraft {
   };
 }
 
-function toRow(record: DnsRecord): RecordRow {
+function toRow(
+  record: DnsRecord,
+  t: ReturnType<typeof useTranslationCatalog>["t"],
+): RecordRow {
   const flags = [
-    record.stale ? "Cermin usang" : "",
-    record.managed ? "Dikelola Cloudflare" : "",
+    record.stale ? t("web.dns.mirrorStale") : "",
+    record.managed ? t("web.dns.managed") : "",
   ]
     .filter(Boolean)
     .join(" · ");
@@ -114,16 +104,19 @@ function toRow(record: DnsRecord): RecordRow {
     name: record.name,
     type: record.type,
     content: record.content,
-    ttl: record.ttl === 1 ? "Auto" : `${record.ttl} d`,
-    proxied: record.proxied ? "Ya" : "Tidak",
+    ttl: record.ttl === 1 ? t("web.dns.auto") : t("web.dns.ttlSeconds", { count: record.ttl }),
+    proxied: record.proxied ? t("web.dns.yes") : t("web.dns.no"),
     flags: flags || "—",
   };
 }
 
-function toAuditRow(entry: AuditEntry): AuditRow {
+function toAuditRow(
+  entry: AuditEntry,
+  locale: "id" | "en",
+): AuditRow {
   return {
     id: entry.id,
-    createdAt: formatTime(entry.createdAt),
+    createdAt: formatTime(entry.createdAt, locale),
     action: entry.action,
     outcome: entry.outcome,
     target: entry.target || "—",
@@ -134,18 +127,18 @@ function toAuditRow(entry: AuditEntry): AuditRow {
   };
 }
 
-function formatTime(value: string | null): string {
+function formatTime(value: string | null, locale: "id" | "en"): string {
   if (!value) return "—";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("id-ID");
-}
-
-function messageOf(error: unknown, fallback: string): string {
-  return error instanceof Error && error.message ? error.message : fallback;
+  return Number.isNaN(date.getTime())
+    ? "—"
+    : date.toLocaleString(locale === "id" ? "id-ID" : "en-US");
 }
 
 export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  useLocalePreference(user);
+  const { t, locale } = useTranslationCatalog();
   const [connector, setConnector] = useState<Connector | null>(null);
   const [kind, setKind] = useState<ConnectorKind | undefined>(undefined);
   const [zones, setZones] = useState<Zone[]>([]);
@@ -210,14 +203,13 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
         setConnector(found ?? null);
         setKind(definition);
         setZoneId(resultZones[0]?.externalId ?? "");
-        if (!found) setError("Connector ini tidak ada di akun kamu.");
+        if (!found) setError(t("web.dns.connectorNotFound"));
       } catch (loadError) {
         if (
           !cancelled &&
-          (!(loadError instanceof Error) ||
-            loadError.message !== "Authentication required.")
+          !(loadError instanceof MoonClientError && loadError.status === 401)
         ) {
-          setError(messageOf(loadError, "Gagal memuat data DNS."));
+          setError(apiErrorMessage(loadError, t));
         }
       } finally {
         if (!cancelled) setBusy(false);
@@ -227,7 +219,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [connectorId, loadZones]);
+  }, [connectorId, loadZones, t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -235,14 +227,14 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
       try {
         await loadRecords();
       } catch (loadError) {
-        if (!cancelled) setError(messageOf(loadError, "Gagal memuat record."));
+        if (!cancelled) setError(apiErrorMessage(loadError, t));
       }
     }
     void refresh();
     return () => {
       cancelled = true;
     };
-  }, [loadRecords]);
+  }, [loadRecords, t]);
 
   function applyFilter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -265,13 +257,13 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
     setError(null);
     setNotice(null);
     try {
-      const result = await moonClient.syncConnector(connectorId);
-      setNotice(result.message);
+      await moonClient.syncConnector(connectorId);
+      setNotice(t("web.dns.syncCompleted"));
       const latest = await loadZones();
       if (!zoneId && latest[0]) setZoneId(latest[0].externalId);
       await loadRecords();
     } catch (syncError) {
-      setError(messageOf(syncError, "Sinkronisasi gagal."));
+      setError(apiErrorMessage(syncError, t));
     } finally {
       setSyncing(false);
     }
@@ -299,7 +291,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
     if (!draft || !zone) return;
     const ttl = draft.proxied ? 1 : Number.parseInt(draft.ttl, 10);
     if (!Number.isInteger(ttl)) {
-      setError("TTL harus bilangan bulat; isi 1 untuk Auto.");
+      setError(t("web.dns.invalidTtl"));
       return;
     }
     const input: DnsRecordInput = {
@@ -321,15 +313,15 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
           draft.id,
           input,
         );
-        setNotice(`Record ${input.name} diperbarui di Cloudflare.`);
+        setNotice(t("web.dns.recordUpdated", { name: input.name }));
       } else {
         await moonClient.createConnectorRecord(connectorId, zone.externalId, input);
-        setNotice(`Record ${input.name} dibuat di Cloudflare.`);
+        setNotice(t("web.dns.recordCreated"));
       }
       setDraft(null);
       await loadRecords();
     } catch (saveError) {
-      setError(messageOf(saveError, "Gagal menyimpan record."));
+      setError(apiErrorMessage(saveError, t));
     } finally {
       setSaving(false);
     }
@@ -346,13 +338,13 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
         deleteTarget.id,
         { confirmName: confirmName.trim() },
       );
-      setNotice(`Record ${result.name} dihapus dari Cloudflare.`);
+      setNotice(t("web.dns.recordDeleted", { name: result.name }));
       if (draft?.id === deleteTarget.id) setDraft(null);
       setDeleteTarget(null);
       setConfirmName("");
       await loadRecords();
     } catch (deleteError) {
-      setError(messageOf(deleteError, "Gagal menghapus record."));
+      setError(apiErrorMessage(deleteError, t));
     } finally {
       setSaving(false);
     }
@@ -368,7 +360,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
       const result = await moonClient.listConnectorAudit(connectorId);
       setAudit(result.entries);
     } catch (auditError) {
-      setError(messageOf(auditError, "Gagal memuat riwayat aksi."));
+      setError(apiErrorMessage(auditError, t));
     }
   }
 
@@ -377,14 +369,14 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
       await moonClient.logout();
       window.location.href = "/command-center";
     } catch (logoutError) {
-      setError(messageOf(logoutError, "Gagal keluar."));
+      setError(apiErrorMessage(logoutError, t));
     }
   }
 
   if (busy) {
     return (
       <main className="ql-hud-app flex min-h-dvh items-center justify-center text-sm text-stone-400">
-        Memuat DNS...
+        {t("web.dns.loading")}
       </main>
     );
   }
@@ -394,10 +386,10 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
       <CenteredAuth>
         <div className="mb-5 flex items-center gap-3">
           <Globe size={20} className="text-[#d7ff63]" />
-          <h1 className="text-lg font-semibold">Masuk untuk mengelola DNS</h1>
+          <h1 className="text-lg font-semibold">{t("web.dns.signIn")}</h1>
         </div>
         <p className="text-sm leading-6 text-stone-400">
-          Zone dan record hanya tampil untuk pemilik connector.
+          {t("web.dns.signInDescription")}
         </p>
         {error && (
           <Alert variant="error" className="mt-4">
@@ -409,16 +401,41 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
           onClick={() => (window.location.href = "/auth")}
         >
           <ArrowLeft size={16} />
-          Ke halaman masuk
+          {t("web.auth.loginAction")}
         </Button>
       </CenteredAuth>
     );
   }
 
+  let dnsButtonLabel: string;
+  if (saving) {
+    dnsButtonLabel = t("web.models.saving");
+  } else if (draft?.id) {
+    dnsButtonLabel = t("web.dns.saveChanges");
+  } else {
+    dnsButtonLabel = t("web.dns.createRecord");
+  }
+  const recordColumns: readonly DataTableColumn<RecordRow>[] = [
+    { key: "name", label: t("web.dns.name") },
+    { key: "type", label: t("web.dns.type") },
+    { key: "content", label: t("web.dns.content") },
+    { key: "ttl", label: t("web.dns.ttlColumn") },
+    { key: "proxied", label: t("web.dns.proxiedColumn") },
+    { key: "flags", label: t("web.dns.notes") },
+  ];
+  const auditColumns: readonly DataTableColumn<AuditRow>[] = [
+    { key: "createdAt", label: t("web.dns.dateTime") },
+    { key: "action", label: t("web.dns.action") },
+    { key: "outcome", label: t("web.dns.result") },
+    { key: "target", label: t("web.dns.target") },
+    { key: "detail", label: t("web.dns.detail") },
+  ];
+
   return (
     <WorkspaceTemplate
       sidebarOpen={sidebarOpen}
       onCloseSidebar={() => setSidebarOpen(false)}
+      closeLabel={t("web.common.closeMenu")}
       sidebar={
         <>
           <div className="flex h-12 items-center justify-between px-2">
@@ -433,7 +450,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
               variant="ghost"
               size="icon"
               className="md:hidden"
-              aria-label="Tutup menu"
+              aria-label={t("web.common.closeMenu")}
               onClick={() => setSidebarOpen(false)}
             >
               <X size={18} />
@@ -441,14 +458,14 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
           </div>
           <a href="/connectors" className="ql-nav-link mt-4">
             <ArrowLeft size={16} />
-            Semua connector
+            {t("web.dns.allConnectors")}
           </a>
-          <a href="/command-center" className="ql-nav-link mt-2">
+          <a href="/command-center/chat" className="ql-nav-link mt-2">
             <Plug size={16} />
-            Kembali ke chat
+            {t("web.dns.chat")}
           </a>
-          <div className="ql-nav-section">Zone tersalin</div>
-          <nav className="flex-1 space-y-1 overflow-y-auto" aria-label="Daftar zone">
+          <div className="ql-nav-section">{t("web.dns.zones")}</div>
+          <nav className="flex-1 space-y-1 overflow-y-auto" aria-label={t("web.dns.zoneList")}>
             {zones.map((item) => (
               <Button
                 key={item.id}
@@ -461,12 +478,12 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                 onClick={() => selectZone(item)}
               >
                 {item.name}
-                {item.stale && <Badge variant="outline">Usang</Badge>}
+                {item.stale && <Badge variant="outline">{t("web.dns.stale")}</Badge>}
               </Button>
             ))}
             {zones.length === 0 && (
               <p className="px-2 text-xs leading-5 text-stone-500">
-                Belum ada zone tersalin. Jalankan sinkronisasi lebih dulu.
+                {t("web.dns.zonesEmpty")}
               </p>
             )}
           </nav>
@@ -480,7 +497,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
             <Button
               variant="ghost"
               size="icon"
-              aria-label="Keluar"
+              aria-label={t("web.common.logout")}
               onClick={() => void logout()}
             >
               <LogOut size={16} />
@@ -495,25 +512,27 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
               variant="ghost"
               size="icon"
               className="md:hidden"
-              aria-label="Buka menu"
+              aria-label={t("web.common.openMenu")}
               onClick={() => setSidebarOpen(true)}
             >
               <Menu size={18} />
             </Button>
             <div>
               <div className="text-sm font-semibold">
-                {connector?.label ?? "Connector"}
+                {connector?.label ?? t("web.dns.connector")}
               </div>
               <div className="text-xs text-stone-500">
-                {zone ? zone.name : "Pilih zone"} · Sinkron terakhir{" "}
-                {formatTime(connector?.lastSyncAt ?? null)}
+                {zone ? zone.name : t("web.dns.noZone")} ·{" "}
+                {t("web.connectors.lastSynced", {
+                  date: formatTime(connector?.lastSyncAt ?? null, locale),
+                })}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {kind?.readonly && <Badge variant="outline">Read-only</Badge>}
+            {kind?.readonly && <Badge variant="outline">{t("web.dns.readOnly")}</Badge>}
             {connector && !connector.enabled && (
-              <Badge variant="default">Connector nonaktif</Badge>
+              <Badge variant="default">{t("web.dns.connectorDisabled")}</Badge>
             )}
             <Button
               variant="ghost"
@@ -521,7 +540,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
               onClick={() => void toggleAudit()}
             >
               <History size={15} />
-              {audit ? "Tutup riwayat" : "Riwayat aksi"}
+              {audit ? t("web.dns.closeAudit") : t("web.dns.audit")}
             </Button>
             {canOperate && (
               <Button
@@ -531,7 +550,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                 onClick={() => void syncNow()}
               >
                 <RefreshCw size={15} />
-                {syncing ? "Menyinkronkan..." : "Sinkronkan"}
+                {syncing ? t("web.dns.syncing") : t("web.connectors.sync")}
               </Button>
             )}
           </div>
@@ -541,12 +560,10 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
       <div className="ql-model-workspace">
         <div className="ql-model-heading">
           <div>
-            <div className="ql-eyebrow">CLOUDFLARE MIRROR</div>
-            <h1>{zone ? zone.name : "Zone DNS"}</h1>
+            <div className="ql-eyebrow">{t("web.dns.mirror")}</div>
+            <h1>{zone ? zone.name : t("web.dns.zoneFallback")}</h1>
             <p>
-              Daftar ini adalah cermin Cloudflare. Setiap mutasi langsung
-              mengubah zona aslinya, jadi periksa nama dan content sebelum
-              menyimpan.
+              {t("web.dns.mirrorDescription")}
             </p>
           </div>
           {canOperate && zone && (
@@ -556,11 +573,11 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
               title={
                 writable
                   ? undefined
-                  : "Connector read-only atau nonaktif; mutasi ditolak server."
+                  : t("web.dns.readOnlyWarning")
               }
             >
               <Plus size={16} />
-              Record baru
+              {t("web.dns.newRecord")}
             </Button>
           )}
         </div>
@@ -570,23 +587,23 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
           onSubmit={(event) => void applyFilter(event)}
         >
           <div className="min-w-56 flex-1">
-            <FormField label="Cari nama atau content" htmlFor="dns-search">
+            <FormField label={t("web.dns.search")} htmlFor="dns-search">
               <Input
                 id="dns-search"
                 value={nameQuery}
                 onChange={(event) => setNameQuery(event.target.value)}
-                placeholder="mis. api atau v=spf1"
+                placeholder={t("web.dns.searchPlaceholder")}
               />
             </FormField>
           </div>
           <div className="w-40">
-            <FormField label="Tipe" htmlFor="dns-type">
+            <FormField label={t("web.dns.type")} htmlFor="dns-type">
               <Select
                 id="dns-type"
                 value={typeQuery}
                 onChange={(event) => setTypeQuery(event.target.value)}
               >
-                <option value="">Semua</option>
+                <option value="">{t("web.dns.all")}</option>
                 {recordTypes.map((type) => (
                   <option key={type} value={type}>
                     {type}
@@ -597,7 +614,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
           </div>
           <Button type="submit" variant="secondary">
             <Search size={15} />
-            Terapkan
+            {t("web.dns.searchAction")}
           </Button>
           {(applied.name || applied.type) && (
             <Button
@@ -609,7 +626,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                 setApplied({ name: "", type: "" });
               }}
             >
-              Bersihkan
+              {t("web.dns.clearAction")}
             </Button>
           )}
         </form>
@@ -622,9 +639,10 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
         {notice && <Alert className="mt-5">{notice}</Alert>}
         {zone?.status && (
           <p className="mt-4 text-[11px] text-stone-500">
-            Status zone: {zone.status}
-            {zone.paused ? " (paused)" : ""}
-            {truncated && " · Daftar record dipotong, perbaiki pencarian"}
+            {t("web.dns.zoneStatus", {
+              status: `${zone.status}${zone.paused ? ` (${t("web.dns.paused")})` : ""}`,
+            })}
+            {truncated && ` · ${t("web.dns.truncated")}`}
           </p>
         )}
 
@@ -632,8 +650,11 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
           <CardContent className="ql-model-table-content">
             <DataTable
               columns={recordColumns}
-              rows={records.map(toRow)}
+              rows={records.map((record) => toRow(record, t))}
               rowKey="id"
+              actionsLabel={t("web.common.actions")}
+              yesLabel={t("web.common.yes")}
+              noLabel={t("web.common.no")}
               onRowClick={
                 canOperate && writable
                   ? (row) => {
@@ -644,8 +665,8 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
               }
               emptyMessage={
                 zone
-                  ? "Tidak ada record yang cocok dengan pencarian ini."
-                  : "Pilih zone di panel kiri untuk melihat record."
+                  ? t("web.dns.emptyRecords")
+                  : t("web.dns.selectZone")
               }
               renderActions={
                 canOperate && zone
@@ -660,12 +681,12 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                             disabled={!writable || record.managed}
                             onClick={() => openEditor(record)}
                           >
-                            Edit
+                            {t("web.dns.edit")}
                           </Button>
                           <Button
                             variant="danger"
                             size="icon"
-                            aria-label={`Hapus ${record.name}`}
+                            aria-label={t("web.dns.deleteRecord", { name: record.name })}
                             disabled={!writable || record.managed}
                             onClick={() => {
                               setDeleteTarget(record);
@@ -687,35 +708,40 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
         {audit && (
           <Card className="mt-5">
             <CardHeader>
-              <div className="ql-eyebrow">RIWAYAT AKSI</div>
+              <div className="ql-eyebrow">{t("web.dns.auditEyebrow")}</div>
               <h2 className="mt-1 text-sm font-semibold">
-                Aksi terbaru untuk {connector?.label ?? "connector ini"}
+                {t("web.dns.auditTitle", {
+                  connector: connector?.label ?? t("web.dns.connector"),
+                })}
               </h2>
             </CardHeader>
             <CardContent className="ql-model-table-content">
               <DataTable
                 columns={auditColumns}
-                rows={audit.map(toAuditRow)}
+                rows={audit.map((entry) => toAuditRow(entry, locale))}
                 rowKey="id"
-                emptyMessage="Belum ada aksi tercatat."
+                actionsLabel={t("web.common.actions")}
+                yesLabel={t("web.common.yes")}
+                noLabel={t("web.common.no")}
+                emptyMessage={t("web.dns.auditEmpty")}
               />
             </CardContent>
           </Card>
         )}
 
         {draft && (
-          <section className="ql-model-editor" aria-label="Form record DNS">
+          <section className="ql-model-editor" aria-label={t("web.dns.recordForm")}>
             <div className="ql-model-editor__header">
               <div>
                 <div className="ql-eyebrow">
-                  {draft.id ? "EDIT RECORD" : "RECORD BARU"}
+                  {draft.id ? t("web.dns.editRecord") : t("web.dns.newRecordLabel")}
                 </div>
                 <h2>{zone?.name}</h2>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="Tutup form"
+                aria-label={t("web.dns.closeForm")}
                 onClick={() => setDraft(null)}
               >
                 <X size={18} />
@@ -725,7 +751,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
               className="ql-model-editor__form"
               onSubmit={(event) => void saveRecord(event)}
             >
-              <FormField label="Nama record" htmlFor="record-name">
+              <FormField label={t("web.dns.name")} htmlFor="record-name">
                 <Input
                   id="record-name"
                   required
@@ -737,7 +763,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                   placeholder={zone?.name ?? "api.example.com"}
                 />
               </FormField>
-              <FormField label="Tipe" htmlFor="record-type">
+              <FormField label={t("web.dns.type")} htmlFor="record-type">
                 <Select
                   id="record-type"
                   required
@@ -760,7 +786,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                   ))}
                 </Select>
               </FormField>
-              <FormField label="Content" htmlFor="record-content">
+              <FormField label={t("web.dns.content")} htmlFor="record-content">
                 <Input
                   id="record-content"
                   required
@@ -769,10 +795,10 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                   onChange={(event) =>
                     setDraft({ ...draft, content: event.target.value })
                   }
-                  placeholder="mis. 203.0.113.10"
+                  placeholder={t("web.dns.contentPlaceholder")}
                 />
               </FormField>
-              <FormField label="TTL (detik, 1 = Auto)" htmlFor="record-ttl">
+              <FormField label={t("web.dns.ttl")} htmlFor="record-ttl">
                 <Input
                   id="record-ttl"
                   type="number"
@@ -800,9 +826,11 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                     })
                   }
                 />
-                Proxied (hanya {proxiableTypes.join(", ") || "tidak ada"})
+                {t("web.dns.proxied", {
+                  types: proxiableTypes.join(", ") || t("web.dns.none"),
+                })}
               </label>
-              <FormField label="Catatan (opsional)" htmlFor="record-comment">
+              <FormField label={t("web.dns.comment")} htmlFor="record-comment">
                 <Input
                   id="record-comment"
                   maxLength={500}
@@ -810,14 +838,14 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                   onChange={(event) =>
                     setDraft({ ...draft, comment: event.target.value })
                   }
-                  placeholder="Menjelaskan record ini untuk siapa pun yang membuka"
+                  placeholder={t("web.dns.commentPlaceholder")}
                 />
               </FormField>
               {!writable && (
                 <Alert variant="error">
                   {connector?.enabled
-                    ? "Connector ini read-only; MoonWitness menolak mutasi."
-                    : "Connector nonaktif. Aktifkan dulu di halaman connector."}
+                    ? t("web.dns.notWritable")
+                    : t("web.dns.activateConnector")}
                 </Alert>
               )}
               <div className="flex justify-end gap-2 pt-1">
@@ -826,15 +854,11 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                   variant="ghost"
                   onClick={() => setDraft(null)}
                 >
-                  Tutup
+                  {t("web.dns.close")}
                 </Button>
                 <Button type="submit" disabled={saving || !writable}>
                   <Save size={15} />
-                  {saving
-                    ? "Menyimpan..."
-                    : draft.id
-                      ? "Simpan perubahan"
-                      : "Buat record"}
+                  {dnsButtonLabel}
                 </Button>
               </div>
             </form>
@@ -845,15 +869,15 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
           <Card className="mt-6">
             <CardContent>
               <h2 className="text-lg font-semibold">
-                Hapus {deleteTarget.name}?
+                {t("web.dns.deleteRecord", { name: deleteTarget.name })}
               </h2>
               <p className="mt-2 text-sm leading-6 text-stone-400">
-                Record ini hilang dari Cloudflare, bukan hanya dari cermin. Ketik{" "}
+                {t("web.dns.deleteDescription")}{" "}
                 <span className="text-[#d7ff63]">{deleteTarget.name}</span> persis
                 untuk mengonfirmasi.
               </p>
               <div className="mt-4 max-w-md">
-                <FormField label="Konfirmasi nama" htmlFor="record-delete-confirm">
+                <FormField label={t("web.dns.confirmName")} htmlFor="record-delete-confirm">
                   <Input
                     id="record-delete-confirm"
                     value={confirmName}
@@ -870,7 +894,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                     setConfirmName("");
                   }}
                 >
-                  Batal
+                  {t("web.connectors.cancel")}
                 </Button>
                 <Button
                   variant="danger"
@@ -882,7 +906,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                   onClick={() => void confirmDeleteRecord()}
                 >
                   <Trash2 size={15} />
-                  Hapus record
+                  {t("web.dns.deleteAction")}
                 </Button>
               </div>
             </CardContent>

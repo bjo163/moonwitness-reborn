@@ -13,5 +13,8 @@
     "build": "tsc -p tsconfig.json",
     "test": "tsx --test src/index.test.ts src/openai-compatible-provider.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@moonwitness/types": "workspace:*"
   }
 }

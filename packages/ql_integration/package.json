@@ -22,6 +22,10 @@
     "./services/field-validators": {
       "types": "./dist/services/field-validators.d.ts",
       "import": "./dist/services/field-validators.js"
+    },
+    "./services/connector-vocabulary": {
+      "types": "./dist/services/connector-vocabulary.d.ts",
+      "import": "./dist/services/connector-vocabulary.js"
     }
   },
   "scripts": {
@@ -30,6 +34,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@moonwitness/types": "workspace:*",
     "ql_orm": "workspace:*"
   }
 }

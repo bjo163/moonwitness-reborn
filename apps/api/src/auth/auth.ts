@@ -16,10 +16,6 @@ const scrypt = promisify(callbackScrypt);
 const SESSION_COOKIE = "ql_session";
 const SESSION_LIFETIME_SECONDS = 60 * 60 * 24 * 30;
 const PASSWORD_BYTES = 64;
-const TOKEN_BYTES = 32;
-
-export const VERIFICATION_TTL_SECONDS = 60 * 30;
-export const VERIFICATION_RESEND_COOLDOWN_SECONDS = 60;
 
 export class AuthenticationError extends Error {
   constructor(
@@ -31,7 +27,13 @@ export class AuthenticationError extends Error {
 }
 
 export function publicUser(user: User): PublicUser {
-  return { id: user.id, name: user.name, email: user.email, role: user.role };
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    preferredLocale: user.preferredLocale,
+  };
 }
 
 export function normalizeEmail(email: string): string {
@@ -95,25 +97,6 @@ export async function verifyPassword(
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
-}
-
-export function hashVerificationToken(token: string): string {
-  return hashToken(token);
-}
-
-/** Untrusted input first, so a long token never reaches `hashToken`. */
-export function normalizeVerificationToken(token: unknown): string | undefined {
-  return typeof token === "string" && /^[A-Za-z0-9_-]{40,50}$/.test(token)
-    ? token
-    : undefined;
-}
-
-export function generateVerificationToken(): {
-  token: string;
-  tokenHash: string;
-} {
-  const token = randomBytes(TOKEN_BYTES).toString("base64url");
-  return { token, tokenHash: hashToken(token) };
 }
 
 function parseCookies(request: IncomingMessage): Map<string, string> {

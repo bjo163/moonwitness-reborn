@@ -50,7 +50,7 @@ export interface ConnectorContext {
   orm: QlOrm;
   ownerId: string;
   /** Resolves the caller's credential from the OS store, for this request only. */
-  resolveToken: () => Promise<ResolvedCredential>;
+  resolveToken(): Promise<ResolvedCredential>;
   fetcher: typeof fetch;
 }
 

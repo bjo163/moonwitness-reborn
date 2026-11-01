@@ -21,6 +21,26 @@ export const resUsers: QlModelDefinition = {
           ? undefined
           : "Field 'role' must be a known role code.",
     },
+    setup_claim: {
+      type: "char",
+      unique: true,
+      private: true,
+      maxLength: 32,
+      validator: (value) =>
+        value === "initial_super_admin"
+          ? undefined
+          : "Field 'setup_claim' is invalid.",
+    },
+    preferred_locale: {
+      type: "char",
+      required: true,
+      default: "id",
+      maxLength: 2,
+      validator: (value) =>
+        value === "id" || value === "en"
+          ? undefined
+          : "Field 'preferred_locale' must be 'id' or 'en'.",
+    },
     created_at: { type: "datetime", required: true },
   },
 };

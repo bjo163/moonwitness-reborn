@@ -1,0 +1,221 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200" style="display:block;max-width:100%;height:auto;margin:0 auto" role="img" aria-labelledby="title description">
+  <title id="title">Concept board A-L-L-A-H</title>
+  <desc id="description">A concept board for Accountable Life, Learning and Action Hub, with a visual identity and an illustrative dashboard for personal and community accountability.</desc>
+  <defs>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#203d38"/>
+      <stop offset="1" stop-color="#142622"/>
+    </linearGradient>
+    <linearGradient id="progress" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#afd079"/>
+      <stop offset="1" stop-color="#78bca3"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#21312b" flood-opacity=".12"/>
+    </filter>
+    <style>
+      .sans { font-family: Inter, "Segoe UI", Arial, sans-serif; }
+      .serif { font-family: Georgia, "Times New Roman", serif; }
+      .ink { fill: #17231f; }
+      .muted { fill: #718078; }
+      .light { fill: #f7f5ef; }
+      .soft { fill: #b7c3ba; }
+      .tiny { font-size: 11px; letter-spacing: 1.7px; font-weight: 700; }
+      .label { font-size: 12px; font-weight: 600; }
+      .body { font-size: 14px; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1200" fill="#f1eee5"/>
+  <circle cx="92" cy="50" r="3" fill="#91aa69"/>
+  <text x="108" y="55" class="sans tiny" fill="#62766b">EARLY VISUAL CONCEPT  /  01 NOV 2026</text>
+  <text x="1490" y="55" text-anchor="end" class="sans tiny" fill="#62766b">PRODUCT DIRECTION · NOT FINAL</text>
+
+  <g transform="translate(88 138)">
+    <g transform="translate(2 2)">
+      <path d="M17 25 C27 5 54 5 64 25 C74 45 100 45 111 25" fill="none" stroke="#789b78" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="17" cy="25" r="5" fill="#789b78"/>
+      <circle cx="64" cy="25" r="5" fill="#c59b5d"/>
+      <circle cx="111" cy="25" r="5" fill="#789b78"/>
+      <path d="M17 25 C27 45 54 45 64 25 C74 5 100 5 111 25" fill="none" stroke="#789b78" stroke-width="2.5" stroke-linecap="round" opacity=".58"/>
+    </g>
+    <text x="0" y="90" class="sans" font-size="48" font-weight="650" letter-spacing="-2.7" fill="#17231f">A-L-L-A-H</text>
+    <text x="2" y="119" class="sans" font-size="13" font-weight="650" letter-spacing="2.1" fill="#61756a">ACCOUNTABLE LIFE, LEARNING &amp; ACTION HUB</text>
+
+    <text x="0" y="206" class="serif ink" font-size="46" font-weight="400" letter-spacing="-1.7">
+      <tspan x="0" dy="0">Niat jadi langkah.</tspan>
+      <tspan x="0" dy="53">Langkah jadi</tspan>
+      <tspan x="0" dy="53">tanggung jawab.</tspan>
+    </text>
+    <text x="2" y="393" class="sans" font-size="16" fill="#68766e">
+      <tspan x="2" dy="0">Ruang untuk bertumbuh, belajar, lalu meninjau</tspan>
+      <tspan x="2" dy="25">dampak tindakan—sendiri maupun bersama.</tspan>
+    </text>
+
+    <g transform="translate(0 476)">
+      <text x="0" y="0" class="sans tiny" fill="#728077">ARAH PENGALAMAN</text>
+      <path d="M5 32 V154" fill="none" stroke="#c6cec2" stroke-width="1.5"/>
+      <circle cx="5" cy="35" r="4" fill="#779877"/>
+      <circle cx="5" cy="94" r="4" fill="#c59b5d"/>
+      <circle cx="5" cy="153" r="4" fill="#779877"/>
+      <text x="24" y="40" class="sans body ink" font-weight="600">Pilih komitmen</text>
+      <text x="24" y="59" class="sans" font-size="12" fill="#7b877f">tujuan yang bermakna dan jelas</text>
+      <text x="24" y="99" class="sans body ink" font-weight="600">Belajar &amp; bertindak</text>
+      <text x="24" y="118" class="sans" font-size="12" fill="#7b877f">langkah kecil, dengan konteks</text>
+      <text x="24" y="158" class="sans body ink" font-weight="600">Tinjau dengan jujur</text>
+      <text x="24" y="177" class="sans" font-size="12" fill="#7b877f">progres, bukti, dan hal yang belum pasti</text>
+    </g>
+
+    <g transform="translate(0 723)">
+      <text x="0" y="0" class="sans tiny" fill="#728077">PALET KONSEP</text>
+      <rect x="0" y="20" width="54" height="36" rx="10" fill="#17231f"/>
+      <rect x="64" y="20" width="54" height="36" rx="10" fill="#f7f5ef" stroke="#d8d8ca"/>
+      <rect x="128" y="20" width="54" height="36" rx="10" fill="#91aa69"/>
+      <rect x="192" y="20" width="54" height="36" rx="10" fill="#78a99a"/>
+      <rect x="256" y="20" width="54" height="36" rx="10" fill="#c59b5d"/>
+      <text x="0" y="78" class="sans" font-size="11" fill="#78847c">INK</text>
+      <text x="64" y="78" class="sans" font-size="11" fill="#78847c">PAPER</text>
+      <text x="128" y="78" class="sans" font-size="11" fill="#78847c">GROWTH</text>
+      <text x="192" y="78" class="sans" font-size="11" fill="#78847c">TRUST</text>
+      <text x="256" y="78" class="sans" font-size="11" fill="#78847c">REVIEW</text>
+    </g>
+
+    <g transform="translate(0 862)">
+      <text x="0" y="0" class="sans tiny" fill="#728077">RASA VISUAL</text>
+      <text x="0" y="29" class="serif ink" font-size="23">Hangat, terukur, manusiawi.</text>
+      <text x="0" y="57" class="sans" font-size="12" fill="#78847c">Editorial yang tenang × alat kerja yang jelas</text>
+    </g>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="505" y="112" width="1025" height="972" rx="28" fill="#fffefa"/>
+    <path d="M533 112 H1502 Q1530 112 1530 140 V1084 H505 V140 Q505 112 533 112Z" fill="#fffefa"/>
+  </g>
+
+  <g transform="translate(505 112)">
+    <path d="M28 0 H226 V972 H28 Q0 972 0 944 V28 Q0 0 28 0Z" fill="#182722"/>
+    <g transform="translate(25 28)">
+      <path d="M2 14 C8 2 23 2 29 14 C35 26 50 26 56 14" fill="none" stroke="#a9c17b" stroke-width="1.7" stroke-linecap="round"/>
+      <circle cx="2" cy="14" r="3" fill="#a9c17b"/>
+      <circle cx="29" cy="14" r="3" fill="#d0aa6d"/>
+      <circle cx="56" cy="14" r="3" fill="#a9c17b"/>
+      <text x="68" y="19" class="sans" font-size="17" font-weight="700" letter-spacing="-.5" fill="#f4f2e9">A-L-L-A-H</text>
+    </g>
+    <text x="26" y="94" class="sans tiny" fill="#91a198">RUANG KERJA</text>
+
+    <g class="sans" font-size="13">
+      <rect x="14" y="111" width="184" height="40" rx="10" fill="#30453b"/>
+      <circle cx="35" cy="131" r="5" fill="#b5cf8b"/>
+      <text x="51" y="135" fill="#f4f4eb" font-weight="600">Ringkasan</text>
+      <circle cx="35" cy="180" r="5" fill="none" stroke="#92a198" stroke-width="1.5"/>
+      <text x="51" y="184" fill="#c4cec7">Komitmen</text>
+      <path d="M31 221 h8 m-4 -4 v8" stroke="#92a198" stroke-width="1.5" stroke-linecap="round"/>
+      <text x="51" y="225" fill="#c4cec7">Belajar</text>
+      <circle cx="35" cy="270" r="6" fill="none" stroke="#92a198" stroke-width="1.4"/>
+      <circle cx="35" cy="270" r="2" fill="#92a198"/>
+      <text x="51" y="274" fill="#c4cec7">Tinjauan</text>
+      <path d="M29 319 h12 M35 313 v12" stroke="#92a198" stroke-width="1.5" stroke-linecap="round"/>
+      <text x="51" y="323" fill="#c4cec7">Komunitas</text>
+    </g>
+
+    <line x1="24" y1="374" x2="202" y2="374" stroke="#3b4e45"/>
+    <text x="26" y="404" class="sans tiny" fill="#91a198">KONTEKS</text>
+    <rect x="24" y="420" width="177" height="48" rx="11" fill="#263930" stroke="#40574a"/>
+    <circle cx="43" cy="444" r="7" fill="#c1ccaa"/>
+    <text x="58" y="441" class="sans" font-size="11" fill="#91a198">AKTIF</text>
+    <text x="58" y="456" class="sans" font-size="12" font-weight="600" fill="#f1f0e8">Pribadi</text>
+    <text x="186" y="450" class="sans" font-size="16" fill="#91a198">⌄</text>
+    <text x="27" y="512" class="sans" font-size="11" fill="#91a198">Beralih ke ruang komunitas</text>
+
+    <g transform="translate(24 875)">
+      <circle cx="20" cy="20" r="19" fill="#40594b"/>
+      <text x="20" y="25" text-anchor="middle" class="sans" font-size="12" font-weight="700" fill="#f7f5ef">N</text>
+      <text x="50" y="17" class="sans" font-size="12" font-weight="600" fill="#f2f1e9">Nadia A.</text>
+      <text x="50" y="34" class="sans" font-size="10" fill="#9ca9a0">Ruang pribadi</text>
+      <circle cx="171" cy="20" r="2" fill="#9ca9a0"/>
+      <circle cx="179" cy="20" r="2" fill="#9ca9a0"/>
+      <circle cx="187" cy="20" r="2" fill="#9ca9a0"/>
+    </g>
+  </g>
+
+  <g transform="translate(731 112)">
+    <rect x="0" y="0" width="799" height="64" rx="0" fill="#fffefa"/>
+    <text x="35" y="39" class="sans" font-size="12" fill="#859188">RINGKASAN  /  MINGGU INI</text>
+    <rect x="641" y="18" width="124" height="30" rx="15" fill="#f2f2e9"/>
+    <circle cx="658" cy="33" r="4" fill="#789b78"/>
+    <text x="670" y="37" class="sans" font-size="10" font-weight="700" fill="#586b5f">DATA CONTOH</text>
+    <line x1="0" y1="64" x2="799" y2="64" stroke="#eeeee5"/>
+
+    <text x="35" y="112" class="sans" font-size="12" fill="#77857c">SENIN, 2 NOVEMBER</text>
+    <text x="35" y="154" class="serif ink" font-size="31" letter-spacing="-.7">Selamat pagi, Nadia.</text>
+    <text x="35" y="181" class="sans" font-size="13" fill="#7b887f">Sempatkan meninjau satu komitmen hari ini.</text>
+    <rect x="35" y="205" width="730" height="1" fill="#e9ebe3"/>
+
+    <rect x="35" y="229" width="468" height="225" rx="18" fill="url(#hero)"/>
+    <text x="59" y="262" class="sans tiny" fill="#b9c9ad">TINJAUAN PEKAN INI</text>
+    <text x="59" y="312" class="serif" font-size="31" fill="#faf8ef">4 dari 5 komitmen</text>
+    <text x="59" y="338" class="sans" font-size="13" fill="#c3cec4">sudah ditinjau dengan jujur</text>
+    <rect x="59" y="362" width="420" height="8" rx="4" fill="#40564a"/>
+    <rect x="59" y="362" width="336" height="8" rx="4" fill="url(#progress)"/>
+    <text x="59" y="400" class="sans" font-size="11" fill="#a9b9ae">1 komitmen menunggu refleksi</text>
+    <rect x="59" y="415" width="143" height="25" rx="12.5" fill="#a9c17b"/>
+    <text x="130.5" y="432" text-anchor="middle" class="sans" font-size="10" font-weight="700" fill="#203228">BUKA TINJAUAN  ↗</text>
+
+    <rect x="519" y="229" width="246" height="225" rx="18" fill="#f4f3eb" stroke="#e8e9df"/>
+    <text x="541" y="261" class="sans tiny" fill="#7c8b7f">RITME MINGGUAN</text>
+    <text x="541" y="298" class="serif ink" font-size="24">Konsisten</text>
+    <text x="541" y="321" class="sans" font-size="11" fill="#8a968e">aktivitas yang ditinjau</text>
+    <line x1="541" y1="397" x2="743" y2="397" stroke="#dedfd5"/>
+    <rect x="550" y="365" width="16" height="32" rx="5" fill="#92aa79"/>
+    <rect x="579" y="345" width="16" height="52" rx="5" fill="#92aa79"/>
+    <rect x="608" y="357" width="16" height="40" rx="5" fill="#92aa79"/>
+    <rect x="637" y="332" width="16" height="65" rx="5" fill="#789b78"/>
+    <rect x="666" y="351" width="16" height="46" rx="5" fill="#92aa79"/>
+    <rect x="695" y="340" width="16" height="57" rx="5" fill="#92aa79"/>
+    <rect x="724" y="320" width="16" height="77" rx="5" fill="#c59b5d"/>
+    <text x="558" y="416" text-anchor="middle" class="sans" font-size="9" fill="#8a968e">S</text>
+    <text x="587" y="416" text-anchor="middle" class="sans" font-size="9" fill="#8a968e">S</text>
+    <text x="616" y="416" text-anchor="middle" class="sans" font-size="9" fill="#8a968e">R</text>
+    <text x="645" y="416" text-anchor="middle" class="sans" font-size="9" fill="#8a968e">K</text>
+    <text x="674" y="416" text-anchor="middle" class="sans" font-size="9" fill="#8a968e">J</text>
+    <text x="703" y="416" text-anchor="middle" class="sans" font-size="9" fill="#8a968e">S</text>
+    <text x="732" y="416" text-anchor="middle" class="sans" font-size="9" fill="#8a968e">M</text>
+
+    <text x="35" y="502" class="sans" font-size="16" font-weight="650" fill="#233129">Yang perlu ditinjau</text>
+    <text x="765" y="502" text-anchor="end" class="sans" font-size="11" font-weight="600" fill="#7b8a7f">LIHAT SEMUA  →</text>
+
+    <rect x="35" y="522" width="730" height="75" rx="14" fill="#fffefa" stroke="#e7e9e1"/>
+    <rect x="50" y="538" width="42" height="42" rx="12" fill="#e9eee1"/>
+    <path d="M63 559 l6 6 12-14" fill="none" stroke="#6b8c68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="108" y="551" class="sans" font-size="12" font-weight="650" fill="#344239">Belajar 20 menit tanpa gangguan</text>
+    <text x="108" y="571" class="sans" font-size="11" fill="#89948d">Komitmen pribadi  ·  Terakhir ditinjau kemarin</text>
+    <rect x="663" y="545" width="83" height="27" rx="13.5" fill="#edf1e8"/>
+    <text x="704.5" y="563" text-anchor="middle" class="sans" font-size="10" font-weight="650" fill="#668260">PERLU TINJAU</text>
+
+    <rect x="35" y="610" width="730" height="75" rx="14" fill="#fffefa" stroke="#e7e9e1"/>
+    <rect x="50" y="626" width="42" height="42" rx="12" fill="#f1eadb"/>
+    <circle cx="71" cy="647" r="9" fill="none" stroke="#b48b50" stroke-width="1.7"/>
+    <path d="M71 641 v7 l5 3" fill="none" stroke="#b48b50" stroke-width="1.7" stroke-linecap="round"/>
+    <text x="108" y="639" class="sans" font-size="12" font-weight="650" fill="#344239">Catatan belajar: mendengar aktif</text>
+    <text x="108" y="659" class="sans" font-size="11" fill="#89948d">Ruang komunitas  ·  3 anggota menambahkan refleksi</text>
+    <rect x="672" y="633" width="74" height="27" rx="13.5" fill="#f5eee1"/>
+    <text x="709" y="651" text-anchor="middle" class="sans" font-size="10" font-weight="650" fill="#987443">BERJALAN</text>
+
+    <rect x="35" y="698" width="730" height="145" rx="16" fill="#f5f4ed"/>
+    <text x="57" y="729" class="sans tiny" fill="#77857c">RUANG KOMUNITAS</text>
+    <text x="57" y="761" class="serif ink" font-size="22">Belajar bersama, tetap saling menjaga.</text>
+    <text x="57" y="786" class="sans" font-size="11" fill="#7f8b83">Tinjauan bersama memberi konteks—bukan skor untuk membandingkan orang.</text>
+    <circle cx="601" cy="811" r="13" fill="#829a79" stroke="#f5f4ed" stroke-width="3"/>
+    <circle cx="626" cy="811" r="13" fill="#c69d69" stroke="#f5f4ed" stroke-width="3"/>
+    <circle cx="651" cy="811" r="13" fill="#829a79" stroke="#f5f4ed" stroke-width="3"/>
+    <circle cx="676" cy="811" r="13" fill="#b8a99a" stroke="#f5f4ed" stroke-width="3"/>
+    <text x="710" y="815" class="sans" font-size="10" fill="#77857c">+8</text>
+
+    <line x1="35" y1="875" x2="765" y2="875" stroke="#ecece4"/>
+    <text x="35" y="912" class="sans" font-size="10" fill="#98a199">Perubahan dan refleksi tetap milik pengguna. Tidak ada skor moral.</text>
+    <text x="765" y="912" text-anchor="end" class="sans" font-size="10" fill="#98a199">Bantuan  ·  Privasi  ·  Pengaturan</text>
+  </g>
+
+  <text x="88" y="1147" class="sans" font-size="11" fill="#718078">A-L-L-A-H · Accountable Life, Learning &amp; Action Hub</text>
+  <text x="1512" y="1147" text-anchor="end" class="sans" font-size="11" fill="#718078">Konsep visual · isi layar ilustratif · belum menjadi spesifikasi produk</text>
+</svg>

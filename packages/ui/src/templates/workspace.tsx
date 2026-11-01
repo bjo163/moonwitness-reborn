@@ -7,7 +7,8 @@ export interface WorkspaceTemplateProps {
   children: ReactNode;
   footer?: ReactNode;
   sidebarOpen: boolean;
-  onCloseSidebar: () => void;
+  onCloseSidebar(): void;
+  closeLabel: string;
 }
 
 export function WorkspaceTemplate({
@@ -17,12 +18,13 @@ export function WorkspaceTemplate({
   footer,
   sidebarOpen,
   onCloseSidebar,
+  closeLabel,
 }: WorkspaceTemplateProps) {
   return (
     <main className="ql-hud-app ql-workspace">
       {sidebarOpen && (
         <button
-          aria-label="Tutup menu"
+          aria-label={closeLabel}
           className="ql-workspace__backdrop"
           onClick={onCloseSidebar}
         />

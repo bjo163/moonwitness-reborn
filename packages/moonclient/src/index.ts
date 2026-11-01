@@ -1,5 +1,22 @@
+import type {
+  ChatRole,
+  ConnectorTokenSource,
+  ConnectorVerifyStatus,
+  FieldType,
+  RecordValues,
+  UiLocale,
+  ViewType,
+} from "@moonwitness/types";
+
+export type {
+  ConnectorTokenSource,
+  ConnectorVerifyStatus,
+  UiLocale,
+} from "@moonwitness/types";
+
 export interface ApiErrorBody {
   error: string;
+  code?: string;
 }
 
 export interface AuthUserDto {
@@ -8,12 +25,20 @@ export interface AuthUserDto {
   email: string;
   role: string;
   groups: string[];
+  preferredLocale: UiLocale;
 }
 
 export interface RegisterRequestDto {
   name: string;
   email: string;
   password: string;
+  preferredLocale?: UiLocale;
+}
+
+export type InitialSetupRequestDto = RegisterRequestDto;
+
+export interface InitialSetupStatusDto {
+  required: boolean;
 }
 
 export interface LoginRequestDto {
@@ -21,26 +46,73 @@ export interface LoginRequestDto {
   password: string;
 }
 
+export interface UpdatePreferredLocaleRequestDto {
+  preferredLocale: UiLocale;
+}
+
+export interface UiLanguageDto {
+  code: UiLocale;
+  label: string;
+  direction: "ltr" | "rtl";
+  isDefault: boolean;
+}
+
+export interface TranslationCatalogItemDto {
+  namespace: string;
+  key: string;
+  value: string;
+  pluralForms?: Partial<Record<TranslationPluralCategoryDto, string>>;
+}
+
+export type TranslationPluralCategoryDto = "one" | "other";
+
+export interface TranslationCatalogResponseDto {
+  locale: UiLocale;
+  entries: TranslationCatalogItemDto[];
+}
+
+export type TranslationStateDto = "draft" | "published";
+export type TranslationDraftSourceDto = "manual" | "import" | "ai" | "seed";
+
+export interface TranslationAdminItemDto extends TranslationCatalogItemDto {
+  id: string;
+  locale: UiLocale;
+  sourceText: string;
+  sourcePluralText?: string;
+  translatedPluralTexts?: Partial<
+    Record<TranslationPluralCategoryDto, string>
+  >;
+  context: string;
+  status: TranslationStateDto;
+  draftSource: TranslationDraftSourceDto;
+  updatedBy: string;
+  updatedAt: string;
+}
+
+export interface TranslationDraftRequestDto {
+  locale: UiLocale;
+  namespace: string;
+  key: string;
+  sourceText: string;
+  translatedText: string;
+  sourcePluralText?: string;
+  translatedPluralTexts?: Partial<
+    Record<TranslationPluralCategoryDto, string>
+  >;
+  context?: string;
+}
+
+export interface TranslationAiDraftRequestDto {
+  locale: UiLocale;
+  namespace: string;
+  key: string;
+  sourceText: string;
+  sourcePluralText?: string;
+  context?: string;
+}
+
 export interface AuthResponseDto {
   user: AuthUserDto;
-}
-
-export interface ForgotPasswordRequestDto {
-  email: string;
-}
-
-/** Always the same shape, so a caller cannot learn whether an address exists. */
-export interface ForgotPasswordResponseDto {
-  sent: boolean;
-}
-
-export interface ResetPasswordRequestDto {
-  token: string;
-  password: string;
-}
-
-export interface ResetPasswordResponseDto {
-  reset: boolean;
 }
 
 export interface ConversationDto {
@@ -64,7 +136,7 @@ export interface CreateConversationRequestDto {
 
 export interface ChatMessageDto {
   id: string;
-  role: "user" | "assistant";
+  role: ChatRole;
   content: string;
   createdAt: string;
 }
@@ -80,21 +152,28 @@ export interface ChatResponseDto {
 }
 
 export interface ModelFieldDto {
-  type: "char" | "text" | "integer" | "boolean" | "datetime";
+  type: FieldType;
+  labelKey: string;
+  helpKey?: string;
+  selectionKeys?: Record<string, string>;
   required?: boolean;
   maxLength?: number;
 }
 
 export interface ModelViewDto {
   name: string;
+  labelKey: string;
+  helpKey?: string;
   model: string;
-  type: "list" | "form";
+  type: ViewType;
   fields: string[];
 }
 
 export interface ModelMetadataDto {
   name: string;
+  labelKey: string;
   description: string;
+  descriptionKey: string;
   fields: Record<string, ModelFieldDto>;
   views: ModelViewDto[];
   permissions: {
@@ -104,7 +183,7 @@ export interface ModelMetadataDto {
   };
 }
 
-export type ModelRecordDto = Record<string, string | number | boolean | null>;
+export type ModelRecordDto = RecordValues;
 
 export interface ModelRecordsResponseDto {
   records: ModelRecordDto[];
@@ -156,7 +235,9 @@ export interface AdminUserListResponseDto {
 
 export interface RoleDto {
   code: string;
+  nameKey: string;
   name: string;
+  descriptionKey: string;
   description: string;
   groups: string[];
   assignable: boolean;
@@ -170,13 +251,12 @@ export interface UpdateUserRoleRequestDto {
   role: string;
 }
 
-export type ConnectorTokenSource = "unresolved" | "env" | "keychain" | "config_file";
-export type ConnectorVerifyStatus = "unverified" | "ok" | "invalid" | "network" | "missing";
-
 export interface ConnectorKindDto {
   kind: string;
+  labelKey: string;
   label: string;
   /** Where the app looks for this service's credential; displayed, never submitted. */
+  credentialHelpKey: string;
   credentialHelp: string;
   helpUrl: string;
   capabilities: string[];
@@ -314,6 +394,297 @@ export interface AuditListResponseDto {
   entries: IntegrationAuditDto[];
 }
 
+// ---------------------------------------------------------------------------
+// `ql_workflow` — CAB approval queue + PM tracker contracts (MW-ADR-017).
+//
+// Field names match the addon's model shape exactly (`snake_case`) because
+// the workflow DTO mirrors the record the QlOrm service path returns. Private
+// fields (`owner_id`, `actor_id`) are stripped server-side before they reach
+// this layer — they intentionally have no key here so any client drift is a
+// compile error rather than a runtime leak.
+// ---------------------------------------------------------------------------
+
+/**
+ * Legal values for `workflow.change.state`. Mirrors the addon's
+ * `REVIEW_STATES` vocabulary verbatim (see
+ * `docs/workflows/WORKFLOW_AND_PUBLISHING_SPECIFICATION.md:8-12`).
+ */
+export type WorkflowStateDto =
+  | "draft"
+  | "submitted"
+  | "in_review"
+  | "changes_requested"
+  | "approved"
+  | "rejected"
+  | "withdrawn"
+  | "superseded"
+  | "published";
+
+/** Legal values for `workflow.transition.action`. */
+export type TransitionActionDto =
+  | "submit"
+  | "start_review"
+  | "request_changes"
+  | "approve"
+  | "reject"
+  | "withdraw"
+  | "publish"
+  | "supersede";
+
+export interface WorkflowChangeDto {
+  id: string;
+  title: string;
+  body: string;
+  subject_type: string;
+  subject_id: string;
+  state: WorkflowStateDto;
+  urgency: string;
+  revision: number;
+  /** Stored as epoch-ms by QlOrm datetime fields. */
+  created_at: number;
+  updated_at: number;
+}
+
+export interface WorkflowTransitionDto {
+  id: string;
+  change_id: string;
+  from_state: WorkflowStateDto;
+  to_state: WorkflowStateDto;
+  action: TransitionActionDto;
+  reason: string;
+  revision: number;
+  created_at: number;
+}
+
+export interface TransitionRequestDto {
+  action: TransitionActionDto;
+  reason?: string;
+}
+
+export interface TransitionResponseDto {
+  change: WorkflowChangeDto;
+  transition: WorkflowTransitionDto;
+}
+
+export interface WorkflowChangeListResponseDto {
+  changes: WorkflowChangeDto[];
+}
+
+export interface WorkflowChangeResponseDto {
+  change: WorkflowChangeDto;
+}
+
+export interface WorkflowTransitionListResponseDto {
+  transitions: WorkflowTransitionDto[];
+}
+
+export type ProjectTaskStateDto =
+  | "done"
+  | "in_progress"
+  | "proposed"
+  | "blocked"
+  | "pending";
+
+export interface ProjectProgressSummaryDto {
+  total: number;
+  readyCount: number;
+  states: Record<ProjectTaskStateDto, number>;
+}
+
+export interface ProjectTaskDto {
+  id: string;
+  title: string;
+  section: string;
+  state: ProjectTaskStateDto;
+  statusLabel: string;
+  owner: string;
+  dependsOn: string[];
+  acceptanceCriteria: string;
+  completedAt: string | null;
+}
+
+export interface ProjectTaskListResponseDto {
+  tasks: ProjectTaskDto[];
+  readyTaskIds: string[];
+}
+
+// ---------------------------------------------------------------------------
+// `ql_source` + `ql_corpus` contracts (MW-ADR-019 / workstream MW-0560).
+//
+// The kind/status vocabularies below are **re-declared** as local literal
+// unions rather than imported from `@moonwitness/types` or the addons —
+// the browser-boundary rule in `@moonwitness/eslint-config` bans `apps/web/**`
+// from touching `ql_*` at all, and `@moonwitness/types` has a proven 3-site
+// duplication threshold (MW-ADR-015) these two addons do not yet cross.
+//
+// Private fields (`owner_id`, `verified_by_id`, `license_evidence_ref`,
+// `actor_id`) are stripped server-side and have **no key here** so any
+// future client drift becomes a compile error rather than a runtime leak.
+// ---------------------------------------------------------------------------
+
+export type PassageKindDto =
+  | "revelation_verbatim"
+  | "translation"
+  | "tafsir"
+  | "reflection"
+  | "annotation"
+  | "lexical";
+
+export type CorpusStageDto =
+  | "staged"
+  | "validated"
+  | "reviewed"
+  | "approved"
+  | "published"
+  | "withdrawn"
+  | "quarantined";
+
+export type RightsStatusDto =
+  | "unknown"
+  | "under_review"
+  | "cleared"
+  | "restricted"
+  | "not_applicable";
+
+export type RightsActionDto =
+  | "import"
+  | "index"
+  | "display"
+  | "transform"
+  | "export"
+  | "publish";
+
+export type LifecycleStageDto =
+  | "discovered"
+  | "registered"
+  | "rights_checked"
+  | "ingest_staged"
+  | "validated"
+  | "mapped"
+  | "reviewed"
+  | "approved"
+  | "published"
+  | "rejected"
+  | "quarantined"
+  | "superseded"
+  | "withdrawn"
+  | "corrected";
+
+export interface CorpusWorkDto {
+  id: string;
+  canonical_id: string;
+  title: string;
+  work_kind: string;
+  primary_locale: string;
+  description: string;
+  updated_at: number;
+}
+
+export interface CorpusEditionDto {
+  id: string;
+  canonical_id: string;
+  work_id: string;
+  source_version_id: string;
+  rights_id: string;
+  edition_key: string;
+  authority: PassageKindDto;
+  locale: string;
+  publisher: string;
+  author_or_translator: string;
+  attribution_text: string;
+  revision: string;
+  imported_row_count: number;
+  materialized_row_count: number;
+  stage: CorpusStageDto;
+  updated_at: number;
+}
+
+/**
+ * A passage row carries its own `authority` (revelation vs. translation) AND
+ * a copy of the parent edition's `attribution_text`, `locale`, and `publisher`
+ * — MW-ADR-019 §(d) forbids a client from rendering text without its kind
+ * and attribution, so those fields are non-optional on every row.
+ */
+export interface CorpusPassageDto {
+  id: string;
+  locator: string;
+  surah: number;
+  ayah: number;
+  authority: PassageKindDto;
+  row_kind: string;
+  text: string;
+  text_checksum: string;
+  ordinal: number;
+  edition_id: string;
+  edition_authority: PassageKindDto;
+  edition_locale: string;
+  edition_publisher: string;
+  edition_attribution_text: string;
+}
+
+export interface CorpusSurahDto {
+  editionKey: string;
+  editionAuthority: PassageKindDto;
+  editionLocale: string;
+  surah: number;
+  passages: CorpusPassageDto[];
+}
+
+export interface CorpusEditionListResponseDto {
+  editions: CorpusEditionDto[];
+}
+
+export interface CorpusSurahResponseDto {
+  reading: CorpusSurahDto;
+}
+
+export interface CorpusVerseResponseDto {
+  passage: CorpusPassageDto;
+}
+
+export interface SourceArtifactDto {
+  id: string;
+  canonical_id: string;
+  title: string;
+  kind: string;
+  publisher: string;
+  repository: string;
+  branch: string;
+  commit_sha: string;
+  original_uri: string;
+  lifecycle_stage: LifecycleStageDto;
+  updated_at: number;
+}
+
+/**
+ * Public projection of `source.rights` — deliberately **excludes**
+ * `license_evidence_ref`, `verified_by_id`, and `owner_id` (all `private:true`
+ * in the model) and the free-form `basis_notes`. Use this to display a
+ * rights banner; the audit trail on `source.provenance` records who flipped
+ * a status and why, and only admins can read it via the generic
+ * `/models/source.provenance` path.
+ */
+export interface SourceRightsSummaryDto {
+  id: string;
+  version_id: string;
+  action: RightsActionDto;
+  rights_status: RightsStatusDto;
+  license_id: string;
+  attribution_required: boolean;
+  attribution_text: string;
+  territory: string;
+  term_ends_at: number;
+}
+
+export interface SourceArtifactListResponseDto {
+  artifacts: SourceArtifactDto[];
+}
+
+export interface SourceArtifactResponseDto {
+  artifact: SourceArtifactDto;
+  rights: SourceRightsSummaryDto[];
+}
+
 export interface MoonClientOptions {
   baseUrl?: string;
   fetcher?: typeof fetch;
@@ -325,11 +696,11 @@ export const apiRoutes = {
   health: "/health",
   auth: {
     me: "/auth/me",
+    preferences: "/auth/me/preferences",
+    setup: "/auth/setup",
     register: "/auth/register",
     login: "/auth/login",
     logout: "/auth/logout",
-    forgotPassword: "/auth/forgot-password",
-    resetPassword: "/auth/reset-password",
   },
   chat: "/chat",
   conversations: {
@@ -363,6 +734,34 @@ export const apiRoutes = {
       `/settings/connectors/${segment(id)}/zones/${segment(zoneId)}/records/${segment(recordId)}`,
     audit: (id: string) => `/settings/connectors/${segment(id)}/audit`,
   },
+  workflow: {
+    queue: "/workflow/queue",
+    collection: "/workflow/changes",
+    prefix: "/workflow/changes/",
+    item: (id: string) => `/workflow/changes/${segment(id)}`,
+    transition: (id: string) => `/workflow/changes/${segment(id)}/transition`,
+    transitions: (id: string) => `/workflow/changes/${segment(id)}/transitions`,
+  },
+  corpus: {
+    editions: "/corpus/editions",
+    prefix: "/corpus/",
+    edition: (key: string) => `/corpus/editions/${segment(key)}`,
+    surah: (key: string, surah: number) =>
+      `/corpus/editions/${segment(key)}/surahs/${segment(String(surah))}`,
+    verse: (key: string, surah: number, ayah: number) =>
+      `/corpus/editions/${segment(key)}/surahs/${segment(String(surah))}/verses/${segment(String(ayah))}`,
+  },
+  source: {
+    artifacts: "/source/artifacts",
+    prefix: "/source/",
+    item: (id: string) => `/source/artifacts/${segment(id)}`,
+    rights: (id: string) => `/source/artifacts/${segment(id)}/rights`,
+    provenance: (id: string) => `/source/artifacts/${segment(id)}/provenance`,
+  },
+  projectProgress: {
+    summary: "/project/progress/summary",
+    tasks: "/project/progress/tasks",
+  },
   admin: {
     users: {
       collection: "/admin/users",
@@ -374,6 +773,19 @@ export const apiRoutes = {
     roles: {
       collection: "/admin/roles",
     },
+    translations: {
+      collection: "/admin/translations",
+      item: (id: string) => `/admin/translations/${segment(id)}`,
+      approve: (id: string) =>
+        `/admin/translations/${segment(id)}/approve`,
+      import: "/admin/translations/import",
+      export: "/admin/translations/export",
+      aiDraft: "/admin/translations/ai-draft",
+    },
+  },
+  translations: {
+    languages: "/translations/languages",
+    catalog: "/translations/catalog",
   },
 } as const;
 
@@ -381,6 +793,7 @@ export class MoonClientError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    readonly code?: string,
   ) {
     super(message);
     this.name = "MoonClientError";
@@ -402,6 +815,84 @@ export class MoonClient {
     return this.request(apiRoutes.auth.me);
   }
 
+  initialSetupStatus(): Promise<InitialSetupStatusDto> {
+    return this.request(apiRoutes.auth.setup);
+  }
+
+  completeInitialSetup(input: InitialSetupRequestDto): Promise<AuthResponseDto> {
+    return this.request(apiRoutes.auth.setup, "POST", input);
+  }
+
+  updatePreferredLocale(
+    preferredLocale: UiLocale,
+  ): Promise<AuthResponseDto> {
+    const body: UpdatePreferredLocaleRequestDto = { preferredLocale };
+    return this.request(apiRoutes.auth.preferences, "PATCH", body);
+  }
+
+  listUiLanguages(): Promise<{ languages: UiLanguageDto[] }> {
+    return this.request(apiRoutes.translations.languages);
+  }
+
+  getTranslationCatalog(
+    locale: UiLocale,
+    namespace?: string,
+  ): Promise<TranslationCatalogResponseDto> {
+    const query = new URLSearchParams({ locale });
+    if (namespace) query.set("namespace", namespace);
+    return this.request(`${apiRoutes.translations.catalog}?${query}`);
+  }
+
+  listAdminTranslations(
+    locale?: UiLocale,
+  ): Promise<{ translations: TranslationAdminItemDto[] }> {
+    const query = new URLSearchParams();
+    if (locale) query.set("locale", locale);
+    const suffix = query.toString();
+    return this.request(
+      `${apiRoutes.admin.translations.collection}${suffix ? `?${suffix}` : ""}`,
+    );
+  }
+
+  saveTranslationDraft(
+    input: TranslationDraftRequestDto,
+  ): Promise<{ translation: TranslationAdminItemDto }> {
+    return this.request(
+      apiRoutes.admin.translations.collection,
+      "POST",
+      input,
+    );
+  }
+
+  approveTranslation(
+    id: string,
+  ): Promise<{ translation: TranslationAdminItemDto }> {
+    return this.request(apiRoutes.admin.translations.approve(id), "POST");
+  }
+
+  importTranslationPo(
+    locale: UiLocale,
+    content: string,
+  ): Promise<{ translations: TranslationAdminItemDto[] }> {
+    return this.request(apiRoutes.admin.translations.import, "POST", {
+      locale,
+      content,
+    });
+  }
+
+  createAiTranslationDraft(
+    input: TranslationAiDraftRequestDto,
+  ): Promise<{ translation: TranslationAdminItemDto }> {
+    return this.request(apiRoutes.admin.translations.aiDraft, "POST", input);
+  }
+
+  exportTranslationPo(locale: UiLocale): Promise<{ content: string }> {
+    const query = new URLSearchParams({ locale });
+    return this.request(
+      `${apiRoutes.admin.translations.export}?${query}`,
+    );
+  }
+
   register(input: RegisterRequestDto): Promise<AuthResponseDto> {
     return this.request(apiRoutes.auth.register, "POST", input);
   }
@@ -412,18 +903,6 @@ export class MoonClient {
 
   logout(): Promise<{ loggedOut: boolean }> {
     return this.request(apiRoutes.auth.logout, "POST");
-  }
-
-  requestPasswordReset(
-    input: ForgotPasswordRequestDto,
-  ): Promise<ForgotPasswordResponseDto> {
-    return this.request(apiRoutes.auth.forgotPassword, "POST", input);
-  }
-
-  resetPassword(
-    input: ResetPasswordRequestDto,
-  ): Promise<ResetPasswordResponseDto> {
-    return this.request(apiRoutes.auth.resetPassword, "POST", input);
   }
 
   sendChat(input: ChatRequestDto): Promise<ChatResponseDto> {
@@ -580,6 +1059,58 @@ export class MoonClient {
     return this.request(apiRoutes.connectors.audit(id));
   }
 
+  listWorkflowQueue(): Promise<WorkflowChangeListResponseDto> {
+    return this.request(apiRoutes.workflow.queue);
+  }
+
+  requestWorkflowTransition(
+    id: string,
+    input: TransitionRequestDto,
+  ): Promise<TransitionResponseDto> {
+    return this.request(apiRoutes.workflow.transition(id), "POST", input);
+  }
+
+  listWorkflowTransitions(
+    id: string,
+  ): Promise<WorkflowTransitionListResponseDto> {
+    return this.request(apiRoutes.workflow.transitions(id));
+  }
+
+  listCorpusEditions(): Promise<CorpusEditionListResponseDto> {
+    return this.request(apiRoutes.corpus.editions);
+  }
+
+  readCorpusSurah(
+    editionKey: string,
+    surah: number,
+  ): Promise<CorpusSurahResponseDto> {
+    return this.request(apiRoutes.corpus.surah(editionKey, surah));
+  }
+
+  readCorpusVerse(
+    editionKey: string,
+    surah: number,
+    ayah: number,
+  ): Promise<CorpusVerseResponseDto> {
+    return this.request(apiRoutes.corpus.verse(editionKey, surah, ayah));
+  }
+
+  listSourceArtifacts(): Promise<SourceArtifactListResponseDto> {
+    return this.request(apiRoutes.source.artifacts);
+  }
+
+  getSourceArtifact(id: string): Promise<SourceArtifactResponseDto> {
+    return this.request(apiRoutes.source.item(id));
+  }
+
+  projectProgressSummary(): Promise<ProjectProgressSummaryDto> {
+    return this.request(apiRoutes.projectProgress.summary);
+  }
+
+  listProjectTasks(): Promise<ProjectTaskListResponseDto> {
+    return this.request(apiRoutes.projectProgress.tasks);
+  }
+
   listAdminUsers(): Promise<AdminUserListResponseDto> {
     return this.request(apiRoutes.admin.users.collection);
   }
@@ -629,7 +1160,14 @@ export class MoonClient {
         typeof payload.error === "string"
           ? payload.error
           : "Permintaan gagal. Coba lagi.";
-      throw new MoonClientError(message, response.status);
+      const code =
+        typeof payload === "object" &&
+        payload !== null &&
+        "code" in payload &&
+        typeof payload.code === "string"
+          ? payload.code
+          : undefined;
+      throw new MoonClientError(message, response.status, code);
     }
     return payload as T;
   }

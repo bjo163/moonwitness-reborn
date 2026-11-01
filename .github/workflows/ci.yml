@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+  workflow_dispatch:
   # Semua branch tetap terscan; hanya tag (dorong workflow Release) yang tidak memicu suite.
   push:
     branches:
@@ -32,6 +33,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm tracker:check
+      - run: pnpm tracker:test
       # Lint memakai rule type-aware dan setiap package export tipe dari dist/,
       # jadi build harus jalan lebih dulu atau lint hanya melaporkan tipe tak ter-resolve.
       - run: pnpm exec turbo run build

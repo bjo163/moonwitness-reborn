@@ -8,11 +8,13 @@ export const MAX_CONNECTORS_PER_OWNER = 10;
 
 export interface ConnectorKindDefinition {
   kind: string;
+  labelKey: string;
   label: string;
   /**
    * Where MoonWitness looks for this service's credential. This is displayed,
    * never submitted: no connector kind accepts a token through the app.
    */
+  credentialHelpKey: string;
   credentialHelp: string;
   helpUrl: string;
   capabilities: readonly ConnectorCapability[];
@@ -23,7 +25,9 @@ export interface ConnectorKindDefinition {
 export const CONNECTOR_KINDS: readonly ConnectorKindDefinition[] = [
   {
     kind: "cloudflare",
+    labelKey: "web.connectors.kinds.cloudflare.label",
     label: "Cloudflare",
+    credentialHelpKey: "web.connectors.kinds.cloudflare.credentialHelp",
     credentialHelp:
       "Token dibaca dari OS credential store (CLOUDFLARE_API_TOKEN, keychain, atau file konfigurasi CLI). Butuh permission Zone / DNS / Edit.",
     helpUrl: "https://dash.cloudflare.com/profile/api-tokens",
@@ -32,7 +36,9 @@ export const CONNECTOR_KINDS: readonly ConnectorKindDefinition[] = [
   },
   {
     kind: "cloudflare_read",
+    labelKey: "web.connectors.kinds.cloudflareRead.label",
     label: "Cloudflare (read-only)",
+    credentialHelpKey: "web.connectors.kinds.cloudflareRead.credentialHelp",
     credentialHelp:
       "Token dibaca dari OS credential store yang sama. Buat token Zone / DNS / View di Cloudflare agar pembatasan ini juga berlaku di luar MoonWitness.",
     helpUrl: "https://dash.cloudflare.com/profile/api-tokens",

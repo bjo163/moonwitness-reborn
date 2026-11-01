@@ -7,12 +7,14 @@ function recorder(response: unknown = {}) {
   const client = new MoonClient({
     baseUrl: "/api",
     fetcher: (input, init = {}) => {
-      const url =
-        typeof input === "string"
-          ? input
-          : input instanceof URL
-            ? input.href
-            : input.url;
+      let url: string;
+      if (typeof input === "string") {
+        url = input;
+      } else if (input instanceof URL) {
+        url = input.href;
+      } else {
+        url = input.url;
+      }
       requests.push({
         url,
         method: init.method,
@@ -29,12 +31,14 @@ void test("MoonClient centralizes URL, request method, and JSON body", async () 
   const client = new MoonClient({
     baseUrl: "https://api.example.test/",
     fetcher: (input, init = {}) => {
-      const url =
-        typeof input === "string"
-          ? input
-          : input instanceof URL
-            ? input.href
-            : input.url;
+      let url: string;
+      if (typeof input === "string") {
+        url = input;
+      } else if (input instanceof URL) {
+        url = input.href;
+      } else {
+        url = input.url;
+      }
       requests.push({ url, init });
       return Promise.resolve(new Response(
         JSON.stringify({
@@ -48,6 +52,16 @@ void test("MoonClient centralizes URL, request method, and JSON body", async () 
         { status: 201 },
       ));
     },
+  });
+
+  void test("MoonClient updates the authenticated account locale through shared routes", async () => {
+    const { client, requests } = recorder();
+    await client.updatePreferredLocale("en");
+
+    assert.equal(apiRoutes.auth.preferences, "/auth/me/preferences");
+    assert.equal(requests[0].url, "/api/auth/me/preferences");
+    assert.equal(requests[0].method, "PATCH");
+    assert.deepEqual(JSON.parse(requests[0].body), { preferredLocale: "en" });
   });
 
   await client.createConversation({ title: "Test" });
@@ -65,45 +79,109 @@ void test("MoonClient encodes route segments and exposes API error status", asyn
   const client = new MoonClient({
     baseUrl: "/api",
     fetcher: (input) => {
-      const url =
-        typeof input === "string"
-          ? input
-          : input instanceof URL
-            ? input.href
-            : input.url;
+      let url: string;
+      if (typeof input === "string") {
+        url = input;
+      } else if (input instanceof URL) {
+        url = input.href;
+      } else {
+        url = input.url;
+      }
       requestedUrls.push(url);
-      return Promise.resolve(new Response(JSON.stringify({ error: "Authentication required." }), {
-        status: 401,
+      return Promise.resolve(new Response(JSON.stringify({
+        code: "I18N_ACCESS_DENIED",
+        error: "Access denied.",
+      }), {
+        status: 403,
       }));
     },
   });
 
   await assert.rejects(client.listMessages("thread/one"), (error: unknown) => {
     assert.ok(error instanceof MoonClientError);
-    assert.equal(error.message, "Authentication required.");
-    assert.equal(error.status, 401);
+    assert.equal(error.message, "Access denied.");
+    assert.equal(error.status, 403);
+    assert.equal(error.code, "I18N_ACCESS_DENIED");
     return true;
   });
   assert.equal(requestedUrls[0], "/api/conversations/thread%2Fone/messages");
 });
 
-void test("password reset calls use the shared route table", async () => {
-  const { client, requests } = recorder({ sent: true, reset: true });
+void test("MoonClient centralizes locale catalog and translation administration routes", async () => {
+  const { client, requests } = recorder();
+  await client.listUiLanguages();
+  await client.getTranslationCatalog("id", "web.common");
+  await client.listAdminTranslations("en");
+  await client.saveTranslationDraft({
+    locale: "id",
+    namespace: "web.common",
+    key: "save",
+    sourceText: "Save",
+    translatedText: "Simpan",
+  });
+  await client.approveTranslation("translation/one");
+  await client.importTranslationPo("id", "msgid \"Save\"");
+  await client.exportTranslationPo("en");
+  await client.createAiTranslationDraft({
+    locale: "en",
+    namespace: "web.common",
+    key: "save",
+    sourceText: "Simpan",
+  });
 
-  await client.requestPasswordReset({ email: "bjo@a-l-l-a-h.com" });
-  await client.resetPassword({ token: "abc", password: "a brand new long password" });
-
-  assert.deepEqual(
-    requests.map(({ url, method }) => ({ url, method })),
-    [
-      { url: "/api/auth/forgot-password", method: "POST" },
-      { url: "/api/auth/reset-password", method: "POST" },
-    ],
+  assert.equal(requests[0].url, "/api/translations/languages");
+  assert.equal(
+    requests[1].url,
+    "/api/translations/catalog?locale=id&namespace=web.common",
   );
-  assert.deepEqual(JSON.parse(requests[0].body), { email: "bjo@a-l-l-a-h.com" });
+  assert.equal(
+    requests[2].url,
+    "/api/admin/translations?locale=en",
+  );
+  assert.equal(requests[3].url, "/api/admin/translations");
+  assert.equal(requests[3].method, "POST");
+  assert.equal(
+    requests[4].url,
+    "/api/admin/translations/translation%2Fone/approve",
+  );
+  assert.deepEqual(JSON.parse(requests[5].body), {
+    locale: "id",
+    content: 'msgid "Save"',
+  });
+  assert.equal(
+    requests[6].url,
+    "/api/admin/translations/export?locale=en",
+  );
+  assert.equal(requests[7].url, "/api/admin/translations/ai-draft");
+  assert.deepEqual(JSON.parse(requests[7].body), {
+    locale: "en",
+    namespace: "web.common",
+    key: "save",
+    sourceText: "Simpan",
+  });
+});
+
+void test("MoonClient centralizes the first-use setup contract", async () => {
+  const { client, requests } = recorder();
+
+  await client.initialSetupStatus();
+  await client.completeInitialSetup({
+    name: "Initial Owner",
+    email: "owner@example.com",
+    password: "correct horse battery staple",
+    preferredLocale: "en",
+  });
+
+  assert.equal(apiRoutes.auth.setup, "/auth/setup");
+  assert.equal(requests[0].url, "/api/auth/setup");
+  assert.equal(requests[0].method, "GET");
+  assert.equal(requests[1].url, "/api/auth/setup");
+  assert.equal(requests[1].method, "POST");
   assert.deepEqual(JSON.parse(requests[1].body), {
-    token: "abc",
-    password: "a brand new long password",
+    name: "Initial Owner",
+    email: "owner@example.com",
+    password: "correct horse battery staple",
+    preferredLocale: "en",
   });
 });
 
@@ -171,6 +249,87 @@ void test("connector routes stay under one prefix and encode every id", async ()
       `Route '${path}' escaped the connector prefix.`,
     );
   }
+});
+
+void test("workflow routes stay under the /workflow prefix and encode every id", async () => {
+  const { client, requests } = recorder();
+
+  await client.listWorkflowQueue();
+  await client.requestWorkflowTransition("c/1", { action: "submit", reason: "ready" });
+  await client.listWorkflowTransitions("c/1");
+
+  assert.deepEqual(
+    requests.map(({ url, method }) => `${method ?? "GET"} ${url}`),
+    [
+      "GET /api/workflow/queue",
+      "POST /api/workflow/changes/c%2F1/transition",
+      "GET /api/workflow/changes/c%2F1/transitions",
+    ],
+  );
+
+  for (const path of [
+    apiRoutes.workflow.queue,
+    apiRoutes.workflow.collection,
+    apiRoutes.workflow.prefix,
+    apiRoutes.workflow.item("x"),
+    apiRoutes.workflow.transition("x"),
+    apiRoutes.workflow.transitions("x"),
+  ]) {
+    assert.ok(
+      path.startsWith("/workflow"),
+      `Route '${path}' escaped the workflow prefix.`,
+    );
+  }
+});
+
+void test("project progress uses shared public-summary and gated-task routes", async () => {
+  const { client, requests } = recorder();
+  await client.projectProgressSummary();
+  await client.listProjectTasks();
+
+  assert.equal(apiRoutes.projectProgress.summary, "/project/progress/summary");
+  assert.equal(apiRoutes.projectProgress.tasks, "/project/progress/tasks");
+  assert.deepEqual(
+    requests.map(({ url, method }) => `${method ?? "GET"} ${url}`),
+    [
+      "GET /api/project/progress/summary",
+      "GET /api/project/progress/tasks",
+    ],
+  );
+});
+
+void test("corpus and source routes stay under their own prefixes and encode every id", () => {
+  for (const path of [
+    apiRoutes.corpus.editions,
+    apiRoutes.corpus.prefix,
+    apiRoutes.corpus.edition("mw:edition:x"),
+    apiRoutes.corpus.surah("mw:edition:x", 2),
+    apiRoutes.corpus.verse("mw:edition:x", 2, 255),
+  ]) {
+    assert.ok(
+      path.startsWith("/corpus"),
+      `Route '${path}' escaped the corpus prefix.`,
+    );
+  }
+  for (const path of [
+    apiRoutes.source.artifacts,
+    apiRoutes.source.prefix,
+    apiRoutes.source.item("a/1"),
+    apiRoutes.source.rights("a/1"),
+    apiRoutes.source.provenance("a/1"),
+  ]) {
+    assert.ok(
+      path.startsWith("/source"),
+      `Route '${path}' escaped the source prefix.`,
+    );
+  }
+  // IDs must be URL-encoded so `/` and other reserved characters cannot
+  // break out of the path segment.
+  assert.equal(apiRoutes.source.item("a/1"), "/source/artifacts/a%2F1");
+  assert.equal(
+    apiRoutes.corpus.verse("mw:edition:x|ar", 1, 1),
+    "/corpus/editions/mw%3Aedition%3Ax%7Car/surahs/1/verses/1",
+  );
 });
 
 void test("no connector contract surface accepts a credential", () => {

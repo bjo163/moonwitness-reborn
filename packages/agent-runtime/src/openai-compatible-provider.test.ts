@@ -13,12 +13,13 @@ void test("provider sends an OpenAI-compatible chat completion request", async (
     apiKey: "test-key",
     model: "test-model",
     fetch: (input, init) => {
-      requestUrl =
-        typeof input === "string"
-          ? input
-          : input instanceof URL
-            ? input.href
-            : input.url;
+      if (typeof input === "string") {
+        requestUrl = input;
+      } else if (input instanceof URL) {
+        requestUrl = input.href;
+      } else {
+        requestUrl = input.url;
+      }
       requestInit = init;
       return Promise.resolve(new Response(
         JSON.stringify({ choices: [{ message: { content: "Hello!" } }] }),

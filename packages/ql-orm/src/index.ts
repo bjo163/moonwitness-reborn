@@ -3,12 +3,24 @@ import { dirname, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { createClient, type Client, type InValue } from "@libsql/client";
 import { Pool, types as pgTypes } from "pg";
+import type {
+  FieldType as QlFieldType,
+  Operation as QlOperation,
+  RecordValue,
+  RecordValues,
+  ViewType,
+} from "@moonwitness/types";
 
-export type QlFieldType = "char" | "text" | "integer" | "boolean" | "datetime";
-export type QlOperation = "read" | "create" | "write" | "unlink";
+export type {
+  FieldType as QlFieldType,
+  Operation as QlOperation,
+} from "@moonwitness/types";
 
 export interface QlFieldDefinition {
   type: QlFieldType;
+  labelKey?: string;
+  helpKey?: string;
+  selectionKeys?: Record<string, string>;
   required?: boolean;
   unique?: boolean;
   maxLength?: number;
@@ -16,12 +28,14 @@ export interface QlFieldDefinition {
   default?: string | number | boolean;
   minValue?: number;
   maxValue?: number;
-  validator?: (value: unknown) => string | undefined;
+  validator?(value: unknown): string | undefined;
 }
 
 export interface QlModelDefinition {
   name: string;
+  labelKey?: string;
   description: string;
+  descriptionKey?: string;
   tableName: string;
   fields: Record<string, QlFieldDefinition>;
   ownerField?: string;
@@ -38,8 +52,10 @@ export interface QlAccessRule {
 
 export interface QlViewDefinition {
   name: string;
+  labelKey?: string;
+  helpKey?: string;
   model: string;
-  type: "list" | "form";
+  type: ViewType;
   fields: string[];
 }
 
@@ -58,9 +74,9 @@ export interface QlUserContext {
   groups: readonly string[];
 }
 
-export type QlRecord = Record<string, string | number | boolean | null>;
-export type QlServiceValue = string | number | boolean | null;
-export type QlSqlValue = string | number | boolean | null;
+export type QlRecord = RecordValues;
+export type QlServiceValue = RecordValue;
+export type QlSqlValue = QlServiceValue;
 export interface QlServiceQueryOptions {
   limit?: number;
   orderBy?: { field: string; direction: "asc" | "desc" } | "rowid-asc";
@@ -971,14 +987,17 @@ export class QlOrm {
       for (const name of selected) {
         const value = row[name];
         const field = model.fields[name];
-        record[name] =
-          field?.type === "boolean" && typeof value === "number"
-            ? value !== 0
-            : typeof value === "string" ||
-                typeof value === "number" ||
-                value === null
-              ? value
-              : null;
+        if (field?.type === "boolean" && typeof value === "number") {
+          record[name] = value !== 0;
+        } else if (
+          typeof value === "string" ||
+          typeof value === "number" ||
+          value === null
+        ) {
+          record[name] = value;
+        } else {
+          record[name] = null;
+        }
       }
       return record;
     });
@@ -1002,7 +1021,7 @@ export function isPostgresUrl(databaseUrl: string): boolean {
 export async function createQlOrm(
   databaseUrl: string,
   manifests: readonly QlAddonManifest[],
-): Promise<{ orm: QlOrm; close: () => void }> {
+): Promise<{ orm: QlOrm; close(): void }> {
   let connection: QlConnection;
   if (isPostgresUrl(databaseUrl)) {
     connection = new PostgresConnection(

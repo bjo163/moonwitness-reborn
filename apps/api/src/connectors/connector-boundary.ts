@@ -3,7 +3,6 @@ import type {
   CloudflareZoneDto,
   ConnectorDto,
   ConnectorKindDto,
-  ConnectorTokenSource,
   ConnectorVerifyStatus,
   IntegrationAuditDto,
 } from "@moonwitness/moonclient";
@@ -15,6 +14,12 @@ import {
   connectorKindSupports,
   findConnectorKind,
 } from "ql_integration/services/connector-registry";
+import {
+  DEFAULT_TOKEN_SOURCE,
+  DEFAULT_VERIFY_STATUS,
+  TOKEN_SOURCES,
+  VERIFY_STATUSES,
+} from "ql_integration/services/connector-vocabulary";
 import { PROXIABLE_TYPES, RECORD_TYPES } from "ql_cloudflare/services/record-types";
 import { sanitizeCloudflareMessage } from "ql_cloudflare/services/errors";
 import {
@@ -31,8 +36,6 @@ export class ConnectorAccessError extends Error {
   readonly name = "ConnectorAccessError";
 }
 
-const tokenSources: ConnectorTokenSource[] = ["unresolved", "env", "keychain", "config_file"];
-
 function textOf(value: unknown, fallback = ""): string {
   return typeof value === "string" && value ? value : fallback;
 }
@@ -43,7 +46,11 @@ function isoOf(value: unknown): string | null {
   return new Date(timestamp).toISOString();
 }
 
-function enumOf<T extends string>(value: unknown, allowed: T[], fallback: T): T {
+function enumOf<T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+  fallback: T,
+): T {
   return allowed.includes(value as T) ? (value as T) : fallback;
 }
 
@@ -55,7 +62,9 @@ export function connectorCatalog(): {
     maxPerOwner: MAX_CONNECTORS_PER_OWNER,
     kinds: CONNECTOR_KINDS.map((definition) => ({
       kind: definition.kind,
+      labelKey: definition.labelKey,
       label: definition.label,
+      credentialHelpKey: definition.credentialHelpKey,
       credentialHelp: definition.credentialHelp,
       helpUrl: definition.helpUrl,
       capabilities: [...definition.capabilities],
@@ -75,13 +84,13 @@ export function toConnectorDto(record: QlRecord): ConnectorDto {
     id: String(record.id),
     kind: textOf(record.kind),
     label: textOf(record.label),
-    tokenSource: enumOf(record.token_source, tokenSources, "unresolved"),
+    tokenSource: enumOf(record.token_source, TOKEN_SOURCES, DEFAULT_TOKEN_SOURCE),
     tokenRef: textOf(record.token_ref),
     enabled: record.enabled === true,
     verifyStatus: enumOf<ConnectorVerifyStatus>(
       record.verify_status,
-      ["unverified", "ok", "invalid", "network", "missing"],
-      "unverified",
+      VERIFY_STATUSES,
+      DEFAULT_VERIFY_STATUS,
     ),
     lastVerifyAt: isoOf(record.last_verify_at),
     lastSyncAt: isoOf(record.last_sync_at),

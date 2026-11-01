@@ -5,14 +5,14 @@ import {
   createConversationStore,
   type ConversationStore,
 } from "@moonwitness/database";
+import { apiRoutes } from "@moonwitness/moonclient";
 import { createQlOrm, type QlOrm } from "ql_orm";
 import aiManifest from "ql_ai/__manifest__";
 import authManifest from "ql_auth/__manifest__";
 import baseManifest from "ql_base/__manifest__";
 import chatManifest from "ql_chat/__manifest__";
-import { hashVerificationToken } from "../auth/auth.js";
-import type { MailSender, PasswordResetMail } from "../mail/mailer.js";
 import { createApiServer } from "./server.js";
+import { listProjectTasks } from "../project-progress/tracker.js";
 
 let server: ReturnType<typeof createApiServer>;
 let address: string;
@@ -66,7 +66,10 @@ after(async () => {
   store.close();
 });
 
-async function register(email: string): Promise<string> {
+async function register(
+  email: string,
+  preferredLocale?: "id" | "en",
+): Promise<string> {
   const response = await fetch(`${address}/auth/register`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -74,6 +77,7 @@ async function register(email: string): Promise<string> {
       name: "Test User",
       email,
       password: "correct horse battery staple",
+      ...(preferredLocale ? { preferredLocale } : {}),
     }),
   });
   assert.equal(response.status, 201);
@@ -86,6 +90,256 @@ void test("GET /health returns service status", async () => {
   const response = await fetch(`${address}/health`);
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { status: "ok" });
+});
+
+void test("first-use onboarding grants exactly one super admin", async () => {
+  const runtime = await createQlOrm("file::memory:", [
+    authManifest,
+    baseManifest,
+    aiManifest,
+    chatManifest,
+  ]);
+  const setupStore = createConversationStore(runtime.orm);
+  const setupServer = createApiServer(undefined, setupStore, runtime.orm);
+  await new Promise<void>((resolve) => {
+    setupServer.listen(0, "127.0.0.1", resolve);
+  });
+  const setupAddress = setupServer.address();
+  assert.ok(setupAddress && typeof setupAddress !== "string");
+  const setupBaseUrl = `http://127.0.0.1:${setupAddress.port}`;
+
+  try {
+    const setupStatus = await fetch(`${setupBaseUrl}/auth/setup`);
+    assert.equal(setupStatus.status, 200);
+    assert.equal(setupStatus.headers.get("cache-control"), "no-store");
+    assert.deepEqual(await setupStatus.json(), { required: true });
+
+    const setupRequests = await Promise.all(
+      ["initial-owner@example.com", "racing-owner@example.com"].map((email) =>
+        fetch(`${setupBaseUrl}/auth/setup`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            name: "Initial Owner",
+            email,
+            password: "correct horse battery staple",
+            role: "member",
+          }),
+        }),
+      ),
+    );
+    assert.deepEqual(
+      setupRequests.map((response) => response.status).sort(),
+      [201, 409],
+    );
+
+    const ownerResponse = setupRequests.find((response) => response.status === 201);
+    assert.ok(ownerResponse);
+    const ownerCookie = ownerResponse.headers.get("set-cookie");
+    assert.ok(ownerCookie);
+    const owner = await fetch(`${setupBaseUrl}/auth/me`, {
+      headers: { cookie: ownerCookie.split(";", 1)[0] },
+    });
+    assert.equal(owner.status, 200);
+    const ownerBody = (await owner.json()) as {
+      user: { role: string; setup_claim?: string };
+    };
+    assert.equal(ownerBody.user.role, "super_admin");
+    assert.equal("setup_claim" in ownerBody.user, false);
+
+    const publicSummary = await fetch(
+      `${setupBaseUrl}${apiRoutes.projectProgress.summary}`,
+    );
+    assert.equal(publicSummary.status, 200);
+    const summaryBody = await publicSummary.json() as {
+      total: number;
+      readyCount: number;
+      states: Record<string, number>;
+    };
+    const projectTasks = await listProjectTasks();
+    assert.equal(summaryBody.total, projectTasks.length);
+    assert.equal(
+      Object.values(summaryBody.states).reduce((sum, count) => sum + count, 0),
+      projectTasks.length,
+    );
+    assert.equal("tasks" in summaryBody, false);
+
+    const anonymousDetails = await fetch(
+      `${setupBaseUrl}${apiRoutes.projectProgress.tasks}`,
+    );
+    assert.equal(anonymousDetails.status, 401);
+
+    const ownerDetails = await fetch(
+      `${setupBaseUrl}${apiRoutes.projectProgress.tasks}`,
+      { headers: { cookie: ownerCookie.split(";", 1)[0] } },
+    );
+    assert.equal(ownerDetails.status, 200);
+    const ownerDetailsBody = await ownerDetails.json() as {
+      tasks: unknown[];
+      readyTaskIds: string[];
+    };
+    assert.equal(ownerDetailsBody.tasks.length, projectTasks.length);
+    assert.equal(ownerDetailsBody.readyTaskIds.length, summaryBody.readyCount);
+
+    const closedSetup = await fetch(`${setupBaseUrl}/auth/setup`);
+    assert.deepEqual(await closedSetup.json(), { required: false });
+    const repeatedSetup = await fetch(`${setupBaseUrl}/auth/setup`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Second Owner",
+        email: "second-owner@example.com",
+        password: "correct horse battery staple",
+      }),
+    });
+    assert.equal(repeatedSetup.status, 409);
+
+    const memberResponse = await fetch(`${setupBaseUrl}/auth/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Ordinary Member",
+        email: "ordinary-member@example.com",
+        password: "correct horse battery staple",
+        role: "super_admin",
+      }),
+    });
+    assert.equal(memberResponse.status, 201);
+    const memberCookie = memberResponse.headers.get("set-cookie");
+    assert.ok(memberCookie);
+    const memberDetails = await fetch(
+      `${setupBaseUrl}${apiRoutes.projectProgress.tasks}`,
+      { headers: { cookie: memberCookie.split(";", 1)[0] } },
+    );
+    assert.equal(memberDetails.status, 403);
+    const member = await fetch(`${setupBaseUrl}/auth/me`, {
+      headers: { cookie: memberCookie.split(";", 1)[0] },
+    });
+    assert.equal(
+      (await member.json() as { user: { role: string } }).user.role,
+      "member",
+    );
+  } finally {
+    await new Promise<void>((resolve, reject) => {
+      setupServer.close((error) => (error ? reject(error) : resolve()));
+    });
+    setupStore.close();
+    runtime.close();
+  }
+});
+
+void test("first-use setup remains available when only member accounts exist", async () => {
+  const runtime = await createQlOrm("file::memory:", [
+    authManifest,
+    baseManifest,
+    aiManifest,
+    chatManifest,
+  ]);
+  const setupStore = createConversationStore(runtime.orm);
+  const setupServer = createApiServer(undefined, setupStore, runtime.orm);
+  await new Promise<void>((resolve) => {
+    setupServer.listen(0, "127.0.0.1", resolve);
+  });
+  const setupAddress = setupServer.address();
+  assert.ok(setupAddress && typeof setupAddress !== "string");
+  const setupBaseUrl = `http://127.0.0.1:${setupAddress.port}`;
+
+  try {
+    const registration = await fetch(`${setupBaseUrl}/auth/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Existing Member",
+        email: "existing-member@example.com",
+        password: "correct horse battery staple",
+      }),
+    });
+    assert.equal(registration.status, 201);
+
+    const setupStatus = await fetch(`${setupBaseUrl}/auth/setup`);
+    assert.deepEqual(await setupStatus.json(), { required: true });
+    const setupAttempt = await fetch(`${setupBaseUrl}/auth/setup`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Initial Owner",
+        email: "initial-owner-after-member@example.com",
+        password: "correct horse battery staple",
+      }),
+    });
+    assert.equal(setupAttempt.status, 201);
+    const closedSetup = await fetch(`${setupBaseUrl}/auth/setup`);
+    assert.deepEqual(await closedSetup.json(), { required: false });
+  } finally {
+    await new Promise<void>((resolve, reject) => {
+      setupServer.close((error) => (error ? reject(error) : resolve()));
+    });
+    setupStore.close();
+    runtime.close();
+  }
+});
+
+void test("account locale updates are validated and scoped to the session user", async () => {
+  const firstCookie = await register("locale-first@example.com", "en");
+  const secondCookie = await register("locale-second@example.com");
+  const firstUserResponse = await fetch(`${address}/auth/me`, {
+    headers: { cookie: firstCookie },
+  });
+  const secondUserResponse = await fetch(`${address}/auth/me`, {
+    headers: { cookie: secondCookie },
+  });
+  const firstUser = (await firstUserResponse.json()) as {
+    user: { id: string; preferredLocale: string; passwordHash?: string };
+  };
+  const secondUser = (await secondUserResponse.json()) as {
+    user: { id: string; preferredLocale: string };
+  };
+  assert.equal(firstUser.user.preferredLocale, "en");
+  assert.equal(secondUser.user.preferredLocale, "id");
+  assert.equal("passwordHash" in firstUser.user, false);
+
+  const unauthenticated = await fetch(`${address}/auth/me/preferences`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ preferredLocale: "en" }),
+  });
+  assert.equal(unauthenticated.status, 401);
+
+  const invalidLocale = await fetch(`${address}/auth/me/preferences`, {
+    method: "PATCH",
+    headers: {
+      cookie: firstCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ preferredLocale: "fr" }),
+  });
+  assert.equal(invalidLocale.status, 400);
+
+  const updated = await fetch(`${address}/auth/me/preferences`, {
+    method: "PATCH",
+    headers: {
+      cookie: firstCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      preferredLocale: "id",
+      userId: secondUser.user.id,
+    }),
+  });
+  assert.equal(updated.status, 200);
+  const updatedBody = (await updated.json()) as {
+    user: { id: string; preferredLocale: string };
+  };
+  assert.equal(updatedBody.user.id, firstUser.user.id);
+  assert.equal(updatedBody.user.preferredLocale, "id");
+
+  const secondAfterUpdate = await fetch(`${address}/auth/me`, {
+    headers: { cookie: secondCookie },
+  });
+  const secondAfterBody = (await secondAfterUpdate.json()) as {
+    user: { preferredLocale: string };
+  };
+  assert.equal(secondAfterBody.user.preferredLocale, "id");
 });
 
 void test("registration, login and logout manage a secure session cookie", async () => {
@@ -326,13 +580,18 @@ void test("authenticated model metadata exposes addon views without private fiel
   const { models } = (await response.json()) as {
     models: Array<{
       name: string;
-      fields: Record<string, unknown>;
-      views: Array<{ type: string; fields: string[] }>;
+      labelKey: string;
+      descriptionKey: string;
+      fields: Record<string, { labelKey: string }>;
+      views: Array<{ labelKey: string; type: string; fields: string[] }>;
       permissions: { create: boolean; write: boolean; unlink: boolean };
     }>;
   };
   const partner = models.find((model) => model.name === "res.partner");
   assert.ok(partner);
+  assert.equal(partner.labelKey, "web.models.entities.res_partner");
+  assert.equal(partner.descriptionKey, "web.models.descriptions.res_partner");
+  assert.equal(partner.fields.name.labelKey, "web.models.fieldName");
   assert.deepEqual(Object.keys(partner.fields), [
     "name",
     "email",
@@ -354,6 +613,7 @@ void test("authenticated model metadata exposes addon views without private fiel
       },
     ],
   );
+  assert.equal(partner.views[0]?.labelKey, "web.models.viewList");
   assert.deepEqual(partner.permissions, {
     create: true,
     write: true,
@@ -487,253 +747,8 @@ void test("registration validates passwords and rejects duplicate emails", async
 void test("unknown routes return 404", async () => {
   const response = await fetch(`${address}/unknown`);
   assert.equal(response.status, 404);
-  assert.deepEqual(await response.json(), { error: "Not found" });
-});
-
-type JsonReply = { status: number; body: Record<string, unknown> };
-
-async function postJson(
-  base: string,
-  path: string,
-  payload: unknown,
-  cookie?: string,
-): Promise<JsonReply> {
-  const response = await fetch(`${base}${path}`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      ...(cookie ? { cookie } : {}),
-    },
-    body: JSON.stringify(payload),
+  assert.deepEqual(await response.json(), {
+    error: "Not found",
+    code: "RESOURCE_NOT_FOUND",
   });
-  return { status: response.status, body: (await response.json()) as Record<string, unknown> };
-}
-
-async function mailServer(mailer: MailSender | undefined) {
-  const app = createApiServer(undefined, store, orm, {
-    encryptionKey: providerEncryptionKey,
-    appBaseUrl: "https://web.test",
-    ...(mailer ? { mail: mailer } : {}),
-  });
-  await new Promise<void>((resolve) => app.listen(0, "127.0.0.1", resolve));
-  const info = app.address();
-  assert.ok(info && typeof info !== "string");
-  return {
-    base: `http://127.0.0.1:${info.port}`,
-    stop: () =>
-      new Promise<void>((resolve, reject) => {
-        app.close((error) => (error ? reject(error) : resolve()));
-      }),
-  };
-}
-
-function recordingMailer() {
-  const sent: PasswordResetMail[] = [];
-  const mailer: MailSender = {
-    sendPasswordReset(mail) {
-      sent.push(mail);
-      return Promise.resolve();
-    },
-    close() {},
-  };
-  return { sent, mailer };
-}
-
-async function registerAt(
-  base: string,
-  email: string,
-  password: string,
-): Promise<string> {
-  const response = await fetch(`${base}/auth/register`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ name: "Reset User", email, password }),
-  });
-  assert.equal(response.status, 201);
-  return (response.headers.get("set-cookie") ?? "").split(";", 1)[0];
-}
-
-void test("forgot-password has one response shape with and without mail", async () => {
-  const app = await mailServer(undefined);
-  try {
-    await registerAt(app.base, "member@example.com", "correct horse battery staple");
-    const unknown = await postJson(app.base, "/auth/forgot-password", {
-      email: "ghost@example.com",
-    });
-    const existing = await postJson(app.base, "/auth/forgot-password", {
-      email: "member@example.com",
-    });
-    assert.deepEqual(unknown, { status: 200, body: { sent: false } });
-    assert.deepEqual(existing, { status: 200, body: { sent: false } });
-
-    const malformed = await postJson(app.base, "/auth/forgot-password", {
-      email: 42,
-    });
-    assert.equal(malformed.status, 400);
-    const noBody = await fetch(`${app.base}/auth/forgot-password`, { method: "POST" });
-    assert.equal(noBody.status, 400);
-  } finally {
-    await app.stop();
-  }
-});
-
-void test("forgot-password sends one single-use link per cooldown window", async () => {
-  const { sent, mailer } = recordingMailer();
-  const app = await mailServer(mailer);
-  try {
-    await registerAt(app.base, "linked@example.com", "correct horse battery staple");
-    const first = await postJson(app.base, "/auth/forgot-password", {
-      email: " LINKED@example.com ",
-    });
-    assert.deepEqual(first, { status: 200, body: { sent: true } });
-    assert.equal(sent.length, 1);
-    assert.equal(sent[0].to, "linked@example.com");
-    assert.equal(sent[0].name, "Reset User");
-    assert.equal(sent[0].ttlMinutes, 30);
-    const token = new URL(sent[0].resetUrl).searchParams.get("token") ?? "";
-    assert.match(token, /^[A-Za-z0-9_-]{40,50}$/);
-    assert.ok(sent[0].resetUrl.startsWith("https://web.test/"));
-
-    const stored = await store.findVerification(
-      "password_reset",
-      hashVerificationToken(token),
-    );
-    assert.ok(stored);
-    assert.equal(stored.tokenHash, hashVerificationToken(token));
-    assert.ok(!stored.tokenHash.includes(token));
-
-    const second = await postJson(app.base, "/auth/forgot-password", {
-      email: "linked@example.com",
-    });
-    assert.deepEqual(second, { status: 200, body: { sent: false } });
-    assert.equal(sent.length, 1);
-  } finally {
-    await app.stop();
-  }
-});
-
-void test("reset-password rotates the credential and revokes active sessions", async () => {
-  const { sent, mailer } = recordingMailer();
-  const app = await mailServer(mailer);
-  const password = "correct horse battery staple";
-  const replacement = "brand new battery horse correct";
-  try {
-    const cookie = await registerAt(app.base, "rotate@example.com", password);
-    await postJson(app.base, "/auth/forgot-password", { email: "rotate@example.com" });
-    const token = new URL(sent[0].resetUrl).searchParams.get("token") ?? "";
-
-    const weak = await postJson(app.base, "/auth/reset-password", {
-      token,
-      password: "short",
-    });
-    assert.equal(weak.status, 400);
-    assert.ok(await store.findVerification("password_reset", hashVerificationToken(token)));
-
-    const done = await postJson(app.base, "/auth/reset-password", {
-      token,
-      password: replacement,
-    });
-    assert.deepEqual(done, { status: 200, body: { reset: true } });
-    assert.equal(
-      await store.findVerification("password_reset", hashVerificationToken(token)),
-      undefined,
-    );
-
-    const replay = await postJson(app.base, "/auth/reset-password", {
-      token,
-      password: replacement,
-    });
-    assert.equal(replay.status, 400);
-
-    const staleSession = await fetch(`${app.base}/auth/me`, {
-      headers: { cookie },
-    });
-    assert.equal(staleSession.status, 401);
-
-    assert.equal(
-      (await postJson(app.base, "/auth/login", { email: "rotate@example.com", password }))
-        .status,
-      401,
-    );
-    assert.equal(
-      (await postJson(app.base, "/auth/login", {
-        email: "rotate@example.com",
-        password: replacement,
-      })).status,
-      200,
-    );
-  } finally {
-    await app.stop();
-  }
-});
-
-void test("reset-password rejects malformed, expired and cross-purpose tokens", async () => {
-  const app = await mailServer(undefined);
-  try {
-    const user = await store.createUser({
-      name: "Seeded",
-      email: "seeded@example.com",
-      passwordHash: "scrypt$salt$hash",
-    });
-    const expiredToken = "expiredexpiredexpiredexpiredexpiredexpiredexp";
-    await store.createVerification({
-      userId: user.id,
-      purpose: "password_reset",
-      tokenHash: hashVerificationToken(expiredToken),
-      expiresAt: new Date(Date.now() - 1_000),
-    });
-    const otherPurposeToken = "verifyingverifyingverifyingverifyingverify1";
-    await store.createVerification({
-      userId: user.id,
-      purpose: "email_verify",
-      tokenHash: hashVerificationToken(otherPurposeToken),
-      expiresAt: new Date(Date.now() + 60_000),
-    });
-
-    for (const token of ["abc", expiredToken, otherPurposeToken]) {
-      const reply = await postJson(app.base, "/auth/reset-password", {
-        token,
-        password: "a brand new long password",
-      });
-      assert.equal(reply.status, 400);
-    }
-    // Rejected attempts must not consume the row they could not use.
-    assert.ok(await store.findVerification("email_verify", hashVerificationToken(otherPurposeToken)));
-    const stillExpired = await store.findVerification(
-      "password_reset",
-      hashVerificationToken(expiredToken),
-    );
-    assert.ok(stillExpired);
-    assert.equal(stillExpired.userId, user.id);
-    assert.ok(stillExpired.expiresAt.getTime() <= Date.now());
-    const leaked = await postJson(app.base, "/auth/reset-password", { password: "x" });
-    assert.equal(leaked.status, 400);
-  } finally {
-    await app.stop();
-  }
-});
-
-void test("a failed SMTP send leaves no usable token", async () => {
-  const failing: MailSender = {
-    sendPasswordReset() {
-      return Promise.reject(new Error("535 authentication failed"));
-    },
-    close() {},
-  };
-  const app = await mailServer(failing);
-  try {
-    await registerAt(app.base, "undelivered@example.com", "correct horse battery staple");
-    const reply = await postJson(app.base, "/auth/forgot-password", {
-      email: "undelivered@example.com",
-    });
-    assert.deepEqual(reply, { status: 200, body: { sent: false } });
-    const user = await store.getUserByEmail("undelivered@example.com");
-    assert.ok(user);
-    assert.deepEqual(
-      await store.findLatestVerification(user.id, "password_reset"),
-      undefined,
-    );
-  } finally {
-    await app.stop();
-  }
 });

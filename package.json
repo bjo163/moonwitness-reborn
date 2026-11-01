@@ -9,10 +9,14 @@
     "dev": "turbo run dev",
     "lint": "eslint apps packages",
     "test": "turbo run test --concurrency=1",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "tracker:render": "python -B docs/audit/tools/task_tracker.py --write",
+    "tracker:check": "python -B docs/audit/tools/task_tracker.py --check",
+    "tracker:test": "python -B docs/audit/tools/test_task_tracker.py"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
+    "@moonwitness/eslint-config": "workspace:*",
     "@next/eslint-plugin-next": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",

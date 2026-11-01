@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
-    "test": "tsx --test src/connectors/os-credential-store.test.ts src/http/server.test.ts src/http/connectors.test.ts src/ai/model-config.test.ts src/ai/model-router.test.ts src/ai/provider-secrets.test.ts src/mail/mail-config.test.ts src/mail/mail-templates.test.ts src/mail/mailer.test.ts",
+    "test": "tsx --test src/connectors/os-credential-store.test.ts src/http/server.test.ts src/http/connectors.test.ts src/http/workflow.test.ts src/http/corpus.test.ts src/http/i18n.test.ts src/ai/model-config.test.ts src/ai/model-router.test.ts src/ai/provider-secrets.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
@@ -13,13 +13,16 @@
     "@moonwitness/database": "workspace:*",
     "@moonwitness/moonclient": "workspace:*",
     "dotenv": "catalog:",
-    "nodemailer": "catalog:",
     "ql_ai": "workspace:*",
     "ql_auth": "workspace:*",
     "ql_base": "workspace:*",
     "ql_chat": "workspace:*",
     "ql_cloudflare": "workspace:*",
+    "ql_corpus": "workspace:*",
     "ql_integration": "workspace:*",
-    "ql_orm": "workspace:*"
+    "ql_i18n": "workspace:*",
+    "ql_orm": "workspace:*",
+    "ql_source": "workspace:*",
+    "ql_workflow": "workspace:*"
   }
 }
