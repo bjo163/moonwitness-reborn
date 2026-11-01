@@ -1,6 +1,8 @@
-# MoonWitness
+# A-L-L-A-H.COM — EMPIRE OF THE LIGHT
 
-MoonWitness adalah fondasi workspace AI yang dibangun bertahap: runtime TypeScript, provider model OpenAI-compatible, memori percakapan, dan sistem addon model-first. Ini tahap awal platform—bukan klaim bahwa AGI sudah tercapai.
+A-L-L-A-H.COM adalah identitas publik dan gerbang ekosistem **EMPIRE OF THE LIGHT**. **MoonWitness** adalah platform perangkat lunak terintegrasi dan fondasi implementasinya di dalam ekosistem tersebut. Akronim, visi publik, janji, batas ekosistem, dan prinsip editorial ditetapkan dalam [Official Canon & Ecosystem Constitution](./docs/vision/ALLAH_COM_OFFICIAL_CANON.md).
+
+Repositori ini saat ini mengimplementasikan fondasi workspace AI MoonWitness secara bertahap: runtime TypeScript, provider model OpenAI-compatible, memori percakapan, dan sistem addon model-first. Itu adalah kondisi implementasi saat ini, bukan klaim bahwa seluruh visi A-L-L-A-H.COM/MoonWitness telah selesai atau AGI telah tercapai.
 
 Nama dan arah visual mengambil inspirasi umum dari narasi sci-fi kosmik dan arsitektur model-first di [repo MoonWitness](https://github.com/bjo163/moonwitness). Implementasi ini tetap berfokus pada asisten AI; domain dan fitur khusus dari repo referensi tidak diasumsikan sebagai kebutuhan produk.
 
