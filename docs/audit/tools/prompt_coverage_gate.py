@@ -48,9 +48,9 @@ TODO = os.path.join(ROOT, "TODO.md")
 REPORT = os.path.join(ROOT, "docs", "audit", "PROMPT_COVERAGE_AND_STEP8_REPORT.md")
 TRACE = os.path.join(ROOT, "docs", "governance", "REQUIREMENTS_TRACEABILITY.md")
 
-# The prompt numbers its phases PHASE 0..12; TODO.md numbering was written before that was
-# reconciled and reuses "Phase 12" for the Cloudflare lane. The mismatch is recorded as
-# R-45, so it is tolerated here rather than hidden — a NEW mismatch still fails.
+# TODO.md retains an older shifted numbering for phases 3–11. The mismatch is recorded as
+# R-45 and is surfaced as an owner goal; the Cloudflare workstream is not a prompt phase.
+# Existing shifted titles are tolerated until the owner-approved numbering reconciliation.
 TOLERATED_PHASE_TITLES = {
     3: "Product Specification",
     4: "Master Blueprint",
@@ -61,7 +61,6 @@ TOLERATED_PHASE_TITLES = {
     9: "Domain Expansion",
     10: "Integration & Hardening",
     11: "Release Preparation",
-    12: "External service integration (Cloudflare DNS)",
 }
 
 NON_DOMAIN_ADDONS = ("ql_base", "ql_chat", "ql_integration", "ql_cloudflare")
@@ -478,6 +477,165 @@ def check_phase_lists(failures):
     failures += ["PHASE_BUILD_MISSING_ROW_%d" % p for p in missing_build]
 
 
+def check_goal_mapping(failures):
+    """Every uncovered planning item and every enumerated build item has a TODO goal."""
+    if not os.path.exists(TRACE):
+        return
+    lines = read(TRACE)
+    pillar_rows = section_table(lines, "## Master prompt end-to-end crosswalk", 5)
+    step_rows = section_table(lines, "## FINAL ASSIGNMENT step map", 5)
+    gap_rows = section_table(lines, "## Goal links for planning-list gaps", 4)
+    build_rows = section_table(lines, "## Item-level goal map", 4)
+    if pillar_rows is None or step_rows is None or gap_rows is None or build_rows is None:
+        print("PROMPT_GOALS: goal mapping table missing")
+        failures.append("traceability has no prompt-to-TODO goal mapping")
+        return
+    pillar_rows = [c for c in pillar_rows if c[0] != "Prompt scope"]
+    step_rows = [c for c in step_rows if c[0] != "Step"]
+    gap_rows = [c for c in gap_rows if c[0] != "Phase"]
+    build_rows = [c for c in build_rows if c[0] != "Phase"]
+    todo_ids = set(re.findall(r"\bMW-\d{4}\b", "\n".join(read(TODO))))
+
+    def norm(s):
+        return re.sub(r"[^a-z0-9/`]", "", s.lower())
+
+    required_crosswalk = ["PILLAR %02d" % number for number in range(1, 13)]
+    required_crosswalk += ["Absolute project constitution", "Overlap, scope-resolution, and evidence rules",
+                           "FINAL ASSIGNMENT"]
+    mapped_scopes = [c[0].lower() for c in pillar_rows]
+    missing_scopes = [scope for scope in required_crosswalk
+                      if not any(scope.lower() in row for row in mapped_scopes)]
+    bad_crosswalk_goals = []
+    for row in pillar_rows:
+        ids = re.findall(r"\bMW-\d{4}\b", row[4])
+        if any(task_id not in todo_ids for task_id in ids):
+            bad_crosswalk_goals.append("%s -> %s" % (row[0], row[4]))
+
+    required_steps = {str(number) for number in range(1, 9)}
+    mapped_steps = {row[0].replace("STEP", "").strip() for row in step_rows}
+    missing_steps = sorted(required_steps - mapped_steps)
+    extra_steps = sorted(mapped_steps - required_steps)
+    bad_step_goals = []
+    for row in step_rows:
+        ids = re.findall(r"\bMW-\d{4}\b", row[3])
+        if any(task_id not in todo_ids for task_id in ids):
+            bad_step_goals.append("%s -> %s" % (row[0], row[3]))
+    print("PILLAR_CROSSWALK", len(required_crosswalk) - len(missing_scopes),
+          "of", len(required_crosswalk), "required rows | missing:", missing_scopes or "none",
+          "| invalid TODO IDs:", bad_crosswalk_goals or "none")
+    print("FINAL_ASSIGNMENT_STEPS", len(required_steps) - len(missing_steps),
+          "of", len(required_steps), "| missing:", missing_steps or "none",
+          "| extra:", extra_steps or "none", "| invalid TODO IDs:", bad_step_goals or "none")
+
+    plan = section_table(lines, "## PHASE 0–7 deliverable coverage", 5) or []
+    holes = {(c[0], norm(c[1])) for c in plan
+             if c[0] != "Phase" and c[3] != "COVERED"}
+    mapped_gaps = {(c[0], norm(c[1])): c for c in gap_rows}
+    missing_gaps = sorted(holes - set(mapped_gaps))
+    extra_gaps = sorted(set(mapped_gaps) - holes)
+    bad_gap_goals = []
+    for key in holes & set(mapped_gaps):
+        ids = re.findall(r"\bMW-\d{4}\b", mapped_gaps[key][2])
+        if not ids or any(task_id not in todo_ids for task_id in ids):
+            bad_gap_goals.append("%s %s -> %s" % (*key, mapped_gaps[key][2]))
+
+    phase_items = prompt_phase_lists()
+    expected = {(str(phase), norm(item)) for phase in (8, 11, 12)
+                for item in phase_items.get(phase, [])}
+    expected.update({
+        ("9", norm("Implement the source-to-publication lifecycle defined in Horizon 1")),
+        ("10", norm("Implement approved domains according to dependency order and priority; each domain must pass its own definition of done")),
+    })
+    mapped_build = {(c[0], norm(c[1])): c for c in build_rows}
+    missing_build = sorted(expected - set(mapped_build))
+    extra_build = sorted(set(mapped_build) - expected)
+    bad_build_goals = []
+    for key in expected & set(mapped_build):
+        ids = re.findall(r"\bMW-\d{4}\b", mapped_build[key][2])
+        if not ids or any(task_id not in todo_ids for task_id in ids):
+            bad_build_goals.append("%s %s -> %s" % (*key, mapped_build[key][2]))
+
+    print("PLANNING_GAP_GOALS", len(holes) - len(missing_gaps), "of", len(holes),
+          "| missing:", missing_gaps or "none",
+          "| extra:", extra_gaps or "none",
+          "| invalid TODO IDs:", bad_gap_goals or "none")
+    print("BUILD_ITEM_GOALS", len(expected) - len(missing_build), "of", len(expected),
+          "| missing:", missing_build or "none",
+          "| extra:", extra_build or "none",
+          "| invalid TODO IDs:", bad_build_goals or "none")
+
+    declarations, dependencies = [], {}
+    task_tables = [
+        ("#### Planning gaps and audit goals", 6, 3),
+        ("#### PHASE 8 — Single Application Foundation", 5, 2),
+        ("#### PHASE 9–10 — First Vertical Slice and Domain Expansion", 5, 2),
+        ("#### PHASE 11 — Integration and Hardening", 5, 2),
+        ("#### PHASE 12 — Release and Continuous Improvement", 5, 2),
+    ]
+
+    def task_table(heading, width):
+        source = read(TODO)
+        try:
+            start = next(i for i, line in enumerate(source) if line.startswith(heading))
+        except StopIteration:
+            return []
+        end = next((i for i in range(start + 1, len(source))
+                    if source[i].startswith("#")), len(source))
+        return [c for c in (cells(line) for line in source[start:end])
+                if c and len(c) == width and not set(c[0]) <= set("-: |")]
+
+    for heading, width, dependency_column in task_tables:
+        rows = task_table(heading, width)
+        for row in rows:
+            if row[0] == "ID":
+                continue
+            if re.fullmatch(r"MW-\d{4}", row[0]):
+                declarations.append(row[0])
+                dependencies[row[0]] = re.findall(r"\bMW-\d{4}\b", row[dependency_column])
+    duplicates = sorted({task_id for task_id in declarations
+                         if declarations.count(task_id) > 1})
+    missing_dependencies = sorted({
+        "%s -> %s" % (task_id, dependency)
+        for task_id, deps in dependencies.items()
+        for dependency in deps if dependency not in declarations
+    })
+    visiting, visited, cycles = set(), set(), []
+
+    def visit(task_id, trail):
+        if task_id in visiting:
+            cycles.append(" -> ".join(trail + [task_id]))
+            return
+        if task_id in visited:
+            return
+        visiting.add(task_id)
+        for dependency in dependencies.get(task_id, []):
+            if dependency in dependencies:
+                visit(dependency, trail + [task_id])
+        visiting.remove(task_id)
+        visited.add(task_id)
+
+    for task_id in dependencies:
+        visit(task_id, [])
+    print("GOAL_TASK_IDS", len(declarations), "declared | duplicates:", duplicates or "none")
+    print("GOAL_DEPENDENCIES", sum(len(v) for v in dependencies.values()),
+          "edges | missing:", missing_dependencies or "none",
+          "| cycles:", cycles or "none")
+    failures += ["PROMPT_GAP_GOAL_MISSING: %s %s" % item for item in missing_gaps]
+    failures += ["PROMPT_GAP_GOAL_EXTRA: %s %s" % item for item in extra_gaps]
+    failures += ["PROMPT_GAP_GOAL_INVALID_TASK: %s" % item for item in bad_gap_goals]
+    failures += ["BUILD_GOAL_MISSING: %s %s" % item for item in missing_build]
+    failures += ["BUILD_GOAL_EXTRA: %s %s" % item for item in extra_build]
+    failures += ["BUILD_GOAL_INVALID_TASK: %s" % item for item in bad_build_goals]
+    failures += ["PILLAR_CROSSWALK_MISSING: %s" % scope for scope in missing_scopes]
+    failures += ["PILLAR_CROSSWALK_INVALID_TASK: %s" % item for item in bad_crosswalk_goals]
+    failures += ["FINAL_STEP_MISSING: %s" % step for step in missing_steps]
+    failures += ["FINAL_STEP_EXTRA: %s" % step for step in extra_steps]
+    failures += ["FINAL_STEP_INVALID_TASK: %s" % item for item in bad_step_goals]
+    failures += ["GOAL_TASK_DUPLICATE: %s" % task_id for task_id in duplicates]
+    failures += ["GOAL_DEPENDENCY_MISSING: %s" % edge for edge in missing_dependencies]
+    failures += ["GOAL_DEPENDENCY_CYCLE: %s" % cycle for cycle in cycles]
+
+
 def check_criteria(failures):
     pc = prompt_criteria()
     if not os.path.exists(REPORT):
@@ -749,6 +907,7 @@ def main():
     check_baseline_tracking()
     check_phases(failures)
     check_phase_lists(failures)
+    check_goal_mapping(failures)
     check_criteria(failures)
     check_step8(failures)
     tally = check_owner_vocabulary(failures)

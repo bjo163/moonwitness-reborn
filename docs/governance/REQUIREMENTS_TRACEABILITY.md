@@ -1,28 +1,83 @@
 # Requirements Traceability Matrix
 
-**Status: initial skeleton.** The target repository (`moonwitness-reborn`) is ratified; test IDs and issue links remain TBD until product requirements and the remaining planning decisions are ratified. `TODO.md` is the sole task-status register.
+**Status: expanded prompt crosswalk.** The target repository (`moonwitness-reborn`) is ratified. This matrix maps all 12 pillars, all 31 deliverables, the execution phases, acceptance criteria, final-assignment steps, and the absolute constitution to canonical documents and TODO goals. A mapped requirement is not evidence that it is implemented or tested. `TODO.md` is the sole task-status register; test IDs, implementation evidence, and issue links are filled as tasks are approved and executed.
 
 | Requirement ID | Requirement | Canonical spec | Candidate task(s) | Evidence / test status |
 |---|---|---|---|---|
-| REQ-PROD-001 | One integrated product and coherent experience | Product Specification; BLUEPRINT | MW-0201, MW-0306 | Proposed; no E2E evidence |
-| REQ-ARCH-001 | One Web/API application, API and identity authority | BLUEPRINT | MW-0002, MW-0301 | Target proposed; local workspace partial |
-| REQ-ARCH-002 | Domain behavior, models, ACL and views in TypeScript ql addons | BLUEPRINT; local AGENTS.md | MW-0003, MW-0302, MW-0304 | Binding workspace rule; local audit found partial boundary debt |
-| REQ-DATA-001 | QlOrm owns app schema; no Drizzle/migration files | Database Strategy | MW-0203 | Binding; QlOrm partial evolution tests pending |
-| REQ-DATA-002 | Exactly one canonical owner per entity | Domain Registry | MW-0202 | Proposed matrix; owner review pending |
-| REQ-DATA-003 | Source, version, rights and provenance trace every imported record | Data Lifecycle; Corpus Plan | MW-0102–MW-0103, MW-0401–MW-0402 | Proposed; rights and data audit pending |
-| REQ-KNOW-001 | Exact text, translation, commentary and interpretation stay distinct | Corpus Plan; Data Dictionary | MW-0402–MW-0403 | Proposed; no selected edition |
-| REQ-API-001 | Shared moonclient contracts/routes and moonClient web transport | API Contract | MW-0305 | Local implementation observed; tests pending |
-| REQ-SEC-001 | Default-deny ACL and cross-owner isolation | Security Blueprint | MW-0205, MW-0303 | Partial implementation; required negative tests not run |
-| REQ-SEC-002 | Private secrets never in metadata/CRUD/logs/responses | Security; AI Architecture | MW-0205, MW-0303 | Provider field encrypted/private observed; full path tests pending |
-| REQ-SEC-003 | Internal service accesses remain owner-scoped | Security Blueprint | MW-0205, MW-0303 | Pending test evidence |
-| REQ-UX-001 | Shared `@moonwitness/ui`, responsive accessible patterns | Master Design | MW-0206, MW-0306 | Current package exists; audit/coverage pending |
-| REQ-I18N-001 | Initial UI locales id/en and dark/light themes | I18N; Master Design | MW-0206, MW-0306 | Gap locally; proposed |
-| REQ-AI-001 | AI cannot silently write canonical records or assert final authority | AI Architecture | MW-0205, MW-0207 | Proposed policy; tests/evals pending |
-| REQ-OPS-001 | Reproducible build, health, backup/restore and rollback evidence | Infrastructure; Migration Plan | MW-0307, MW-0407 | CI workflow exists; deployment/recovery not verified |
-| REQ-GOV-001 | Unique tasks and accepted decisions have evidence | TODO; ADR Registry; GitHub Governance | MW-0001 | Proposed; no GitHub issue created |
-| REQ-REL-001 | Release claims are tied to exact SHA and gates | Release Strategy | MW-0406–MW-0408 | No release evidence for this workspace |
+| REQ-PROD-001 | One integrated product and coherent experience | Product Specification; BLUEPRINT; official canon | MW-0601, MW-0616, MW-0905 | Product target documented; implementation audit and first-slice evidence pending |
+| REQ-ARCH-001 | One Web/API application, API and identity authority | BLUEPRINT | MW-0601, MW-0802 | Target proposed; conformance not yet audited against current code |
+| REQ-ARCH-002 | Domain behavior, models, ACL and views in TypeScript ql addons | BLUEPRINT; local AGENTS.md | MW-0601, MW-1001 | Binding workspace rule; addon-by-addon evidence pending |
+| REQ-DATA-001 | QlOrm owns app schema; no Drizzle/migration files | Database Strategy | MW-0601, MW-0807, MW-1103 | Binding; runtime and schema-evolution evidence pending |
+| REQ-DATA-002 | Exactly one canonical owner per entity | Domain Registry | MW-0601, MW-0611, MW-1001, MW-1101 | 23-domain registry mapped; implementation and owner ratification pending |
+| REQ-DATA-003 | Source, version, rights and provenance trace every imported record | Data Lifecycle; Corpus Plan | MW-0605, MW-0901, MW-0902, MW-1104 | Proposed; rights-approved edition and implementation evidence pending |
+| REQ-KNOW-001 | Exact text, translation, commentary and interpretation stay distinct | Corpus Plan; Data Dictionary | MW-0903, MW-0905, MW-1104 | Proposed; first-slice and rights evidence pending |
+| REQ-API-001 | Shared moonclient contracts/routes and moonClient web transport | API Contract | MW-0601, MW-0811, MW-1102 | Local code exists; full route/contract conformance audit pending |
+| REQ-SEC-001 | Default-deny ACL and cross-owner isolation | Security Blueprint | MW-0601, MW-0809, MW-1105 | Partial implementation; required negative-test evidence pending |
+| REQ-SEC-002 | Private secrets never in metadata/CRUD/logs/responses | Security; AI Architecture | MW-0601, MW-0810, MW-1105 | Private-field controls exist in part; full-path audit and tests pending |
+| REQ-SEC-003 | Internal service accesses remain owner-scoped | Security Blueprint | MW-0601, MW-0809, MW-1105 | Owner-scope evidence pending |
+| REQ-UX-001 | Shared `@moonwitness/ui`, responsive accessible patterns | Master Design | MW-0601, MW-0804, MW-0805, MW-1106, MW-1108 | Package exists; rendered UX and accessibility verification pending |
+| REQ-I18N-001 | Initial UI locales id/en and dark/light themes | I18N; Master Design | MW-0607, MW-0805, MW-0806, MW-1107 | Requirements mapped; locale/theme implementation audit pending |
+| REQ-AI-001 | AI cannot silently write canonical records or assert final authority | AI Architecture; official canon | MW-0601, MW-1105 | Policy documented; permission, evaluation, and audit evidence pending |
+| REQ-OPS-001 | Reproducible build, health, backup/restore and rollback evidence | Infrastructure; Migration Plan | MW-0601, MW-0813, MW-0814, MW-1110–MW-1113 | Deployment/recovery evidence not verified |
+| REQ-GOV-001 | Unique tasks and accepted decisions have evidence | TODO; ADR Registry; GitHub Governance | MW-0612–MW-0616 | Goal register created; owner ratification and gated GitHub mapping pending |
+| REQ-REL-001 | Release claims are tied to exact SHA and gates | Release Strategy | MW-0616, MW-1201–MW-1208 | Existing release is historical; current release-gate evidence pending |
 
 Add requirements through a stable ID process. Every accepted requirement links to one canonical spec, domain owner, task, test/evidence and release gate. Do not mark complete by document presence alone.
+
+## Master prompt end-to-end crosswalk
+
+The prompt has four independently checked layers: its 12 product/architecture pillars, the execution protocol's 87 planning-list entries, its 35 enumerated build/verification/release entries, and its nine acceptance criteria. The tables below expose both mapping coverage and implementation evidence; `MAPPED / UNVERIFIED` means a canonical home exists but the implementation audit has not established the behavior.
+
+| Prompt scope | Requirement coverage | Canonical carrier(s) | Mapping / evidence state | Goal(s) |
+|---|---|---|---|---|
+| PILLAR 01 §§1.1–1.5 — Constitution, identity, vision | Product identity, ecosystem boundaries, spiritual/editorial safeguards, north star, principles | `docs/vision/ALLAH_COM_OFFICIAL_CANON.md`; D04; D05 | Identity/narrative canon ratified; product scope/first journey remain proposed; implementation unverified | MW-0601, MW-0602, MW-0616 |
+| PILLAR 02 §§2.1–2.6 — Repository intelligence and migration | Audit scope/depth/classification, preservation, reconciliation | D01, D02, D03; `docs/audit/tools/repository_census_gate.py` | Census and 102-row owner roll-up gate pass at recorded HEAD; source-depth, rights, permission scopes, and implementation evidence remain limited | MW-0601, MW-0603, MW-0616 |
+| PILLAR 03 §§3.1–3.6 — Single Web/API architecture | Unified application, runtime, modularity, processing, technology, application structure | D06/D07; D13; D14; D18; D19; D23 | Target architecture mapped; current conformance requires code-level audit | MW-0601, MW-0616 |
+| PILLAR 04 §§4.1–4.5 — Canonical data and domain ownership | Shared kernel, 23 domains, entities, contracts, dependencies | D08–D14; D30 | 23/23 §4.3 domains and 20/20 §4.4 attributes mapped; per-domain contract depth and events/notifications unresolved; five domains have no estate-source material | MW-0601, MW-0610–MW-0612 |
+| PILLAR 05 §§5.1–5.12 — Knowledge, corpus, research | Source, exact text, editions, rights, provenance, research methods/evidence | D11, D12, D15, D16; D29 | Specifications mapped; dataset/edition rights and first-slice evidence remain unapproved; implementation unverified | MW-0601, MW-0605, MW-0901–MW-0905 |
+| PILLAR 06 §§6.1–6.5 — Character, story, creative | Person/character/agent/story separation, canon, visual/narrative use, creative studio | D11, D17, D04 | Boundary specification mapped; five-domain/source gap includes `ql_creative`; implementation unverified | MW-0601, MW-0611, MW-1001 |
+| PILLAR 07 §§7.1–7.8 — AI, agents, workflows | Provider/config boundary, agents, lifecycle, memory, safety/evaluation, workflows | D18, D19, D28; D22 | Safety and workflow specs mapped; code-level permissions, evaluations, and no-silent-write evidence remain to audit | MW-0601, MW-1001, MW-1105 |
+| PILLAR 08 §§8.1–8.8 — UX, design, branding, I18N | One shell, patterns/routes, brand, tokens, components, tenant branding, id/en | D20, D21; `docs/vision/ALLAH_COM_OFFICIAL_CANON.md` | Public identity is canonically defined; visual brand/token inventory and tenant model are partial; current UI is not a verified implementation of the proposed system | MW-0601, MW-0602, MW-0606–MW-0608, MW-0803–MW-0806 |
+| PILLAR 09 §§9.1–9.6 — Security, privacy, rights, integrity | Identity/ACL, privacy, rights, religious/research integrity, admin governance | D12, D22, D28; D08; D13 | Requirements mapped; tenant decision, rights evidence, and full negative-test coverage remain open | MW-0601, MW-0605, MW-0608, MW-1104, MW-1105 |
+| PILLAR 10 §§10.1–10.10 — Data, API, infrastructure, quality | Database, API, search, storage/media, import/export, observability, performance, tests, NFRs | D13–D16, D23, D24, D29, D31 | Search specification absent; storage decision/threat model and quantitative performance targets incomplete; implementation/CI evidence must be rechecked | MW-0601, MW-0604, MW-0605, MW-0609, MW-0807, MW-0810–MW-0814, MW-1102–MW-1113 |
+| PILLAR 11 §§11.1–11.4 — Scope, journeys, roadmap | Personas, seven journeys, horizons, first-release principle | D04, D05, D19, D31 | Product requirements mapped but priority, first journey, and approved dataset remain pending owner ratification | MW-0601, MW-0616, MW-0901–MW-1001 |
+| PILLAR 12 §§12.1–12.6 — Governance, documentation, AI execution | Document ownership, traceability, ADRs, TODO/GitHub, branches, agent execution | D25–D30; TODO.md; D27; D28 | Core policies mapped; task dependencies, label taxonomy, GitHub object mapping, and phase-number alignment remain open | MW-0601, MW-0612–MW-0617, MW-1201–MW-1208 |
+| Absolute project constitution — rules 1–30 | Single authorities, no duplicate ownership/surfaces, rights/privacy, evidence/status honesty, acceptance, architecture changes | Official canon; D03, D06–D14, D18–D31; `AGENTS.md` | Rules have canonical homes; technical compliance is not inferred from documentation and requires code/tests/evidence | MW-0601, MW-1101–MW-1113 |
+| Overlap, scope-resolution, and evidence rules | Seven-step overlap resolution; seven-step scope resolution; status vocabulary | D03, D05–D08, D25, D30, D31; official canon | Mapped as governing policy; each discovered overlap and status claim must be checked against code and evidence | MW-0601, MW-0611, MW-0616 |
+| FINAL ASSIGNMENT — STEPS 1–8 | Repository discovery, source audit, capability map, conflict resolution, ownership, D01–D31, TODO, report | D01–D03, D08–D31, TODO.md, `docs/audit/PROMPT_COVERAGE_AND_STEP8_REPORT.md` | Deliverable/report structure mapped; live repository permissions, exact current implementation evidence, and build-phase TODO decomposition are not all verified | MW-0601, MW-0603, MW-0612, MW-0616 |
+
+## FINAL ASSIGNMENT step map
+
+| Step | Prompt requirement | Canonical home | Goal/task | State |
+|---|---|---|---|---|
+| 1 | Repository discovery and source-of-truth selection | D01, D02, D27; MW-ADR-001 | MW-0603, MW-0616 | Repository selected; permission scope incomplete |
+| 2 | Complete code/data/source audit | D01, D02, D15–D17 | MW-0601 | Prior repository census exists; implementation audit not yet run |
+| 3 | Map features, models, API, screens, sources, characters, assets, workflows | D02 estate roll-up; D08, D11, D13, D17, D19 | MW-0601, MW-0611 | Repository capability map exists; implementation inventory is next |
+| 4 | Resolve historical architecture and migration conflicts | D03; D06–D09; D29 | MW-0601, MW-0616 | Conflicts recorded; owner dispositions remain |
+| 5 | Finalize canonical domain/entity/schema/dependency ownership | D08–D14 | MW-0610–MW-0612, MW-1001 | 23 domains mapped; contract depth, no-source domains, and implementation evidence remain |
+| 6 | Finalize applicable D01–D31 master documents | `docs/audit/DELIVERABLE_REGISTER.md` | MW-0616 | 31/31 canonical document paths registered; proposals still require appropriate review/ratification |
+| 7 | Convert approved requirements to unique bounded microtasks with dependencies | TODO.md; MW-0601–MW-1208 | MW-0612, MW-0616 | 58 proposed goals/tasks now have IDs, acceptance criteria, owners, and an acyclic dependency map; implementation tasks remain gated |
+| 8 | Present the twelve-item STEP 8 report | This report | — | 12/12 requested report items present; factual evidence remains separately qualified |
+
+## Goal links for planning-list gaps
+
+Each PARTIAL/NONE entry in PHASE 0–7 has a concrete TODO goal. These goals make the gap actionable; they do not upgrade its coverage status until the acceptance criterion is evidenced.
+
+| Phase | Prompt item | Goal in TODO.md | Status before goal evidence |
+|---|---|---|---|
+| 0 | Inspect GitHub permissions | MW-0603 | PARTIAL |
+| 3 | Search | MW-0604 | NONE |
+| 3 | Storage | MW-0605 | PARTIAL |
+| 5 | Brand | MW-0606 | PARTIAL — official identity is ratified; visual brand specification is not complete |
+| 5 | Design Tokens | MW-0607 | PARTIAL |
+| 6 | Tenant Model | MW-0608 | PARTIAL |
+| 6 | Performance Requirements | MW-0609 | PARTIAL |
+| 7 | Microtask breakdown | MW-0612 | PARTIAL |
+| 7 | Dependencies | MW-0612 | PARTIAL |
+| 7 | GitHub Issues | MW-0614 | PARTIAL — creation deliberately gated |
+| 7 | GitHub Project | MW-0614 | PARTIAL — creation deliberately gated |
+| 7 | Labels | MW-0613 | NONE |
+| 7 | Milestones | MW-0614 | PARTIAL — creation deliberately gated |
 
 ## PHASE 0–7 deliverable coverage (planning phases)
 
@@ -41,7 +96,7 @@ that entry is missing.
 | Phase | Deliverable required by the prompt | Carrier in this baseline | Status | Gap entry |
 |---|---|---|---|---|
 | 0 | Identify the correct main repository | D01 §Selected repository findings summary; D26 owner selection of `moonwitness-reborn` | COVERED | — |
-| 0 | Inspect GitHub permissions | D27 §Verified `moonwitnessxv` snapshot and §Verified current workspace repository (account `bjo163` admin on both) | PARTIAL | R-51 |
+| 0 | Inspect GitHub permissions | D27 §Verified `moonwitnessxv` snapshot and §Verified current workspace repository (account `bjo163` admin on both); full organization/team scope remains unverified | PARTIAL | R-51 |
 | 0 | Inspect default branch and working branch | D02 per-row branch and tip column; D27 §Verified current workspace repository | COVERED | — |
 | 0 | Capture exact SHA | D02 per-row SHA at every census row; `docs/audit/tools/repository_census_gate.py` fails on a stale one | COVERED | — |
 | 0 | Audit all relevant repositories | D02 roll-up, 102 rows (92 repositories plus 10 XV component slices) | COVERED | — |
@@ -92,7 +147,7 @@ that entry is missing.
 | 4 | Source and Provenance Contract | D12 §Provenance record minimum; D10 §Required shared concepts | COVERED | — |
 | 4 | Data Lifecycle | D12 §Lifecycle | COVERED | — |
 | 4 | Migration Specification | D29 §Data import and rollback and §Schema rollout under QlOrm | COVERED | — |
-| 5 | Brand | no brand section in the baseline; D04 §Identity fixes the name, nothing fixes wordmark, palette ownership or voice | NONE | R-50 |
+| 5 | Brand | `docs/vision/ALLAH_COM_OFFICIAL_CANON.md` fixes the A-L-L-A-H.COM identity, vision, promise and declaration; no approved visual wordmark, palette ownership, or full voice/usage specification | PARTIAL | R-50 |
 | 5 | Visual System | D20 §2 Visual system requirements | COVERED | — |
 | 5 | Application Shell | D20 §9 Application shell | COVERED | — |
 | 5 | Navigation | D20 §5 Navigation plus the §9 role-checked routes | COVERED | — |
@@ -141,3 +196,47 @@ from the prompt on every run; a number typed here that no longer matches is a fa
 | 10 | 0 | 0 | BUILD — prose only; dependency order comes from D08 §Dependency graph |
 | 11 | 13 | 0 | BUILD — verification list, no checklist item exists yet (R-52) |
 | 12 | 8 | 0 | BUILD — `TODO.md` §2 has no row for this ladder; the release steps have already been executed end to end by another session (PR #1/#2 merged, tag and release `v0.1.0` at `4fdb7c7…`, release workflow `286bde5…` on `dev`) while the plan that governs them is still unratified (R-52) |
+
+## Item-level goal map
+
+All numbered build, verification, and release items are mapped individually below. PHASE 9 and 10 are prose requirements rather than numbered lists, so each has one explicit goal row. Task IDs and acceptance criteria are defined in TODO.md; status remains blocked until its gates are met.
+
+| Phase | Prompt item | Goal ID | State |
+|---|---|---|---|
+| 8 | Repository foundation | MW-0801 | BLOCKED |
+| 8 | Unified Web/API bootstrap | MW-0802 | BLOCKED |
+| 8 | Routing | MW-0803 | BLOCKED |
+| 8 | Application shell | MW-0804 | BLOCKED |
+| 8 | Design system | MW-0805 | BLOCKED |
+| 8 | I18N | MW-0806 | BLOCKED |
+| 8 | Database | MW-0807 | BLOCKED |
+| 8 | Authentication | MW-0808 | BLOCKED |
+| 8 | Authorization | MW-0809 | BLOCKED |
+| 8 | Logging and error handling | MW-0810 | BLOCKED |
+| 8 | API contracts | MW-0811 | BLOCKED |
+| 8 | Tests | MW-0812 | BLOCKED |
+| 8 | Docker | MW-0813 | BLOCKED |
+| 8 | Health checks | MW-0814 | BLOCKED |
+| 9 | Implement the source-to-publication lifecycle defined in Horizon 1 | MW-0901, MW-0902, MW-0903, MW-0904, MW-0905 | BLOCKED |
+| 10 | Implement approved domains according to dependency order and priority; each domain must pass its own definition of done | MW-1001 | BLOCKED |
+| 11 | Domain boundaries | MW-1101 | BLOCKED |
+| 11 | API consistency | MW-1102 | BLOCKED |
+| 11 | Database integrity | MW-1103 | BLOCKED |
+| 11 | Rights | MW-1104 | BLOCKED |
+| 11 | Security | MW-1105 | BLOCKED |
+| 11 | UX | MW-1106 | BLOCKED |
+| 11 | I18N | MW-1107 | BLOCKED |
+| 11 | Accessibility | MW-1108 | BLOCKED |
+| 11 | Performance | MW-1109 | BLOCKED |
+| 11 | Backup | MW-1110 | BLOCKED |
+| 11 | Restore | MW-1111 | BLOCKED |
+| 11 | Docker | MW-1112 | BLOCKED |
+| 11 | Failure recovery | MW-1113 | BLOCKED |
+| 12 | Merge to `dev` | MW-1201 | BLOCKED |
+| 12 | Verify integration | MW-1202 | BLOCKED |
+| 12 | Promote to `main` | MW-1203 | BLOCKED |
+| 12 | Generate version | MW-1204 | BLOCKED |
+| 12 | Update changelog | MW-1205 | BLOCKED |
+| 12 | Publish release | MW-1206 | BLOCKED |
+| 12 | Update documentation | MW-1207 | BLOCKED |
+| 12 | Begin the next approved milestone | MW-1208 | BLOCKED |
