@@ -1,5 +1,7 @@
 # Product Specification
 
+**Ecosystem context:** A-L-L-A-H.COM / EMPIRE OF THE LIGHT identity is governed by [`../vision/ALLAH_COM_OFFICIAL_CANON.md`](../vision/ALLAH_COM_OFFICIAL_CANON.md). This specification owns MoonWitness user needs, product scope and acceptance criteria only.
+
 **Status: PROPOSED · Canonical product requirements owner**
 
 ## Product outcome
