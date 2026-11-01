@@ -162,7 +162,7 @@ Owner directive and plan approval on 2026-11-01; MW-ADR-013 and MW-ADR-014 recor
 
 | Category | Status |
 |---|---|
-| **Phase 1** | Reconciliation complete; all 44 discrepancy entries (R-01–R-44) evidenced with exact SHAs |
+| **Phase 1** | Reconciliation **register** complete, reconciliation **decided** not: all 53 discrepancy entries (R-01–R-53, count printed as `RECON_ENTRIES` by `prompt_coverage_gate.py`) carry file/line/bridge/evidence rows with exact SHAs, and 18 of them still block ratification |
 | **Phase 1 — repository census (D02)** | **CENSUS COMPLETE**: 92 individually SHA-pinned rows = 90 filter-matched candidates (84 with a commit, 6 verified empty) + 2 carried rows; produced by the three-source union census (search + user listing + org listing) after the fork-exclusion and org-vs-user defects were found; coverage and SHA freshness enforced by `docs/audit/tools/repository_census_gate.py`, currently green (`GATE: PASS`) with one documented moving-tip exemption |
 | **Phase 1 — capability mapping (D02/D08)** | **MAPPING COMPLETE**: every one of the 102 matrix rows (92 repositories + 10 XV component slices) has a target canonical owner in the estate-wide roll-up, enforced by the same gate (`ROLLUP_COVERAGE 102 of 102`); 38 rows resolve to `NONE` (empty, independent, excluded or illegal to depend on), 3 to `MULTIPLE`, 2 stay `TBD` for want of an inventory, and the roll-up surfaced two new owner decisions (R-43 single-owner capacity, R-44 material with no ratified domain) |
 | **Phase 2** | Master Vision Narrative exists; owner ratification pending |
