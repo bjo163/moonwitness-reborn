@@ -105,7 +105,10 @@ void test("view declarations validate model and field names", () => {
   );
 });
 
-void test("service-owned records keep private fields out of user CRUD", async () => {
+async function runRecordSuite(
+  databaseUrl: string,
+  tableName: string,
+): Promise<void> {
   const manifest = {
     ...base,
     access: [
@@ -122,10 +125,11 @@ void test("service-owned records keep private fields out of user CRUD", async ()
       {
         name: "ai.provider",
         description: "Provider credentials",
-        tableName: "ai_provider_test",
+        tableName,
         ownerField: "owner_id",
         fields: {
           name: { type: "char" as const, required: true },
+          code: { type: "char" as const, unique: true },
           base_url: {
             type: "char" as const,
             required: true,
@@ -146,6 +150,11 @@ void test("service-owned records keep private fields out of user CRUD", async ()
             minValue: 0,
             maxValue: 1000,
           },
+          enabled: {
+            type: "boolean" as const,
+            required: true,
+            default: true,
+          },
           owner_id: { type: "char" as const, required: true, private: true },
           created_at: { type: "datetime" as const, required: true },
           updated_at: { type: "datetime" as const, required: true },
@@ -153,7 +162,7 @@ void test("service-owned records keep private fields out of user CRUD", async ()
       },
     ],
   };
-  const runtime = await createQlOrm("file::memory:", [manifest]);
+  const runtime = await createQlOrm(databaseUrl, [manifest]);
   try {
     const record = await runtime.orm.createForService("ai.provider", "owner-1", {
       name: "Primary",
@@ -220,7 +229,75 @@ void test("service-owned records keep private fields out of user CRUD", async ()
       }),
       /between 0 and 1000/,
     );
+    await runtime.orm.createForService("ai.provider", "owner-1", {
+      name: "Coded",
+      base_url: "https://coded.example/v1",
+      encrypted_api_key: "secret",
+      code: "unique-code",
+    });
+    await assert.rejects(
+      runtime.orm.createForService("ai.provider", "owner-1", {
+        name: "Duplicate code",
+        base_url: "https://duplicate.example/v1",
+        encrypted_api_key: "secret",
+        code: "unique-code",
+      }),
+      /already exists/,
+    );
+    await runtime.orm.createRecordForService("ai.provider", {
+      name: "First",
+      base_url: "https://first.example/v1",
+      encrypted_api_key: "secret",
+      owner_id: "owner-7",
+    });
+    await runtime.orm.createRecordForService("ai.provider", {
+      name: "Second",
+      base_url: "https://second.example/v1",
+      encrypted_api_key: "secret",
+      owner_id: "owner-7",
+    });
+    assert.deepEqual(
+      (
+        await runtime.orm.findManyByService(
+          "ai.provider",
+          { owner_id: "owner-7" },
+          { orderBy: "rowid-asc", limit: 10 },
+        )
+      ).map((record) => record.name),
+      ["First", "Second"],
+    );
+    const ordered = await runtime.orm.findManyForService(
+      "ai.provider",
+      "owner-1",
+    );
+    const coded = ordered.find((record) => record.name === "Coded");
+    assert.equal(coded?.enabled, true);
+    assert.equal(typeof coded?.priority, "number");
+    assert.equal(coded?.priority, 0);
+    assert.equal(typeof coded?.created_at, "number");
+    assert.ok(Number.isSafeInteger(coded?.created_at));
+    await runtime.orm.updateForService(
+      "ai.provider",
+      "owner-1",
+      String(coded?.id),
+      { enabled: false },
+    );
+    const disabled = await runtime.orm.findOneByService("ai.provider", {
+      id: String(coded?.id),
+    });
+    assert.equal(disabled?.enabled, false);
   } finally {
     runtime.close();
   }
+}
+
+void test("service CRUD and ACL hold on libsql", async () => {
+  await runRecordSuite("file::memory:", "ai_provider_libsql_test");
 });
+
+const postgresUrl = process.env.QL_ORM_PG_URL;
+if (postgresUrl) {
+  void test("service CRUD and ACL hold on postgres", async () => {
+    await runRecordSuite(postgresUrl, `ai_provider_pg_${Date.now().toString(36)}`);
+  });
+}

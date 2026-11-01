@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { createClient, type Client, type InValue } from "@libsql/client";
+import { Pool, types as pgTypes } from "pg";
 
 export type QlFieldType = "char" | "text" | "integer" | "boolean" | "datetime";
 export type QlOperation = "read" | "create" | "write" | "unlink";
@@ -59,6 +60,7 @@ export interface QlUserContext {
 
 export type QlRecord = Record<string, string | number | boolean | null>;
 export type QlServiceValue = string | number | boolean | null;
+export type QlSqlValue = string | number | boolean | null;
 export interface QlServiceQueryOptions {
   limit?: number;
   orderBy?: { field: string; direction: "asc" | "desc" } | "rowid-asc";
@@ -83,19 +85,146 @@ function quoteIdentifier(identifier: string): string {
   return `"${identifier}"`;
 }
 
-function sqlType(type: QlFieldType): string {
+export interface QlQueryResult {
+  rows: readonly Record<string, unknown>[];
+  rowsAffected: number;
+}
+
+export interface QlConnection {
+  readonly driver: "libsql" | "postgres";
+  execute(sql: string, values: readonly QlSqlValue[]): Promise<QlQueryResult>;
+  columnNames(table: string): Promise<Set<string>>;
+  close(): void;
+}
+
+class LibSqlConnection implements QlConnection {
+  readonly driver = "libsql" as const;
+
+  constructor(private readonly client: Client) {}
+
+  async execute(
+    sql: string,
+    values: readonly QlSqlValue[],
+  ): Promise<QlQueryResult> {
+    const result = await this.client.execute({
+      sql,
+      args: values as InValue[],
+    });
+    return { rows: result.rows, rowsAffected: result.rowsAffected ?? 0 };
+  }
+
+  async columnNames(table: string): Promise<Set<string>> {
+    const result = await this.client.execute(`PRAGMA table_info(${table})`);
+    return new Set(
+      result.rows.flatMap((row) =>
+        typeof row.name === "string" ? [row.name] : [],
+      ),
+    );
+  }
+
+  close(): void {
+    this.client.close();
+  }
+}
+
+// node-postgres mengembalikan string untuk int8 agar tidak kehilangan presisi;
+// QlOrm memakai int8 untuk integer dan datetime epoch, jadi angka dikonversi ke number.
+pgTypes.setTypeParser(20, (value: string | null) =>
+  value === null ? null : Number(value),
+);
+
+class PostgresConnection implements QlConnection {
+  readonly driver = "postgres" as const;
+
+  constructor(private readonly pool: Pool) {}
+
+  async execute(
+    sql: string,
+    values: readonly QlSqlValue[],
+  ): Promise<QlQueryResult> {
+    const result = await this.pool.query<Record<string, unknown>>(
+      sql,
+      [...values],
+    );
+    return {
+      rows: result.rows,
+      rowsAffected: result.rowCount ?? 0,
+    };
+  }
+
+  async columnNames(table: string): Promise<Set<string>> {
+    const result = await this.pool.query<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = $1`,
+      [table.replaceAll('"', "")],
+    );
+    return new Set(
+      result.rows.flatMap((row) =>
+        typeof row.column_name === "string" ? [row.column_name] : [],
+      ),
+    );
+  }
+
+  close(): void {
+    // Penutup dipanggil dari handler sinkron (proses exit / callback server.close),
+    // jadi pool.end() hanya diberi kesempatan selesai; reject-nya tidak boleh
+    // menjatuhkan proses yang sedang mematikan diri.
+    void this.pool.end().catch(() => undefined);
+  }
+}
+
+class SqlBuilder {
+  private readonly values: QlSqlValue[] = [];
+
+  constructor(private readonly driver: "libsql" | "postgres") {}
+
+  param(value: QlSqlValue): string {
+    this.values.push(value);
+    return this.driver === "postgres" ? `$${this.values.length}` : "?";
+  }
+
+  get args(): readonly QlSqlValue[] {
+    return this.values;
+  }
+}
+
+function sqlType(driver: "libsql" | "postgres", type: QlFieldType): string {
   switch (type) {
     case "integer":
-    case "boolean":
     case "datetime":
-      return "INTEGER";
+      return driver === "postgres" ? "BIGINT" : "INTEGER";
+    case "boolean":
+      return driver === "postgres" ? "SMALLINT" : "INTEGER";
     case "char":
     case "text":
       return "TEXT";
   }
 }
 
-function toDatabaseValue(value: unknown, field: QlFieldDefinition): InValue {
+// Postgres tidak punya rowid, jadi tabel mendapat kolom urutan sisipan terpisah.
+function orderExpression(driver: "libsql" | "postgres"): string {
+  return driver === "postgres" ? quoteIdentifier("ql_seq") : "rowid";
+}
+
+function sqlDefault(field: QlFieldDefinition): string {
+  if (field.default === undefined) return "";
+  if (typeof field.default === "string") {
+    return `DEFAULT '${field.default.replace(/'/g, "''")}'`;
+  }
+  if (field.type === "boolean") {
+    return `DEFAULT ${field.default ? 1 : 0}`;
+  }
+  return `DEFAULT ${field.default}`;
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  if ((error as { code?: unknown }).code === "23505") return true;
+  return /(?:SQLITE_CONSTRAINT_(?:UNIQUE|PRIMARYKEY)|UNIQUE constraint failed|duplicate key value violates unique constraint)/i.test(
+    error.message,
+  );
+}
+
+function toDatabaseValue(value: unknown, field: QlFieldDefinition): QlSqlValue {
   if (value === null && !field.required) {
     return null;
   }
@@ -328,55 +457,58 @@ export class QlModelRegistry {
 
 export class QlOrm {
   constructor(
-    private readonly client: Client,
+    private readonly connection: QlConnection,
     readonly registry: QlModelRegistry,
   ) {}
 
   async syncSchema(): Promise<void> {
+    const driver = this.connection.driver;
     for (const model of this.registry.getModels()) {
+      const table = quoteIdentifier(model.tableName);
       const columns = [
         `${quoteIdentifier("id")} TEXT PRIMARY KEY NOT NULL`,
         ...Object.entries(model.fields).map(([name, field]) => {
           const parts = [
             quoteIdentifier(name),
-            sqlType(field.type),
+            sqlType(driver, field.type),
             field.required ? "NOT NULL" : "",
             field.unique ? "UNIQUE" : "",
-            field.default !== undefined
-              ? `DEFAULT ${typeof field.default === "string" ? `'${field.default.replace(/'/g, "''")}'` : field.default === true ? 1 : field.default === false ? 0 : field.default}`
-              : "",
+            sqlDefault(field),
           ];
           return parts.filter(Boolean).join(" ");
         }),
       ];
-      await this.client.execute(
-        `CREATE TABLE IF NOT EXISTS ${quoteIdentifier(model.tableName)} (${columns.join(", ")})`,
+      if (driver === "postgres") {
+        columns.push(`${quoteIdentifier("ql_seq")} BIGSERIAL`);
+      }
+      await this.connection.execute(
+        `CREATE TABLE IF NOT EXISTS ${table} (${columns.join(", ")})`,
+        [],
       );
-      const currentColumns = await this.client.execute(
-        `PRAGMA table_info(${quoteIdentifier(model.tableName)})`,
-      );
-      const existing = new Set(
-        currentColumns.rows.flatMap((row) =>
-          typeof row.name === "string" ? [row.name] : [],
-        ),
-      );
+      const existing = await this.connection.columnNames(model.tableName);
+      if (driver === "postgres" && !existing.has("ql_seq")) {
+        await this.connection.execute(
+          `ALTER TABLE ${table} ADD COLUMN ${quoteIdentifier("ql_seq")} BIGSERIAL`,
+          [],
+        );
+      }
       for (const [name, field] of Object.entries(model.fields)) {
         if (existing.has(name)) continue;
         const definition = [
           quoteIdentifier(name),
-          sqlType(field.type),
-          field.default !== undefined
-            ? `DEFAULT ${typeof field.default === "string" ? `'${field.default.replace(/'/g, "''")}'` : field.default === true ? 1 : field.default === false ? 0 : field.default}`
-            : "",
+          sqlType(driver, field.type),
+          sqlDefault(field),
         ]
           .filter(Boolean)
           .join(" ");
-        await this.client.execute(
-          `ALTER TABLE ${quoteIdentifier(model.tableName)} ADD COLUMN ${definition}`,
+        await this.connection.execute(
+          `ALTER TABLE ${table} ADD COLUMN ${definition}`,
+          [],
         );
         if (field.unique) {
-          await this.client.execute(
-            `CREATE UNIQUE INDEX IF NOT EXISTS ${quoteIdentifier(`${model.tableName}_${name}_unique`)} ON ${quoteIdentifier(model.tableName)} (${quoteIdentifier(name)})`,
+          await this.connection.execute(
+            `CREATE UNIQUE INDEX IF NOT EXISTS ${quoteIdentifier(`${model.tableName}_${name}_unique`)} ON ${table} (${quoteIdentifier(name)})`,
+            [],
           );
         }
       }
@@ -393,33 +525,18 @@ export class QlOrm {
     const selected = Object.keys(model.fields)
       .filter((name) => !model.fields[name].private)
       .concat("id");
+    const sql = new SqlBuilder(this.connection.driver);
     const conditions: string[] = [];
-    const args: InValue[] = [];
     if (model.ownerField) {
-      conditions.push(`${quoteIdentifier(model.ownerField)} = ?`);
-      args.push(user.id);
+      conditions.push(
+        `${quoteIdentifier(model.ownerField)} = ${sql.param(user.id)}`,
+      );
     }
-    args.push(Math.max(1, Math.min(500, Math.floor(limit))));
-    const result = await this.client.execute({
-      sql: `SELECT ${selected.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)}${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""} ORDER BY rowid DESC LIMIT ?`,
-      args,
-    });
-    return result.rows.map((row) => {
-      const record: QlRecord = {};
-      for (const name of selected) {
-        const value = row[name];
-        const field = model.fields[name];
-        record[name] =
-          field?.type === "boolean" && typeof value === "number"
-            ? value !== 0
-            : typeof value === "string" ||
-                typeof value === "number" ||
-                value === null
-              ? value
-              : null;
-      }
-      return record;
-    });
+    const result = await this.connection.execute(
+      `SELECT ${selected.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)}${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""} ORDER BY ${orderExpression(this.connection.driver)} DESC LIMIT ${sql.param(Math.max(1, Math.min(500, Math.floor(limit))))}`,
+      sql.args,
+    );
+    return this.mapRows(model, selected, result.rows);
   }
 
   async create(
@@ -429,7 +546,7 @@ export class QlOrm {
   ): Promise<QlRecord> {
     this.requireAccess(modelName, user, "create");
     const model = this.registry.getModel(modelName);
-    const values: Record<string, InValue> = { id: randomUUID() };
+    const values: Record<string, QlSqlValue> = { id: randomUUID() };
     for (const [name, value] of Object.entries(input)) {
       const field = validateValue(model, name, value);
       if (field.private) {
@@ -452,18 +569,15 @@ export class QlOrm {
     }
 
     const columns = Object.keys(values);
+    const sql = new SqlBuilder(this.connection.driver);
+    const placeholders = columns.map((column) => sql.param(values[column]));
     try {
-      await this.client.execute({
-        sql: `INSERT INTO ${quoteIdentifier(model.tableName)} (${columns.map(quoteIdentifier).join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`,
-        args: columns.map((column) => values[column]),
-      });
+      await this.connection.execute(
+        `INSERT INTO ${quoteIdentifier(model.tableName)} (${columns.map(quoteIdentifier).join(", ")}) VALUES (${placeholders.join(", ")})`,
+        sql.args,
+      );
     } catch (error) {
-      if (
-        error instanceof Error &&
-        /(?:SQLITE_CONSTRAINT_(?:UNIQUE|PRIMARYKEY)|UNIQUE constraint failed)/i.test(
-          error.message,
-        )
-      ) {
+      if (isUniqueViolation(error)) {
         throw new QlConflictError("A record with the same unique value already exists.");
       }
       throw error;
@@ -484,8 +598,8 @@ export class QlOrm {
   ): Promise<QlRecord | undefined> {
     this.requireAccess(modelName, user, "write");
     const model = this.registry.getModel(modelName);
-    const columns: string[] = [];
-    const args: InValue[] = [];
+    const assignments: string[] = [];
+    const sql = new SqlBuilder(this.connection.driver);
     for (const [name, value] of Object.entries(input)) {
       if (name === model.ownerField) {
         throw new QlValidationError("Record ownership cannot be changed.");
@@ -494,22 +608,21 @@ export class QlOrm {
       if (field.private) {
         throw new QlValidationError(`Field '${name}' cannot be written through this API.`);
       }
-      columns.push(`${quoteIdentifier(name)} = ?`);
-      args.push(toDatabaseValue(value, field));
+      assignments.push(`${quoteIdentifier(name)} = ${sql.param(toDatabaseValue(value, field))}`);
     }
-    if (columns.length === 0) {
+    if (assignments.length === 0) {
       throw new QlValidationError("At least one field is required.");
     }
-    args.push(id);
-    let where = `${quoteIdentifier("id")} = ?`;
+    const conditions = [`${quoteIdentifier("id")} = ${sql.param(id)}`];
     if (model.ownerField) {
-      where += ` AND ${quoteIdentifier(model.ownerField)} = ?`;
-      args.push(user.id);
+      conditions.push(
+        `${quoteIdentifier(model.ownerField)} = ${sql.param(user.id)}`,
+      );
     }
-    const result = await this.client.execute({
-      sql: `UPDATE ${quoteIdentifier(model.tableName)} SET ${columns.join(", ")} WHERE ${where}`,
-      args,
-    });
+    const result = await this.connection.execute(
+      `UPDATE ${quoteIdentifier(model.tableName)} SET ${assignments.join(", ")} WHERE ${conditions.join(" AND ")}`,
+      sql.args,
+    );
     if (result.rowsAffected === 0) return undefined;
     const [record] = await this.findManyById(model, user, id);
     return record;
@@ -522,16 +635,17 @@ export class QlOrm {
   ): Promise<boolean> {
     this.requireAccess(modelName, user, "unlink");
     const model = this.registry.getModel(modelName);
-    let where = `${quoteIdentifier("id")} = ?`;
-    const args: InValue[] = [id];
+    const sql = new SqlBuilder(this.connection.driver);
+    const conditions = [`${quoteIdentifier("id")} = ${sql.param(id)}`];
     if (model.ownerField) {
-      where += ` AND ${quoteIdentifier(model.ownerField)} = ?`;
-      args.push(user.id);
+      conditions.push(
+        `${quoteIdentifier(model.ownerField)} = ${sql.param(user.id)}`,
+      );
     }
-    const result = await this.client.execute({
-      sql: `DELETE FROM ${quoteIdentifier(model.tableName)} WHERE ${where}`,
-      args,
-    });
+    const result = await this.connection.execute(
+      `DELETE FROM ${quoteIdentifier(model.tableName)} WHERE ${conditions.join(" AND ")}`,
+      sql.args,
+    );
     return result.rowsAffected > 0;
   }
 
@@ -556,22 +670,21 @@ export class QlOrm {
   ): Promise<QlRecord[]> {
     const model = this.registry.getModel(modelName);
     const selected = [...Object.keys(model.fields), "id"];
+    const sql = new SqlBuilder(this.connection.driver);
     const conditions: string[] = [];
-    const args: InValue[] = [];
     for (const [name, value] of Object.entries(filters)) {
       if (name !== "id" && !model.fields[name]) {
         throw new QlValidationError(`Unknown field '${name}' on model '${modelName}'.`);
       }
-      conditions.push(`${quoteIdentifier(name)} = ?`);
-      args.push(
-        name === "id"
-          ? value
-          : toDatabaseValue(value, model.fields[name]),
+      conditions.push(
+        `${quoteIdentifier(name)} = ${sql.param(
+          name === "id" ? value : toDatabaseValue(value, model.fields[name]),
+        )}`,
       );
     }
-    let orderClause = "ORDER BY rowid DESC";
+    let orderClause = `ORDER BY ${orderExpression(this.connection.driver)} DESC`;
     if (options.orderBy === "rowid-asc") {
-      orderClause = "ORDER BY rowid ASC";
+      orderClause = `ORDER BY ${orderExpression(this.connection.driver)} ASC`;
     } else if (options.orderBy) {
       if (options.orderBy.field !== "id" && !model.fields[options.orderBy.field]) {
         throw new QlValidationError(
@@ -580,11 +693,11 @@ export class QlOrm {
       }
       orderClause = `ORDER BY ${quoteIdentifier(options.orderBy.field)} ${options.orderBy.direction.toUpperCase()}`;
     }
-    args.push(Math.max(1, Math.min(500, Math.floor(options.limit ?? 100))));
-    const result = await this.client.execute({
-      sql: `SELECT ${selected.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)}${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""} ${orderClause} LIMIT ?`,
-      args,
-    });
+    orderClause += ` LIMIT ${sql.param(Math.max(1, Math.min(500, Math.floor(options.limit ?? 100))))}`;
+    const result = await this.connection.execute(
+      `SELECT ${selected.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)}${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""} ${orderClause}`,
+      sql.args,
+    );
     return this.mapRows(model, selected, result.rows);
   }
 
@@ -603,7 +716,7 @@ export class QlOrm {
     input: Record<string, unknown>,
   ): Promise<QlRecord> {
     const model = this.registry.getModel(modelName);
-    const values: Record<string, InValue> = { id: randomUUID() };
+    const values: Record<string, QlSqlValue> = { id: randomUUID() };
     for (const [name, value] of Object.entries(input)) {
       const field = validateValue(model, name, value);
       values[name] = toDatabaseValue(value, field);
@@ -620,18 +733,15 @@ export class QlOrm {
       }
     }
     const columns = Object.keys(values);
+    const sql = new SqlBuilder(this.connection.driver);
+    const placeholders = columns.map((column) => sql.param(values[column]));
     try {
-      await this.client.execute({
-        sql: `INSERT INTO ${quoteIdentifier(model.tableName)} (${columns.map(quoteIdentifier).join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`,
-        args: columns.map((column) => values[column]),
-      });
+      await this.connection.execute(
+        `INSERT INTO ${quoteIdentifier(model.tableName)} (${columns.map(quoteIdentifier).join(", ")}) VALUES (${placeholders.join(", ")})`,
+        sql.args,
+      );
     } catch (error) {
-      if (
-        error instanceof Error &&
-        /(?:SQLITE_CONSTRAINT_(?:UNIQUE|PRIMARYKEY)|UNIQUE constraint failed)/i.test(
-          error.message,
-        )
-      ) {
+      if (isUniqueViolation(error)) {
         throw new QlConflictError("A record with the same unique value already exists.");
       }
       throw error;
@@ -654,14 +764,15 @@ export class QlOrm {
     input: Record<string, unknown>,
   ): Promise<number> {
     const model = this.registry.getModel(modelName);
-    const columns: string[] = [];
-    const values: InValue[] = [];
+    const assignments: string[] = [];
+    const sql = new SqlBuilder(this.connection.driver);
     for (const [name, value] of Object.entries(input)) {
       const field = validateValue(model, name, value);
-      columns.push(`${quoteIdentifier(name)} = ?`);
-      values.push(toDatabaseValue(value, field));
+      assignments.push(
+        `${quoteIdentifier(name)} = ${sql.param(toDatabaseValue(value, field))}`,
+      );
     }
-    if (columns.length === 0) {
+    if (assignments.length === 0) {
       throw new QlValidationError("At least one field is required.");
     }
     const conditions: string[] = [];
@@ -669,20 +780,19 @@ export class QlOrm {
       if (name !== "id" && !model.fields[name]) {
         throw new QlValidationError(`Unknown field '${name}' on model '${modelName}'.`);
       }
-      conditions.push(`${quoteIdentifier(name)} = ?`);
-      values.push(
-        name === "id"
-          ? value
-          : toDatabaseValue(value, model.fields[name]),
+      conditions.push(
+        `${quoteIdentifier(name)} = ${sql.param(
+          name === "id" ? value : toDatabaseValue(value, model.fields[name]),
+        )}`,
       );
     }
     if (!conditions.length) {
       throw new Error("Service updates require at least one filter.");
     }
-    const result = await this.client.execute({
-      sql: `UPDATE ${quoteIdentifier(model.tableName)} SET ${columns.join(", ")} WHERE ${conditions.join(" AND ")}`,
-      args: values,
-    });
+    const result = await this.connection.execute(
+      `UPDATE ${quoteIdentifier(model.tableName)} SET ${assignments.join(", ")} WHERE ${conditions.join(" AND ")}`,
+      sql.args,
+    );
     return result.rowsAffected;
   }
 
@@ -692,25 +802,24 @@ export class QlOrm {
   ): Promise<number> {
     const model = this.registry.getModel(modelName);
     const conditions: string[] = [];
-    const args: InValue[] = [];
+    const sql = new SqlBuilder(this.connection.driver);
     for (const [name, value] of Object.entries(filters)) {
       if (name !== "id" && !model.fields[name]) {
         throw new QlValidationError(`Unknown field '${name}' on model '${modelName}'.`);
       }
-      conditions.push(`${quoteIdentifier(name)} = ?`);
-      args.push(
-        name === "id"
-          ? value
-          : toDatabaseValue(value, model.fields[name]),
+      conditions.push(
+        `${quoteIdentifier(name)} = ${sql.param(
+          name === "id" ? value : toDatabaseValue(value, model.fields[name]),
+        )}`,
       );
     }
     if (!conditions.length) {
       throw new Error("Service deletes require at least one filter.");
     }
-    const result = await this.client.execute({
-      sql: `DELETE FROM ${quoteIdentifier(model.tableName)} WHERE ${conditions.join(" AND ")}`,
-      args,
-    });
+    const result = await this.connection.execute(
+      `DELETE FROM ${quoteIdentifier(model.tableName)} WHERE ${conditions.join(" AND ")}`,
+      sql.args,
+    );
     return result.rowsAffected;
   }
 
@@ -723,7 +832,7 @@ export class QlOrm {
     if (!model.ownerField) {
       throw new Error(`Service-owned model '${modelName}' must define ownerField.`);
     }
-    const values: Record<string, InValue> = {
+    const values: Record<string, QlSqlValue> = {
       id: randomUUID(),
       [model.ownerField]: ownerId,
     };
@@ -747,10 +856,19 @@ export class QlOrm {
       }
     }
     const columns = Object.keys(values);
-    await this.client.execute({
-      sql: `INSERT INTO ${quoteIdentifier(model.tableName)} (${columns.map(quoteIdentifier).join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`,
-      args: columns.map((column) => values[column]),
-    });
+    const sql = new SqlBuilder(this.connection.driver);
+    const placeholders = columns.map((column) => sql.param(values[column]));
+    try {
+      await this.connection.execute(
+        `INSERT INTO ${quoteIdentifier(model.tableName)} (${columns.map(quoteIdentifier).join(", ")}) VALUES (${placeholders.join(", ")})`,
+        sql.args,
+      );
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new QlConflictError("A record with the same unique value already exists.");
+      }
+      throw error;
+    }
     if (typeof values.id !== "string") {
       throw new Error("Created service record identifier is invalid.");
     }
@@ -773,24 +891,28 @@ export class QlOrm {
     if (!model.ownerField) {
       throw new Error(`Service-owned model '${modelName}' must define ownerField.`);
     }
-    const columns: string[] = [];
-    const args: InValue[] = [];
+    const assignments: string[] = [];
+    const sql = new SqlBuilder(this.connection.driver);
     for (const [name, value] of Object.entries(input)) {
       if (name === model.ownerField) {
         throw new QlValidationError("Record ownership cannot be changed.");
       }
       const field = validateValue(model, name, value);
-      columns.push(`${quoteIdentifier(name)} = ?`);
-      args.push(toDatabaseValue(value, field));
+      assignments.push(
+        `${quoteIdentifier(name)} = ${sql.param(toDatabaseValue(value, field))}`,
+      );
     }
-    if (columns.length === 0) {
+    if (assignments.length === 0) {
       throw new QlValidationError("At least one field is required.");
     }
-    args.push(id, ownerId);
-    const result = await this.client.execute({
-      sql: `UPDATE ${quoteIdentifier(model.tableName)} SET ${columns.join(", ")} WHERE ${quoteIdentifier("id")} = ? AND ${quoteIdentifier(model.ownerField)} = ?`,
-      args,
-    });
+    const conditions = [
+      `${quoteIdentifier("id")} = ${sql.param(id)}`,
+      `${quoteIdentifier(model.ownerField)} = ${sql.param(ownerId)}`,
+    ];
+    const result = await this.connection.execute(
+      `UPDATE ${quoteIdentifier(model.tableName)} SET ${assignments.join(", ")} WHERE ${conditions.join(" AND ")}`,
+      sql.args,
+    );
     if (result.rowsAffected === 0) return undefined;
     const [record] = await this.findManyById(
       model,
@@ -809,10 +931,11 @@ export class QlOrm {
     if (!model.ownerField) {
       throw new Error(`Service-owned model '${modelName}' must define ownerField.`);
     }
-    const result = await this.client.execute({
-      sql: `DELETE FROM ${quoteIdentifier(model.tableName)} WHERE ${quoteIdentifier("id")} = ? AND ${quoteIdentifier(model.ownerField)} = ?`,
-      args: [id, ownerId],
-    });
+    const sql = new SqlBuilder(this.connection.driver);
+    const result = await this.connection.execute(
+      `DELETE FROM ${quoteIdentifier(model.tableName)} WHERE ${quoteIdentifier("id")} = ${sql.param(id)} AND ${quoteIdentifier(model.ownerField)} = ${sql.param(ownerId)}`,
+      sql.args,
+    );
     return result.rowsAffected > 0;
   }
 
@@ -824,16 +947,17 @@ export class QlOrm {
     const selected = Object.keys(model.fields)
       .filter((name) => !model.fields[name].private)
       .concat("id");
-    let where = `${quoteIdentifier("id")} = ?`;
-    const args: InValue[] = [id];
+    const sql = new SqlBuilder(this.connection.driver);
+    const conditions = [`${quoteIdentifier("id")} = ${sql.param(id)}`];
     if (model.ownerField) {
-      where += ` AND ${quoteIdentifier(model.ownerField)} = ?`;
-      args.push(user.id);
+      conditions.push(
+        `${quoteIdentifier(model.ownerField)} = ${sql.param(user.id)}`,
+      );
     }
-    const result = await this.client.execute({ 
-      sql: `SELECT ${selected.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)} WHERE ${where} LIMIT 1`,
-      args,
-    });
+    const result = await this.connection.execute(
+      `SELECT ${selected.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)} WHERE ${conditions.join(" AND ")} LIMIT 1`,
+      sql.args,
+    );
     return this.mapRows(model, selected, result.rows);
   }
 
@@ -871,23 +995,34 @@ export class QlOrm {
   }
 }
 
+export function isPostgresUrl(databaseUrl: string): boolean {
+  return /^postgres(ql)?:\/\//i.test(databaseUrl);
+}
+
 export async function createQlOrm(
   databaseUrl: string,
   manifests: readonly QlAddonManifest[],
 ): Promise<{ orm: QlOrm; close: () => void }> {
-  if (databaseUrl.startsWith("file:")) {
-    const filePath = decodeURIComponent(databaseUrl.slice("file:".length));
-    if (filePath !== ":memory:") {
-      mkdirSync(dirname(resolve(filePath)), { recursive: true });
+  let connection: QlConnection;
+  if (isPostgresUrl(databaseUrl)) {
+    connection = new PostgresConnection(
+      new Pool({ connectionString: databaseUrl, max: 10 }),
+    );
+  } else {
+    if (databaseUrl.startsWith("file:")) {
+      const filePath = decodeURIComponent(databaseUrl.slice("file:".length));
+      if (filePath !== ":memory:") {
+        mkdirSync(dirname(resolve(filePath)), { recursive: true });
+      }
     }
+    connection = new LibSqlConnection(createClient({ url: databaseUrl }));
   }
-  const client = createClient({ url: databaseUrl });
   try {
-    const orm = new QlOrm(client, new QlModelRegistry(manifests));
+    const orm = new QlOrm(connection, new QlModelRegistry(manifests));
     await orm.syncSchema();
-    return { orm, close: () => client.close() };
+    return { orm, close: () => connection.close() };
   } catch (error) {
-    client.close();
+    connection.close();
     throw error;
   }
 }
