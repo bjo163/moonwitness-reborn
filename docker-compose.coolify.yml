@@ -8,7 +8,10 @@
 # - Tidak ada service Postgres: QlOrm masih memakai driver @libsql/client, jadi api
 #   menulis ke file SQLite di volume `api_data`. Database ditambahkan ke stack ini
 #   setelah packages/ql-orm pindah ke driver pg.
-# - Nama domain memakai wildcard *.apps.mycocolink.com yang sudah mengarah ke server.
+# - Nama domain dipakai bersama: domain custom (a-l-l-a-h.com + moonwitness.biz.id untuk
+#   web, api.moonwitness.biz.id untuk api) dan wildcard *.apps.mycocolink.com. Domain
+#   custom butuh label Traefik manual seperti di bawah; Coolify hanya membuatkannya
+#   otomatis untuk subdomain *.apps.mycocolink.com.
 # - PROVIDER_ENCRYPTION_KEY diisi lewat environment Coolify, bukan dari repo. Kosong
 #   berarti penyimpanan credential provider /providers dinonaktifkan (api tetap jalan).
 #
@@ -40,11 +43,11 @@ services:
       start_period: 20s
     labels:
       - traefik.enable=true
-      - traefik.http.routers.moonwitness-reborn-api-http.rule=Host(`moonwitness-reborn-api.apps.mycocolink.com`)
+      - traefik.http.routers.moonwitness-reborn-api-http.rule=Host(`api.moonwitness.biz.id`, `moonwitness-reborn-api.apps.mycocolink.com`)
       - traefik.http.routers.moonwitness-reborn-api-http.entrypoints=http
       - traefik.http.routers.moonwitness-reborn-api-http.middlewares=moonwitness-reborn-api-redirect
       - traefik.http.middlewares.moonwitness-reborn-api-redirect.redirectscheme.scheme=https
-      - traefik.http.routers.moonwitness-reborn-api-https.rule=Host(`moonwitness-reborn-api.apps.mycocolink.com`)
+      - traefik.http.routers.moonwitness-reborn-api-https.rule=Host(`api.moonwitness.biz.id`, `moonwitness-reborn-api.apps.mycocolink.com`)
       - traefik.http.routers.moonwitness-reborn-api-https.entrypoints=https
       - traefik.http.routers.moonwitness-reborn-api-https.tls=true
       - traefik.http.routers.moonwitness-reborn-api-https.tls.certresolver=letsencrypt
@@ -73,11 +76,11 @@ services:
       start_period: 30s
     labels:
       - traefik.enable=true
-      - traefik.http.routers.moonwitness-reborn-web-http.rule=Host(`moonwitness-reborn.apps.mycocolink.com`)
+      - traefik.http.routers.moonwitness-reborn-web-http.rule=Host(`a-l-l-a-h.com`, `moonwitness.biz.id`, `moonwitness-reborn.apps.mycocolink.com`)
       - traefik.http.routers.moonwitness-reborn-web-http.entrypoints=http
       - traefik.http.routers.moonwitness-reborn-web-http.middlewares=moonwitness-reborn-web-redirect
       - traefik.http.middlewares.moonwitness-reborn-web-redirect.redirectscheme.scheme=https
-      - traefik.http.routers.moonwitness-reborn-web-https.rule=Host(`moonwitness-reborn.apps.mycocolink.com`)
+      - traefik.http.routers.moonwitness-reborn-web-https.rule=Host(`a-l-l-a-h.com`, `moonwitness.biz.id`, `moonwitness-reborn.apps.mycocolink.com`)
       - traefik.http.routers.moonwitness-reborn-web-https.entrypoints=https
       - traefik.http.routers.moonwitness-reborn-web-https.tls=true
       - traefik.http.routers.moonwitness-reborn-web-https.tls.certresolver=letsencrypt
