@@ -2,6 +2,7 @@
 
 import {
   moonClient,
+  MoonClientError,
   type AuthUserDto as AuthUser,
   type ChatMessageDto as ChatMessage,
   type ConversationDto as Conversation,
@@ -11,13 +12,18 @@ import {
   Alert,
   Badge,
   Button,
+  LoadingScreen,
+  NavSectionLabel,
   Textarea,
+  WorkspaceSidebar,
   WorkspaceTemplate,
   cn,
 } from "@moonwitness/ui";
 import { LocaleSwitcher } from "../locale/locale-switcher";
 import { useMessages } from "../locale/messages";
+import { useTranslationCatalog } from "../locale/translation-catalog";
 import { useLocalePreference } from "../locale/use-locale-preference";
+import { apiErrorMessage } from "../locale/api-error-message";
 import {
   ArrowUp,
   Bot,
@@ -31,7 +37,6 @@ import {
   ShieldCheck,
   Sparkles,
   Trash2,
-  X,
 } from "lucide-react";
 import {
   type FormEvent,
@@ -54,9 +59,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const { locale, changeLocale, saving, error: localeError } =
     useLocalePreference(user);
+  const { t } = useTranslationCatalog();
   const copy = useMessages();
-  const copyRef = useRef(copy);
-  copyRef.current = copy;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -76,13 +80,9 @@ export default function Home() {
       setSidebarOpen(false);
       textareaRef.current?.focus();
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : copyRef.current.assistant.conversationError,
-      );
+      setError(apiErrorMessage(requestError, t));
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,16 +99,12 @@ export default function Home() {
       } catch (requestError) {
         if (!cancelled) {
           if (
-            requestError instanceof Error &&
-            requestError.message === "Authentication required."
+            requestError instanceof MoonClientError &&
+            requestError.status === 401
           ) {
             router.replace("/auth");
           } else {
-            setError(
-              requestError instanceof Error
-                ? requestError.message
-                : copyRef.current.assistant.conversationError,
-            );
+            setError(apiErrorMessage(requestError, t));
           }
         }
       } finally {
@@ -119,18 +115,14 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [loadConversations, router]);
+  }, [loadConversations, router, t]);
 
   async function logout() {
     try {
       await moonClient.logout();
       router.replace("/auth");
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : copy.assistant.logoutError,
-      );
+      setError(apiErrorMessage(requestError, t));
     }
   }
 
@@ -147,11 +139,7 @@ export default function Home() {
         if (!cancelled) setMessages(result.messages);
       } catch (requestError) {
         if (!cancelled) {
-          setError(
-            requestError instanceof Error
-              ? requestError.message
-              : copy.assistant.conversationError,
-          );
+          setError(apiErrorMessage(requestError, t));
         }
       }
     }
@@ -159,7 +147,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [activeId, copy.assistant.conversationError]);
+  }, [activeId, t]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -191,11 +179,7 @@ export default function Home() {
       ]);
       await loadConversations();
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : copy.assistant.sendError,
-      );
+      setError(apiErrorMessage(requestError, t));
       try {
         const result = await moonClient.listMessages(activeId);
         setMessages(result.messages);
@@ -227,28 +211,16 @@ export default function Home() {
         setActiveId(remaining[0]?.id ?? null);
       }
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : copy.assistant.deleteError,
-      );
+      setError(apiErrorMessage(requestError, t));
     }
   }
 
   if (loading) {
-    return (
-      <main className="ql-hud-app flex min-h-dvh items-center justify-center text-sm text-stone-500">
-        {copy.common.loading}
-      </main>
-    );
+    return <LoadingScreen label={copy.common.loading} />;
   }
 
   if (!user) {
-    return (
-      <main className="ql-hud-app flex min-h-dvh items-center justify-center text-sm text-stone-500">
-        {copy.common.loading}
-      </main>
-    );
+    return <LoadingScreen label={copy.common.loading} />;
   }
 
   return (
@@ -257,69 +229,76 @@ export default function Home() {
       onCloseSidebar={() => setSidebarOpen(false)}
       closeLabel={copy.common.closeMenu}
       sidebar={
-        <>
-        <div className="flex h-12 items-center justify-between px-2">
-          <a href="/command-center" className="ql-hud-brand flex items-center gap-2.5 font-semibold tracking-tight">
-            <span className="flex size-8 items-center justify-center rounded-xl bg-stone-900 text-white">
-              <Sparkles size={16} />
-            </span>
-            MoonWitness
-          </a>
+        <WorkspaceSidebar
+          brandIcon={<Sparkles aria-hidden="true" size={16} />}
+          closeLabel={copy.common.closeMenu}
+          identity={{ name: user.name, subtitle: user.email }}
+          items={[
+            {
+              href: "/command-center",
+              label: copy.common.dashboard,
+              icon: <Boxes aria-hidden="true" size={16} />,
+              onSelect: () => setSidebarOpen(false),
+            },
+            {
+              href: "/models",
+              label: copy.common.models,
+              icon: <Boxes aria-hidden="true" size={16} />,
+              onSelect: () => setSidebarOpen(false),
+            },
+            {
+              href: "/providers",
+              label: copy.common.providers,
+              icon: <KeyRound aria-hidden="true" size={16} />,
+              onSelect: () => setSidebarOpen(false),
+            },
+            ...((user.groups ?? []).some(
+              (group) => group === "connector" || group === "operator",
+            )
+              ? [
+                  {
+                    href: "/connectors",
+                    label: copy.common.integrations,
+                    icon: <Plug aria-hidden="true" size={16} />,
+                    onSelect: () => setSidebarOpen(false),
+                  },
+                ]
+              : []),
+            ...((user.groups ?? []).includes("admin")
+              ? [
+                  {
+                    href: "/admin/users",
+                    label: copy.common.users,
+                    icon: <ShieldCheck aria-hidden="true" size={16} />,
+                    onSelect: () => setSidebarOpen(false),
+                  },
+                ]
+              : []),
+          ]}
+          logout={{
+            label: copy.common.logout,
+            onLogout: () => void logout(),
+            icon: <LogOut aria-hidden="true" size={16} />,
+          }}
+          navLabel={copy.common.mainNavigation}
+          onCloseSidebar={() => setSidebarOpen(false)}
+          className="flex-none"
+        >
           <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            aria-label={copy.common.closeMenu}
-            onClick={() => setSidebarOpen(false)}
+            variant="secondary"
+            className="mt-5 w-full justify-start gap-2.5"
+            onClick={() => void createConversation()}
           >
-            <X size={18} />
+            <Plus aria-hidden="true" size={17} />
+            {copy.assistant.newConversation}
           </Button>
-        </div>
-
-        <a
-          href="/command-center"
-          className="ql-nav-link mt-4"
-          onClick={() => setSidebarOpen(false)}
-        >
-          <Boxes aria-hidden="true" size={16} />
-          {copy.common.dashboard}
-        </a>
-        <Button
-          variant="secondary"
-          className="mt-5 w-full justify-start gap-2.5"
-          onClick={() => void createConversation()}
-        >
-          <Plus size={17} />
-          {copy.assistant.newConversation}
-        </Button>
-
-        <a href="/models" className="ql-nav-link mt-2">
-          <Boxes size={16} />
-          {copy.common.models}
-        </a>
-        <a href="/providers" className="ql-nav-link mt-2">
-          <KeyRound size={16} />
-          {copy.common.providers}
-        </a>
-        {(user?.groups ?? []).some((group) =>
-          group === "connector" || group === "operator",
-        ) && (
-          <a href="/connectors" className="ql-nav-link mt-2">
-            <Plug size={16} />
-            {copy.common.integrations}
-          </a>
-        )}
-        {(user?.groups ?? []).includes("admin") && (
-          <a href="/admin/users" className="ql-nav-link mt-2">
-            <ShieldCheck size={16} />
-            {copy.common.users}
-          </a>
-        )}
-
-        <div className="mb-2 mt-7 px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">
-          {copy.assistant.history}
-        </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto" aria-label={copy.assistant.history}>
+          <NavSectionLabel className="mb-2 mt-7">
+            {copy.assistant.history}
+          </NavSectionLabel>
+          <nav
+            className="min-h-0 flex-1 space-y-1 overflow-y-auto"
+            aria-label={copy.assistant.history}
+          >
           {conversations.map((conversation) => (
             <div
               key={conversation.id}
@@ -337,11 +316,11 @@ export default function Home() {
                 className={cn(
                   "flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
                   activeId === conversation.id
-                    ? "bg-white text-stone-950 shadow-sm"
-                    : "text-stone-600 hover:bg-white/70 hover:text-stone-950",
+                    ? "bg-panel text-ink shadow-sm"
+                    : "text-muted-dim hover:bg-panel/70 hover:text-ink",
                 )}
               >
-                <MessageSquare size={15} className="shrink-0 text-stone-400" />
+                <MessageSquare size={15} className="shrink-0 text-muted" />
                 <span className="min-w-0 flex-1 truncate">
                   {conversation.title}
                 </span>
@@ -355,39 +334,19 @@ export default function Home() {
                 onClick={(event) =>
                   void deleteConversation(event, conversation.id)
                 }
-                className="rounded-md p-1 text-stone-400 opacity-0 hover:bg-stone-100 hover:text-red-600 group-hover:opacity-100 focus:opacity-100"
+                className="rounded-md p-1 text-muted opacity-0 hover:bg-panel-edge hover:text-danger group-hover:opacity-100 focus:opacity-100"
               >
                 <Trash2 size={14} />
               </Button>
             </div>
           ))}
           {!loading && conversations.length === 0 && (
-            <p className="px-3 py-2 text-xs leading-5 text-stone-500">
+            <p className="px-3 py-2 text-xs leading-5 text-muted">
               {copy.assistant.emptyHistory}
             </p>
           )}
-        </nav>
-
-        <div className="mt-3 flex items-center gap-2 border-t border-stone-200 px-2 pt-4">
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-xs font-medium text-stone-700">
-              {user.name}
-            </div>
-            <div className="truncate text-[11px] text-stone-500">
-              {user.email}
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={copy.common.logout}
-            title={copy.common.logout}
-            onClick={() => void logout()}
-          >
-            <LogOut size={16} />
-          </Button>
-        </div>
-        </>
+          </nav>
+        </WorkspaceSidebar>
       }
       header={
         <>
@@ -401,7 +360,7 @@ export default function Home() {
             >
               <Menu size={19} />
             </Button>
-            <div className="text-sm font-medium text-stone-700">{copy.common.chat}</div>
+            <div className="text-sm font-medium text-ink-soft">{copy.common.chat}</div>
           </div>
           <Badge variant="live" className="ql-hud-status">
             {copy.assistant.aiAssistant}
@@ -420,13 +379,13 @@ export default function Home() {
           <div className="ql-hud-thread mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-6 pt-8 md:px-8">
             {!activeId && !loading && (
               <div className="flex flex-1 flex-col items-center justify-center text-center">
-                <div className="mb-5 flex size-14 items-center justify-center border border-stone-700 bg-[#151d15] shadow-[4px_4px_0_#050706]">
-                  <Bot size={25} className="text-[#d7ff63]" />
+                <div className="mb-5 flex size-14 items-center justify-center border border-hairline bg-panel-edge shadow-hud-sm">
+                  <Bot size={25} className="text-acid" />
                 </div>
-                <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
+                <h1 className="text-2xl font-semibold tracking-tight text-ink">
                   {copy.assistant.startPrompt}
                 </h1>
-                <p className="mt-2 max-w-sm text-sm leading-6 text-stone-500">
+                <p className="mt-2 max-w-sm text-sm leading-6 text-muted">
                   {copy.assistant.startDescription}
                 </p>
                 <Button className="mt-6" onClick={() => void createConversation()}>
@@ -438,13 +397,13 @@ export default function Home() {
 
             {activeId && messages.length === 0 && !loading && (
               <div className="flex flex-1 flex-col items-center justify-center pb-10 text-center">
-                <div className="mb-5 flex size-14 items-center justify-center border border-stone-700 bg-[#151d15] shadow-[4px_4px_0_#050706]">
-                  <Sparkles size={24} className="text-stone-700" />
+                <div className="mb-5 flex size-14 items-center justify-center border border-hairline bg-panel-edge shadow-hud-sm">
+                  <Sparkles size={24} className="text-ink-soft" />
                 </div>
-                <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
+                <h1 className="text-2xl font-semibold tracking-tight text-ink">
                   {copy.assistant.activePrompt}
                 </h1>
-                <p className="mt-2 text-sm text-stone-500">
+                <p className="mt-2 text-sm text-muted">
                   {copy.assistant.activeDescription}
                 </p>
               </div>
@@ -469,7 +428,7 @@ export default function Home() {
                       "max-w-[85%] whitespace-pre-wrap text-[15px] leading-7",
                       message.role === "user"
                         ? "ql-hud-user-message px-4 py-2.5"
-                        : "pt-0.5 text-stone-800",
+                        : "pt-0.5 text-ink",
                     )}
                   >
                     {message.content}
@@ -477,7 +436,7 @@ export default function Home() {
                 </article>
               ))}
               {sending && (
-                <div className="flex items-center gap-3 text-sm text-stone-500">
+                <div className="flex items-center gap-3 text-sm text-muted">
                   <div className="ql-hud-assistant-mark flex size-8 items-center justify-center">
                     <Sparkles size={15} />
                   </div>
@@ -517,7 +476,7 @@ export default function Home() {
                 className="max-h-40 min-h-12"
               />
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-stone-400">
+                <span className="text-[11px] text-muted">
                   {copy.assistant.sendHint}
                 </span>
                 <Button
@@ -531,7 +490,7 @@ export default function Home() {
                 </Button>
               </div>
             </form>
-            <p className="mt-2 text-center text-[11px] text-stone-400">
+            <p className="mt-2 text-center text-[11px] text-muted">
               {copy.assistant.savedNotice}
             </p>
           </div>

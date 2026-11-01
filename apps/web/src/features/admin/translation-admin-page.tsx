@@ -13,11 +13,15 @@ import {
   Button,
   CenteredAuth,
   Input,
+  ListOption,
+  PageHeader,
   Select,
   Textarea,
+  WorkspaceSidebar,
   WorkspaceTemplate,
 } from "@moonwitness/ui";
 import { ArrowLeft, Download, Languages, Upload } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
 import { useLocalePreference } from "../locale/use-locale-preference";
@@ -271,7 +275,7 @@ export default function TranslationAdminPage() {
   if (busy && user === undefined) {
     return (
       <main
-        className="ql-hud-app flex min-h-dvh items-center justify-center px-6 text-sm text-stone-500"
+        className="ql-hud-app flex min-h-dvh items-center justify-center px-6 text-sm text-muted"
         aria-busy="true"
       >
         {t("web.translationAdmin.loading")}
@@ -282,10 +286,10 @@ export default function TranslationAdminPage() {
   if (!user) {
     return (
       <CenteredAuth>
-        <h1 className="text-xl font-semibold text-stone-950">
+        <h1 className="text-xl font-semibold text-ink">
           {t("web.translationAdmin.signIn")}
         </h1>
-        <p className="mt-2 text-sm leading-6 text-stone-500">
+        <p className="mt-2 text-sm leading-6 text-muted">
           {t("web.translationAdmin.description")}
         </p>
         {error && <Alert className="mt-4" variant="error">{error}</Alert>}
@@ -302,15 +306,15 @@ export default function TranslationAdminPage() {
   if (!isAdmin) {
     return (
       <CenteredAuth>
-        <h1 className="text-xl font-semibold text-stone-950">
+        <h1 className="text-xl font-semibold text-ink">
           {t("web.translationAdmin.accessDenied")}
         </h1>
-        <a
+        <Link
           className="mt-5 inline-flex text-sm font-medium underline underline-offset-4"
           href="/command-center"
         >
           {t("web.translationAdmin.back")}
-        </a>
+        </Link>
       </CenteredAuth>
     );
   }
@@ -327,31 +331,24 @@ export default function TranslationAdminPage() {
       onCloseSidebar={() => undefined}
       closeLabel={t("web.common.closeMenu")}
       sidebar={
-        <div className="space-y-5">
-          <a
-            href="/command-center"
-            className="flex h-12 items-center gap-2.5 px-2 font-semibold tracking-tight"
-          >
-            <span className="flex size-8 items-center justify-center rounded-xl bg-stone-900 text-white">
-              <Languages size={16} aria-hidden="true" />
-            </span>
-            MoonWitness
-          </a>
-          <a href="/command-center" className="ql-nav-link">
-            <ArrowLeft size={16} aria-hidden="true" />
-            {t("web.translationAdmin.back")}
-          </a>
-          <div className="border-t border-stone-200 px-2 pt-4">
-            <p className="truncate text-xs font-medium text-stone-700">
-              {user.name}
-            </p>
-            <p className="truncate text-[11px] text-stone-500">{user.role}</p>
-          </div>
-        </div>
+        <WorkspaceSidebar
+          brandIcon={<Languages aria-hidden="true" size={16} />}
+          closeLabel={t("web.common.closeMenu")}
+          identity={{ name: user.name, subtitle: user.role }}
+          items={[
+            {
+              href: "/command-center",
+              label: t("web.translationAdmin.back"),
+              icon: <ArrowLeft aria-hidden="true" size={16} />,
+            },
+          ]}
+          navLabel={t("web.common.mainNavigation")}
+          onCloseSidebar={() => undefined}
+        />
       }
       header={
         <>
-          <span className="text-sm font-medium text-stone-700">
+          <span className="text-sm font-medium text-ink-soft">
             {t("web.translationAdmin.title")}
           </span>
           <Button
@@ -367,70 +364,69 @@ export default function TranslationAdminPage() {
     >
       <div className="flex-1 overflow-y-auto px-4 py-8 md:px-8">
         <div className="mx-auto max-w-7xl space-y-7">
-          <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
-              <h1 className="text-3xl font-semibold tracking-tight text-stone-950">
-                {t("web.translationAdmin.title")}
-              </h1>
-              <p className="mt-2 text-sm leading-6 text-stone-600">
-                {t("web.translationAdmin.description")}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-end gap-3">
-              <label className="grid gap-1.5 text-xs font-medium text-stone-600">
-                {t("web.translationAdmin.targetLanguage")}
-                <Select
-                  className="min-w-40"
-                  value={targetLocale}
-                  onChange={(event) => {
-                    if (event.target.value === "id" || event.target.value === "en") {
-                      setTargetLocale(event.target.value);
-                    }
-                  }}
-                >
-                  <option value="id">
-                    {t("web.translationAdmin.languageId")}
-                  </option>
-                  <option value="en">
-                    {t("web.translationAdmin.languageEn")}
-                  </option>
-                </Select>
-              </label>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={working}
-                onClick={() => void exportPo()}
-              >
-                <Download size={15} aria-hidden="true" />
-                {working
-                  ? t("web.translationAdmin.exporting")
-                  : t("web.translationAdmin.exportPo")}
-              </Button>
-              <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-stone-300 px-3 text-sm font-medium text-stone-700 hover:bg-stone-50 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2">
-                <Upload size={15} aria-hidden="true" />
-                {working
-                  ? t("web.translationAdmin.importing")
-                  : t("web.translationAdmin.importPo")}
-                <Input
-                  className="sr-only"
-                  type="file"
-                  accept=".po,text/plain"
-                  aria-label={t("web.translationAdmin.importPo")}
+          <PageHeader
+            title={t("web.translationAdmin.title")}
+            description={t("web.translationAdmin.description")}
+            actions={
+              <div className="flex flex-wrap items-end gap-3">
+                <label className="grid gap-1.5 text-xs font-medium text-muted-dim">
+                  {t("web.translationAdmin.targetLanguage")}
+                  <Select
+                    className="min-w-40"
+                    value={targetLocale}
+                    onChange={(event) => {
+                      if (
+                        event.target.value === "id" ||
+                        event.target.value === "en"
+                      ) {
+                        setTargetLocale(event.target.value);
+                      }
+                    }}
+                  >
+                    <option value="id">
+                      {t("web.translationAdmin.languageId")}
+                    </option>
+                    <option value="en">
+                      {t("web.translationAdmin.languageEn")}
+                    </option>
+                  </Select>
+                </label>
+                <Button
+                  type="button"
+                  variant="secondary"
                   disabled={working}
-                  onChange={(event) => void importPo(event)}
-                />
-              </label>
-            </div>
-          </header>
+                  onClick={() => void exportPo()}
+                >
+                  <Download size={15} aria-hidden="true" />
+                  {working
+                    ? t("web.translationAdmin.exporting")
+                    : t("web.translationAdmin.exportPo")}
+                </Button>
+                <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-hairline-strong px-3 text-sm font-medium text-ink-soft hover:bg-panel-raised focus-within:outline focus-within:outline-2 focus-within:outline-offset-2">
+                  <Upload size={15} aria-hidden="true" />
+                  {working
+                    ? t("web.translationAdmin.importing")
+                    : t("web.translationAdmin.importPo")}
+                  <Input
+                    className="sr-only"
+                    type="file"
+                    accept=".po,text/plain"
+                    aria-label={t("web.translationAdmin.importPo")}
+                    disabled={working}
+                    onChange={(event) => void importPo(event)}
+                  />
+                </label>
+              </div>
+            }
+          />
 
           {error && <Alert variant="error">{error}</Alert>}
           {notice && <Alert role="status">{notice}</Alert>}
 
           <section className="grid min-h-[36rem] gap-6 lg:grid-cols-[minmax(18rem,0.82fr)_minmax(0,1.18fr)]">
-            <div className="flex min-h-0 flex-col border-y border-stone-200 py-5">
+            <div className="flex min-h-0 flex-col border-y border-hairline py-5">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold text-stone-900">
+                <h2 className="text-sm font-semibold text-ink">
                   {t("web.translationAdmin.filterLabel")}
                 </h2>
                 <Badge variant="outline">
@@ -465,28 +461,22 @@ export default function TranslationAdminPage() {
               </Select>
               <div className="mt-4 min-h-0 flex-1 space-y-1 overflow-y-auto" aria-busy={busy}>
                 {busy ? (
-                  <p className="py-5 text-sm text-stone-500" role="status">
+                  <p className="py-5 text-sm text-muted" role="status">
                     {t("web.translationAdmin.loading")}
                   </p>
                 ) : filteredEntries.length === 0 ? (
-                  <p className="py-5 text-sm text-stone-500">
+                  <p className="py-5 text-sm text-muted">
                     {t("web.translationAdmin.noResults")}
                   </p>
                 ) : (
                   filteredEntries.map((entry) => (
-                    <button
+                    <ListOption
                       key={entry.id}
-                      type="button"
-                      aria-current={entry.id === selectedId ? "true" : undefined}
-                      className={`w-full rounded-lg border px-3 py-3 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
-                        entry.id === selectedId
-                          ? "border-lime-700 bg-lime-50"
-                          : "border-transparent hover:border-stone-200 hover:bg-stone-50"
-                      }`}
-                      onClick={() => setSelectedId(entry.id)}
+                      onSelect={() => setSelectedId(entry.id)}
+                      selected={entry.id === selectedId}
                     >
                       <span className="flex items-center justify-between gap-3">
-                        <span className="min-w-0 truncate font-mono text-xs font-semibold text-stone-800">
+                        <span className="min-w-0 truncate font-mono text-xs font-semibold text-ink">
                           {entry.namespace}.{entry.key}
                         </span>
                         <Badge
@@ -497,13 +487,13 @@ export default function TranslationAdminPage() {
                             : t("web.translationAdmin.draftStatus")}
                         </Badge>
                       </span>
-                      <span className="mt-1 block truncate text-sm text-stone-600">
+                      <span className="mt-1 block truncate text-sm text-muted-dim">
                         {entry.value}
                       </span>
-                      <span className="mt-1 block truncate text-xs text-stone-500">
+                      <span className="mt-1 block truncate text-xs text-muted">
                         {entry.sourceText}
                       </span>
-                    </button>
+                    </ListOption>
                   ))
                 )}
               </div>
@@ -512,12 +502,12 @@ export default function TranslationAdminPage() {
             <div className="min-w-0 py-5">
               {selected ? (
                 <form className="space-y-5" onSubmit={(event) => void saveDraft(event)}>
-                  <div className="flex flex-wrap items-start justify-between gap-4 border-b border-stone-200 pb-4">
+                  <div className="flex flex-wrap items-start justify-between gap-4 border-b border-hairline pb-4">
                     <div className="min-w-0">
-                      <h2 className="break-all font-mono text-sm font-semibold text-stone-900">
+                      <h2 className="break-all font-mono text-sm font-semibold text-ink">
                         {selected.namespace}.{selected.key}
                       </h2>
-                      <p className="mt-1 text-xs text-stone-500">
+                      <p className="mt-1 text-xs text-muted">
                         {languageLabel} · {selected.status === "draft"
                           ? t("web.translationAdmin.draftStatus")
                           : t("web.translationAdmin.publishedStatus")}
@@ -535,17 +525,17 @@ export default function TranslationAdminPage() {
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-stone-600">
+                    <label className="mb-1.5 block text-xs font-semibold text-muted-dim">
                       {t("web.translationAdmin.source")}
                     </label>
-                    <p className="rounded-lg bg-stone-100 px-3 py-2.5 text-sm leading-6 text-stone-700">
+                    <p className="rounded-lg bg-panel-edge px-3 py-2.5 text-sm leading-6 text-ink-soft">
                       {selected.sourceText}
                     </p>
                   </div>
 
                   {!selected.sourcePluralText && <div>
                     <label
-                      className="mb-1.5 block text-xs font-semibold text-stone-600"
+                      className="mb-1.5 block text-xs font-semibold text-muted-dim"
                       htmlFor="translation-value"
                     >
                       {t("web.translationAdmin.translated")}
@@ -561,13 +551,13 @@ export default function TranslationAdminPage() {
                   </div>}
                   {selected.sourcePluralText && (
                     <div className="space-y-4">
-                      <p className="text-sm leading-6 text-stone-700">
+                      <p className="text-sm leading-6 text-ink-soft">
                         {selected.sourcePluralText}
                       </p>
                       {targetLocale === "en" && (
                         <div>
                           <label
-                            className="mb-1.5 block text-xs font-semibold text-stone-600"
+                            className="mb-1.5 block text-xs font-semibold text-muted-dim"
                             htmlFor="translation-one"
                           >
                             {t("web.translationAdmin.pluralOne")}
@@ -588,7 +578,7 @@ export default function TranslationAdminPage() {
                       )}
                       <div>
                         <label
-                          className="mb-1.5 block text-xs font-semibold text-stone-600"
+                          className="mb-1.5 block text-xs font-semibold text-muted-dim"
                           htmlFor="translation-other"
                         >
                           {t("web.translationAdmin.pluralOther")}
@@ -611,19 +601,19 @@ export default function TranslationAdminPage() {
 
                   {selected.context && (
                     <div>
-                      <label className="mb-1.5 block text-xs font-semibold text-stone-600">
+                      <label className="mb-1.5 block text-xs font-semibold text-muted-dim">
                         {t("web.translationAdmin.context")}
                       </label>
-                      <p className="text-sm leading-6 text-stone-600">
+                      <p className="text-sm leading-6 text-muted-dim">
                         {selected.context}
                       </p>
                     </div>
                   )}
 
-                  <p id="translation-review-notice" className="text-xs leading-5 text-stone-500">
+                  <p id="translation-review-notice" className="text-xs leading-5 text-muted">
                     {t("web.translationAdmin.aiReviewNotice")}
                   </p>
-                  <div className="flex flex-wrap gap-2 border-t border-stone-200 pt-4">
+                  <div className="flex flex-wrap gap-2 border-t border-hairline pt-4">
                     <Button type="submit" disabled={working || !draftText.trim()}>
                       {working
                         ? t("web.translationAdmin.loading")
@@ -649,7 +639,7 @@ export default function TranslationAdminPage() {
                     )}
                   </div>
                   {Number.isFinite(Date.parse(selected.updatedAt)) && (
-                    <p className="text-xs text-stone-500">
+                    <p className="text-xs text-muted">
                       {t("web.translationAdmin.updated", {
                         date: new Intl.DateTimeFormat(locale, {
                           dateStyle: "medium",
@@ -660,7 +650,7 @@ export default function TranslationAdminPage() {
                   )}
                 </form>
               ) : (
-                <p className="py-10 text-sm text-stone-500">
+                <p className="py-10 text-sm text-muted">
                   {t("web.translationAdmin.selectEntry")}
                 </p>
               )}

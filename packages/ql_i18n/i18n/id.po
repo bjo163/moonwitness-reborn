@@ -367,6 +367,18 @@ msgctxt "web:dashboard.availableDescription"
 msgid "Pintasan di bawah membuka area yang sudah ada di aplikasi."
 msgstr "Pintasan di bawah membuka area yang sudah ada di aplikasi."
 
+msgctxt "web:dashboard.corpusTitle"
+msgid "Kitab & Sumber"
+msgstr "Kitab & Sumber"
+
+msgctxt "web:dashboard.corpusDescription"
+msgid ""
+"Baca Qur'an (Tanzil Uthmani) atau terjemahan yang diatribusi (RWWAD English, "
+"Kemenag Indonesia)."
+msgstr ""
+"Baca Qur'an (Tanzil Uthmani) atau terjemahan yang diatribusi (RWWAD English, "
+"Kemenag Indonesia)."
+
 msgctxt "web:dashboard.chatDescription"
 msgid ""
 "Mulai percakapan atau lanjutkan riwayat dengan provider model yang "
@@ -611,6 +623,14 @@ msgstr "Memuat antrean review..."
 msgctxt "web:workflow.empty"
 msgid "Belum ada perubahan yang menunggu review."
 msgstr "Belum ada perubahan yang menunggu review."
+
+msgctxt "web:workflow.noReviewerActions"
+msgid "Tidak ada aksi reviewer yang tersedia untuk status ini."
+msgstr "Tidak ada aksi reviewer yang tersedia untuk status ini."
+
+msgctxt "web:workflow.noSubmitterActions"
+msgid "Tidak ada aksi submitter yang tersedia untuk status ini."
+msgstr "Tidak ada aksi submitter yang tersedia untuk status ini."
 
 msgctxt "web:workflow.errorQueue"
 msgid "Antrean review gagal dimuat."
@@ -2172,6 +2192,50 @@ msgctxt "web.models:descriptions.corpus_work"
 msgid "Karya tingkat atas (mis. Al-Qur'an); banyak edisi/bahasa dapat merujuk ke satu work."
 msgstr "Karya tingkat atas (mis. Al-Qur'an); banyak edisi/bahasa dapat merujuk ke satu work."
 
+msgctxt "web.models:entities.corpus_lexical_candidate"
+msgid "Kandidat leksikal korpus"
+msgstr "Kandidat leksikal korpus"
+
+msgctxt "web.models:descriptions.corpus_lexical_candidate"
+msgid "Kandidat frekuensi Arab yang belum ditinjau dari edisi Al-Qur'an dengan hak transformasi yang disetujui; bukan kesimpulan agama."
+msgstr "Kandidat frekuensi Arab yang belum ditinjau dari edisi Al-Qur'an dengan hak transformasi yang disetujui; bukan kesimpulan agama."
+
+msgctxt "web.models:fieldCandidateText"
+msgid "Teks kandidat"
+msgstr "Teks kandidat"
+
+msgctxt "web.models:fieldNormalizedForm"
+msgid "Bentuk ternormalisasi"
+msgstr "Bentuk ternormalisasi"
+
+msgctxt "web.models:fieldOccurrenceCount"
+msgid "Jumlah kemunculan"
+msgstr "Jumlah kemunculan"
+
+msgctxt "web.models:fieldVerseReferenceCount"
+msgid "Jumlah referensi ayat"
+msgstr "Jumlah referensi ayat"
+
+msgctxt "web.models:fieldSourceEdition"
+msgid "Edisi sumber"
+msgstr "Edisi sumber"
+
+msgctxt "web.models:fieldSourceVersionId"
+msgid "ID versi sumber"
+msgstr "ID versi sumber"
+
+msgctxt "web.models:fieldSourceReferences"
+msgid "Referensi sumber"
+msgstr "Referensi sumber"
+
+msgctxt "web.models:fieldNormalizationVersion"
+msgid "Versi normalisasi"
+msgstr "Versi normalisasi"
+
+msgctxt "web.models:fieldAlgorithmVersion"
+msgid "Versi algoritme"
+msgstr "Versi algoritme"
+
 msgctxt "web.models:entities.i18n_language"
 msgid "Bahasa antarmuka"
 msgstr "Bahasa antarmuka"
@@ -2467,3 +2531,135 @@ msgstr "Viewer"
 msgctxt "web.adminUsers:roles.viewer.description"
 msgid "Hanya membaca."
 msgstr "Hanya membaca."
+
+msgctxt "web.models:entities.research_lexical_review"
+msgid "Penilaian leksikal"
+msgstr "Penilaian leksikal"
+
+msgctxt "web.models:descriptions.research_lexical_review"
+msgid "Penilaian manusia append-only atas frekuensi leksikal eksploratif yang terikat pada snapshot sumber dan metode."
+msgstr "Penilaian manusia append-only atas frekuensi leksikal eksploratif yang terikat pada snapshot sumber dan metode."
+
+msgctxt "web.research:navLabel"
+msgid "Review Riset"
+msgstr "Review Riset"
+
+msgctxt "web.research:title"
+msgid "Antrean review leksikal"
+msgstr "Antrean review leksikal"
+
+msgctxt "web.research:description"
+msgid "Tinjau frekuensi token Arab eksploratif dengan rujukan sumber yang dapat diaudit. Hasil komputasi bukan identifikasi Asmaulhusna."
+msgstr "Tinjau frekuensi token Arab eksploratif dengan rujukan sumber yang dapat diaudit. Hasil komputasi bukan identifikasi Asmaulhusna."
+
+msgctxt "web.research:reviewerRequired"
+msgid "Halaman ini hanya tersedia untuk admin dan operator."
+msgstr "Halaman ini hanya tersedia untuk admin dan operator."
+
+msgctxt "web.research:edition"
+msgid "Edisi sumber"
+msgstr "Edisi sumber"
+
+msgctxt "web.research:loadingEditions"
+msgid "Memuat edisi..."
+msgstr "Memuat edisi..."
+
+msgctxt "web.research:noEditions"
+msgid "Belum ada edisi terbit yang dapat ditinjau."
+msgstr "Belum ada edisi terbit yang dapat ditinjau."
+
+msgctxt "web.research:loadingCandidates"
+msgid "Menghitung frekuensi leksikal..."
+msgstr "Menghitung frekuensi leksikal..."
+
+msgctxt "web.research:emptyCandidates"
+msgid "Tidak ada kandidat leksikal pada edisi ini."
+msgstr "Tidak ada kandidat leksikal pada edisi ini."
+
+msgctxt "web.research:candidate"
+msgid "Bentuk token"
+msgstr "Bentuk token"
+
+msgctxt "web.research:normalizedForm"
+msgid "Bentuk normalisasi"
+msgstr "Bentuk normalisasi"
+
+msgctxt "web.research:occurrenceCount"
+msgid "Jumlah kemunculan"
+msgstr "Jumlah kemunculan"
+
+msgctxt "web.research:verseCount"
+msgid "Rujukan ayat"
+msgstr "Rujukan ayat"
+
+msgctxt "web.research:reviewStatus"
+msgid "Status review"
+msgstr "Status review"
+
+msgctxt "web.research:unreviewed"
+msgid "Belum ditinjau"
+msgstr "Belum ditinjau"
+
+msgctxt "web.research:sourceVersion"
+msgid "Versi sumber"
+msgstr "Versi sumber"
+
+msgctxt "web.research:algorithmVersion"
+msgid "Versi algoritme"
+msgstr "Versi algoritme"
+
+msgctxt "web.research:normalizationVersion"
+msgid "Versi normalisasi"
+msgstr "Versi normalisasi"
+
+msgctxt "web.research:evidenceReferences"
+msgid "Rujukan dan checksum sumber"
+msgstr "Rujukan dan checksum sumber"
+
+msgctxt "web.research:checksum"
+msgid "Checksum"
+msgstr "Checksum"
+
+msgctxt "web.research:referenceId"
+msgid "ID sumber"
+msgstr "ID sumber"
+
+msgctxt "web.research:decision"
+msgid "Keputusan riset"
+msgstr "Keputusan riset"
+
+msgctxt "web.research:rationale"
+msgid "Alasan peninjauan"
+msgstr "Alasan peninjauan"
+
+msgctxt "web.research:rationalePlaceholder"
+msgid "Catat alasan dan kebutuhan verifikasi ahli."
+msgstr "Catat alasan dan kebutuhan verifikasi ahli."
+
+msgctxt "web.research:submitReview"
+msgid "Simpan penilaian"
+msgstr "Simpan penilaian"
+
+msgctxt "web.research:saving"
+msgid "Menyimpan..."
+msgstr "Menyimpan..."
+
+msgctxt "web.research:saved"
+msgid "Penilaian tersimpan sebagai catatan audit baru."
+msgstr "Penilaian tersimpan sebagai catatan audit baru."
+
+msgctxt "web.research:decisions.retain_for_research"
+msgid "Simpan untuk riset lanjutan"
+msgstr "Simpan untuk riset lanjutan"
+
+msgctxt "web.research:decisions.exclude_from_research"
+msgid "Keluarkan dari riset lanjutan"
+msgstr "Keluarkan dari riset lanjutan"
+
+msgctxt "web.research:decisions.needs_expert_review"
+msgid "Perlu tinjauan ahli"
+msgstr "Perlu tinjauan ahli"
+
+msgctxt "web.research:researchDisclaimer"
+msgid "Frekuensi token dan keputusan review ini bukan kesimpulan agama atau verifikasi nama ilahi. Penilaian baru menandai jalur riset dan selalu menyimpan provenance sumber/metode."
+msgstr "Frekuensi token dan keputusan review ini bukan kesimpulan agama atau verifikasi nama ilahi. Penilaian baru menandai jalur riset dan selalu menyimpan provenance sumber/metode."

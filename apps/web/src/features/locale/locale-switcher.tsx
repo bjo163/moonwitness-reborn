@@ -23,7 +23,7 @@ export function LocaleSwitcher({
       role="group"
       aria-label={label}
     >
-      <Globe2 aria-hidden="true" size={15} className="mr-1 text-stone-500" />
+      <Globe2 aria-hidden="true" size={15} className="mr-1 text-muted" />
       {(["id", "en"] as const).map((option) => (
         <Button
           key={option}

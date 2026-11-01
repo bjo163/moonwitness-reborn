@@ -4,6 +4,7 @@ import {
   moonClient,
   type UiLocale,
 } from "@moonwitness/moonclient";
+import { Alert, Button } from "@moonwitness/ui";
 import {
   uiCatalogs,
   type UiCatalogMessage,
@@ -166,18 +167,19 @@ export function TranslationCatalogProvider({
   return (
     <TranslationContext.Provider value={context}>
       {catalogError && (
-        <div
-          className="fixed inset-x-0 top-0 z-[100] border-b border-amber-700 bg-amber-950 px-4 py-2 text-center text-xs text-amber-100"
-          role="alert"
-        >
-          {t("web.common.catalogUnavailable")}
-          <button
-            className="ml-3 underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-            onClick={() => void refresh()}
-            type="button"
-          >
-            {t("web.common.retry")}
-          </button>
+        <div className="fixed inset-x-0 top-0 z-[100] text-xs">
+          <Alert variant="error" className="flex flex-wrap items-center justify-center gap-1">
+            {t("web.common.catalogUnavailable")}
+            <Button
+              className="ml-3 underline underline-offset-2"
+              onClick={() => void refresh()}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              {t("web.common.retry")}
+            </Button>
+          </Alert>
         </div>
       )}
       {children}

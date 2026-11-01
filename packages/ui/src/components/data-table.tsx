@@ -14,10 +14,15 @@ export interface DataTableProps<
   rowKey: keyof Row & string;
   onRowClick?(row: Row): void;
   renderActions?(row: Row): ReactNode;
-  emptyMessage?: string;
-  actionsLabel?: string;
-  yesLabel?: string;
-  noLabel?: string;
+  /**
+   * All four strings are required and have no defaults: a design-system
+   * package must not own user-facing copy (MW-ADR-020, MW-0576). Every
+   * caller passes the localised value from the app's translation catalogue.
+   */
+  emptyMessage: string;
+  actionsLabel: string;
+  yesLabel: string;
+  noLabel: string;
   className?: string;
 }
 
@@ -39,10 +44,10 @@ export function DataTable<
   rowKey,
   onRowClick,
   renderActions,
-  emptyMessage = "Belum ada data.",
-  actionsLabel = "Aksi",
-  yesLabel = "Ya",
-  noLabel = "Tidak",
+  emptyMessage,
+  actionsLabel,
+  yesLabel,
+  noLabel,
   className,
 }: DataTableProps<Row>) {
   return (

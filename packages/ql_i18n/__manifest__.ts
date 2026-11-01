@@ -1,4 +1,5 @@
 import type { QlAddonManifest } from "ql_orm";
+import { createDefaultI18nData } from "./services/catalog-service.js";
 import { models } from "./models/index.js";
 import { views } from "./views/index.js";
 
@@ -27,6 +28,7 @@ const manifest: QlAddonManifest = {
     },
   ],
   views,
+  data: createDefaultI18nData(),
 };
 
 export default manifest;

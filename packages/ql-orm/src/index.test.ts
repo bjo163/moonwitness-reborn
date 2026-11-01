@@ -7,6 +7,8 @@ import pg from "pg";
 import {
   createQlOrm,
   loadAddons,
+  type QlComputedModelContext,
+  type QlAddonManifest,
   type QlFieldDefinition,
   QlModelRegistry,
 } from "./index.js";
@@ -19,6 +21,7 @@ const base = {
   models: [],
   access: [],
   views: [],
+  data: [],
 };
 
 void test("addon loading sorts dependencies and rejects cycles", () => {
@@ -84,6 +87,192 @@ void test("model registry validates addon prefix, models and access rules", () =
   );
 });
 
+void test("manifest seed data loads in dependency order and follows row policies", async () => {
+  const externalIds = {
+    name: "ir.model.data",
+    description: "External IDs",
+    tableName: "ir_model_data_seed_test",
+    fields: {
+      external_id: {
+        type: "char" as const,
+        required: true,
+        unique: true,
+        private: true,
+      },
+      model_name: { type: "char" as const, required: true, private: true },
+      record_id: { type: "char" as const, required: true, private: true },
+    },
+  };
+  const setting = {
+    name: "base.setting",
+    description: "System settings",
+    tableName: "base_setting_seed_test",
+    fields: {
+      code: { type: "char" as const, required: true, unique: true },
+      value: { type: "char" as const, required: true },
+    },
+  };
+  const item = {
+    name: "test.item",
+    description: "Seedable test item",
+    tableName: "test_item_seed_test",
+    fields: {
+      code: { type: "char" as const, required: true, unique: true },
+      value: { type: "char" as const, required: true },
+    },
+  };
+  const baseManifest: QlAddonManifest = {
+    ...base,
+    models: [externalIds, setting],
+    data: [
+      {
+        id: "default_setting",
+        model: "base.setting",
+        key: { field: "code", value: "site_name" },
+        values: { code: "site_name", value: "MoonWitness" },
+        updatePolicy: "reconcile",
+      },
+    ],
+  };
+  const itemManifest: QlAddonManifest = {
+    ...base,
+    name: "ql_seed_fixture",
+    depends: ["ql_base"],
+    models: [item],
+    data: [
+      {
+        id: "stable_item",
+        model: "test.item",
+        key: { field: "code", value: "example" },
+        values: { code: "example", value: "original" },
+        updatePolicy: "insert_only",
+      },
+    ],
+  };
+
+  const runtime = await createQlOrm("file::memory:", [
+    itemManifest,
+    baseManifest,
+  ]);
+  try {
+    assert.equal(
+      runtime.orm.registry.can("ir.model.data", ["admin", "root"], "read"),
+      false,
+    );
+    const externalIdsInOrder = await runtime.orm.findManyByService(
+      "ir.model.data",
+      {},
+      { limit: 10, orderBy: "rowid-asc" },
+    );
+    assert.deepEqual(
+      externalIdsInOrder.map((record) => record.external_id),
+      ["ql_base.default_setting", "ql_seed_fixture.stable_item"],
+    );
+
+    await runtime.orm.updateRecordsForService(
+      "base.setting",
+      { code: "site_name" },
+      { value: "local override" },
+    );
+    await runtime.orm.updateRecordsForService(
+      "test.item",
+      { code: "example" },
+      { value: "local override" },
+    );
+    await runtime.orm.loadDefaultData();
+
+    assert.equal(
+      (
+        await runtime.orm.findOneByService("base.setting", {
+          code: "site_name",
+        })
+      )?.value,
+      "MoonWitness",
+    );
+    assert.equal(
+      (
+        await runtime.orm.findOneByService("test.item", {
+          code: "example",
+        })
+      )?.value,
+      "local override",
+    );
+    assert.equal(
+      (
+        await runtime.orm.findManyByService(
+          "ir.model.data",
+          {},
+          { limit: 10 },
+        )
+      ).length,
+      2,
+    );
+  } finally {
+    runtime.close();
+  }
+});
+
+void test("manifest seed data rejects private fields and owner-scoped models", () => {
+  const protectedModel = {
+    name: "test.protected",
+    description: "Protected test model",
+    tableName: "test_protected_seed_validation",
+    fields: {
+      code: { type: "char" as const, required: true, unique: true },
+      secret: { type: "char" as const, required: true, private: true },
+    },
+  };
+  const privateSeed: QlAddonManifest = {
+    ...base,
+    name: "ql_private_seed",
+    depends: ["ql_base"],
+    models: [protectedModel],
+    data: [
+      {
+        id: "private_value",
+        model: "test.protected",
+        key: { field: "code", value: "private" },
+        values: { code: "private", secret: "not allowed" },
+        updatePolicy: "insert_only",
+      },
+    ],
+  };
+  assert.throws(
+    () => new QlModelRegistry([base, privateSeed]),
+    /invalid or private field 'secret'/,
+  );
+
+  const ownerScopedModel = {
+    name: "test.owned",
+    description: "Owner-scoped test model",
+    tableName: "test_owned_seed_validation",
+    ownerField: "owner_id",
+    fields: {
+      code: { type: "char" as const, required: true, unique: true },
+      owner_id: { type: "char" as const, required: true, private: true },
+    },
+  };
+  const ownerSeed: QlAddonManifest = {
+    ...base,
+    name: "ql_owner_seed",
+    depends: ["ql_base"],
+    models: [ownerScopedModel],
+    data: [
+      {
+        id: "owner_record",
+        model: "test.owned",
+        key: { field: "code", value: "owner" },
+        values: { code: "owner", owner_id: "system" },
+        updatePolicy: "insert_only",
+      },
+    ],
+  };
+  assert.throws(
+    () => new QlModelRegistry([base, ownerSeed]),
+    /cannot seed owner-scoped model/,
+  );
+});
+
 void test("view declarations validate model and field names", () => {
   const model = {
     name: "res.partner",
@@ -112,6 +301,287 @@ void test("view declarations validate model and field names", () => {
       ]),
     /unknown field/,
   );
+});
+
+function computedFieldManifest(tableName: string) {
+  return {
+    ...base,
+    access: [
+      {
+        model: "test.profile",
+        group: "user",
+        read: true,
+        write: true,
+        create: true,
+        unlink: true,
+      },
+    ],
+    models: [
+      {
+        name: "test.profile",
+        description: "Computed profile fields",
+        tableName,
+        ownerField: "owner_id",
+        fields: {
+          first_name: { type: "char" as const, required: true },
+          last_name: { type: "char" as const, required: true },
+          owner_id: {
+            type: "char" as const,
+            required: true,
+            private: true,
+          },
+          full_name: {
+            type: "char" as const,
+            required: true,
+            compute: {
+              dependsOn: ["first_name", "last_name"],
+              resolve: (record: Readonly<Record<string, string | number | boolean | null>>) =>
+                `${record.first_name} ${record.last_name}`,
+            },
+          },
+          greeting: {
+            type: "char" as const,
+            compute: {
+              dependsOn: ["full_name"],
+              resolve: (record: Readonly<Record<string, string | number | boolean | null>>) =>
+                `Hello, ${record.full_name}`,
+            },
+          },
+        },
+      },
+    ],
+  };
+}
+
+async function runComputedFieldSuite(
+  databaseUrl: string,
+  tableName: string,
+): Promise<void> {
+  const runtime = await createQlOrm(databaseUrl, [
+    computedFieldManifest(tableName),
+  ]);
+  try {
+    const owner = { id: "owner-1", groups: ["user"] };
+    const created = await runtime.orm.createRecordForService(
+      "test.profile",
+      {
+        first_name: "Ada",
+        last_name: "Lovelace",
+        owner_id: owner.id,
+      },
+    );
+    assert.equal(created.full_name, "Ada Lovelace");
+    assert.equal(created.greeting, "Hello, Ada Lovelace");
+    assert.equal("owner_id" in created, true);
+
+    const publicRows = await runtime.orm.findMany("test.profile", owner);
+    assert.equal(publicRows.length, 1);
+    assert.equal(publicRows[0].full_name, "Ada Lovelace");
+    assert.equal(publicRows[0].greeting, "Hello, Ada Lovelace");
+    assert.equal("owner_id" in publicRows[0], false);
+
+    await assert.rejects(
+      runtime.orm.create("test.profile", owner, {
+        first_name: "Grace",
+        last_name: "Hopper",
+        full_name: "Forged",
+      }),
+      /Computed field 'full_name' is read-only/,
+    );
+    await assert.rejects(
+      runtime.orm.update(
+        "test.profile",
+        owner,
+        String(created.id),
+        { greeting: "Forged" },
+      ),
+      /Computed field 'greeting' is read-only/,
+    );
+    await assert.rejects(
+      runtime.orm.createRecordForService("test.profile", {
+        first_name: "Grace",
+        last_name: "Hopper",
+        owner_id: owner.id,
+        greeting: "Forged",
+      }),
+      /Computed field 'greeting' is read-only/,
+    );
+    await assert.rejects(
+      runtime.orm.findManyByService("test.profile", { full_name: "Ada Lovelace" }),
+      /cannot be used as a database filter/,
+    );
+  } finally {
+    runtime.close();
+  }
+}
+
+void test("computed fields resolve in dependency order and stay virtual on libsql", async () => {
+  await runComputedFieldSuite("file::memory:", "test_profile_computed_libsql");
+});
+
+void test("computed field dependencies reject cycles and private-field leaks", () => {
+  const model = computedFieldManifest("test_profile_invalid").models[0];
+  assert.ok(model);
+  const cycle = {
+    ...model,
+    fields: {
+      first_name: {
+        type: "char" as const,
+        compute: {
+          dependsOn: ["greeting"],
+          resolve: () => "first",
+        },
+      },
+      greeting: {
+        type: "char" as const,
+        compute: {
+          dependsOn: ["first_name"],
+          resolve: () => "greeting",
+        },
+      },
+    },
+  };
+  assert.throws(
+    () => new QlModelRegistry([{ ...base, models: [cycle] }]),
+    /dependency cycle/,
+  );
+
+  const leaksPrivate = {
+    ...model,
+    fields: {
+      ...model.fields,
+      leaked_owner: {
+        type: "char" as const,
+        compute: {
+          dependsOn: ["owner_id"],
+          resolve: (record: Readonly<Record<string, string | number | boolean | null>>) =>
+            record.owner_id,
+        },
+      },
+    },
+  };
+  assert.throws(
+    () => new QlModelRegistry([{ ...base, models: [leaksPrivate] }]),
+    /cannot depend on private field/,
+  );
+});
+
+void test("computed models are ACL-gated bounded read-only projections", async () => {
+  let computeCalls = 0;
+  const manifest = {
+    ...base,
+    models: [
+      {
+        name: "test.source",
+        description: "Source record",
+        tableName: "test_computed_source",
+        fields: {
+          value: { type: "char" as const, required: true },
+        },
+      },
+    ],
+    computedModels: [
+      {
+        name: "test.projection",
+        description: "Virtual projection",
+        sources: ["test.source"],
+        queryFields: {
+          prefix: { type: "char" as const, required: true, maxLength: 20 },
+        },
+        fields: {
+          value: { type: "char" as const, required: true },
+        },
+        compute({ query }: QlComputedModelContext) {
+          computeCalls += 1;
+          const prefix = query.filters.prefix;
+          if (typeof prefix !== "string") {
+            throw new Error("Validated prefix query is missing.");
+          }
+          return Promise.resolve([{ id: "projection-1", value: prefix }]);
+        },
+      },
+    ],
+    access: [
+      {
+        model: "test.source",
+        group: "operator",
+        read: true,
+        write: false,
+        create: false,
+        unlink: false,
+      },
+      {
+        model: "test.projection",
+        group: "operator",
+        read: true,
+        write: false,
+        create: false,
+        unlink: false,
+      },
+      {
+        model: "test.projection",
+        group: "analyst",
+        read: true,
+        write: false,
+        create: false,
+        unlink: false,
+      },
+    ],
+    views: [
+      {
+        name: "test.projection.list",
+        model: "test.projection",
+        type: "list" as const,
+        fields: ["value"],
+      },
+    ],
+  };
+  const runtime = await createQlOrm("file::memory:", [manifest]);
+  try {
+    const operator = { id: "operator-1", groups: ["operator"] };
+    const records = await runtime.orm.queryComputedModel(
+      "test.projection",
+      operator,
+      { filters: { prefix: "candidate" }, limit: 1 },
+    );
+    assert.deepEqual(records, [{ id: "projection-1", value: "candidate" }]);
+    assert.equal(computeCalls, 1);
+    assert.deepEqual(
+      runtime.orm.registry.getComputedModels().map((model) => model.name),
+      ["test.projection"],
+    );
+    assert.deepEqual(
+      runtime.orm.registry.getViews("test.projection").map((view) => view.name),
+      ["test.projection.list"],
+    );
+    await assert.rejects(
+      runtime.orm.queryComputedModel("test.projection", operator, {
+        filters: { unknown: "value" },
+      }),
+      /Unknown query field/,
+    );
+    await assert.rejects(
+      runtime.orm.queryComputedModel("test.projection", operator, { limit: 101 }),
+      /between 1 and 100/,
+    );
+    await assert.rejects(
+      runtime.orm.queryComputedModel("test.projection", {
+        id: "member-1",
+        groups: ["user"],
+      }),
+      /Access denied: read on 'test\.projection'/,
+    );
+    await assert.rejects(
+      runtime.orm.queryComputedModel("test.projection", {
+        id: "member-1",
+        groups: ["analyst"],
+      }),
+      /Access denied: read on 'test\.source'/,
+    );
+    assert.equal(computeCalls, 1);
+  } finally {
+    runtime.close();
+  }
 });
 
 async function runRecordSuite(
@@ -426,6 +896,14 @@ async function dropScratchTable(
 }
 
 if (postgresUrl) {
+  void test("computed fields resolve in dependency order and stay virtual on postgres", async () => {
+    const tableName = `test_profile_computed_pg_${Date.now().toString(36)}`;
+    try {
+      await runComputedFieldSuite(postgresUrl, tableName);
+    } finally {
+      await dropScratchTable(postgresUrl, tableName);
+    }
+  });
   void test("service CRUD and ACL hold on postgres", async () => {
     const tableName = `ai_provider_pg_${Date.now().toString(36)}`;
     try {

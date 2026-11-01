@@ -15,7 +15,7 @@ export default [
       "**/*.d.ts",
       "**/dist/**",
       "**/.next/**",
-      "**/.next-verify/**",
+      "**/.next-*/**",
       "**/node_modules/**",
       ".turbo/**",
     ],

@@ -21,6 +21,17 @@ The canonical source is [`docs/governance/task-tracker.json`](../../../docs/gove
 
 5. Record the selected task ID in the working context and keep changes scoped to its acceptance criteria.
 
+## AI execution packets
+
+When a task has an `execution_packet`, read it before editing and use its canonical references, scope, non-goals, touchpoints, checks, and stop conditions as the bounded work contract.
+
+- `autonomous`: implementation may begin only when the task is pending/proposed and every dependency is done.
+- `decision_prep`: gather evidence and prepare options; do not make an owner decision or implement the undecided feature.
+- `manual_verification`: ask the owner to perform the named human/browser action and record evidence; do not fabricate completion.
+- `gated_implementation`: do not start implementation until every listed ratification, rights, and release prerequisite is done.
+
+Never infer permission to commit, push, create GitHub records, change branch protection, or deploy from a task packet. If a reference is missing, its scope conflicts with an accepted decision, or an explicit stop condition is met, update the task with the blocker and stop rather than guessing.
+
 ## While working
 
 - Keep the task in `in_progress` while implementation or verification remains.

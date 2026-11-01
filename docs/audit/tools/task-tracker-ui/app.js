@@ -8,6 +8,12 @@ const stateLabels = {
   blocked: "Terhambat",
   done: "Selesai",
 };
+const executionModeLabels = {
+  autonomous: "AI dapat mengerjakan",
+  decision_prep: "Persiapan keputusan saja",
+  manual_verification: "Perlu verifikasi manusia",
+  gated_implementation: "Terkunci sampai prasyarat selesai",
+};
 const token = document.querySelector('meta[name="csrf-token"]').content;
 const rows = document.querySelector("#task-rows");
 const searchInput = document.querySelector("#task-search");
@@ -16,6 +22,7 @@ const feedback = document.querySelector("#feedback");
 const refreshButton = document.querySelector("#refresh-button");
 let tasks = [];
 let readyTaskIds = [];
+let aiReadyTaskIds = [];
 let busy = false;
 
 function makeElement(tag, className, text) {
@@ -32,9 +39,23 @@ function updateSummary() {
     document.querySelector(`#count-${state}`).textContent = String(count);
   }
   document.querySelector("#count-ready").textContent = String(readyTaskIds.length);
+  document.querySelector("#count-ai-ready").textContent = String(aiReadyTaskIds.length);
 }
 
 function taskSearchText(task) {
+  const packet = task.execution_packet;
+  const packetText = packet
+    ? [
+        packet.mode,
+        packet.scope,
+        ...packet.non_goals,
+        ...packet.spec_refs,
+        ...packet.requirement_ids,
+        ...packet.touchpoints,
+        ...packet.checks,
+        ...packet.stop_conditions,
+      ]
+    : [];
   return [
     task.id,
     task.title,
@@ -44,6 +65,7 @@ function taskSearchText(task) {
     task.owner,
     task.acceptance_criteria,
     ...task.depends_on,
+    ...packetText,
   ].join(" ").toLocaleLowerCase("id");
 }
 
@@ -74,6 +96,30 @@ function makeTaskDetails(task) {
   content.append(makeElement("p", "section-name", task.section));
   content.append(makeElement("h3", "detail-label", "Kriteria penerimaan"));
   content.append(makeElement("p", "acceptance", task.acceptance_criteria));
+  if (task.execution_packet) {
+    const packet = task.execution_packet;
+    content.append(makeElement("h3", "detail-label", "Paket eksekusi"));
+    const modeLabel = executionModeLabels[packet.mode] || packet.mode;
+    const readyLabel = aiReadyTaskIds.includes(task.id)
+      ? " · Siap masuk antrean AI"
+      : "";
+    content.append(makeElement("p", "execution-mode", `${modeLabel}${readyLabel}`));
+    content.append(makeElement("p", "packet-scope", packet.scope));
+    for (const [field, label] of [
+      ["non_goals", "Batasan"],
+      ["spec_refs", "Referensi kanonis"],
+      ["requirement_ids", "Requirement"],
+      ["touchpoints", "Area terkait"],
+      ["checks", "Pemeriksaan"],
+      ["stop_conditions", "Kondisi berhenti"],
+    ]) {
+      if (!packet[field].length) continue;
+      const list = document.createElement("ul");
+      list.className = "packet-list";
+      for (const item of packet[field]) list.append(makeElement("li", "", item));
+      content.append(makeElement("h4", "packet-label", label), list);
+    }
+  }
   content.append(makeElement("p", "status-note", `Catatan status (dipertahankan): ${task.status_label}`));
   if (task.completed_at) {
     content.append(makeElement("p", "completion-date", `Selesai tercatat: ${task.completed_at}`));
@@ -151,12 +197,17 @@ async function loadTasks() {
     if (!response.ok) throw new Error(body.error || `Gagal memuat task (${response.status}).`);
     tasks = body.tasks;
     readyTaskIds = body.ready_task_ids;
+    aiReadyTaskIds = body.ai_ready_task_ids;
     updateSummary();
     feedback.textContent = "";
     renderTasks();
   } catch (error) {
     feedback.className = "feedback is-error";
     feedback.textContent = error instanceof Error ? error.message : "Gagal memuat task.";
+    tasks = [];
+    readyTaskIds = [];
+    aiReadyTaskIds = [];
+    updateSummary();
     rows.replaceChildren();
     const row = document.createElement("tr");
     row.append(makeElement("td", "table-message", "Periksa server dan muat ulang untuk mencoba lagi."));
@@ -191,6 +242,7 @@ async function saveTaskState(task, select) {
     if (!response.ok) throw new Error(body.error || `Gagal menyimpan (${response.status}).`);
     tasks = body.tasks;
     readyTaskIds = body.ready_task_ids;
+    aiReadyTaskIds = body.ai_ready_task_ids;
     updateSummary();
     feedback.className = "feedback is-success";
     feedback.textContent = `${task.id} disimpan sebagai ${stateLabels[nextState]}.`;

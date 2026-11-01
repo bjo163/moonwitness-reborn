@@ -1,0 +1,24 @@
+/*
+ * One-line CSS entry for MoonWitness applications (MW-ADR-020).
+ *
+ * Any web app in the workspace sets `globals.css` to a single import of
+ * this file. `@tailwindcss/postcss` picks up `@import "tailwindcss"` and
+ * the `@theme` block from `tokens.css`, so named Tailwind utilities
+ * (`bg-acid`, `text-ink`, `border-hairline`, `font-mono`, …) are
+ * available everywhere the app renders.
+ *
+ * Order matters: `tailwindcss` must come first so `@theme` extends the
+ * tailwind palette; `tokens.css` next so `base.css` and `components.css`
+ * can resolve the `--color-*` variables they consume.
+ *
+ * `@source` is explicit because apps resolve this package through the
+ * `apps/<app>/node_modules` symlink, which Tailwind's automatic content
+ * detection skips. Without it, a utility that only ever appears inside
+ * `packages/ui/src` (e.g. `text-acid-dark` in `PageHeader`) is purged
+ * from the consumer's stylesheet.
+ */
+@import "tailwindcss";
+@source "../src";
+@import "./tokens.css";
+@import "./base.css";
+@import "./components.css";

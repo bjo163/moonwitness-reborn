@@ -20,8 +20,8 @@ Per the D30 requirement catalog and `docs/governance/GITHUB_GOVERNANCE.md`:
 - **GitHub Projects** are operational visualizations only.
 - A task marked **Done** is not evidence that the work was released; only `CHANGELOG.md` records released work.
 - Completion timestamps are recorded only when known. Existing Done tasks without a timestamp remain undated.
-- **Branch protection snapshot (2026-11-01):** default branch is `dev`; classic protection exists on `main` with required `validate` and `enforce_admins`, while `dev` requires `validate` with `strict: false` and `enforce_admins: false`. No repository rulesets were observed. This is an uneven baseline, not a claim that protection is complete.
-- **Actions CI:** no current CI result has been established for the latest observed `dev` commit (`8fe4713e58c7099b3e52c76d3c64cbeb5d16b50c`). An earlier clean-runner audit reported `pnpm lint` failing with 720 type-aware/type-resolution errors, so typecheck/tests/build were skipped then; do not treat that historical finding as current or claim the latest commit passed.
+- **Branch protection snapshot (2026-11-01):** default branch is `dev`; `main` requires a PR and the `validate` check with admin enforcement; `dev` permits direct pushes without a required-check/PR gate while force-push and deletion remain blocked and admin enforcement stays on. No repository rulesets were observed. This snapshot is operational evidence, not owner approval of every future governance policy.
+- **Actions CI:** CI passed on `dev` commit `833b1be` before the automatic v0.1.4 promotion. The later synchronized `dev` tip is `64f4828`; no CI result for that exact SHA was confirmed when this snapshot was updated. Do not treat a nearby green run as evidence for another SHA.
 
 ### 1.1 Requirement-to-issue linking
 
@@ -42,6 +42,17 @@ No requirement without an owner. No task without an acceptance criterion.
 - No duplicate task IDs across `TODO.md`, GitHub Issues, or any other register.
 - No multiple issues implementing the same result.
 - Each canonical entity has one addon/domain owner; same principle applies to task IDs.
+
+### 1.3 AI execution packets
+
+Tasks with an `execution_packet` expose a bounded working contract: execution mode, scope, non-goals, canonical spec references, requirement IDs, likely touchpoints, checks, and stop conditions. Use the packet together with the task's dependencies and acceptance criteria; it is not permission to bypass owner, rights, security, or release gates.
+
+- `autonomous`: safe for an AI to implement when the task is pending/proposed and every dependency is done.
+- `decision_prep`: prepare evidence and options only; do not make or imply the owner's decision.
+- `manual_verification`: requires a human to perform and record the named interaction.
+- `gated_implementation`: implementation is blocked until every explicit ratification and release dependency is done.
+
+Do not commit, push, create external GitHub records, change protection, or deploy unless the user explicitly asks. If a packet's source, target ownership, acceptance test, or authorization is unclear, stop and update the task rather than guessing.
 
 ---
 
@@ -219,6 +230,35 @@ The canonical owner for each goal/task in these tables is `bjo163`; an agent may
 <!-- TASK:MW-0905 -->
 <!-- TASK:MW-1001 -->
 
+##### PHASE 10 — D30 feature slices under the domain-expansion gate
+
+These are source-section work packets, not newly approved product scope. Each packet preserves exact catalog links and stays blocked until its listed owner, first-slice, and task-governance prerequisites are satisfied.
+
+| ID | Feature slice | D30 source | Depends on | Status | Acceptance criterion |
+|---|---|---|---|---|---|
+<!-- TASK:MW-1215 -->
+<!-- TASK:MW-1216 -->
+<!-- TASK:MW-1217 -->
+<!-- TASK:MW-1218 -->
+<!-- TASK:MW-1219 -->
+<!-- TASK:MW-1220 -->
+<!-- TASK:MW-1221 -->
+<!-- TASK:MW-1222 -->
+<!-- TASK:MW-1223 -->
+<!-- TASK:MW-1224 -->
+<!-- TASK:MW-1225 -->
+<!-- TASK:MW-1226 -->
+<!-- TASK:MW-1227 -->
+<!-- TASK:MW-1228 -->
+<!-- TASK:MW-1229 -->
+<!-- TASK:MW-1230 -->
+<!-- TASK:MW-1231 -->
+<!-- TASK:MW-1232 -->
+<!-- TASK:MW-1233 -->
+<!-- TASK:MW-1234 -->
+<!-- TASK:MW-1235 -->
+<!-- TASK:MW-1236 -->
+
 #### PHASE 11 — Integration and Hardening
 
 | ID | Prompt item | Depends on | Status | Acceptance criterion |
@@ -289,18 +329,52 @@ The canonical owner for each goal/task in these tables is `bjo163`; an agent may
 | **Prompt PHASE 6** | Security, infrastructure, quality, migration, and release specs exist; tenant model, performance targets, current CI, and recovery evidence remain open |
 | **Prompt PHASE 7** | TODO is the sole task register; task dependency, label, issue/project/milestone mapping, and phase-number reconciliation are now explicit goals |
 
+### Developer tooling — UI centralisation
+
+| ID | Subject | Status | Owner | Acceptance Criterion |
+|---|---|---|---|---|
+<!-- TASK:MW-0571 -->
+<!-- TASK:MW-0572 -->
+<!-- TASK:MW-0573 -->
+<!-- TASK:MW-0574 -->
+<!-- TASK:MW-0575 -->
+<!-- TASK:MW-0576 -->
+<!-- TASK:MW-0577 -->
+<!-- TASK:MW-0578 -->
+<!-- TASK:MW-0579 -->
+<!-- TASK:MW-0580 -->
+<!-- TASK:MW-0581 -->
+<!-- TASK:MW-0582 -->
+<!-- TASK:MW-0583 -->
+
 ### Developer tooling — canonical project task tracker
 
 | ID | Goal | Master-prompt mapping | Depends on | Status | Acceptance criterion |
 |---|---|---|---|---|---|
 <!-- TASK:MW-1209 -->
 <!-- TASK:MW-1210 -->
+<!-- TASK:MW-1212 -->
+<!-- TASK:MW-1213 -->
+<!-- TASK:MW-1214 -->
+<!-- TASK:MW-1237 -->
 | **Prompt PHASE 8** | Partial foundation exists in-workspace; all 14 foundation outcomes are separate blocked tasks pending ratification and implementation audit |
 | **Prompt PHASE 9** | First source-to-publication slice is not verified; five lifecycle goals are defined and blocked on rights, product decisions, and foundation gates |
-| **Prompt PHASE 10** | Domain expansion is not verified; approved domains must receive separate tasks and pass addon-specific DoD |
+| **Prompt PHASE 10** | MW-1001 is decomposed into 22 source-section child tasks covering 365 exact MWREQ rows; two cross-cutting rows stay on the parent. Every child remains blocked on owner/product/release gates and must pass addon-specific DoD |
 | **Prompt PHASE 11** | Integration/hardening evidence is not complete; all 13 verification outcomes are separately tracked and blocked |
 | **Prompt PHASE 12** | Historical `v0.1.0` exists, but current release gates are not evidenced; all eight release steps are separately tracked and blocked |
 | **MW-0500 workstream** | MW-0501–MW-0507 code is present and addon/HTTP suites were previously reported green; browser verification and latest commit CI status remain unverified |
+
+### Developer tooling — local development infrastructure
+
+| ID | Goal | Master-prompt mapping | Depends on | Status | Acceptance criterion |
+|---|---|---|---|---|---|
+<!-- TASK:MW-1211 -->
+
+### Addon platform — default data and reference catalogs
+
+| ID | Goal | Status | Owner | Acceptance criterion |
+|---|---|---|---|---|
+<!-- TASK:MW-1238 -->
 
 ### Phase 12 — Release & Continuous Improvement
 

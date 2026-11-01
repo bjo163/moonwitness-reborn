@@ -2,16 +2,100 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createConversationStore } from "@moonwitness/database";
 import { createQlOrm } from "ql_orm";
+import aiManifest from "ql_ai/__manifest__";
 import authManifest from "ql_auth/__manifest__";
+import { ROLE_CATALOG, seedRoles } from "ql_auth/services/rbac";
 import baseManifest from "ql_base/__manifest__";
 import chatManifest from "ql_chat/__manifest__";
+import cloudflareManifest from "ql_cloudflare/__manifest__";
+import corpusManifest from "ql_corpus/__manifest__";
+import integrationManifest from "ql_integration/__manifest__";
+import { CONNECTOR_KINDS } from "ql_integration/services/connector-registry";
+import {
+  SYNC_STATUSES,
+} from "ql_integration/services/connector-vocabulary";
 import i18nManifest from "ql_i18n/__manifest__";
+import { uiCatalogs } from "ql_i18n/catalogs";
+import researchManifest from "ql_research/__manifest__";
+import sourceManifest from "ql_source/__manifest__";
+import workflowManifest from "ql_workflow/__manifest__";
 import {
   seedCatalogs,
   seedLanguages,
 } from "ql_i18n/services/catalog-service";
-import { seedRoles } from "ql_auth/services/rbac";
 import { createApiServer } from "./server.js";
+
+void test("authored addon metadata keys exist in both bundled locale catalogs", () => {
+  const manifests = [
+    aiManifest,
+    authManifest,
+    baseManifest,
+    chatManifest,
+    cloudflareManifest,
+    corpusManifest,
+    integrationManifest,
+    i18nManifest,
+    researchManifest,
+    sourceManifest,
+    workflowManifest,
+  ];
+  const requiredKeys = new Set<string>();
+
+  for (const manifest of manifests) {
+    for (const model of [
+      ...manifest.models,
+      ...(manifest.computedModels ?? []),
+    ]) {
+      // Generated labels remain usable through the API's source-text fallback;
+      // authored translation keys must always resolve in both bundled locales.
+      if (model.labelKey) requiredKeys.add(model.labelKey);
+      if (model.descriptionKey) requiredKeys.add(model.descriptionKey);
+      const modelViews = manifest.views.filter(
+        (view) => view.model === model.name,
+      );
+      for (const view of modelViews) {
+        if (view.labelKey) requiredKeys.add(view.labelKey);
+        if (view.helpKey) requiredKeys.add(view.helpKey);
+      }
+      for (const field of Object.values(model.fields)) {
+        if (field.private) continue;
+        if (field.labelKey) requiredKeys.add(field.labelKey);
+        if (field.helpKey) requiredKeys.add(field.helpKey);
+        for (const selectionKey of Object.values(field.selectionKeys ?? {})) {
+          requiredKeys.add(selectionKey);
+        }
+      }
+    }
+    if (manifest.views.some((view) => view.type === "list")) {
+      requiredKeys.add("web.models.viewList");
+    }
+    if (manifest.views.some((view) => view.type === "form")) {
+      requiredKeys.add("web.models.viewForm");
+    }
+  }
+
+  for (const definition of CONNECTOR_KINDS) {
+    requiredKeys.add(definition.labelKey);
+    requiredKeys.add(definition.credentialHelpKey);
+    for (const capability of definition.capabilities) {
+      requiredKeys.add(`web.connectors.capabilities.${capability}`);
+    }
+  }
+  for (const status of SYNC_STATUSES) {
+    requiredKeys.add(`web.connectors.syncStatuses.${status}`);
+  }
+  for (const role of ROLE_CATALOG) {
+    requiredKeys.add(`web.adminUsers.roles.${role.code}.name`);
+    requiredKeys.add(`web.adminUsers.roles.${role.code}.description`);
+  }
+
+  const missing = [...requiredKeys].flatMap((key) =>
+    (["id", "en"] as const)
+      .filter((locale) => !Object.hasOwn(uiCatalogs[locale], key))
+      .map((locale) => `${locale}:${key}`),
+  );
+  assert.deepEqual(missing, []);
+});
 
 void test("published catalogs are public while draft management is admin-only", async () => {
   const runtime = await createQlOrm("file::memory:", [

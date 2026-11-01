@@ -30,7 +30,7 @@
   },
   "scripts": {
     "build": "node scripts/copy-catalogs.mjs && tsc -p tsconfig.json",
-    "test": "tsx --test models/index.test.ts services/catalog-service.test.ts",
+    "test": "tsx --test models/index.test.ts services/catalog-service.test.ts && node --test scripts/catalog-validation.test.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

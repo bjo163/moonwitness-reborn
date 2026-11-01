@@ -20,11 +20,16 @@ import {
   CardHeader,
   CenteredAuth,
   Checkbox,
-  cn,
   DataTable,
   FormField,
   Input,
+  ListOption,
+  LoadingScreen,
+  NavSectionLabel,
+  PageHeader,
   Select,
+  SidePanel,
+  WorkspaceSidebar,
   WorkspaceTemplate,
   type DataTableColumn,
 } from "@moonwitness/ui";
@@ -32,7 +37,6 @@ import {
   ArrowLeft,
   Globe,
   History,
-  LogOut,
   Menu,
   Plug,
   Plus,
@@ -40,7 +44,6 @@ import {
   Save,
   Search,
   Trash2,
-  X,
 } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
@@ -374,21 +377,17 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
   }
 
   if (busy) {
-    return (
-      <main className="ql-hud-app flex min-h-dvh items-center justify-center text-sm text-stone-400">
-        {t("web.dns.loading")}
-      </main>
-    );
+    return <LoadingScreen label={t("web.dns.loading")} />;
   }
 
   if (!user) {
     return (
       <CenteredAuth>
         <div className="mb-5 flex items-center gap-3">
-          <Globe size={20} className="text-[#d7ff63]" />
+          <Globe size={20} className="text-acid" />
           <h1 className="text-lg font-semibold">{t("web.dns.signIn")}</h1>
         </div>
-        <p className="text-sm leading-6 text-stone-400">
+        <p className="text-sm leading-6 text-muted">
           {t("web.dns.signInDescription")}
         </p>
         {error && (
@@ -437,73 +436,53 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
       onCloseSidebar={() => setSidebarOpen(false)}
       closeLabel={t("web.common.closeMenu")}
       sidebar={
-        <>
-          <div className="flex h-12 items-center justify-between px-2">
-            <a
-              href="/connectors"
-              className="ql-hud-brand flex items-center gap-2.5 font-semibold"
-            >
-              <Globe size={18} className="text-[#d7ff63]" />
-              DNS
-            </a>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              aria-label={t("web.common.closeMenu")}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X size={18} />
-            </Button>
-          </div>
-          <a href="/connectors" className="ql-nav-link mt-4">
-            <ArrowLeft size={16} />
-            {t("web.dns.allConnectors")}
-          </a>
-          <a href="/command-center/chat" className="ql-nav-link mt-2">
-            <Plug size={16} />
-            {t("web.dns.chat")}
-          </a>
-          <div className="ql-nav-section">{t("web.dns.zones")}</div>
-          <nav className="flex-1 space-y-1 overflow-y-auto" aria-label={t("web.dns.zoneList")}>
+        <WorkspaceSidebar
+          brandHref="/connectors"
+          brandIcon={<Globe aria-hidden="true" size={16} />}
+          brandLabel="DNS"
+          closeLabel={t("web.common.closeMenu")}
+          identity={{ name: user.name, subtitle: user.email }}
+          items={[
+            {
+              href: "/connectors",
+              label: t("web.dns.allConnectors"),
+              icon: <ArrowLeft aria-hidden="true" size={16} />,
+              onSelect: () => setSidebarOpen(false),
+            },
+            {
+              href: "/command-center/chat",
+              label: t("web.dns.chat"),
+              icon: <Plug aria-hidden="true" size={16} />,
+              onSelect: () => setSidebarOpen(false),
+            },
+          ]}
+          logout={{ label: t("web.common.logout"), onLogout: () => void logout() }}
+          navLabel={t("web.common.mainNavigation")}
+          onCloseSidebar={() => setSidebarOpen(false)}
+        >
+          <NavSectionLabel>{t("web.dns.zones")}</NavSectionLabel>
+          <nav
+            className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto"
+            aria-label={t("web.dns.zoneList")}
+          >
             {zones.map((item) => (
-              <Button
+              <ListOption
                 key={item.id}
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "ql-nav-link w-full justify-start text-left",
-                  zoneId === item.externalId && "is-active",
-                )}
-                onClick={() => selectZone(item)}
+                onSelect={() => selectZone(item)}
+                selected={zoneId === item.externalId}
+                variant="nav"
               >
                 {item.name}
                 {item.stale && <Badge variant="outline">{t("web.dns.stale")}</Badge>}
-              </Button>
+              </ListOption>
             ))}
             {zones.length === 0 && (
-              <p className="px-2 text-xs leading-5 text-stone-500">
+              <p className="px-2 text-xs leading-5 text-muted">
                 {t("web.dns.zonesEmpty")}
               </p>
             )}
           </nav>
-          <div className="mt-3 flex items-center gap-2 border-t border-stone-700 px-2 pt-4">
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-xs font-medium">{user.name}</div>
-              <div className="truncate text-[11px] text-stone-500">
-                {user.email}
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={t("web.common.logout")}
-              onClick={() => void logout()}
-            >
-              <LogOut size={16} />
-            </Button>
-          </div>
-        </>
+        </WorkspaceSidebar>
       }
       header={
         <>
@@ -521,7 +500,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
               <div className="text-sm font-semibold">
                 {connector?.label ?? t("web.dns.connector")}
               </div>
-              <div className="text-xs text-stone-500">
+              <div className="text-xs text-muted">
                 {zone ? zone.name : t("web.dns.noZone")} ·{" "}
                 {t("web.connectors.lastSynced", {
                   date: formatTime(connector?.lastSyncAt ?? null, locale),
@@ -557,30 +536,28 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
         </>
       }
     >
-      <div className="ql-model-workspace">
-        <div className="ql-model-heading">
-          <div>
-            <div className="ql-eyebrow">{t("web.dns.mirror")}</div>
-            <h1>{zone ? zone.name : t("web.dns.zoneFallback")}</h1>
-            <p>
-              {t("web.dns.mirrorDescription")}
-            </p>
-          </div>
-          {canOperate && zone && (
-            <Button
-              disabled={!writable}
-              onClick={() => openEditor()}
-              title={
-                writable
-                  ? undefined
-                  : t("web.dns.readOnlyWarning")
-              }
-            >
-              <Plus size={16} />
-              {t("web.dns.newRecord")}
-            </Button>
-          )}
-        </div>
+      <div className="ql-page-body">
+        <PageHeader
+          actions={
+            canOperate && zone ? (
+              <Button
+                disabled={!writable}
+                onClick={() => openEditor()}
+                title={
+                  writable
+                    ? undefined
+                    : t("web.dns.readOnlyWarning")
+                }
+              >
+                <Plus aria-hidden="true" size={16} />
+                {t("web.dns.newRecord")}
+              </Button>
+            ) : undefined
+          }
+          description={t("web.dns.mirrorDescription")}
+          eyebrow={t("web.dns.mirror")}
+          title={zone ? zone.name : t("web.dns.zoneFallback")}
+        />
 
         <form
           className="mt-5 flex flex-wrap items-end gap-3"
@@ -638,7 +615,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
         )}
         {notice && <Alert className="mt-5">{notice}</Alert>}
         {zone?.status && (
-          <p className="mt-4 text-[11px] text-stone-500">
+          <p className="mt-4 text-[11px] text-muted">
             {t("web.dns.zoneStatus", {
               status: `${zone.status}${zone.paused ? ` (${t("web.dns.paused")})` : ""}`,
             })}
@@ -647,7 +624,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
         )}
 
         <Card className="mt-5">
-          <CardContent className="ql-model-table-content">
+          <CardContent className="ql-card--flush">
             <DataTable
               columns={recordColumns}
               rows={records.map((record) => toRow(record, t))}
@@ -715,7 +692,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                 })}
               </h2>
             </CardHeader>
-            <CardContent className="ql-model-table-content">
+            <CardContent className="ql-card--flush">
               <DataTable
                 columns={auditColumns}
                 rows={audit.map((entry) => toAuditRow(entry, locale))}
@@ -730,25 +707,17 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
         )}
 
         {draft && (
-          <section className="ql-model-editor" aria-label={t("web.dns.recordForm")}>
-            <div className="ql-model-editor__header">
-              <div>
-                <div className="ql-eyebrow">
-                  {draft.id ? t("web.dns.editRecord") : t("web.dns.newRecordLabel")}
-                </div>
-                <h2>{zone?.name}</h2>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={t("web.dns.closeForm")}
-                onClick={() => setDraft(null)}
-              >
-                <X size={18} />
-              </Button>
-            </div>
+          <SidePanel
+            closeLabel={t("web.dns.closeForm")}
+            eyebrow={
+              draft.id ? t("web.dns.editRecord") : t("web.dns.newRecordLabel")
+            }
+            label={t("web.dns.recordForm")}
+            onClose={() => setDraft(null)}
+            title={zone?.name}
+          >
             <form
-              className="ql-model-editor__form"
+              className="ql-side-panel__form"
               onSubmit={(event) => void saveRecord(event)}
             >
               <FormField label={t("web.dns.name")} htmlFor="record-name">
@@ -813,7 +782,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                   }
                 />
               </FormField>
-              <label className="ql-model-checkbox" htmlFor="record-proxied">
+              <label className="ql-inline-label" htmlFor="record-proxied">
                 <Checkbox
                   id="record-proxied"
                   checked={draft.proxied}
@@ -862,7 +831,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                 </Button>
               </div>
             </form>
-          </section>
+          </SidePanel>
         )}
 
         {deleteTarget && zone && (
@@ -871,9 +840,9 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
               <h2 className="text-lg font-semibold">
                 {t("web.dns.deleteRecord", { name: deleteTarget.name })}
               </h2>
-              <p className="mt-2 text-sm leading-6 text-stone-400">
+              <p className="mt-2 text-sm leading-6 text-muted">
                 {t("web.dns.deleteDescription")}{" "}
-                <span className="text-[#d7ff63]">{deleteTarget.name}</span> persis
+                <span className="text-acid">{deleteTarget.name}</span> persis
                 untuk mengonfirmasi.
               </p>
               <div className="mt-4 max-w-md">

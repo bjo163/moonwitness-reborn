@@ -4,19 +4,11 @@ import {
   QlAccessError,
   QlConflictError,
   createQlOrm,
-  type QlAddonManifest,
 } from "ql_orm";
+import { stubAddonManifest } from "ql_orm/testing";
 import authManifest from "../__manifest__.js";
 
-const baseStub: QlAddonManifest = {
-  name: "ql_base",
-  version: "1.0.0",
-  description: "Base stub for verification model tests.",
-  depends: [],
-  models: [],
-  access: [],
-  views: [],
-};
+const baseStub = stubAddonManifest("ql_base");
 
 const user = { id: "user-1", groups: ["user"] };
 

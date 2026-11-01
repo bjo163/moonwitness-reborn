@@ -31,6 +31,9 @@ class TaskTrackerTests(unittest.TestCase):
         rendered = task_tracker.render(self.template, self.tracker)
         with open(task_tracker.OUTPUT, encoding="utf-8") as current:
             self.assertEqual(rendered, current.read())
+        self.assertIn("## Ready for AI work", rendered)
+        self.assertIn("## AI execution packets", rendered)
+        self.assertIn("MW-1215", rendered)
         task_rows = [
             line.split("|", 2)[1].strip()
             for line in rendered.splitlines()
@@ -49,6 +52,97 @@ class TaskTrackerTests(unittest.TestCase):
         for task_id in ready_ids:
             self.assertIn(by_id[task_id]["state"], {"proposed", "pending"})
             self.assertTrue(all(by_id[dependency]["state"] == "done" for dependency in by_id[task_id]["depends_on"]))
+
+    def test_execution_packets_are_complete_and_reference_catalog_requirements(self):
+        requirement_path = os.path.join(
+            os.path.dirname(task_tracker.TRACKER), "requirement-catalog.json"
+        )
+        catalog = task_tracker.load_json(requirement_path)
+        requirement_ids = {entry["id"] for entry in catalog["entries"]}
+        entries_by_id = {entry["id"]: entry for entry in catalog["entries"]}
+        packets = [
+            task for task in self.tracker["tasks"] if "execution_packet" in task
+        ]
+        self.assertTrue(packets)
+        for task in packets:
+            packet = task["execution_packet"]
+            self.assertTrue(packet["scope"].strip())
+            self.assertTrue(packet["non_goals"])
+            self.assertTrue(packet["spec_refs"])
+            self.assertTrue(packet["touchpoints"])
+            self.assertTrue(packet["checks"])
+            self.assertTrue(packet["stop_conditions"])
+            self.assertTrue(set(packet["requirement_ids"]).issubset(requirement_ids))
+            for requirement_id in packet["requirement_ids"]:
+                self.assertIn(task["id"], entries_by_id[requirement_id]["task_ids"])
+            for reference in packet["spec_refs"]:
+                source_path = reference.split("#", 1)[0]
+                self.assertTrue(os.path.isfile(os.path.join(task_tracker.ROOT, source_path)))
+
+    def test_domain_expansion_backlog_is_split_and_stays_gated(self):
+        by_id = {task["id"]: task for task in self.tracker["tasks"]}
+        children = [
+            task for task in self.tracker["tasks"]
+            if task["section"] == "PHASE 10 - D30 feature slices"
+        ]
+        self.assertEqual(len(children), 22)
+        child_ids = {task["id"] for task in children}
+        self.assertTrue(child_ids.issubset(set(by_id["MW-1001"]["depends_on"])))
+        self.assertTrue(all(task["state"] == "blocked" for task in children))
+        requirement_ids = [
+            requirement_id
+            for task in children
+            for requirement_id in task["execution_packet"]["requirement_ids"]
+        ]
+        self.assertEqual(len(requirement_ids), 365)
+        self.assertEqual(len(set(requirement_ids)), len(requirement_ids))
+
+    def test_invalid_execution_packet_is_rejected(self):
+        tracker = copy.deepcopy(self.tracker)
+        task = next(item for item in tracker["tasks"] if "execution_packet" in item)
+        del task["execution_packet"]["checks"]
+        errors = task_tracker.validate_tracker(tracker)
+        self.assertTrue(any("execution_packet fields must be exactly" in error for error in errors))
+
+        tracker = copy.deepcopy(self.tracker)
+        task = next(item for item in tracker["tasks"] if "execution_packet" in item)
+        task["execution_packet"]["mode"] = "push_to_main"
+        errors = task_tracker.validate_tracker(tracker)
+        self.assertTrue(any("invalid execution mode" in error for error in errors))
+
+    def test_tracker_validation_rejects_unknown_or_unlinked_requirement_ids(self):
+        requirement_path = os.path.join(
+            os.path.dirname(task_tracker.TRACKER), "requirement-catalog.json"
+        )
+        catalog = task_tracker.load_json(requirement_path)
+        tracker = copy.deepcopy(self.tracker)
+        task = next(
+            item for item in tracker["tasks"]
+            if item.get("execution_packet", {}).get("requirement_ids")
+        )
+        task["execution_packet"]["requirement_ids"] = ["MWREQ-99999"]
+        errors = task_tracker.validate_tracker(tracker, catalog["entries"])
+        self.assertTrue(any("references unknown requirement MWREQ-99999" in error for error in errors))
+
+        tracker = copy.deepcopy(self.tracker)
+        task = next(
+            item for item in tracker["tasks"]
+            if item.get("execution_packet", {}).get("requirement_ids")
+        )
+        requirement_id = task["execution_packet"]["requirement_ids"][0]
+        catalog_copy = copy.deepcopy(catalog["entries"])
+        entry = next(item for item in catalog_copy if item["id"] == requirement_id)
+        entry["task_ids"].remove(task["id"])
+        errors = task_tracker.validate_tracker(tracker, catalog_copy)
+        self.assertTrue(any("is not linked from catalog requirement" in error for error in errors))
+
+    def test_ai_queue_excludes_manual_and_gated_work(self):
+        queue = task_tracker.ai_ready_tasks(self.tracker)
+        by_id = {task["id"]: task for task in self.tracker["tasks"]}
+        self.assertTrue(queue)
+        for task in queue:
+            self.assertIn(task["execution_packet"]["mode"], {"autonomous", "decision_prep"})
+            self.assertTrue(all(by_id[dependency]["state"] == "done" for dependency in task["depends_on"]))
 
     def test_missing_dependency_and_cycle_are_rejected(self):
         tracker = copy.deepcopy(self.tracker)

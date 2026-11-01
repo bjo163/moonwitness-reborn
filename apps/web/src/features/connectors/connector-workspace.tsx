@@ -20,7 +20,11 @@ import {
   cn,
   FormField,
   Input,
+  LoadingScreen,
+  PageHeader,
+  SectionGrid,
   Select,
+  WorkspaceSidebar,
   WorkspaceTemplate,
 } from "@moonwitness/ui";
 import {
@@ -29,14 +33,12 @@ import {
   ExternalLink,
   Globe,
   KeyRound,
-  LogOut,
   Menu,
   Plug,
   RefreshCw,
   Save,
   ShieldCheck,
   Trash2,
-  X,
 } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
@@ -260,21 +262,17 @@ export default function ConnectorWorkspace() {
   }
 
   if (busy) {
-    return (
-      <main className="ql-hud-app flex min-h-dvh items-center justify-center text-sm text-stone-400">
-        {t("web.connectors.loading")}
-      </main>
-    );
+    return <LoadingScreen label={t("web.connectors.loading")} />;
   }
 
   if (!user) {
     return (
       <CenteredAuth>
         <div className="mb-5 flex items-center gap-3">
-          <Plug size={20} className="text-[#d7ff63]" />
+          <Plug size={20} className="text-acid" />
           <h1 className="text-lg font-semibold">{t("web.connectors.signIn")}</h1>
         </div>
-        <p className="text-sm leading-6 text-stone-400">
+        <p className="text-sm leading-6 text-muted">
           {t("web.connectors.description")}
         </p>
         {error && (
@@ -308,64 +306,47 @@ export default function ConnectorWorkspace() {
       onCloseSidebar={() => setSidebarOpen(false)}
       closeLabel={t("web.common.closeMenu")}
       sidebar={
-        <>
-          <div className="flex h-12 items-center justify-between px-2">
-            <a
-              href="/command-center"
-              className="ql-hud-brand flex items-center gap-2.5 font-semibold"
-            >
-              <Plug size={18} className="text-[#d7ff63]" />
-              MoonWitness
-            </a>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              aria-label={t("web.common.closeMenu")}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X size={18} />
-            </Button>
-          </div>
-          <a href="/command-center/chat" className="ql-nav-link mt-4">
-            <ArrowLeft size={16} />
-            {t("web.connectors.back")}
-          </a>
-          <a href="/models" className="ql-nav-link mt-2">
-            <Boxes size={16} />
-            {t("web.connectors.models")}
-          </a>
-          <a href="/providers" className="ql-nav-link mt-2">
-            <KeyRound size={16} />
-            {t("web.connectors.providers")}
-          </a>
-          <a href="/connectors" className="ql-nav-link is-active mt-2">
-            <Plug size={16} />
-            {t("web.common.integrations")}
-          </a>
-          {user.groups.includes("admin") && (
-            <a href="/admin/users" className="ql-nav-link mt-2">
-              <ShieldCheck size={16} />
-              {t("web.connectors.users")}
-            </a>
-          )}
-          <div className="mt-3 flex items-center gap-2 border-t border-stone-700 px-2 pt-4">
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-xs font-medium">{user.name}</div>
-              <div className="truncate text-[11px] text-stone-500">
-                {user.email}
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={t("web.common.logout")}
-              onClick={() => void logout()}
-            >
-              <LogOut size={16} />
-            </Button>
-          </div>
-        </>
+        <WorkspaceSidebar
+          brandIcon={<Plug aria-hidden="true" size={16} />}
+          closeLabel={t("web.common.closeMenu")}
+          identity={{ name: user.name, subtitle: user.email }}
+          items={[
+            {
+              href: "/command-center/chat",
+              label: t("web.connectors.back"),
+              icon: <ArrowLeft aria-hidden="true" size={16} />,
+              onSelect: () => setSidebarOpen(false),
+            },
+            {
+              href: "/models",
+              label: t("web.connectors.models"),
+              icon: <Boxes aria-hidden="true" size={16} />,
+            },
+            {
+              href: "/providers",
+              label: t("web.connectors.providers"),
+              icon: <KeyRound aria-hidden="true" size={16} />,
+            },
+            {
+              href: "/connectors",
+              label: t("web.common.integrations"),
+              icon: <Plug aria-hidden="true" size={16} />,
+              active: true,
+            },
+            ...(user.groups.includes("admin")
+              ? [
+                  {
+                    href: "/admin/users",
+                    label: t("web.connectors.users"),
+                    icon: <ShieldCheck aria-hidden="true" size={16} />,
+                  },
+                ]
+              : []),
+          ]}
+          logout={{ label: t("web.common.logout"), onLogout: () => void logout() }}
+          navLabel={t("web.connectors.integrations")}
+          onCloseSidebar={() => setSidebarOpen(false)}
+        />
       }
       header={
         <>
@@ -381,7 +362,7 @@ export default function ConnectorWorkspace() {
             </Button>
             <div>
               <div className="text-sm font-semibold">{t("web.connectors.integrations")}</div>
-              <div className="text-xs text-stone-500">
+              <div className="text-xs text-muted">
                 {t("web.connectors.integrationsDescription")}
               </div>
             </div>
@@ -390,16 +371,12 @@ export default function ConnectorWorkspace() {
         </>
       }
     >
-      <div className="ql-model-workspace">
-        <div className="ql-model-heading">
-          <div>
-            <div className="ql-eyebrow">{t("web.connectors.eyebrow")}</div>
-            <h1>{t("web.connectors.title")}</h1>
-            <p>
-              {t("web.connectors.securityDescription")}
-            </p>
-          </div>
-        </div>
+      <div className="ql-page-body">
+        <PageHeader
+          description={t("web.connectors.securityDescription")}
+          eyebrow={t("web.connectors.eyebrow")}
+          title={t("web.connectors.title")}
+        />
 
         {error && (
           <Alert variant="error" className="mt-5">
@@ -428,7 +405,7 @@ export default function ConnectorWorkspace() {
                 className={cn(connector.enabled || "opacity-70")}
               >
                 <CardContent className="flex flex-wrap items-start gap-4">
-                  <div className="flex size-10 shrink-0 items-center justify-center border border-stone-700 bg-stone-900 text-[#d7ff63]">
+                  <div className="flex size-10 shrink-0 items-center justify-center border border-hairline bg-panel-edge text-acid">
                     <Plug size={17} />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -446,7 +423,7 @@ export default function ConnectorWorkspace() {
                       </Badge>
                       {kind?.readonly && <Badge variant="outline">{t("web.connectors.readOnly")}</Badge>}
                     </div>
-                    <p className="mt-1 text-xs text-stone-500">
+                    <p className="mt-1 text-xs text-muted">
                       {kind
                         ? translateMetadata(kind.labelKey, kind.label, tm)
                         : connector.kind} ·{" "}
@@ -454,10 +431,10 @@ export default function ConnectorWorkspace() {
                         source: t(tokenSourceKeys[connector.tokenSource]),
                       })}
                     </p>
-                    <p className="mt-1 break-all text-[11px] text-stone-600">
+                    <p className="mt-1 break-all text-[11px] text-muted-dim">
                       {connector.tokenRef || t("web.connectors.neverRead")}
                     </p>
-                    <p className="mt-1 text-[11px] text-stone-500">
+                    <p className="mt-1 text-[11px] text-muted">
                       {t("web.connectors.lastVerified", {
                         date: formatTime(connector.lastVerifyAt, locale),
                       })} ·{" "}
@@ -466,7 +443,7 @@ export default function ConnectorWorkspace() {
                       })}
                     </p>
                     {connector.lastSyncStatus && (
-                      <p className="mt-1 text-[11px] text-stone-500">
+                      <p className="mt-1 text-[11px] text-muted">
                         {t("web.connectors.lastSyncStatus", {
                           status: translateMetadata(
                             `web.connectors.syncStatuses.${connector.lastSyncStatus}`,
@@ -581,7 +558,7 @@ export default function ConnectorWorkspace() {
                     </Button>
                   )}
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <SectionGrid>
                   <FormField label={t("web.connectors.kind")} htmlFor="connector-kind">
                     <Select
                       id="connector-kind"
@@ -612,18 +589,18 @@ export default function ConnectorWorkspace() {
                       placeholder={t("web.connectors.labelPlaceholder")}
                     />
                   </FormField>
-                </div>
+                </SectionGrid>
 
                 {selectedKind && (
-                  <div className="mt-4 border border-stone-700 bg-stone-900/60 p-4">
-                    <p className="text-xs leading-6 text-stone-400">
+                  <div className="mt-4 border border-hairline bg-panel-edge/60 p-4">
+                    <p className="text-xs leading-6 text-muted">
                       {translateMetadata(
                         selectedKind.credentialHelpKey,
                         selectedKind.credentialHelp,
                         tm,
                       )}
                     </p>
-                    <p className="mt-2 text-[11px] text-stone-500">
+                    <p className="mt-2 text-[11px] text-muted">
                       {t("web.connectors.capabilities", {
                         capabilities:
                           selectedKind.capabilities
@@ -644,7 +621,7 @@ export default function ConnectorWorkspace() {
                       href={selectedKind.helpUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-2 inline-flex items-center gap-1.5 text-xs text-[#d7ff63]"
+                      className="mt-2 inline-flex items-center gap-1.5 text-xs text-acid"
                     >
                       {t("web.connectors.configureToken")}
                       <ExternalLink size={13} />
@@ -652,7 +629,7 @@ export default function ConnectorWorkspace() {
                   </div>
                 )}
 
-                <label className="ql-model-checkbox mt-4" htmlFor="connector-enabled">
+                <label className="ql-inline-label mt-4" htmlFor="connector-enabled">
                   <Checkbox
                     id="connector-enabled"
                     checked={draft.enabled}
@@ -685,9 +662,9 @@ export default function ConnectorWorkspace() {
                   name: deleteTarget.label,
                 })}
               </h2>
-              <p className="mt-2 text-sm leading-6 text-stone-400">
+              <p className="mt-2 text-sm leading-6 text-muted">
                 {t("web.connectors.deleteDescription")}{" "}
-                <span className="text-[#d7ff63]">{deleteTarget.label}</span>{" "}
+                <span className="text-acid">{deleteTarget.label}</span>{" "}
                 persis untuk mengonfirmasi.
               </p>
               <div className="mt-4 max-w-md">

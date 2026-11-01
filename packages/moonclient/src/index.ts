@@ -158,6 +158,9 @@ export interface ModelFieldDto {
   selectionKeys?: Record<string, string>;
   required?: boolean;
   maxLength?: number;
+  computed?: boolean;
+  readOnly?: boolean;
+  dependsOn?: string[];
 }
 
 export interface ModelViewDto {
@@ -170,6 +173,7 @@ export interface ModelViewDto {
 }
 
 export interface ModelMetadataDto {
+  kind: "table" | "computed";
   name: string;
   labelKey: string;
   description: string;
@@ -187,6 +191,11 @@ export type ModelRecordDto = RecordValues;
 
 export interface ModelRecordsResponseDto {
   records: ModelRecordDto[];
+}
+
+export interface ComputeModelQueryRequestDto {
+  filters?: Record<string, string | number | boolean | null>;
+  limit?: number;
 }
 
 export interface ModelRecordResponseDto {
@@ -478,6 +487,73 @@ export interface WorkflowTransitionListResponseDto {
   transitions: WorkflowTransitionDto[];
 }
 
+// ---------------------------------------------------------------------------
+// `ql_research` — human review of versioned lexical-frequency evidence.
+// Candidate results remain computed/read-only; this contract exposes review
+// decisions separately and never claims theological verification.
+// ---------------------------------------------------------------------------
+
+export type LexicalResearchDecisionDto =
+  | "retain_for_research"
+  | "exclude_from_research"
+  | "needs_expert_review";
+
+export interface LexicalResearchSourceReferenceDto {
+  surah: number;
+  ayah: number;
+  passageId: string;
+  checksum: string;
+}
+
+export interface LexicalResearchCandidateDto {
+  id: string;
+  candidate_text: string;
+  normalized_form: string;
+  occurrence_count: number;
+  verse_reference_count: number;
+  source_edition: string;
+  source_version_id: string;
+  source_references: LexicalResearchSourceReferenceDto[];
+  normalization_version: string;
+  algorithm_version: string;
+}
+
+export interface LexicalResearchReviewDto {
+  id: string;
+  candidate_id: string;
+  edition_key: string;
+  source_version_id: string;
+  normalization_version: string;
+  algorithm_version: string;
+  occurrence_count: number;
+  verse_reference_count: number;
+  source_references: LexicalResearchSourceReferenceDto[];
+  source_reference_digest: string;
+  decision: LexicalResearchDecisionDto;
+  rationale: string;
+  reviewed_at: number;
+}
+
+export interface LexicalResearchReviewQueueItemDto {
+  candidate: LexicalResearchCandidateDto;
+  review: LexicalResearchReviewDto | null;
+}
+
+export interface LexicalResearchReviewQueueResponseDto {
+  candidates: LexicalResearchReviewQueueItemDto[];
+}
+
+export interface CreateLexicalResearchReviewRequestDto {
+  edition_key: string;
+  normalized_form: string;
+  decision: LexicalResearchDecisionDto;
+  rationale: string;
+}
+
+export interface CreateLexicalResearchReviewResponseDto {
+  review: LexicalResearchReviewDto;
+}
+
 export type ProjectTaskStateDto =
   | "done"
   | "in_progress"
@@ -713,6 +789,8 @@ export const apiRoutes = {
     collection: "/models",
     prefix: "/models/",
     records: (model: string) => `/models/${segment(model)}`,
+    compute: (model: string) =>
+      `/models/${segment(model)}/compute`,
     record: (model: string, id: string) =>
       `/models/${segment(model)}/${segment(id)}`,
   },
@@ -741,6 +819,14 @@ export const apiRoutes = {
     item: (id: string) => `/workflow/changes/${segment(id)}`,
     transition: (id: string) => `/workflow/changes/${segment(id)}/transition`,
     transitions: (id: string) => `/workflow/changes/${segment(id)}/transitions`,
+  },
+  research: {
+    lexicalCandidates: "/research/lexical-candidates",
+    lexicalCandidatePrefix: "/research/lexical-candidates/",
+    lexicalCandidateQueue: (editionKey: string) =>
+      `/research/lexical-candidates?edition_key=${encodeURIComponent(editionKey)}`,
+    lexicalCandidateReview: (id: string) =>
+      `/research/lexical-candidates/${segment(id)}/reviews`,
   },
   corpus: {
     editions: "/corpus/editions",
@@ -935,6 +1021,13 @@ export class MoonClient {
     return this.request(apiRoutes.models.records(model));
   }
 
+  computeModel(
+    model: string,
+    input: ComputeModelQueryRequestDto = {},
+  ): Promise<ModelRecordsResponseDto> {
+    return this.request(apiRoutes.models.compute(model), "POST", input);
+  }
+
   createRecord(
     model: string,
     values: ModelRecordDto,
@@ -1074,6 +1167,23 @@ export class MoonClient {
     id: string,
   ): Promise<WorkflowTransitionListResponseDto> {
     return this.request(apiRoutes.workflow.transitions(id));
+  }
+
+  listLexicalResearchCandidates(
+    editionKey: string,
+  ): Promise<LexicalResearchReviewQueueResponseDto> {
+    return this.request(apiRoutes.research.lexicalCandidateQueue(editionKey));
+  }
+
+  createLexicalResearchReview(
+    candidateId: string,
+    input: CreateLexicalResearchReviewRequestDto,
+  ): Promise<CreateLexicalResearchReviewResponseDto> {
+    return this.request(
+      apiRoutes.research.lexicalCandidateReview(candidateId),
+      "POST",
+      input,
+    );
   }
 
   listCorpusEditions(): Promise<CorpusEditionListResponseDto> {

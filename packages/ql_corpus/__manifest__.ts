@@ -1,5 +1,5 @@
 import type { QlAddonManifest } from "ql_orm";
-import { models } from "./models/index.js";
+import { computedModels, models } from "./models/index.js";
 import { views } from "./views/index.js";
 
 /**
@@ -40,6 +40,7 @@ const manifest: QlAddonManifest = {
     "RGBL corpus layer: work, edition, passage, dan annotation; authority di level storage menegakkan canon text-vs-commentary.",
   depends: ["ql_base", "ql_auth", "ql_source"],
   models,
+  computedModels: [...computedModels],
   access: [
     // corpus.work — read everywhere, admin-curated metadata edits allowed.
     {
@@ -209,8 +210,36 @@ const manifest: QlAddonManifest = {
       create: false,
       unlink: false,
     },
+    // Lexical frequencies are operator-facing research inputs, not a public
+    // scripture surface. Human assessments belong to ql_research. QlOrm also
+    // checks read access to every declared source before invoking computation.
+    {
+      model: "corpus.lexical_candidate",
+      group: "operator",
+      read: true,
+      write: false,
+      create: false,
+      unlink: false,
+    },
+    {
+      model: "corpus.lexical_candidate",
+      group: "admin",
+      read: true,
+      write: false,
+      create: false,
+      unlink: false,
+    },
+    {
+      model: "corpus.lexical_candidate",
+      group: "root",
+      read: true,
+      write: false,
+      create: false,
+      unlink: false,
+    },
   ],
   views,
+  data: [],
 };
 
 export default manifest;

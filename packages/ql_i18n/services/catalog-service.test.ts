@@ -7,14 +7,61 @@ import {
   approveTranslation,
   getPublishedCatalog,
   importPoDrafts,
+  listEnabledLanguages,
   listAdminTranslations,
   saveTranslationDraft,
-  seedLanguages,
 } from "./catalog-service.js";
 import { compilePoCatalog, parsePoCatalog } from "./po.js";
 
 const source = "Save {name}";
 const translated = "Simpan {name}";
+const serviceManifest = { ...manifest, data: [] };
+
+void test("i18n manifest seeds languages and catalogs using insert-only defaults", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      manifest,
+    ],
+    async (orm) => {
+      assert.deepEqual(
+        (await listEnabledLanguages(orm)).map(({ code }) => code),
+        ["en", "id"],
+      );
+      const translations = await getPublishedCatalog(orm, "id");
+      assert.ok(translations.length > 0);
+      const first = translations[0];
+      const catalogKey = `id:${first.namespace}:${first.key}`;
+      await orm.updateRecordsForService(
+        "i18n.language",
+        { code: "id" },
+        { label: "Local language label" },
+      );
+      await orm.updateRecordsForService(
+        "i18n.translation",
+        { catalog_key: catalogKey },
+        { translated_text: "Local translation" },
+      );
+
+      await orm.seedAddonData("ql_i18n");
+      assert.equal(
+        (
+          await orm.findOneByService("i18n.language", { code: "id" })
+        )?.label,
+        "Local language label",
+      );
+      assert.equal(
+        (
+          await orm.findOneByService("i18n.translation", {
+            catalog_key: catalogKey,
+          })
+        )?.translated_text,
+        "Local translation",
+      );
+    },
+  );
+});
 
 void test("PO catalog parsing preserves namespaced message keys and placeholders", () => {
   const po = compilePoCatalog("id", [
@@ -127,15 +174,38 @@ void test("PO catalog rejects unbalanced placeholders and malformed keys", () =>
   );
 });
 
+void test("PO import parsing rejects empty singular and plural translations", () => {
+  const singular = [
+    'msgid ""',
+    'msgstr ""',
+    "",
+    'msgctxt "web.common:save"',
+    'msgid "Save"',
+    'msgstr "  "',
+  ].join("\n");
+  assert.throws(() => parsePoCatalog(singular, "id"), QlValidationError);
+
+  const plural = [
+    'msgid ""',
+    'msgstr ""',
+    "",
+    'msgctxt "web.common:items"',
+    'msgid "{count} item"',
+    'msgid_plural "{count} items"',
+    'msgstr[0] ""',
+    'msgstr[1] "{count} items"',
+  ].join("\n");
+  assert.throws(() => parsePoCatalog(plural, "en"), QlValidationError);
+});
+
 void test("catalog service keeps drafts private and publishes only reviewed entries", async () => {
   await withMemoryOrm(
     [
       stubAddonManifest("ql_base"),
       stubAddonManifest("ql_auth"),
-      manifest,
+      serviceManifest,
     ],
     async (orm) => {
-      await seedLanguages(orm);
       const draft = await saveTranslationDraft(
         orm,
         {
@@ -177,7 +247,7 @@ void test("imported PO entries remain drafts until approved", async () => {
     [
       stubAddonManifest("ql_base"),
       stubAddonManifest("ql_auth"),
-      manifest,
+      serviceManifest,
     ],
     async (orm) => {
       const po = compilePoCatalog("id", [
@@ -202,7 +272,7 @@ void test("unsupported locales are rejected before catalog access", async () => 
     [
       stubAddonManifest("ql_base"),
       stubAddonManifest("ql_auth"),
-      manifest,
+      serviceManifest,
     ],
     async (orm) => {
       await assert.rejects(

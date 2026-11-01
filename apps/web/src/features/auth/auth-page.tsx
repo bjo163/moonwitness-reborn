@@ -11,7 +11,9 @@ import {
   Button,
   CenteredAuth,
   FormField,
+  IconTile,
   Input,
+  LoadingScreen,
 } from "@moonwitness/ui";
 import { Sparkles } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
@@ -154,11 +156,7 @@ export default function AuthPage() {
   }
 
   if (checking) {
-    return (
-      <main className="ql-hud-app flex min-h-dvh items-center justify-center text-sm text-stone-500">
-        {copy.common.loading}
-      </main>
-    );
+    return <LoadingScreen label={copy.common.loading} className="text-muted" />;
   }
 
   const isSetup = mode === "setup";
@@ -188,12 +186,10 @@ export default function AuthPage() {
     <CenteredAuth>
       <div className="mb-7 flex flex-wrap items-center justify-between gap-3">
         <Link href={`/?locale=${locale}`} className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-xl border border-[#354135] bg-[#121a13] text-[#d7ff63]">
-            <Sparkles aria-hidden="true" size={18} />
-          </span>
+          <IconTile><Sparkles aria-hidden="true" size={18} /></IconTile>
           <span>
             <span className="block font-semibold tracking-tight">MoonWitness</span>
-            <span className="block text-sm text-stone-500">{copy.common.dashboard}</span>
+            <span className="block text-sm text-muted">{copy.common.dashboard}</span>
           </span>
         </Link>
         <LocaleSwitcher
@@ -204,7 +200,7 @@ export default function AuthPage() {
         />
       </div>
       <h1 className="text-2xl font-semibold tracking-tight">{pageTitle}</h1>
-      <p className="mt-2 text-sm leading-6 text-stone-500">
+      <p className="mt-2 text-sm leading-6 text-muted">
         {isSetup ? copy.auth.setupDescription : copy.auth.loginDescription}
       </p>
       <form onSubmit={(event) => void submit(event)} className="mt-6 space-y-4">
@@ -253,11 +249,11 @@ export default function AuthPage() {
         <Button className="w-full" disabled={busy}>{buttonText}</Button>
       </form>
       {isSetup ? (
-        <p className="mt-5 text-center text-sm text-stone-500">
+        <p className="mt-5 text-center text-sm text-muted">
           {copy.auth.setupSecurityNote}
         </p>
       ) : (
-        <p className="mt-5 text-center text-sm text-stone-500">
+        <p className="mt-5 text-center text-sm text-muted">
           {mode === "register" ? (
             <>
               {copy.auth.existingAccount}{" "}

@@ -12,8 +12,14 @@ import {
   Button,
   Checkbox,
   CenteredAuth,
+  EmptyState,
   FormField,
+  IconTile,
   Input,
+  LoadingScreen,
+  PageHeader,
+  SectionGrid,
+  WorkspaceSidebar,
   WorkspaceTemplate,
 } from "@moonwitness/ui";
 import { ArrowDown, ArrowLeft, ArrowUp, KeyRound, Plus, Save, Trash2 } from "lucide-react";
@@ -142,14 +148,14 @@ export default function ProviderWorkspace() {
   }
 
   if (busy) {
-    return <main className="ql-hud-app flex min-h-dvh items-center justify-center text-sm text-stone-500">{t("web.providers.loading")}</main>;
+    return <LoadingScreen label={t("web.providers.loading")} />;
   }
 
   if (!user) {
     return (
       <CenteredAuth>
         <h1 className="text-xl font-semibold">{t("web.providers.signIn")}</h1>
-        <p className="mt-2 text-sm text-stone-500">{t("web.providers.description")}</p>
+        <p className="mt-2 text-sm text-muted">{t("web.providers.description")}</p>
         <Button className="mt-5 w-full" onClick={() => (window.location.href = "/auth")}>{t("web.auth.loginAction")}</Button>
       </CenteredAuth>
     );
@@ -170,50 +176,49 @@ export default function ProviderWorkspace() {
       onCloseSidebar={() => undefined}
       closeLabel={t("web.common.closeMenu")}
       sidebar={
-        <div className="space-y-5">
-          <a href="/command-center" className="flex h-12 items-center gap-2.5 px-2 font-semibold tracking-tight">
-            <span className="flex size-8 items-center justify-center rounded-xl bg-stone-900 text-white"><KeyRound size={16} /></span>
-            MoonWitness
-          </a>
-          <a href="/command-center/chat" className="ql-nav-link"><ArrowLeft size={16} />{t("web.providers.back")}</a>
-          <div className="border-t border-stone-200 px-2 pt-4">
-            <p className="truncate text-xs font-medium text-stone-700">{user.name}</p>
-            <p className="truncate text-[11px] text-stone-500">{user.email}</p>
-          </div>
-        </div>
+        <WorkspaceSidebar
+          brandIcon={<KeyRound aria-hidden="true" size={16} />}
+          closeLabel={t("web.common.closeMenu")}
+          identity={{ name: user.name, subtitle: user.email }}
+          items={[
+            {
+              href: "/command-center/chat",
+              label: t("web.providers.back"),
+              icon: <ArrowLeft aria-hidden="true" size={16} />,
+            },
+          ]}
+          navLabel={t("web.providers.title")}
+          onCloseSidebar={() => undefined}
+        />
       }
-      header={<><div className="text-sm font-medium text-stone-700">{t("web.providers.modelGateway")}</div><Badge variant="live">{t("web.providers.personal")}</Badge></>}
+      header={<><div className="text-sm font-medium text-ink-soft">{t("web.providers.modelGateway")}</div><Badge variant="live">{t("web.providers.personal")}</Badge></>}
     >
       <div className="flex-1 overflow-y-auto px-4 py-8 md:px-8">
         <div className="mx-auto max-w-5xl space-y-7">
-          <header>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">{t("web.providers.eyebrow")}</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-950">{t("web.providers.title")}</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-500">
-              {t("web.providers.intro")}
-            </p>
-          </header>
+          <PageHeader
+            description={t("web.providers.intro")}
+            eyebrow={t("web.providers.eyebrow")}
+            title={t("web.providers.title")}
+          />
 
           {error && <Alert variant="error">{error}</Alert>}
           {notice && <Alert>{notice}</Alert>}
 
           <section className="space-y-3" aria-label={t("web.providers.savedProviders")}>
             {providers.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-stone-300 bg-white/70 p-6 text-sm text-stone-500">
-                {t("web.providers.empty")}
-              </div>
+              <EmptyState title={t("web.providers.empty")} />
             )}
             {providers.map((provider, index) => (
-              <article key={provider.id} className="flex flex-wrap items-center gap-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-stone-100 text-stone-700"><KeyRound size={17} /></div>
+              <article key={provider.id} className="flex flex-wrap items-center gap-4 rounded-2xl border border-hairline bg-panel p-4 shadow-sm">
+                <IconTile tone="plain"><KeyRound aria-hidden="true" size={17} /></IconTile>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-medium text-stone-900">{provider.name}</h2>
+                    <h2 className="font-medium text-ink">{provider.name}</h2>
                     <Badge variant={provider.enabled ? "live" : "default"}>{provider.enabled ? t("web.providers.active") : t("web.providers.inactive")}</Badge>
-                    <span className="text-xs text-stone-400">{t("web.providers.priority", { number: index + 1 })}</span>
+                    <span className="text-xs text-muted">{t("web.providers.priority", { number: index + 1 })}</span>
                   </div>
-                  <p className="mt-1 truncate text-xs text-stone-500">{provider.model} · {provider.baseUrl}</p>
-                  <p className="mt-1 text-[11px] text-stone-400">{provider.hasApiKey ? t("web.providers.keyStored") : t("web.providers.keyMissing")}</p>
+                  <p className="mt-1 truncate text-xs text-muted">{provider.model} · {provider.baseUrl}</p>
+                  <p className="mt-1 text-[11px] text-muted">{provider.hasApiKey ? t("web.providers.keyStored") : t("web.providers.keyMissing")}</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <Button variant="ghost" size="icon" aria-label={t("web.providers.raisePriority")} disabled={index === 0} onClick={() => void move(provider, -1)}><ArrowUp size={16} /></Button>
@@ -225,15 +230,15 @@ export default function ProviderWorkspace() {
             ))}
           </section>
 
-          <form onSubmit={(event) => void save(event)} className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm md:p-7">
+          <form onSubmit={(event) => void save(event)} className="rounded-2xl border border-hairline bg-panel p-5 shadow-sm md:p-7">
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-lg font-semibold text-stone-900">{draft.id ? t("web.providers.editTitle") : t("web.providers.addTitle")}</h2>
-                <p className="mt-1 text-sm text-stone-500">{t("web.providers.securityNote")}</p>
+                <h2 className="text-lg font-semibold text-ink">{draft.id ? t("web.providers.editTitle") : t("web.providers.addTitle")}</h2>
+                <p className="mt-1 text-sm text-muted">{t("web.providers.securityNote")}</p>
               </div>
               {draft.id && <Button type="button" variant="ghost" size="sm" onClick={() => setDraft(emptyDraft)}>{t("web.providers.cancelEdit")}</Button>}
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+            <SectionGrid>
               <FormField label={t("web.providers.name")} htmlFor="provider-name">
                 <Input id="provider-name" required maxLength={80} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder={t("web.providers.namePlaceholder")} />
               </FormField>
@@ -250,17 +255,17 @@ export default function ProviderWorkspace() {
                   <Input id="provider-key" type="password" autoComplete="new-password" required={!draft.id} maxLength={4096} value={draft.apiKey} onChange={(event) => setDraft({ ...draft, apiKey: event.target.value })} placeholder={draft.id ? t("web.providers.keepKey") : t("web.providers.yourKey")} />
                 </FormField>
               </div>
-              <label className="flex items-center gap-2 text-sm text-stone-700">
+              <label className="flex items-center gap-2 text-sm text-ink-soft">
                 <Checkbox checked={draft.enabled} onChange={(event) => setDraft({ ...draft, enabled: event.target.checked })} />
                 {t("web.providers.enable")}
               </label>
-            </div>
+            </SectionGrid>
             <div className="mt-6 flex justify-end">
               <Button disabled={saving}>{draft.id ? <Save size={16} /> : <Plus size={16} />}{providerButtonLabel}</Button>
             </div>
           </form>
 
-          <p className="text-xs leading-5 text-stone-500">
+          <p className="text-xs leading-5 text-muted">
             {t("web.providers.securityGuidance")}
           </p>
         </div>

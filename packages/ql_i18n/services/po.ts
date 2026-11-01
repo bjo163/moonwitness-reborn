@@ -129,8 +129,15 @@ export function parsePoCatalog(
         ) as Partial<Record<PluralCategory, string>>;
         const translatedText =
           translatedPluralTexts.one ?? translatedPluralTexts.other ?? "";
-        if (categories.some((category) => !translatedPluralTexts[category])) {
-          continue;
+        if (
+          categories.some(
+            (category) =>
+              !translatedPluralTexts[category]?.trim(),
+          )
+        ) {
+          throw new QlValidationError(
+            `PO plural message '${context}' has a missing translation form.`,
+          );
         }
         entries.push(
           validateEntry(
@@ -144,7 +151,11 @@ export function parsePoCatalog(
         );
       } else {
         const translatedText = message.msgstr[0] ?? "";
-        if (!translatedText) continue;
+        if (!translatedText.trim()) {
+          throw new QlValidationError(
+            `PO message '${context}' has an empty translation.`,
+          );
+        }
         entries.push(validateEntry(locale, context, message.msgid, translatedText));
       }
     }

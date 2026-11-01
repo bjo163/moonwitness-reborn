@@ -10,7 +10,11 @@ import {
   Alert,
   Badge,
   Button,
+  LoadingScreen,
+  PageHeader,
+  WorkspaceSidebar,
   WorkspaceTemplate,
+  type SidebarNavItem,
 } from "@moonwitness/ui";
 import {
   Boxes,
@@ -18,15 +22,14 @@ import {
   KeyRound,
   LayoutDashboard,
   Languages,
-  LogOut,
   Menu,
   MessageSquare,
+  Microscope,
   Plug,
   ShieldCheck,
   Sparkles,
   Workflow as WorkflowIcon,
   BookOpen,
-  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -35,6 +38,7 @@ import { LocaleSwitcher } from "../locale/locale-switcher";
 import { useMessages } from "../locale/messages";
 import { useLocalePreference } from "../locale/use-locale-preference";
 import { useTranslationCatalog } from "../locale/translation-catalog";
+import { apiErrorMessage } from "../locale/api-error-message";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -44,6 +48,7 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [hasWorkflow, setHasWorkflow] = useState(false);
   const [hasCorpus, setHasCorpus] = useState(false);
+  const [hasResearch, setHasResearch] = useState(false);
   const [projectTracker, setProjectTracker] =
     useState<ProjectTaskListResponseDto | null>(null);
   const [projectTrackerLoading, setProjectTrackerLoading] = useState(false);
@@ -92,11 +97,17 @@ export default function DashboardPage() {
             setHasCorpus(
               metadata.models.some((model) => model.name.startsWith("corpus.")),
             );
+            setHasResearch(
+              metadata.models.some((model) =>
+                model.name.startsWith("research."),
+              ),
+            );
           }
         } catch {
           if (!cancelled) {
             setHasWorkflow(false);
             setHasCorpus(false);
+            setHasResearch(false);
           }
         }
       })
@@ -109,11 +120,7 @@ export default function DashboardPage() {
           router.replace("/auth");
           return;
         }
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Gagal memuat akun.",
-        );
+        setError(apiErrorMessage(requestError, t));
         setUser(null);
       })
       .finally(() => {
@@ -122,7 +129,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, t]);
 
   async function logout() {
     setError(null);
@@ -130,23 +137,16 @@ export default function DashboardPage() {
       await moonClient.logout();
       router.replace("/auth");
     } catch (logoutError) {
-      setError(
-        logoutError instanceof Error
-          ? logoutError.message
-          : copy.dashboard.logoutError,
-      );
+      setError(apiErrorMessage(logoutError, t));
     }
   }
 
   if (loading || !user) {
     return (
-      <main className="ql-hud-app flex min-h-dvh items-center justify-center px-6 text-sm text-stone-300">
-        {error ? (
-          <Alert variant="error">{error}</Alert>
-        ) : (
-          <p role="status">{copy.common.loading}</p>
-        )}
-      </main>
+      <LoadingScreen
+        error={error}
+        label={copy.common.loading}
+      />
     );
   }
 
@@ -165,141 +165,106 @@ export default function DashboardPage() {
   const blockedCount =
     projectTracker?.tasks.filter((task) => task.state === "blocked").length ?? 0;
 
+  const closeSidebar = () => setSidebarOpen(false);
+  const navItems: readonly SidebarNavItem[] = [
+    {
+      href: "/command-center",
+      label: copy.common.dashboard,
+      icon: <LayoutDashboard aria-hidden="true" size={16} />,
+      active: true,
+      onSelect: closeSidebar,
+    },
+    {
+      href: "/command-center/chat",
+      label: copy.common.chat,
+      icon: <MessageSquare aria-hidden="true" size={16} />,
+      onSelect: closeSidebar,
+    },
+    {
+      href: "/models",
+      label: copy.common.models,
+      icon: <Boxes aria-hidden="true" size={16} />,
+      onSelect: closeSidebar,
+    },
+    {
+      href: "/providers",
+      label: copy.common.providers,
+      icon: <KeyRound aria-hidden="true" size={16} />,
+      onSelect: closeSidebar,
+    },
+    ...(hasConnectors
+      ? [
+          {
+            href: "/connectors",
+            label: copy.common.integrations,
+            icon: <Plug aria-hidden="true" size={16} />,
+            onSelect: closeSidebar,
+          },
+        ]
+      : []),
+    ...(hasWorkflow
+      ? [
+          {
+            href: "/workflow",
+            label: copy.workflow.navLabel,
+            icon: <WorkflowIcon aria-hidden="true" size={16} />,
+            onSelect: closeSidebar,
+          },
+        ]
+      : []),
+    ...(hasCorpus
+      ? [
+          {
+            href: "/corpus",
+            label: t("web.dashboard.corpusTitle"),
+            icon: <BookOpen aria-hidden="true" size={16} />,
+            onSelect: closeSidebar,
+          },
+        ]
+      : []),
+    ...(hasResearch
+      ? [
+          {
+            href: "/research",
+            label: copy.research.navLabel,
+            icon: <Microscope aria-hidden="true" size={16} />,
+            onSelect: closeSidebar,
+          },
+        ]
+      : []),
+    ...(isAdmin
+      ? [
+          {
+            href: "/admin/users",
+            label: copy.common.users,
+            icon: <ShieldCheck aria-hidden="true" size={16} />,
+            onSelect: closeSidebar,
+          },
+          {
+            href: "/admin/translations",
+            label: t("web.translationAdmin.title"),
+            icon: <Languages aria-hidden="true" size={16} />,
+            onSelect: closeSidebar,
+          },
+        ]
+      : []),
+  ];
+
   return (
     <WorkspaceTemplate
       sidebarOpen={sidebarOpen}
       onCloseSidebar={() => setSidebarOpen(false)}
       closeLabel={copy.common.closeMenu}
       sidebar={
-        <>
-          <div className="flex h-12 items-center justify-between px-2">
-            <Link
-              href="/command-center"
-              className="ql-hud-brand flex items-center gap-2.5 font-semibold tracking-tight"
-            >
-              <span className="flex size-8 items-center justify-center rounded-xl border border-[#354135] bg-[#121a13] text-[#d7ff63]">
-                <Sparkles aria-hidden="true" size={16} />
-              </span>
-              MoonWitness
-            </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              aria-label={copy.common.closeMenu}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X aria-hidden="true" size={18} />
-            </Button>
-          </div>
-          <nav
-            className="mt-6 flex-1 space-y-1"
-            aria-label={copy.common.dashboard}
-          >
-            <Link
-              href="/command-center"
-              className="ql-nav-link is-active"
-              aria-current="page"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <LayoutDashboard aria-hidden="true" size={16} />
-              {copy.common.dashboard}
-            </Link>
-            <Link
-              href="/command-center/chat"
-              className="ql-nav-link"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <MessageSquare aria-hidden="true" size={16} />
-              {copy.common.chat}
-            </Link>
-            <Link
-              href="/models"
-              className="ql-nav-link"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <Boxes aria-hidden="true" size={16} />
-              {copy.common.models}
-            </Link>
-            <Link
-              href="/providers"
-              className="ql-nav-link"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <KeyRound aria-hidden="true" size={16} />
-              {copy.common.providers}
-            </Link>
-            {hasConnectors && (
-              <Link
-                href="/connectors"
-                className="ql-nav-link"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <Plug aria-hidden="true" size={16} />
-                {copy.common.integrations}
-              </Link>
-            )}
-            {hasWorkflow && (
-              <Link
-                href="/workflow"
-                className="ql-nav-link"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <WorkflowIcon aria-hidden="true" size={16} />
-                {copy.workflow.navLabel}
-              </Link>
-            )}
-            {hasCorpus && (
-              <Link
-                href="/corpus"
-                className="ql-nav-link"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <BookOpen aria-hidden="true" size={16} />
-                {locale === "id" ? "Kitab & Sumber" : "Books & sources"}
-              </Link>
-            )}
-            {isAdmin && (
-              <>
-                <Link
-                  href="/admin/users"
-                  className="ql-nav-link"
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <ShieldCheck aria-hidden="true" size={16} />
-                  {copy.common.users}
-                </Link>
-                <Link
-                  href="/admin/translations"
-                  className="ql-nav-link"
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <Languages aria-hidden="true" size={16} />
-                  {t("web.translationAdmin.title")}
-                </Link>
-              </>
-            )}
-          </nav>
-          <div className="mt-4 flex items-center gap-2 border-t border-[#354135] px-2 pt-4">
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-xs font-medium text-stone-200">
-                {user.name}
-              </div>
-              <div className="truncate text-[11px] text-stone-400">
-                {user.email}
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={copy.common.logout}
-              title={copy.common.logout}
-              onClick={() => void logout()}
-            >
-              <LogOut aria-hidden="true" size={16} />
-            </Button>
-          </div>
-        </>
+        <WorkspaceSidebar
+          brandIcon={<Sparkles aria-hidden="true" size={16} />}
+          closeLabel={copy.common.closeMenu}
+          identity={{ name: user.name, subtitle: user.email }}
+          items={navItems}
+          logout={{ label: copy.common.logout, onLogout: () => void logout() }}
+          navLabel={copy.common.dashboard}
+          onCloseSidebar={() => setSidebarOpen(false)}
+        />
       }
       header={
         <>
@@ -313,7 +278,7 @@ export default function DashboardPage() {
             >
               <Menu aria-hidden="true" size={19} />
             </Button>
-            <span className="text-sm font-medium text-stone-200">
+            <span className="text-sm font-medium text-ink-soft">
               {copy.common.dashboard}
             </span>
           </div>
@@ -328,20 +293,17 @@ export default function DashboardPage() {
     >
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-12">
-          <header className="grid gap-8 border-b border-[#354135] pb-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-            <div>
-              <h1 className="max-w-3xl text-4xl font-semibold leading-tight tracking-[-0.04em] text-stone-100 md:text-5xl">
-                {copy.dashboard.greeting} {user.name}
-              </h1>
-              <p className="mt-5 max-w-2xl text-sm leading-7 text-stone-300 md:text-base">
-                {copy.dashboard.description}
-              </p>
-            </div>
-            <Button onClick={() => router.push("/command-center/chat")}>
-              <MessageSquare aria-hidden="true" size={16} />
-              {copy.dashboard.continueChat}
-            </Button>
-          </header>
+          <PageHeader
+            actions={
+              <Button onClick={() => router.push("/command-center/chat")}>
+                <MessageSquare aria-hidden="true" size={16} />
+                {copy.dashboard.continueChat}
+              </Button>
+            }
+            className="border-b-0 pb-0"
+            description={copy.dashboard.description}
+            title={`${copy.dashboard.greeting} ${user.name}`}
+          />
 
           {(error || localeError) && (
             <Alert variant="error" className="mt-6">
@@ -351,29 +313,29 @@ export default function DashboardPage() {
 
           <section className="grid gap-7 py-10 md:grid-cols-[0.8fr_1.2fr]">
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-stone-100">
+              <h2 className="text-2xl font-semibold tracking-tight text-ink">
                 {copy.dashboard.availableTitle}
               </h2>
-              <p className="mt-3 max-w-sm text-sm leading-6 text-stone-400">
+              <p className="mt-3 max-w-sm text-sm leading-6 text-muted">
                 {copy.dashboard.availableDescription}
               </p>
             </div>
-            <ul className="divide-y divide-[#354135] border-y border-[#354135]">
+            <ul className="divide-y divide-hairline border-y border-hairline">
               <li>
                 <Link
                   href="/command-center/chat"
-                  className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d7ff63]"
+                  className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
                 >
                   <MessageSquare
                     aria-hidden="true"
                     size={18}
-                    className="shrink-0 text-[#d7ff63]"
+                    className="shrink-0 text-acid"
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-stone-100 group-hover:text-[#d7ff63]">
+                    <span className="block text-sm font-medium text-ink group-hover:text-acid">
                       {copy.common.chat}
                     </span>
-                    <span className="mt-1 block text-sm leading-6 text-stone-400">
+                    <span className="mt-1 block text-sm leading-6 text-muted">
                       {copy.dashboard.chatDescription}
                     </span>
                   </span>
@@ -383,18 +345,18 @@ export default function DashboardPage() {
               <li>
                 <Link
                   href="/models"
-                  className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d7ff63]"
+                  className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
                 >
                   <Database
                     aria-hidden="true"
                     size={18}
-                    className="shrink-0 text-[#d7ff63]"
+                    className="shrink-0 text-acid"
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-stone-100 group-hover:text-[#d7ff63]">
+                    <span className="block text-sm font-medium text-ink group-hover:text-acid">
                       {copy.common.models}
                     </span>
-                    <span className="mt-1 block text-sm leading-6 text-stone-400">
+                    <span className="mt-1 block text-sm leading-6 text-muted">
                       {copy.dashboard.modelsDescription}
                     </span>
                   </span>
@@ -404,18 +366,18 @@ export default function DashboardPage() {
               <li>
                 <Link
                   href="/providers"
-                  className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d7ff63]"
+                  className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
                 >
                   <KeyRound
                     aria-hidden="true"
                     size={18}
-                    className="shrink-0 text-[#d7ff63]"
+                    className="shrink-0 text-acid"
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-stone-100 group-hover:text-[#d7ff63]">
+                    <span className="block text-sm font-medium text-ink group-hover:text-acid">
                       {copy.common.providers}
                     </span>
-                    <span className="mt-1 block text-sm leading-6 text-stone-400">
+                    <span className="mt-1 block text-sm leading-6 text-muted">
                       {copy.dashboard.providersDescription}
                     </span>
                   </span>
@@ -426,18 +388,18 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href="/connectors"
-                    className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d7ff63]"
+                    className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
                   >
                     <Plug
                       aria-hidden="true"
                       size={18}
-                      className="shrink-0 text-[#d7ff63]"
+                      className="shrink-0 text-acid"
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium text-stone-100 group-hover:text-[#d7ff63]">
+                      <span className="block text-sm font-medium text-ink group-hover:text-acid">
                         {copy.common.integrations}
                       </span>
-                      <span className="mt-1 block text-sm leading-6 text-stone-400">
+                      <span className="mt-1 block text-sm leading-6 text-muted">
                         {copy.dashboard.integrationsDescription}
                       </span>
                     </span>
@@ -449,18 +411,18 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href="/workflow"
-                    className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d7ff63]"
+                    className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
                   >
                     <WorkflowIcon
                       aria-hidden="true"
                       size={18}
-                      className="shrink-0 text-[#d7ff63]"
+                      className="shrink-0 text-acid"
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium text-stone-100 group-hover:text-[#d7ff63]">
+                      <span className="block text-sm font-medium text-ink group-hover:text-acid">
                         {copy.workflow.navLabel}
                       </span>
-                      <span className="mt-1 block text-sm leading-6 text-stone-400">
+                      <span className="mt-1 block text-sm leading-6 text-muted">
                         {copy.workflow.queueSubtitle}
                       </span>
                     </span>
@@ -472,21 +434,42 @@ export default function DashboardPage() {
                 <li>
                   <Link
                     href="/corpus"
-                    className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d7ff63]"
+                    className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
                   >
                     <BookOpen
                       aria-hidden="true"
                       size={18}
-                      className="shrink-0 text-[#d7ff63]"
+                      className="shrink-0 text-acid"
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium text-stone-100 group-hover:text-[#d7ff63]">
-                        {locale === "id" ? "Kitab & Sumber" : "Books & sources"}
+                      <span className="block text-sm font-medium text-ink group-hover:text-acid">
+                        {t("web.dashboard.corpusTitle")}
                       </span>
-                      <span className="mt-1 block text-sm leading-6 text-stone-400">
-                        {locale === "id"
-                          ? "Baca Qur'an (Tanzil Uthmani) atau terjemahan yang diatribusi (RWWAD English, Kemenag Indonesia)."
-                          : "Read the Qur'an (Tanzil Uthmani) or an attributed translation (RWWAD English, Kemenag Indonesian)."}
+                      <span className="mt-1 block text-sm leading-6 text-muted">
+                        {t("web.dashboard.corpusDescription")}
+                      </span>
+                    </span>
+                    <Badge variant="outline">{copy.common.statusAvailable}</Badge>
+                  </Link>
+                </li>
+              )}
+              {hasResearch && (
+                <li>
+                  <Link
+                    href="/research"
+                    className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
+                  >
+                    <Microscope
+                      aria-hidden="true"
+                      size={18}
+                      className="shrink-0 text-acid"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium text-ink group-hover:text-acid">
+                        {copy.research.navLabel}
+                      </span>
+                      <span className="mt-1 block text-sm leading-6 text-muted">
+                        {copy.research.description}
                       </span>
                     </span>
                     <Badge variant="outline">{copy.common.statusAvailable}</Badge>
@@ -496,16 +479,16 @@ export default function DashboardPage() {
             </ul>
           </section>
 
-          <section className="border-t border-[#354135] py-10">
+          <section className="border-t border-hairline py-10">
             <div className="grid gap-6 md:grid-cols-[0.8fr_1.2fr]">
               <div>
-                <h2 className="text-2xl font-semibold tracking-tight text-stone-100">
+                <h2 className="text-2xl font-semibold tracking-tight text-ink">
                   {copy.dashboard.directionTitle}
                 </h2>
-                <p className="mt-3 max-w-sm text-sm leading-6 text-stone-300">
+                <p className="mt-3 max-w-sm text-sm leading-6 text-ink-soft">
                   {copy.dashboard.directionDescription}
                 </p>
-                <p className="mt-3 max-w-sm text-xs leading-5 text-stone-400">
+                <p className="mt-3 max-w-sm text-xs leading-5 text-muted">
                   {copy.dashboard.directionNote}
                 </p>
               </div>
@@ -515,9 +498,9 @@ export default function DashboardPage() {
                   {copy.landing.journey.map((step, index) => (
                     <li
                       key={step}
-                      className="inline-flex items-center gap-2 rounded-full border border-[#354135] px-3 py-2 text-xs text-stone-200"
+                      className="inline-flex items-center gap-2 rounded-full border border-hairline px-3 py-2 text-xs text-ink-soft"
                     >
-                      <span className="tabular-nums text-[#b8cc91]">
+                      <span className="tabular-nums text-acid-muted">
                         {String(index + 1).padStart(2, "0")}
                       </span>
                       {step}
@@ -530,24 +513,24 @@ export default function DashboardPage() {
 
           {canViewProjectTracker && (
             <section
-              className="border-t border-[#354135] py-10"
+              className="border-t border-hairline py-10"
               aria-labelledby="project-tracker-title"
             >
               <div className="grid gap-6 md:grid-cols-[0.8fr_1.2fr]">
                 <div>
                   <h2
                     id="project-tracker-title"
-                    className="text-2xl font-semibold tracking-tight text-stone-100"
+                    className="text-2xl font-semibold tracking-tight text-ink"
                   >
                     {copy.dashboard.trackerTitle}
                   </h2>
-                  <p className="mt-3 max-w-sm text-sm leading-6 text-stone-300">
+                  <p className="mt-3 max-w-sm text-sm leading-6 text-ink-soft">
                     {copy.dashboard.trackerDescription}
                   </p>
                 </div>
                 <div>
                   {projectTrackerLoading && (
-                    <p role="status" className="text-sm text-stone-300">
+                    <p role="status" className="text-sm text-ink-soft">
                       {copy.dashboard.trackerLoading}
                     </p>
                   )}
@@ -556,56 +539,56 @@ export default function DashboardPage() {
                   )}
                   {projectTracker && (
                     <>
-                      <dl className="grid gap-x-6 border-y border-[#354135] sm:grid-cols-3">
-                        <div className="flex items-baseline justify-between gap-3 border-b border-[#354135] py-4 sm:border-b-0">
-                          <dt className="text-sm text-stone-300">
+                      <dl className="grid gap-x-6 border-y border-hairline sm:grid-cols-3">
+                        <div className="flex items-baseline justify-between gap-3 border-b border-hairline py-4 sm:border-b-0">
+                          <dt className="text-sm text-ink-soft">
                             {copy.dashboard.trackerStateLabels.done}
                           </dt>
-                          <dd className="text-lg font-semibold tabular-nums text-stone-100">
+                          <dd className="text-lg font-semibold tabular-nums text-ink">
                             {doneCount} / {projectTracker.tasks.length}
                           </dd>
                         </div>
-                        <div className="flex items-baseline justify-between gap-3 border-b border-[#354135] py-4 sm:border-b-0">
-                          <dt className="text-sm text-stone-300">
+                        <div className="flex items-baseline justify-between gap-3 border-b border-hairline py-4 sm:border-b-0">
+                          <dt className="text-sm text-ink-soft">
                             {copy.dashboard.trackerReadyTitle}
                           </dt>
-                          <dd className="text-lg font-semibold tabular-nums text-stone-100">
+                          <dd className="text-lg font-semibold tabular-nums text-ink">
                             {readyTasks.length}
                           </dd>
                         </div>
                         <div className="flex items-baseline justify-between gap-3 py-4">
-                          <dt className="text-sm text-stone-300">
+                          <dt className="text-sm text-ink-soft">
                             {copy.dashboard.trackerStateLabels.blocked}
                           </dt>
-                          <dd className="text-lg font-semibold tabular-nums text-stone-100">
+                          <dd className="text-lg font-semibold tabular-nums text-ink">
                             {blockedCount}
                           </dd>
                         </div>
                       </dl>
 
-                      <h3 className="mt-7 text-lg font-semibold text-stone-100">
+                      <h3 className="mt-7 text-lg font-semibold text-ink">
                         {copy.dashboard.trackerReadyTitle}
                       </h3>
                       {readyTasks.length === 0 ? (
-                        <p className="mt-3 text-sm leading-6 text-stone-400">
+                        <p className="mt-3 text-sm leading-6 text-muted">
                           {copy.dashboard.trackerEmptyReady}
                         </p>
                       ) : (
-                        <ol className="mt-3 divide-y divide-[#354135]">
+                        <ol className="mt-3 divide-y divide-hairline">
                           {readyTasks.slice(0, 6).map((task) => (
                             <li key={task.id} className="py-4">
                               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                                <span className="font-mono text-xs text-[#b8cc91]">
+                                <span className="font-mono text-xs text-acid-muted">
                                   {task.id}
                                 </span>
                                 <Badge variant="outline">
                                   {copy.dashboard.trackerStateLabels[task.state]}
                                 </Badge>
                               </div>
-                              <p className="mt-2 text-sm font-medium leading-6 text-stone-100">
+                              <p className="mt-2 text-sm font-medium leading-6 text-ink">
                                 {task.title}
                               </p>
-                              <p className="mt-1 text-xs leading-5 text-stone-400">
+                              <p className="mt-1 text-xs leading-5 text-muted">
                                 {task.section}
                               </p>
                             </li>
@@ -613,45 +596,45 @@ export default function DashboardPage() {
                         </ol>
                       )}
 
-                      <details className="mt-7 border-t border-[#354135] pt-5">
-                        <summary className="cursor-pointer text-sm font-medium text-stone-200 underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d7ff63]">
+                      <details className="mt-7 border-t border-hairline pt-5">
+                        <summary className="cursor-pointer text-sm font-medium text-ink-soft underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid">
                           {copy.dashboard.trackerAllTitle} (
                           {projectTracker.tasks.length})
                         </summary>
-                        <ul className="mt-4 divide-y divide-[#354135]">
+                        <ul className="mt-4 divide-y divide-hairline">
                           {projectTracker.tasks.map((task) => (
                             <li key={task.id} className="py-4">
                               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                                <span className="font-mono text-xs text-[#b8cc91]">
+                                <span className="font-mono text-xs text-acid-muted">
                                   {task.id}
                                 </span>
                                 <Badge variant="outline">
                                   {copy.dashboard.trackerStateLabels[task.state]}
                                 </Badge>
                               </div>
-                              <p className="mt-2 text-sm font-medium leading-6 text-stone-100">
+                              <p className="mt-2 text-sm font-medium leading-6 text-ink">
                                 {task.title}
                               </p>
-                              <p className="mt-1 text-xs leading-5 text-stone-400">
+                              <p className="mt-1 text-xs leading-5 text-muted">
                                 {task.section}
                               </p>
-                              <p className="mt-3 text-xs font-medium text-stone-300">
+                              <p className="mt-3 text-xs font-medium text-ink-soft">
                                 {copy.dashboard.trackerAcceptance}
                               </p>
-                              <p className="mt-1 text-sm leading-6 text-stone-400">
+                              <p className="mt-1 text-sm leading-6 text-muted">
                                 {task.acceptanceCriteria}
                               </p>
                               {task.dependsOn.length > 0 && (
-                                <p className="mt-2 text-xs leading-5 text-stone-400">
+                                <p className="mt-2 text-xs leading-5 text-muted">
                                   {copy.dashboard.trackerDependencies}:{" "}
                                   {task.dependsOn.join(", ")}
                                 </p>
                               )}
-                              <p className="mt-2 text-xs leading-5 text-stone-400">
+                              <p className="mt-2 text-xs leading-5 text-muted">
                                 {copy.dashboard.trackerOwner}: {task.owner}
                               </p>
                               {task.completedAt && (
-                                <p className="mt-2 text-xs leading-5 text-stone-400">
+                                <p className="mt-2 text-xs leading-5 text-muted">
                                   {copy.dashboard.trackerCompletedAt}:{" "}
                                   <time dateTime={task.completedAt}>
                                     {new Intl.DateTimeFormat(locale).format(
@@ -664,7 +647,7 @@ export default function DashboardPage() {
                           ))}
                         </ul>
                       </details>
-                      <p className="mt-4 text-xs leading-5 text-stone-400">
+                      <p className="mt-4 text-xs leading-5 text-muted">
                         {copy.dashboard.trackerHistoryNote}
                       </p>
                     </>

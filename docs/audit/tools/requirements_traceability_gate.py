@@ -577,6 +577,7 @@ def check_goal_mapping(failures):
         ("#### Planning gaps and audit goals", 6, 3),
         ("#### PHASE 8 — Single Application Foundation", 5, 2),
         ("#### PHASE 9–10 — First Vertical Slice and Domain Expansion", 5, 2),
+        ("##### PHASE 10 — D30 feature slices under the domain-expansion gate", 6, 3),
         ("#### PHASE 11 — Integration and Hardening", 5, 2),
         ("#### PHASE 12 — Release and Continuous Improvement", 5, 2),
     ]

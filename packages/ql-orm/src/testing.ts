@@ -1,4 +1,36 @@
-import { createQlOrm, type QlAddonManifest, type QlOrm } from "./index.js";
+import {
+  createQlOrm,
+  type QlAddonManifest,
+  type QlModelDefinition,
+  type QlOrm,
+} from "./index.js";
+
+const externalIdModel: QlModelDefinition = {
+  name: "ir.model.data",
+  description: "External identifiers for stable addon seed data.",
+  tableName: "ir_model_data",
+  fields: {
+    external_id: {
+      type: "char",
+      required: true,
+      unique: true,
+      maxLength: 255,
+      private: true,
+    },
+    model_name: {
+      type: "char",
+      required: true,
+      maxLength: 120,
+      private: true,
+    },
+    record_id: {
+      type: "char",
+      required: true,
+      maxLength: 120,
+      private: true,
+    },
+  },
+};
 
 /**
  * `ql_orm/testing` — helpers shared by the workspace's addon test suites.
@@ -17,9 +49,10 @@ export function stubAddonManifest(name: string): QlAddonManifest {
     version: "1.0.0",
     description: name,
     depends: [],
-    models: [],
+    models: name === "ql_base" ? [externalIdModel] : [],
     access: [],
     views: [],
+    data: [],
   };
 }
 

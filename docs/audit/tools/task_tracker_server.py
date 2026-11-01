@@ -89,7 +89,8 @@ class TrackerHandler(BaseHTTPRequestHandler):
     def _read_tracker(self):
         source = self.server.tracker_path.read_bytes()
         value = json.loads(source)
-        errors = task_tracker.validate_tracker(value)
+        catalog = task_tracker.load_json(task_tracker.REQUIREMENT_CATALOG)
+        errors = task_tracker.validate_tracker(value, catalog.get("entries", []))
         if errors:
             raise ValueError("Invalid canonical task tracker: " + "; ".join(errors))
         return source, value
@@ -105,6 +106,7 @@ class TrackerHandler(BaseHTTPRequestHandler):
                 "owner": task["owner"],
                 "depends_on": task["depends_on"],
                 "acceptance_criteria": task["acceptance_criteria"],
+                "execution_packet": task.get("execution_packet"),
                 "completed_at": task["completed_at"],
             }
             for task in tracker["tasks"]
@@ -113,6 +115,9 @@ class TrackerHandler(BaseHTTPRequestHandler):
             "tasks": tasks,
             "ready_task_ids": [
                 task["id"] for task in task_tracker.dependency_ready_tasks(tracker)
+            ],
+            "ai_ready_task_ids": [
+                task["id"] for task in task_tracker.ai_ready_tasks(tracker)
             ],
             "states": {
                 state: sum(task["state"] == state for task in tasks)

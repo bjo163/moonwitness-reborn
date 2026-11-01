@@ -29,6 +29,16 @@ const BROWSER_BOUNDARY_MESSAGE =
   "Server/addon packages must never be imported by the web app.";
 const UI_CONSISTENCY_MESSAGE =
   "Use @moonwitness/ui components and the cn() utility; do not duplicate the design system.";
+const UI_PRIMITIVE_BAN_MESSAGE =
+  "Use @moonwitness/ui primitives (Button, Input, Textarea, Select, Checkbox, NavLink, SidebarBrand, SidebarFooter, PageHeader, LoadingScreen, EmptyState, SectionGrid, Card, Badge, Alert, DataTable, WorkspaceTemplate, CenteredAuth); do not hand-roll them in apps/web.";
+const UI_INTERNAL_LINK_MESSAGE =
+  "Use Next.js <Link> or @moonwitness/ui NavLink for internal routes in apps/web.";
+const UI_INLINE_STYLE_MESSAGE =
+  "Prefer Tailwind design tokens (`bg-panel`, `text-acid`, `border-hairline`) or a `ql-*` class; do not use inline `style` props in apps/web.";
+const UI_ARBITRARY_HEX_MESSAGE =
+  "Use @moonwitness/ui design tokens (`bg-panel`, `text-ink`, `border-hairline`) instead of an arbitrary Tailwind hex value (MW-ADR-020).";
+const UI_DEFAULT_PALETTE_MESSAGE =
+  "Use the @moonwitness/ui design tokens (`text-ink`, `text-ink-soft`, `text-muted`, `border-hairline`, `bg-panel`) instead of a Tailwind default palette colour (MW-ADR-020).";
 const CLEAN_CODE_MESSAGE = "Clean code: avoid implicit any and unused code.";
 
 const contractsBanPath = {
@@ -101,6 +111,72 @@ const cssInJsBanPaths = [
   { name: "linaria/**", message: UI_CONSISTENCY_MESSAGE },
   { name: "stitches", message: UI_CONSISTENCY_MESSAGE },
 ];
+
+/**
+ * UI-consistency selectors (MW-ADR-020). Applied to every `.tsx` file under
+ * `apps/web/src/features`, so `@moonwitness/ui` internal primitives (which are
+ * exactly the button/input/a implementations) stay legal.
+ *
+ * The `no-restricted-syntax` block bans raw JSX elements and inline
+ * `style` props; the `Literal` regex ban rejects arbitrary Tailwind
+ * values like `bg-[#0b110b]` in `className` string literals. Together
+ * these force apps/web to consume the design system instead of
+ * re-rolling it (see AGENTS.md, section "UI dan perubahan").
+ *
+ * NOTE: never write a recursive glob (double-star, slash, star, extension)
+ * inside a block comment here. Its star-slash pair closes the comment
+ * early, Node then fails to parse this module, and `pnpm lint` breaks for
+ * the whole workspace. Describe a glob in prose or in a line comment.
+ */
+const uiPrimitiveBans = [
+  { selector: 'JSXOpeningElement[name.name="button"]', message: UI_PRIMITIVE_BAN_MESSAGE },
+  { selector: 'JSXOpeningElement[name.name="input"]', message: UI_PRIMITIVE_BAN_MESSAGE },
+  { selector: 'JSXOpeningElement[name.name="textarea"]', message: UI_PRIMITIVE_BAN_MESSAGE },
+  { selector: 'JSXOpeningElement[name.name="select"]', message: UI_PRIMITIVE_BAN_MESSAGE },
+  { selector: 'JSXOpeningElement[name.name="style"]', message: UI_PRIMITIVE_BAN_MESSAGE },
+];
+const uiInternalAnchorBan = {
+  // `JSXAttribute` holds a `Literal` directly — there is no intermediate
+  // `JSXValue` node in the TypeScript JSX AST, so the earlier
+  // `> JSXValue > Literal` chain never matched and internal anchors went
+  // unreported. A leading-slash value test also fails: esquery's regex lexer
+  // ends the pattern at the `\x2f`-style escape, so the rule is scoped by
+  // element + literal `href` instead. Every literal `href` on a raw `<a>` in
+  // this app is an in-app route today; a genuinely external link passes an
+  // expression (`href={url}`) and stays legal.
+  selector:
+    'JSXOpeningElement[name.name="a"] JSXAttribute[name.name="href"] Literal',
+  message: UI_INTERNAL_LINK_MESSAGE,
+};
+const uiInlineStyleBan = {
+  selector: 'JSXAttribute[name.name="style"]',
+  message: UI_INLINE_STYLE_MESSAGE,
+};
+const uiArbitraryHexBan = {
+  // Matches a JSX `className="…"` string literal that contains a Tailwind
+  // arbitrary-value bracket wrapping a hex colour, e.g. `bg-[#0b110b]`.
+  // Kept intentionally simple: `[value=/#[0-9a-f]+/i]` — esquery parses
+  // the regex between the slashes and does not allow `{n,m}` bounds or
+  // nested `[…]` character classes without escapes, so the pattern
+  // trades precision for stability.
+  selector: 'JSXAttribute[name.name="className"] Literal[value=/#[0-9a-fA-F]+/i]',
+  message: UI_ARBITRARY_HEX_MESSAGE,
+};
+// Rejects Tailwind's default colour scale (`text-stone-300`, `bg-amber-950`, …)
+// in app markup. The numeric step is required because a bare colour family
+// name (`text-stone`) is not a utility; `white`/`black` have no step and are
+// matched separately. Same esquery constraint as above: no `{n,m}` bounds and
+// no `/` inside the pattern.
+const uiDefaultPaletteBan = {
+  selector:
+    'JSXAttribute[name.name="className"] Literal[value=/(?:bg|text|border|divide|outline|ring|placeholder|from|via|to|fill|stroke|accent|decoration|shadow)-(?:stone|zinc|neutral|gray|slate|amber|emerald|green|red|rose|sky|blue|indigo|violet|purple|pink|cyan|teal|lime|orange|yellow|fuchsia)-\\d/]',
+  message: UI_DEFAULT_PALETTE_MESSAGE,
+};
+const uiPurePaletteBan = {
+  selector:
+    'JSXAttribute[name.name="className"] Literal[value=/(?:bg|text|border|divide|outline|ring|fill|stroke)-(?:white|black)(?:[^a-zA-Z0-9]|$)/]',
+  message: UI_DEFAULT_PALETTE_MESSAGE,
+};
 
 /**
  * @param {object} options
@@ -224,6 +300,27 @@ export function moonwitnessConfig({
       },
     },
     {
+      // MW-ADR-020 UI-consistency rules. Scoped to every `.tsx` file under
+      // the web app's `src` (not just `src/features`) so the landing page,
+      // the root layout, and the locale widgets are held to the same bar as
+      // the workspaces. Flipped from `warn` to `error` in MW-0577 once every
+      // `apps/web` screen had been migrated to the design system; adding a raw
+      // control, an internal `<a>`, an inline `style`, a hex value, or a
+      // default-palette colour in the app now fails CI.
+      files: [`${webAppDir}/src/**/*.tsx`],
+      rules: {
+        "no-restricted-syntax": [
+          "error",
+          ...uiPrimitiveBans,
+          uiInternalAnchorBan,
+          uiInlineStyleBan,
+          uiArbitraryHexBan,
+          uiDefaultPaletteBan,
+          uiPurePaletteBan,
+        ],
+      },
+    },
+    {
       files: ["**/*.tsx"],
       plugins: { "react-hooks": reactHooks },
       rules: {
@@ -245,6 +342,11 @@ export const boundaryMessages = {
   credentialStore: CREDENTIAL_STORE_MESSAGE,
   browserBoundary: BROWSER_BOUNDARY_MESSAGE,
   uiConsistency: UI_CONSISTENCY_MESSAGE,
+  uiPrimitiveBan: UI_PRIMITIVE_BAN_MESSAGE,
+  uiInternalLink: UI_INTERNAL_LINK_MESSAGE,
+  uiInlineStyle: UI_INLINE_STYLE_MESSAGE,
+  uiArbitraryHex: UI_ARBITRARY_HEX_MESSAGE,
+  uiDefaultPalette: UI_DEFAULT_PALETTE_MESSAGE,
   cleanCode: CLEAN_CODE_MESSAGE,
 };
 export const sharedRuleFragments = {
@@ -255,4 +357,10 @@ export const sharedRuleFragments = {
   httpBoundaryGlobals,
   credentialStorePatterns,
   browserBoundaryPatterns,
+  uiPrimitiveBans,
+  uiInternalAnchorBan,
+  uiInlineStyleBan,
+  uiArbitraryHexBan,
+  uiDefaultPaletteBan,
+  uiPurePaletteBan,
 };

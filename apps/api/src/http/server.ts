@@ -18,6 +18,8 @@ import {
   type ChatMessageDto,
   type ChatRequestDto,
   type ChatResponseDto,
+  type ComputeModelQueryRequestDto,
+  type CreateLexicalResearchReviewResponseDto,
   type ConversationDto,
   type ConversationListResponseDto,
   type CorpusEditionDto,
@@ -27,6 +29,13 @@ import {
   type CorpusSurahResponseDto,
   type CorpusVerseResponseDto,
   type ModelProviderDto,
+  type ModelRecordsResponseDto,
+  type LexicalResearchCandidateDto,
+  type LexicalResearchDecisionDto,
+  type LexicalResearchReviewDto,
+  type LexicalResearchReviewQueueItemDto,
+  type LexicalResearchReviewQueueResponseDto,
+  type LexicalResearchSourceReferenceDto,
   type ProjectTaskListResponseDto,
   type RoleDto,
   type RoleListResponseDto,
@@ -74,6 +83,10 @@ import {
   listTransitionsForChange,
   requestTransition,
 } from "ql_workflow/services/workflow-service";
+import {
+  listLexicalCandidateReviewQueue,
+  recordLexicalCandidateReview,
+} from "ql_research/services/lexical-review-service";
 import {
   publishEdition,
   withdrawEdition,
@@ -211,6 +224,61 @@ function parseObject(body: unknown): Record<string, unknown> {
     throw new RequestError("Request body must be a JSON object.", 400);
   }
   return body as Record<string, unknown>;
+}
+
+function parseComputedModelQuery(body: unknown): ComputeModelQueryRequestDto {
+  const input = parseObject(body);
+  if (Object.keys(input).some((key) => key !== "filters" && key !== "limit")) {
+    throw new RequestError("Computed model query contains an unknown field.", 400);
+  }
+  const filtersInput =
+    input.filters === undefined ? {} : parseObject(input.filters);
+  if (Object.keys(filtersInput).length > 20) {
+    throw new RequestError("Computed model query supports at most 20 filters.", 400);
+  }
+  const filters: NonNullable<ComputeModelQueryRequestDto["filters"]> = {};
+  for (const [name, value] of Object.entries(filtersInput)) {
+    if (!/^[a-z][a-z0-9_]*$/.test(name)) {
+      throw new RequestError(`Computed model filter '${name}' is invalid.`, 400);
+    }
+    if (
+      value !== null &&
+      typeof value !== "string" &&
+      typeof value !== "number" &&
+      typeof value !== "boolean"
+    ) {
+      throw new RequestError(
+        `Computed model filter '${name}' must be a scalar value.`,
+        400,
+      );
+    }
+    if (
+      (typeof value === "number" && !Number.isFinite(value)) ||
+      (typeof value === "string" && value.length > 500)
+    ) {
+      throw new RequestError(`Computed model filter '${name}' is too large.`, 400);
+    }
+    filters[name] = value;
+  }
+  let limit: number | undefined;
+  if (input.limit !== undefined) {
+    if (
+      typeof input.limit !== "number" ||
+      !Number.isInteger(input.limit) ||
+      input.limit < 1 ||
+      input.limit > 100
+    ) {
+      throw new RequestError(
+        "Computed model limit must be an integer between 1 and 100.",
+        400,
+      );
+    }
+    limit = input.limit;
+  }
+  return {
+    ...(Object.keys(filters).length ? { filters } : {}),
+    ...(limit === undefined ? {} : { limit }),
+  };
 }
 
 function parseUiLocale(value: unknown): UiLocale {
@@ -918,6 +986,125 @@ function toWorkflowTransitionDto(record: QlRecord): WorkflowTransitionDto {
   };
 }
 
+const LEXICAL_REVIEW_DECISIONS: readonly LexicalResearchDecisionDto[] = [
+  "retain_for_research",
+  "exclude_from_research",
+  "needs_expert_review",
+];
+
+function isLexicalResearchDecision(
+  value: string,
+): value is LexicalResearchDecisionDto {
+  return LEXICAL_REVIEW_DECISIONS.some((decision) => decision === value);
+}
+
+function researchString(record: QlRecord, field: string): string {
+  const value = record[field];
+  if (typeof value !== "string") {
+    throw new Error(`Research record field '${field}' must be a string.`);
+  }
+  return value;
+}
+
+function researchInteger(record: QlRecord, field: string): number {
+  const value = record[field];
+  if (typeof value !== "number" || !Number.isSafeInteger(value)) {
+    throw new Error(`Research record field '${field}' must be a safe integer.`);
+  }
+  return value;
+}
+
+function researchReferences(
+  record: QlRecord,
+): LexicalResearchSourceReferenceDto[] {
+  const raw = researchString(record, "source_references");
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw) as unknown;
+  } catch (error) {
+    throw new Error("Research source references contain invalid JSON.", {
+      cause: error,
+    });
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error("Research source references must be an array.");
+  }
+  return parsed.map((value, index) => {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) {
+      throw new Error(`Research source reference ${index} is invalid.`);
+    }
+    const reference = value as Record<string, unknown>;
+    const surah = reference.surah;
+    const ayah = reference.ayah;
+    const passageId = reference.passageId;
+    const checksum = reference.checksum;
+    if (
+      typeof surah !== "number" ||
+      !Number.isSafeInteger(surah) ||
+      typeof ayah !== "number" ||
+      !Number.isSafeInteger(ayah) ||
+      typeof passageId !== "string" ||
+      !passageId ||
+      typeof checksum !== "string" ||
+      !/^[a-f0-9]{64}$/u.test(checksum)
+    ) {
+      throw new Error(`Research source reference ${index} is invalid.`);
+    }
+    return { surah, ayah, passageId, checksum };
+  });
+}
+
+function toLexicalResearchCandidateDto(
+  record: QlRecord,
+): LexicalResearchCandidateDto {
+  return {
+    id: researchString(record, "id"),
+    candidate_text: researchString(record, "candidate_text"),
+    normalized_form: researchString(record, "normalized_form"),
+    occurrence_count: researchInteger(record, "occurrence_count"),
+    verse_reference_count: researchInteger(record, "verse_reference_count"),
+    source_edition: researchString(record, "source_edition"),
+    source_version_id: researchString(record, "source_version_id"),
+    source_references: researchReferences(record),
+    normalization_version: researchString(record, "normalization_version"),
+    algorithm_version: researchString(record, "algorithm_version"),
+  };
+}
+
+function toLexicalResearchReviewDto(
+  record: QlRecord,
+): LexicalResearchReviewDto {
+  const decision = researchString(record, "decision");
+  if (!isLexicalResearchDecision(decision)) {
+    throw new Error(`Unknown lexical research decision '${decision}'.`);
+  }
+  return {
+    id: researchString(record, "id"),
+    candidate_id: researchString(record, "candidate_id"),
+    edition_key: researchString(record, "edition_key"),
+    source_version_id: researchString(record, "source_version_id"),
+    normalization_version: researchString(record, "normalization_version"),
+    algorithm_version: researchString(record, "algorithm_version"),
+    occurrence_count: researchInteger(record, "occurrence_count"),
+    verse_reference_count: researchInteger(record, "verse_reference_count"),
+    source_references: researchReferences(record),
+    source_reference_digest: researchString(record, "source_reference_digest"),
+    decision,
+    rationale: researchString(record, "rationale"),
+    reviewed_at: researchInteger(record, "reviewed_at"),
+  };
+}
+
+function toLexicalResearchReviewQueueItemDto(
+  candidate: QlRecord,
+  review: QlRecord | null,
+): LexicalResearchReviewQueueItemDto {
+  return {
+    candidate: toLexicalResearchCandidateDto(candidate),
+    review: review === null ? null : toLexicalResearchReviewDto(review),
+  };
+}
+
 /**
  * The `/workflow/*` prefix handler. Mirrors `handleConnectorRequest`: one
  * bounded function returning `Promise<boolean>` so the outer dispatcher can
@@ -981,6 +1168,60 @@ async function handleWorkflowRequest(
     sendJson(response, 200, {
       transitions: rows.map(toWorkflowTransitionDto),
     } satisfies WorkflowTransitionListResponseDto);
+    return true;
+  }
+
+  return false;
+}
+
+async function handleResearchRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+  user: User,
+  orm: QlOrm,
+  pathname: string,
+): Promise<boolean> {
+  const method = request.method ?? "GET";
+  const ctx = userContext(user);
+
+  if (pathname === apiRoutes.research.lexicalCandidates && method === "GET") {
+    requireGroup(user, "admin", "operator");
+    const url = new URL(request.url ?? "/", "http://localhost");
+    const editionKey = url.searchParams.get("edition_key") ?? "";
+    const queue = await listLexicalCandidateReviewQueue(orm, ctx, editionKey);
+    const candidates = queue.map(({ candidate, review }) =>
+      toLexicalResearchReviewQueueItemDto(candidate, review),
+    );
+    sendJson(response, 200, {
+      candidates,
+    } satisfies LexicalResearchReviewQueueResponseDto);
+    return true;
+  }
+
+  const reviewMatch = pathname.match(
+    new RegExp(
+      `^${apiRoutes.research.lexicalCandidatePrefix}([^/]+)/reviews$`,
+    ),
+  );
+  if (reviewMatch && method === "POST") {
+    requireGroup(user, "admin", "operator");
+    const raw = parseObject(await readJsonBody(request));
+    const record = await recordLexicalCandidateReview(
+      orm,
+      ctx,
+      decodeURIComponent(reviewMatch[1]),
+      {
+        editionKey:
+          typeof raw.edition_key === "string" ? raw.edition_key : "",
+        normalizedForm:
+          typeof raw.normalized_form === "string" ? raw.normalized_form : "",
+        decision: raw.decision,
+        rationale: raw.rationale,
+      },
+    );
+    sendJson(response, 201, {
+      review: toLexicalResearchReviewDto(record),
+    } satisfies CreateLexicalResearchReviewResponseDto);
     return true;
   }
 
@@ -1696,12 +1937,24 @@ export function createApiServer(
       if (!user) return;
       try {
         const groups = userContext(user).groups;
-        const models = orm.registry
-          .getModels()
-          .filter((model) => orm.registry.can(model.name, groups, "read"))
-          .map((model) => {
+        const modelDefinitions = [
+          ...orm.registry.getModels().map((model) => ({
+            kind: "table" as const,
+            model,
+          })),
+          ...orm.registry.getComputedModels().map((model) => ({
+            kind: "computed" as const,
+            model,
+          })),
+        ];
+        const models = modelDefinitions
+          .filter(({ model }) =>
+            orm.registry.can(model.name, groups, "read"),
+          )
+          .map(({ kind, model }) => {
             const modelKey = model.name.replaceAll(".", "_");
             return {
+              kind,
               name: model.name,
               labelKey:
                 model.labelKey ?? `web.models.entities.${modelKey}`,
@@ -1712,21 +1965,31 @@ export function createApiServer(
               fields: Object.fromEntries(
                 Object.entries(model.fields)
                   .filter(([, field]) => !field.private)
-                  .map(([fieldName, field]) => [
-                    fieldName,
-                    {
-                      ...field,
-                      labelKey:
-                        field.labelKey ??
-                        `web.models.field${fieldName
-                          .split("_")
-                          .map(
-                            (part) =>
-                              part.charAt(0).toUpperCase() + part.slice(1),
-                          )
-                          .join("")}`,
-                    },
-                  ]),
+                  .map(([fieldName, field]) => {
+                    const { compute, ...metadata } = field;
+                    return [
+                      fieldName,
+                      {
+                        ...metadata,
+                        ...(compute
+                          ? {
+                              computed: true,
+                              readOnly: true,
+                              dependsOn: [...compute.dependsOn],
+                            }
+                          : {}),
+                        labelKey:
+                          field.labelKey ??
+                          `web.models.field${fieldName
+                            .split("_")
+                            .map(
+                              (part) =>
+                                part.charAt(0).toUpperCase() + part.slice(1),
+                            )
+                            .join("")}`,
+                      },
+                    ];
+                  }),
               ),
               views: orm.registry
                 .getViews(model.name)
@@ -1742,9 +2005,15 @@ export function createApiServer(
                   ),
                 })),
               permissions: {
-                create: orm.registry.can(model.name, groups, "create"),
-                write: orm.registry.can(model.name, groups, "write"),
-                unlink: orm.registry.can(model.name, groups, "unlink"),
+                create:
+                  kind === "table" &&
+                  orm.registry.can(model.name, groups, "create"),
+                write:
+                  kind === "table" &&
+                  orm.registry.can(model.name, groups, "write"),
+                unlink:
+                  kind === "table" &&
+                  orm.registry.can(model.name, groups, "unlink"),
               },
             };
           });
@@ -1893,6 +2162,29 @@ export function createApiServer(
       if (!user) return;
       try {
         const handled = await handleWorkflowRequest(
+          request,
+          response,
+          user,
+          orm,
+          pathname,
+        );
+        if (!handled) {
+          sendJson(response, 405, { error: "Method not allowed." });
+        }
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    if (
+      pathname === apiRoutes.research.lexicalCandidates ||
+      pathname.startsWith(apiRoutes.research.lexicalCandidatePrefix)
+    ) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        const handled = await handleResearchRequest(
           request,
           response,
           user,
@@ -2088,6 +2380,26 @@ export function createApiServer(
         );
         await orm.deleteRecordsForService("res.sessions", { user_id: targetId });
         sendJson(response, 200, { deactivated: true });
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    const computeModelMatch = pathname.match(
+      new RegExp(`^${apiRoutes.models.prefix}([^/]+)/compute$`),
+    );
+    if (request.method === "POST" && computeModelMatch) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        const input = parseComputedModelQuery(await readJsonBody(request));
+        const records = await orm.queryComputedModel(
+          decodeURIComponent(computeModelMatch[1]),
+          userContext(user),
+          input,
+        );
+        sendJson(response, 200, { records } satisfies ModelRecordsResponseDto);
       } catch (error) {
         handleRequestError(response, error);
       }

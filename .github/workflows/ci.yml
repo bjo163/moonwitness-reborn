@@ -46,3 +46,5 @@ jobs:
       - run: pnpm test
         env:
           QL_ORM_PG_URL: postgres://ci:ci@127.0.0.1:5432/ci
+      # Budget per rute First Load JS, diukur dari manifest yang ditulis `next build` pada langkah build di atas.
+      - run: pnpm --filter @moonwitness/web size

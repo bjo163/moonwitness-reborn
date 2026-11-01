@@ -98,7 +98,13 @@ class TrackerHTTPTests(unittest.TestCase):
 
         status, _, body = self.request("GET", "/api/tasks")
         self.assertEqual(status, 200)
-        self.assertEqual(len(json.loads(body)["tasks"]), len(self.server_tasks()))
+        response = json.loads(body)
+        self.assertEqual(len(response["tasks"]), len(self.server_tasks()))
+        by_id = {task["id"]: task for task in response["tasks"]}
+        self.assertIn("execution_packet", by_id["MW-1215"])
+        self.assertNotIn("MW-0602", response["ai_ready_task_ids"])
+        self.assertNotIn("MW-0558", response["ai_ready_task_ids"])
+        self.assertNotIn("MW-1215", response["ai_ready_task_ids"])
 
     def test_update_changes_only_state_data_and_renders_markdown(self):
         task = next(

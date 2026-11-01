@@ -14,13 +14,19 @@ import {
   CardContent,
   CardHeader,
   DataTable,
+  EmptyState,
+  LoadingScreen,
+  PageHeader,
+  SectionGrid,
+  WorkspaceSidebar,
   WorkspaceTemplate,
 } from "@moonwitness/ui";
-import { Boxes, BookOpen, LogOut, Menu, ShieldCheck, X } from "lucide-react";
-import Link from "next/link";
+import { Boxes, BookOpen, Menu, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { apiErrorMessage } from "../locale/api-error-message";
 import { useMessages } from "../locale/messages";
+import { useTranslationCatalog } from "../locale/translation-catalog";
 import { useLocalePreference } from "../locale/use-locale-preference";
 
 /**
@@ -38,6 +44,7 @@ interface EditionRow extends Record<string, string> {
   id: string;
   edition_key: string;
   canonical_id: string;
+  authority: CorpusEditionDto["authority"];
   authority_label: string;
   locale: string;
   publisher: string;
@@ -48,23 +55,34 @@ interface EditionRow extends Record<string, string> {
 function authorityLabel(
   authority: CorpusEditionDto["authority"],
   locale: string,
+  t: ReturnType<typeof useTranslationCatalog>["t"],
 ): string {
   if (authority === "revelation_verbatim") {
-    return `Qur'anic text (verbatim, ${locale})`;
+    return t("web.corpus.authorityVerbatim", { locale });
   }
   if (authority === "translation") {
-    return `Translation (${locale})`;
+    return t("web.corpus.authorityTranslation", { locale });
   }
-  return `${authority} (${locale})`;
+  return t("web.corpus.authorityAttributed", { authority });
+}
+
+function stageLabel(
+  stage: string,
+  t: ReturnType<typeof useTranslationCatalog>["t"],
+): string {
+  if (stage === "draft") return t("web.corpus.stageDraft");
+  if (stage === "accepted") return t("web.corpus.stageAccepted");
+  if (stage === "published") return t("web.corpus.stagePublished");
+  return t("web.corpus.stageOther", { stage });
 }
 
 export default function CorpusShelf() {
   const router = useRouter();
   const copy = useMessages();
+  const { t } = useTranslationCatalog();
   const [user, setUser] = useState<AuthUser | null | undefined>(undefined);
-  const { locale } = useLocalePreference(user ?? null);
-  const shelfLabel =
-    locale === "id" ? "Kitab & Sumber" : "Books & sources";
+  useLocalePreference(user ?? null);
+  const shelfLabel = t("web.corpus.shelfTitle");
   const [loading, setLoading] = useState(true);
   const [shelfLoading, setShelfLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -87,11 +105,7 @@ export default function CorpusShelf() {
           router.replace("/auth");
           return;
         }
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Gagal memuat sesi.",
-        );
+        setError(apiErrorMessage(requestError, t));
         setUser(null);
       })
       .finally(() => {
@@ -100,7 +114,7 @@ export default function CorpusShelf() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, t]);
 
   useEffect(() => {
     if (!user) return;
@@ -110,40 +124,29 @@ export default function CorpusShelf() {
       .listCorpusEditions()
       .then((response) => setEditions(response.editions))
       .catch((requestError: unknown) => {
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Daftar edisi gagal dimuat.",
-        );
+        setError(apiErrorMessage(requestError, t));
       })
       .finally(() => setShelfLoading(false));
-  }, [user]);
+  }, [t, user]);
 
   if (loading || user === undefined) {
-    return (
-      <main className="ql-hud-app flex min-h-dvh items-center justify-center px-6 text-sm text-stone-300">
-        <p role="status">{copy.common.loading}</p>
-      </main>
-    );
+    return <LoadingScreen label={copy.common.loading} />;
   }
 
   if (!user) {
-    return (
-      <main className="ql-hud-app flex min-h-dvh items-center justify-center px-6 text-sm text-stone-300">
-        <Alert variant="error">{error ?? "Sesi berakhir."}</Alert>
-      </main>
-    );
+    return <LoadingScreen error={error ?? t("web.errors.authentication")} />;
   }
 
   const rows: EditionRow[] = editions.map((edition) => ({
     id: edition.id,
     edition_key: edition.edition_key,
     canonical_id: edition.canonical_id,
-    authority_label: authorityLabel(edition.authority, edition.locale),
+    authority: edition.authority,
+    authority_label: authorityLabel(edition.authority, edition.locale, t),
     locale: edition.locale,
     publisher: edition.publisher,
     attribution_text: edition.attribution_text,
-    stage_label: edition.stage,
+    stage_label: stageLabel(edition.stage, t),
   }));
 
   return (
@@ -152,74 +155,40 @@ export default function CorpusShelf() {
       onCloseSidebar={() => setSidebarOpen(false)}
       closeLabel={copy.common.closeMenu}
       sidebar={
-        <>
-          <div className="flex h-12 items-center justify-between px-2">
-            <Link
-              href="/command-center"
-              className="ql-hud-brand flex items-center gap-2.5 font-semibold tracking-tight"
-            >
-              <span className="flex size-8 items-center justify-center rounded-xl border border-[#354135] bg-[#121a13] text-[#d7ff63]">
-                <BookOpen aria-hidden="true" size={16} />
-              </span>
-              MoonWitness
-            </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              aria-label={copy.common.closeMenu}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X aria-hidden="true" size={18} />
-            </Button>
-          </div>
-          <nav className="mt-6 flex-1 space-y-1" aria-label={copy.common.mainNavigation}>
-            <Link
-              href="/command-center"
-              className="ql-nav-link"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <ShieldCheck aria-hidden="true" size={16} />
-              {copy.common.dashboard}
-            </Link>
-            <Link
-              href="/models"
-              className="ql-nav-link"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <Boxes aria-hidden="true" size={16} />
-              {copy.common.models}
-            </Link>
-            <Link
-              href="/corpus"
-              className="ql-nav-link is-active"
-              aria-current="page"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <BookOpen aria-hidden="true" size={16} />
-              {shelfLabel}
-            </Link>
-          </nav>
-          <div className="mt-4 flex items-center gap-2 border-t border-[#354135] px-2 pt-4">
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-xs font-medium text-stone-200">
-                {user.name}
-              </div>
-              <div className="truncate text-[11px] text-stone-400">{user.email}</div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={copy.common.logout}
-              title={copy.common.logout}
-              onClick={() => {
-                void moonClient.logout().then(() => router.replace("/auth"));
-              }}
-            >
-              <LogOut aria-hidden="true" size={16} />
-            </Button>
-          </div>
-        </>
+        <WorkspaceSidebar
+          brandIcon={<BookOpen aria-hidden="true" size={16} />}
+          closeLabel={copy.common.closeMenu}
+          identity={{ name: user.name, subtitle: user.email }}
+          items={[
+            {
+              href: "/command-center",
+              label: copy.common.dashboard,
+              icon: <ShieldCheck aria-hidden="true" size={16} />,
+              onSelect: () => setSidebarOpen(false),
+            },
+            {
+              href: "/models",
+              label: copy.common.models,
+              icon: <Boxes aria-hidden="true" size={16} />,
+              onSelect: () => setSidebarOpen(false),
+            },
+            {
+              href: "/corpus",
+              label: shelfLabel,
+              icon: <BookOpen aria-hidden="true" size={16} />,
+              active: true,
+              onSelect: () => setSidebarOpen(false),
+            },
+          ]}
+          logout={{
+            label: copy.common.logout,
+            onLogout: () => {
+              void moonClient.logout().then(() => router.replace("/auth"));
+            },
+          }}
+          navLabel={copy.common.mainNavigation}
+          onCloseSidebar={() => setSidebarOpen(false)}
+        />
       }
       header={
         <>
@@ -233,23 +202,17 @@ export default function CorpusShelf() {
             >
               <Menu aria-hidden="true" size={19} />
             </Button>
-            <span className="text-sm font-medium text-stone-200">{shelfLabel}</span>
+            <span className="text-sm font-medium text-ink-soft">{shelfLabel}</span>
           </div>
         </>
       }
     >
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-12">
-          <header className="border-b border-[#354135] pb-6">
-            <h1 className="text-3xl font-semibold tracking-[-0.04em] text-stone-100 md:text-4xl">
-              {shelfLabel}
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-300">
-              {locale === "id"
-                ? "Setiap edisi menampilkan otoritas teks (revelation vs. terjemahan) dan atribusi penerbit. Edisi yang hak tayangnya belum disahkan tidak muncul di daftar ini sama sekali — server tidak mengembalikannya."
-                : "Every edition carries its text authority (revelation vs. translation) and publisher attribution. Editions whose display rights are not cleared are absent from this list — the server does not return them."}
-            </p>
-          </header>
+          <PageHeader
+            description={t("web.corpus.shelfDescription")}
+            title={shelfLabel}
+          />
 
           {error && (
             <Alert variant="error" className="mt-6">
@@ -258,38 +221,41 @@ export default function CorpusShelf() {
           )}
 
           {shelfLoading ? (
-            <p role="status" className="mt-6 text-sm text-stone-400">
-              {locale === "id" ? "Memuat daftar edisi..." : "Loading editions..."}
+            <p role="status" className="mt-6 text-sm text-muted">
+              {t("web.corpus.loadingEditions")}
             </p>
           ) : rows.length === 0 ? (
-            <p className="mt-6 text-sm text-stone-400">
-              {locale === "id"
-                ? "Belum ada edisi yang diterbitkan."
-                : "No published editions yet."}
-            </p>
+            <EmptyState
+              className="mt-6"
+              title={t("web.corpus.noEditions")}
+            />
           ) : (
             <section className="mt-6 space-y-6">
               <DataTable<EditionRow>
                 columns={[
-                  { key: "authority_label", label: "Authority" },
-                  { key: "publisher", label: "Publisher" },
-                  { key: "attribution_text", label: "Attribution" },
-                  { key: "stage_label", label: "Stage" },
+                  { key: "authority_label", label: t("web.corpus.authority") },
+                  { key: "publisher", label: t("web.corpus.publisher") },
+                  { key: "attribution_text", label: t("web.corpus.attribution") },
+                  { key: "stage_label", label: t("web.corpus.stage") },
                 ]}
                 rows={rows}
                 rowKey="id"
+                emptyMessage={t("web.corpus.emptyShelf")}
+                actionsLabel={copy.common.actions}
+                yesLabel={copy.common.yes}
+                noLabel={copy.common.no}
                 onRowClick={(row) => {
                   router.push(`/corpus/${encodeURIComponent(row.edition_key)}/1`);
                 }}
               />
-              <div className="grid gap-4 md:grid-cols-2">
+              <SectionGrid gap={4}>
                 {rows.map((row) => (
                   <Card key={row.id}>
                     <CardHeader>
                       <div className="flex items-center gap-2">
                         <Badge
                           variant={
-                            row.authority_label.startsWith("Qur'anic")
+                            row.authority === "revelation_verbatim"
                               ? "live"
                               : "outline"
                           }
@@ -299,14 +265,14 @@ export default function CorpusShelf() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-stone-300">{row.attribution_text}</p>
-                      <p className="mt-2 text-xs text-stone-400">
-                        {locale === "id" ? "Penerbit" : "Publisher"}: {row.publisher}
+                      <p className="text-sm text-ink-soft">{row.attribution_text}</p>
+                      <p className="mt-2 text-xs text-muted">
+                        {t("web.corpus.publisher")}: {row.publisher}
                       </p>
                     </CardContent>
                   </Card>
                 ))}
-              </div>
+              </SectionGrid>
             </section>
           )}
         </div>

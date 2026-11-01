@@ -1,0 +1,36 @@
+{
+  "name": "ql_research",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./__manifest__": {
+      "types": "./dist/__manifest__.d.ts",
+      "import": "./dist/__manifest__.js"
+    },
+    "./models": {
+      "types": "./dist/models/index.d.ts",
+      "import": "./dist/models/index.js"
+    },
+    "./views": {
+      "types": "./dist/views/index.d.ts",
+      "import": "./dist/views/index.js"
+    },
+    "./services/lexical-review-service": {
+      "types": "./dist/services/lexical-review-service.d.ts",
+      "import": "./dist/services/lexical-review-service.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsx --test models/index.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@moonwitness/types": "workspace:*",
+    "ql_auth": "workspace:*",
+    "ql_base": "workspace:*",
+    "ql_corpus": "workspace:*",
+    "ql_orm": "workspace:*",
+    "ql_source": "workspace:*"
+  }
+}

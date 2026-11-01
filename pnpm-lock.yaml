@@ -152,6 +152,9 @@ importers:
       ql_corpus:
         specifier: workspace:*
         version: link:../../packages/ql_corpus
+      ql_geo:
+        specifier: workspace:*
+        version: link:../../packages/ql_geo
       ql_i18n:
         specifier: workspace:*
         version: link:../../packages/ql_i18n
@@ -161,6 +164,9 @@ importers:
       ql_orm:
         specifier: workspace:*
         version: link:../../packages/ql-orm
+      ql_research:
+        specifier: workspace:*
+        version: link:../../packages/ql_research
       ql_source:
         specifier: workspace:*
         version: link:../../packages/ql_source
@@ -324,6 +330,16 @@ importers:
         specifier: workspace:*
         version: link:../ql_source
 
+  packages/ql_geo:
+    dependencies:
+      ql_orm:
+        specifier: workspace:*
+        version: link:../ql-orm
+    devDependencies:
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
+
   packages/ql_i18n:
     dependencies:
       '@moonwitness/types':
@@ -348,6 +364,27 @@ importers:
       ql_orm:
         specifier: workspace:*
         version: link:../ql-orm
+
+  packages/ql_research:
+    dependencies:
+      '@moonwitness/types':
+        specifier: workspace:*
+        version: link:../types
+      ql_auth:
+        specifier: workspace:*
+        version: link:../ql_auth
+      ql_base:
+        specifier: workspace:*
+        version: link:../ql_base
+      ql_corpus:
+        specifier: workspace:*
+        version: link:../ql_corpus
+      ql_orm:
+        specifier: workspace:*
+        version: link:../ql-orm
+      ql_source:
+        specifier: workspace:*
+        version: link:../ql_source
 
   packages/ql_source:
     dependencies:
@@ -377,16 +414,34 @@ importers:
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
-      react:
-        specifier: ^18.2.0 || ^19.0.0
-        version: 19.3.1
       tailwind-merge:
         specifier: 'catalog:'
         version: 2.6.1
     devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.5
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
+      lucide-react:
+        specifier: 'catalog:'
+        version: 0.468.0(react@19.3.1)
+      next:
+        specifier: 'catalog:'
+        version: 15.5.28(@babel/core@7.29.7)(@types/node@22.20.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
 
 packages:
 

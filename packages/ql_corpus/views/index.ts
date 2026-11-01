@@ -99,4 +99,17 @@ export const views: QlViewDefinition[] = [
       "updated_at",
     ],
   },
+  {
+    name: "corpus.lexical_candidate.list",
+    model: "corpus.lexical_candidate",
+    type: "list",
+    fields: [
+      "candidate_text",
+      "normalized_form",
+      "occurrence_count",
+      "verse_reference_count",
+      "source_edition",
+      "algorithm_version",
+    ],
+  },
 ];

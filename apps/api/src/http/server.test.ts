@@ -11,6 +11,8 @@ import aiManifest from "ql_ai/__manifest__";
 import authManifest from "ql_auth/__manifest__";
 import baseManifest from "ql_base/__manifest__";
 import chatManifest from "ql_chat/__manifest__";
+import corpusManifest from "ql_corpus/__manifest__";
+import sourceManifest from "ql_source/__manifest__";
 import { createApiServer } from "./server.js";
 import { listProjectTasks } from "../project-progress/tracker.js";
 
@@ -29,6 +31,8 @@ before(async () => {
     baseManifest,
     aiManifest,
     chatManifest,
+    sourceManifest,
+    corpusManifest,
   ]);
   orm = ormRuntime.orm;
   closeOrm = ormRuntime.close;
@@ -146,6 +150,26 @@ void test("first-use onboarding grants exactly one super admin", async () => {
     };
     assert.equal(ownerBody.user.role, "super_admin");
     assert.equal("setup_claim" in ownerBody.user, false);
+
+    const roleCatalog = await fetch(
+      `${setupBaseUrl}${apiRoutes.admin.roles.collection}`,
+      { headers: { cookie: ownerCookie.split(";", 1)[0] } },
+    );
+    assert.equal(roleCatalog.status, 200);
+    const roleCatalogBody = await roleCatalog.json() as {
+      roles: Array<{
+        code: string;
+        nameKey: string;
+        descriptionKey: string;
+      }>;
+    };
+    const adminRole = roleCatalogBody.roles.find((role) => role.code === "admin");
+    assert.ok(adminRole);
+    assert.equal(adminRole.nameKey, "web.adminUsers.roles.admin.name");
+    assert.equal(
+      adminRole.descriptionKey,
+      "web.adminUsers.roles.admin.description",
+    );
 
     const publicSummary = await fetch(
       `${setupBaseUrl}${apiRoutes.projectProgress.summary}`,
@@ -620,6 +644,54 @@ void test("authenticated model metadata exposes addon views without private fiel
     unlink: true,
   });
   assert.equal(models.some((model) => model.name === "res.users"), false);
+});
+
+void test("computed model metadata and query route are read-only and validated", async () => {
+  const cookie = await register("computed-model@example.com");
+  const user = await store.getUserByEmail("computed-model@example.com");
+  assert.ok(user);
+  await orm.updateRecordsForService(
+    "res.users",
+    { id: user.id },
+    { role: "admin" },
+  );
+
+  const metadataResponse = await fetch(`${address}/models`, {
+    headers: { cookie },
+  });
+  assert.equal(metadataResponse.status, 200);
+  const metadata = (await metadataResponse.json()) as {
+    models: Array<{
+      kind: string;
+      name: string;
+      permissions: { create: boolean; write: boolean; unlink: boolean };
+    }>;
+  };
+  const lexicalCandidate = metadata.models.find(
+    (model) => model.name === "corpus.lexical_candidate",
+  );
+  assert.ok(lexicalCandidate);
+  assert.equal(lexicalCandidate.kind, "computed");
+  assert.deepEqual(lexicalCandidate.permissions, {
+    create: false,
+    write: false,
+    unlink: false,
+  });
+
+  const route = apiRoutes.models.compute("corpus.lexical_candidate");
+  const invalid = await fetch(`${address}${route}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", cookie },
+    body: JSON.stringify({ unexpected: true }),
+  });
+  assert.equal(invalid.status, 400);
+
+  const denied = await fetch(`${address}${route}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", cookie },
+    body: JSON.stringify({ filters: {} }),
+  });
+  assert.equal(denied.status, 403);
 });
 
 void test("provider gateway stores encrypted keys in the ql_ai addon and routes chat", async () => {

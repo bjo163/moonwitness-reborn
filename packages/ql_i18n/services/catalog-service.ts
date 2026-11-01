@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
@@ -6,6 +7,7 @@ import {
   QlValidationError,
   type QlOrm,
   type QlRecord,
+  type QlSeedDataRecord,
 } from "ql_orm";
 import {
   compilePoCatalog,
@@ -345,22 +347,73 @@ export async function exportPoCatalog(
   );
 }
 
-export async function seedLanguages(orm: QlOrm): Promise<void> {
-  const languages = [
-    { code: "id", label: "Bahasa Indonesia", direction: "ltr", is_default: true },
-    { code: "en", label: "English", direction: "ltr", is_default: false },
-  ] as const;
-  for (const language of languages) {
-    const existing = await orm.findOneByService("i18n.language", {
-      code: language.code,
-    });
-    if (!existing) {
-      await orm.createRecordForService("i18n.language", {
-        ...language,
+export function createDefaultI18nData(): QlSeedDataRecord[] {
+  const data: QlSeedDataRecord[] = [
+    {
+      id: "language_id",
+      model: "i18n.language",
+      key: { field: "code", value: "id" },
+      values: {
+        code: "id",
+        label: "Bahasa Indonesia",
+        direction: "ltr",
+        is_default: true,
         enabled: true,
+      },
+      updatePolicy: "insert_only",
+    },
+    {
+      id: "language_en",
+      model: "i18n.language",
+      key: { field: "code", value: "en" },
+      values: {
+        code: "en",
+        label: "English",
+        direction: "ltr",
+        is_default: false,
+        enabled: true,
+      },
+      updatePolicy: "insert_only",
+    },
+  ];
+
+  for (const locale of ENABLED_LOCALES) {
+    const content = readFileSync(
+      fileURLToPath(new URL(`../i18n/${locale}.po`, import.meta.url)),
+      "utf8",
+    );
+    for (const entry of parsePoCatalog(content, locale)) {
+      const key = catalogKey(locale, entry.namespace, entry.key);
+      const digest = createHash("sha256").update(key).digest("hex");
+      data.push({
+        id: `translation_${locale}_${digest}`,
+        model: "i18n.translation",
+        key: { field: "catalog_key", value: key },
+        values: {
+          catalog_key: key,
+          namespace: entry.namespace,
+          message_key: entry.key,
+          locale,
+          source_text: entry.sourceText,
+          source_plural_text: entry.sourcePluralText ?? "",
+          context: entry.context ?? "",
+          translated_text: entry.translatedText,
+          translated_plural_texts: JSON.stringify(
+            entry.translatedPluralTexts ?? {},
+          ),
+          status: "published",
+          draft_source: "seed",
+          updated_by: "system",
+        },
+        updatePolicy: "insert_only",
       });
     }
   }
+  return data;
+}
+
+export async function seedLanguages(orm: QlOrm): Promise<void> {
+  await orm.seedAddonData("ql_i18n");
 }
 
 export async function listEnabledLanguages(orm: QlOrm): Promise<UiLanguage[]> {
@@ -385,34 +438,5 @@ export async function listEnabledLanguages(orm: QlOrm): Promise<UiLanguage[]> {
 }
 
 export async function seedCatalogs(orm: QlOrm): Promise<void> {
-  for (const locale of ENABLED_LOCALES) {
-    const content = readFileSync(
-      fileURLToPath(new URL(`../i18n/${locale}.po`, import.meta.url)),
-      "utf8",
-    );
-    const entries = parsePoCatalog(content, locale);
-    for (const entry of entries) {
-      const key = catalogKey(locale, entry.namespace, entry.key);
-      if (await orm.findOneByService("i18n.translation", { catalog_key: key })) {
-        continue;
-      }
-      await orm.createRecordForService("i18n.translation", {
-        catalog_key: key,
-        namespace: entry.namespace,
-        message_key: entry.key,
-        locale,
-        source_text: entry.sourceText,
-        source_plural_text: entry.sourcePluralText ?? "",
-        context: entry.context ?? "",
-        translated_text: entry.translatedText,
-        translated_plural_texts: JSON.stringify(
-          entry.translatedPluralTexts ?? {},
-        ),
-        status: "published",
-        draft_source: "seed",
-        updated_by: "system",
-        updated_at: new Date().toISOString(),
-      });
-    }
-  }
+  await orm.seedAddonData("ql_i18n");
 }

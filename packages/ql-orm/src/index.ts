@@ -28,7 +28,13 @@ export interface QlFieldDefinition {
   default?: string | number | boolean;
   minValue?: number;
   maxValue?: number;
+  compute?: QlComputedFieldDefinition;
   validator?(value: unknown): string | undefined;
+}
+
+export interface QlComputedFieldDefinition {
+  dependsOn: readonly string[];
+  resolve(record: Readonly<QlRecord>): QlServiceValue;
 }
 
 export interface QlModelDefinition {
@@ -39,6 +45,28 @@ export interface QlModelDefinition {
   tableName: string;
   fields: Record<string, QlFieldDefinition>;
   ownerField?: string;
+}
+
+export interface QlComputedModelQuery {
+  filters?: Record<string, QlServiceValue>;
+  limit?: number;
+}
+
+export interface QlComputedModelContext {
+  orm: QlOrm;
+  user: QlUserContext;
+  query: Required<QlComputedModelQuery>;
+}
+
+export interface QlComputedModelDefinition {
+  name: string;
+  labelKey?: string;
+  description: string;
+  descriptionKey?: string;
+  sources: readonly string[];
+  queryFields?: Record<string, QlFieldDefinition>;
+  fields: Record<string, QlFieldDefinition>;
+  compute(context: QlComputedModelContext): Promise<readonly QlRecord[]>;
 }
 
 export interface QlAccessRule {
@@ -59,14 +87,24 @@ export interface QlViewDefinition {
   fields: string[];
 }
 
+export interface QlSeedDataRecord {
+  id: string;
+  model: string;
+  key: { field: string; value: QlServiceValue };
+  values: Record<string, QlServiceValue>;
+  updatePolicy: "insert_only" | "reconcile";
+}
+
 export interface QlAddonManifest {
   name: string;
   version: string;
   description: string;
   depends: string[];
   models: QlModelDefinition[];
+  computedModels?: QlComputedModelDefinition[];
   access: QlAccessRule[];
   views: QlViewDefinition[];
+  data: readonly QlSeedDataRecord[];
 }
 
 export interface QlUserContext {
@@ -273,6 +311,28 @@ function validateValue(
   if (!field) {
     throw new QlValidationError(`Unknown field '${name}' on model '${model.name}'.`);
   }
+  if (field.compute) {
+    throw new QlValidationError(`Computed field '${name}' is read-only.`);
+  }
+  return validateFieldValue(name, field, value);
+}
+
+function validateComputedValue(
+  name: string,
+  field: QlFieldDefinition,
+  value: unknown,
+): QlFieldDefinition {
+  if (!field.compute) {
+    throw new Error(`Field '${name}' is not computed.`);
+  }
+  return validateFieldValue(name, field, value);
+}
+
+function validateFieldValue(
+  name: string,
+  field: QlFieldDefinition,
+  value: unknown,
+): QlFieldDefinition {
   if (value === null && !field.required) {
     return field;
   }
@@ -330,6 +390,28 @@ function validateValue(
   return field;
 }
 
+function isRecordValue(value: unknown): value is RecordValue {
+  return (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  );
+}
+
+function isQlRecord(value: unknown): value is QlRecord {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.values(value).every(isRecordValue)
+  );
+}
+
+function isUnknownArray(value: unknown): value is readonly unknown[] {
+  return Array.isArray(value);
+}
+
 export function loadAddons(
   manifests: readonly QlAddonManifest[],
 ): QlAddonManifest[] {
@@ -340,6 +422,60 @@ export function loadAddons(
     }
     if (byName.has(manifest.name)) {
       throw new Error(`Duplicate addon '${manifest.name}'.`);
+    }
+    if (!Array.isArray(manifest.data)) {
+      throw new Error(`Addon '${manifest.name}' must declare a data array.`);
+    }
+    const seedIds = new Set<string>();
+    const seedKeys = new Set<string>();
+    for (const seed of manifest.data) {
+      if (typeof seed !== "object" || seed === null) {
+        throw new Error(`Addon '${manifest.name}' contains an invalid seed.`);
+      }
+      if (
+        typeof seed.id !== "string" ||
+        !/^[a-z][a-z0-9_.:-]{0,255}$/.test(seed.id) ||
+        manifest.name.length + seed.id.length + 1 > 255
+      ) {
+        throw new Error(
+          `Addon '${manifest.name}' has invalid seed identifier '${seed.id}'.`,
+        );
+      }
+      if (seedIds.has(seed.id)) {
+        throw new Error(
+          `Addon '${manifest.name}' declares duplicate seed '${seed.id}'.`,
+        );
+      }
+      seedIds.add(seed.id);
+      if (
+        typeof seed.model !== "string" ||
+        !/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/.test(seed.model)
+      ) {
+        throw new Error(
+          `Addon '${manifest.name}' has an invalid seed model '${seed.model}'.`,
+        );
+      }
+      if (
+        typeof seed.key?.field !== "string" ||
+        !/^[a-z][a-z0-9_]*$/.test(seed.key.field) ||
+        !isRecordValue(seed.key.value) ||
+        !isQlRecord(seed.values) ||
+        !Object.hasOwn(seed.values, seed.key.field) ||
+        seed.values[seed.key.field] !== seed.key.value ||
+        (seed.updatePolicy !== "insert_only" &&
+          seed.updatePolicy !== "reconcile")
+      ) {
+        throw new Error(
+          `Addon '${manifest.name}' has an invalid seed definition '${seed.id}'.`,
+        );
+      }
+      const seedKey = `${seed.model}:${seed.key.field}:${JSON.stringify(seed.key.value)}`;
+      if (seedKeys.has(seedKey)) {
+        throw new Error(
+          `Addon '${manifest.name}' declares multiple seeds for '${seed.model}.${seed.key.field}'.`,
+        );
+      }
+      seedKeys.add(seedKey);
     }
     byName.set(manifest.name, manifest);
   }
@@ -368,7 +504,10 @@ export function loadAddons(
 
 export class QlModelRegistry {
   private readonly models = new Map<string, QlModelDefinition>();
+  private readonly modelAddons = new Map<string, string>();
+  private readonly computedModels = new Map<string, QlComputedModelDefinition>();
   private readonly access = new Map<string, QlAccessRule[]>();
+  private readonly computedFieldOrder = new Map<string, readonly string[]>();
   readonly addons: readonly QlAddonManifest[];
 
   constructor(manifests: readonly QlAddonManifest[]) {
@@ -381,6 +520,11 @@ export class QlModelRegistry {
         quoteIdentifier(model.tableName);
         for (const [fieldName, field] of Object.entries(model.fields)) {
           quoteIdentifier(fieldName);
+          if (field.compute && (field.unique || field.default !== undefined)) {
+            throw new Error(
+              `Computed field '${model.name}.${fieldName}' cannot be unique or have a default.`,
+            );
+          }
           if (field.maxLength !== undefined && field.maxLength < 1) {
             throw new Error(`Invalid maxLength for '${model.name}.${fieldName}'.`);
           }
@@ -402,6 +546,53 @@ export class QlModelRegistry {
             );
           }
         }
+        const computedOrder: string[] = [];
+        const visitingFields = new Set<string>();
+        const visitedFields = new Set<string>();
+        const visitField = (fieldName: string) => {
+          if (visitedFields.has(fieldName)) return;
+          if (visitingFields.has(fieldName)) {
+            throw new Error(
+              `Computed field dependency cycle detected at '${model.name}.${fieldName}'.`,
+            );
+          }
+          const field = model.fields[fieldName];
+          if (!field?.compute) return;
+          if (field.compute.dependsOn.length === 0) {
+            throw new Error(
+              `Computed field '${model.name}.${fieldName}' must declare dependencies.`,
+            );
+          }
+          visitingFields.add(fieldName);
+          const uniqueDependencies = new Set<string>();
+          for (const dependencyName of field.compute.dependsOn) {
+            if (uniqueDependencies.has(dependencyName)) {
+              throw new Error(
+                `Computed field '${model.name}.${fieldName}' repeats dependency '${dependencyName}'.`,
+              );
+            }
+            uniqueDependencies.add(dependencyName);
+            const dependency = model.fields[dependencyName];
+            if (!dependency) {
+              throw new Error(
+                `Computed field '${model.name}.${fieldName}' depends on unknown field '${dependencyName}'.`,
+              );
+            }
+            if (!field.private && dependency.private) {
+              throw new Error(
+                `Public computed field '${model.name}.${fieldName}' cannot depend on private field '${dependencyName}'.`,
+              );
+            }
+            visitField(dependencyName);
+          }
+          visitingFields.delete(fieldName);
+          visitedFields.add(fieldName);
+          computedOrder.push(fieldName);
+        };
+        for (const [fieldName, field] of Object.entries(model.fields)) {
+          if (field.compute) visitField(fieldName);
+        }
+        this.computedFieldOrder.set(model.name, computedOrder);
         if (
           model.ownerField &&
           (!model.fields[model.ownerField] ||
@@ -413,9 +604,54 @@ export class QlModelRegistry {
           );
         }
         this.models.set(model.name, model);
+        this.modelAddons.set(model.name, addon.name);
+      }
+      for (const model of addon.computedModels ?? []) {
+        if (this.models.has(model.name) || this.computedModels.has(model.name)) {
+          throw new Error(`Duplicate model '${model.name}'.`);
+        }
+        if (model.sources.length === 0) {
+          throw new Error(
+            `Computed model '${model.name}' must declare at least one source model.`,
+          );
+        }
+        const sourceNames = new Set<string>();
+        for (const source of model.sources) {
+          if (sourceNames.has(source)) {
+            throw new Error(
+              `Computed model '${model.name}' repeats source '${source}'.`,
+            );
+          }
+          if (!this.models.has(source)) {
+            throw new Error(
+              `Computed model '${model.name}' references unknown source model '${source}'.`,
+            );
+          }
+          sourceNames.add(source);
+        }
+        for (const [fieldName, field] of Object.entries(model.fields)) {
+          quoteIdentifier(fieldName);
+          if (field.compute || field.unique || field.default !== undefined) {
+            throw new Error(
+              `Computed model field '${model.name}.${fieldName}' cannot compute recursively, be unique, or have a default.`,
+            );
+          }
+          if (field.maxLength !== undefined && field.maxLength < 1) {
+            throw new Error(`Invalid maxLength for '${model.name}.${fieldName}'.`);
+          }
+        }
+        for (const [filterName, field] of Object.entries(model.queryFields ?? {})) {
+          quoteIdentifier(filterName);
+          if (field.private || field.compute || field.default !== undefined) {
+            throw new Error(
+              `Computed model query field '${model.name}.${filterName}' must be public, stored-independent, and have no default.`,
+            );
+          }
+        }
+        this.computedModels.set(model.name, model);
       }
       for (const rule of addon.access) {
-        if (!this.models.has(rule.model)) {
+        if (!this.models.has(rule.model) && !this.computedModels.has(rule.model)) {
           throw new Error(
             `Addon '${addon.name}' grants access to missing model '${rule.model}'.`,
           );
@@ -425,7 +661,8 @@ export class QlModelRegistry {
         this.access.set(rule.model, rules);
       }
       for (const view of addon.views) {
-        const model = this.models.get(view.model);
+        const model =
+          this.models.get(view.model) ?? this.computedModels.get(view.model);
         if (!model) {
           throw new Error(
             `Addon '${addon.name}' declares a view for missing model '${view.model}'.`,
@@ -440,6 +677,54 @@ export class QlModelRegistry {
         }
       }
     }
+    for (const addon of this.addons) {
+      for (const seed of addon.data) {
+        const model = this.getModel(seed.model);
+        if (this.modelAddons.get(seed.model) !== addon.name) {
+          throw new Error(
+            `Addon '${addon.name}' can only seed models it owns; '${seed.model}' belongs to another addon.`,
+          );
+        }
+        if (model.ownerField) {
+          throw new Error(
+            `Addon '${addon.name}' cannot seed owner-scoped model '${seed.model}'.`,
+          );
+        }
+        if (seed.model === "ir.model.data") {
+          throw new Error(
+            "Addon data cannot declare records in the external-ID registry.",
+          );
+        }
+        const keyField = model.fields[seed.key.field];
+        if (
+          !keyField?.unique ||
+          keyField.private ||
+          keyField.compute ||
+          seed.values[seed.key.field] !== seed.key.value
+        ) {
+          throw new Error(
+            `Seed '${addon.name}.${seed.id}' must use a public unique key field on '${seed.model}'.`,
+          );
+        }
+        for (const fieldName of Object.keys(seed.values)) {
+          if (
+            !model.fields[fieldName] ||
+            model.fields[fieldName].compute ||
+            model.fields[fieldName].private
+          ) {
+            throw new Error(
+              `Seed '${addon.name}.${seed.id}' references invalid or private field '${fieldName}' on '${seed.model}'.`,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  getAddon(name: string): QlAddonManifest {
+    const addon = this.addons.find((item) => item.name === name);
+    if (!addon) throw new QlNotFoundError(`Unknown addon '${name}'.`);
+    return addon;
   }
 
   getModel(name: string): QlModelDefinition {
@@ -452,8 +737,25 @@ export class QlModelRegistry {
     return [...this.models.values()];
   }
 
-  getViews(modelName: string): readonly QlViewDefinition[] {
+  getComputedModels(): readonly QlComputedModelDefinition[] {
+    return [...this.computedModels.values()];
+  }
+
+  getComputedModel(name: string): QlComputedModelDefinition {
+    const model = this.computedModels.get(name);
+    if (!model) throw new QlNotFoundError(`Unknown computed model '${name}'.`);
+    return model;
+  }
+
+  getComputedFieldOrder(modelName: string): readonly string[] {
     this.getModel(modelName);
+    return this.computedFieldOrder.get(modelName) ?? [];
+  }
+
+  getViews(modelName: string): readonly QlViewDefinition[] {
+    if (!this.models.has(modelName) && !this.computedModels.has(modelName)) {
+      throw new QlNotFoundError(`Unknown model '${modelName}'.`);
+    }
     return this.addons.flatMap((addon) =>
       addon.views.filter((view) => view.model === modelName),
     );
@@ -483,16 +785,18 @@ export class QlOrm {
       const table = quoteIdentifier(model.tableName);
       const columns = [
         `${quoteIdentifier("id")} TEXT PRIMARY KEY NOT NULL`,
-        ...Object.entries(model.fields).map(([name, field]) => {
-          const parts = [
-            quoteIdentifier(name),
-            sqlType(driver, field.type),
-            field.required ? "NOT NULL" : "",
-            field.unique ? "UNIQUE" : "",
-            sqlDefault(field),
-          ];
-          return parts.filter(Boolean).join(" ");
-        }),
+        ...Object.entries(model.fields)
+          .filter(([, field]) => !field.compute)
+          .map(([name, field]) => {
+            const parts = [
+              quoteIdentifier(name),
+              sqlType(driver, field.type),
+              field.required ? "NOT NULL" : "",
+              field.unique ? "UNIQUE" : "",
+              sqlDefault(field),
+            ];
+            return parts.filter(Boolean).join(" ");
+          }),
       ];
       if (driver === "postgres") {
         columns.push(`${quoteIdentifier("ql_seq")} BIGSERIAL`);
@@ -509,6 +813,7 @@ export class QlOrm {
         );
       }
       for (const [name, field] of Object.entries(model.fields)) {
+        if (field.compute) continue;
         if (existing.has(name)) continue;
         const definition = [
           quoteIdentifier(name),
@@ -531,6 +836,118 @@ export class QlOrm {
     }
   }
 
+  async loadDefaultData(): Promise<void> {
+    for (const addon of this.registry.addons) {
+      await this.seedAddonData(addon.name);
+    }
+  }
+
+  async seedAddonData(addonName: string): Promise<void> {
+    const addon = this.registry.getAddon(addonName);
+    if (addon.data.length === 0) return;
+    if (!this.registry.getModels().some((model) => model.name === "ir.model.data")) {
+      throw new Error(
+        `Addon data requires the 'ir.model.data' model from ql_base.`,
+      );
+    }
+    for (const seed of addon.data) {
+      await this.applyDefaultData(addon.name, seed);
+    }
+  }
+
+  private async applyDefaultData(
+    addonName: string,
+    seed: QlSeedDataRecord,
+  ): Promise<void> {
+    const externalId = `${addonName}.${seed.id}`;
+    let metadata = await this.findOneByService("ir.model.data", {
+      external_id: externalId,
+    });
+    if (
+      metadata &&
+      (metadata.model_name !== seed.model ||
+        typeof metadata.record_id !== "string" ||
+        typeof metadata.id !== "string")
+    ) {
+      throw new Error(
+        `External ID '${externalId}' points to an invalid target record.`,
+      );
+    }
+
+    let targetId: string | undefined;
+    if (metadata) {
+      const target = await this.findOneByService(seed.model, {
+        id: metadata.record_id,
+      });
+      if (target && typeof target.id === "string") {
+        targetId = target.id;
+      }
+    }
+    if (!targetId) {
+      const existing = await this.findOneByService(seed.model, {
+        [seed.key.field]: seed.key.value,
+      });
+      if (existing && typeof existing.id === "string") {
+        targetId = existing.id;
+      }
+    }
+
+    if (targetId) {
+      if (seed.updatePolicy === "reconcile") {
+        const updated = await this.updateRecordsForService(
+          seed.model,
+          { id: targetId },
+          seed.values,
+        );
+        if (updated !== 1) {
+          throw new Error(
+            `Default data '${externalId}' could not be reconciled.`,
+          );
+        }
+      }
+    } else {
+      const created = await this.createRecordForService(seed.model, seed.values);
+      if (typeof created.id !== "string") {
+        throw new Error(`Default data '${externalId}' has no record ID.`);
+      }
+      targetId = created.id;
+    }
+
+    const metadataValues = {
+      model_name: seed.model,
+      record_id: targetId,
+    };
+    if (metadata) {
+      if (metadata.record_id !== targetId) {
+        const updated = await this.updateRecordsForService(
+          "ir.model.data",
+          { id: metadata.id },
+          metadataValues,
+        );
+        if (updated !== 1) {
+          throw new Error(
+            `External ID '${externalId}' could not be updated.`,
+          );
+        }
+      }
+      return;
+    }
+
+    metadata = await this.findOneByService("ir.model.data", {
+      model_name: seed.model,
+      record_id: targetId,
+    });
+    if (metadata) {
+      throw new Error(
+        `Default record '${seed.model}:${targetId}' is already assigned to another external ID.`,
+      );
+    }
+    await this.createRecordForService("ir.model.data", {
+      external_id: externalId,
+      ...metadataValues,
+    });
+  }
+
   async findMany(
     modelName: string,
     user: QlUserContext,
@@ -541,6 +958,7 @@ export class QlOrm {
     const selected = Object.keys(model.fields)
       .filter((name) => !model.fields[name].private)
       .concat("id");
+    const selectedColumns = selected.filter((name) => !model.fields[name]?.compute);
     const sql = new SqlBuilder(this.connection.driver);
     const conditions: string[] = [];
     if (model.ownerField) {
@@ -549,10 +967,112 @@ export class QlOrm {
       );
     }
     const result = await this.connection.execute(
-      `SELECT ${selected.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)}${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""} ORDER BY ${orderExpression(this.connection.driver)} DESC LIMIT ${sql.param(Math.max(1, Math.min(500, Math.floor(limit))))}`,
+      `SELECT ${selectedColumns.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)}${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""} ORDER BY ${orderExpression(this.connection.driver)} DESC LIMIT ${sql.param(Math.max(1, Math.min(500, Math.floor(limit))))}`,
       sql.args,
     );
     return this.mapRows(model, selected, result.rows);
+  }
+
+  async queryComputedModel(
+    modelName: string,
+    user: QlUserContext,
+    input: QlComputedModelQuery = {},
+  ): Promise<QlRecord[]> {
+    this.requireAccess(modelName, user, "read");
+    const model = this.registry.getComputedModel(modelName);
+    for (const source of model.sources) {
+      this.requireAccess(source, user, "read");
+    }
+
+    const limit = input.limit ?? 100;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      throw new QlValidationError(
+        "Computed model limit must be an integer between 1 and 100.",
+      );
+    }
+    const filters = input.filters ?? {};
+    if (
+      typeof filters !== "object" ||
+      filters === null ||
+      Array.isArray(filters) ||
+      Object.keys(filters).length > 20
+    ) {
+      throw new QlValidationError(
+        "Computed model filters must be an object with at most 20 fields.",
+      );
+    }
+    const queryFields = model.queryFields ?? {};
+    for (const [name, value] of Object.entries(filters)) {
+      const field = queryFields[name];
+      if (!field) {
+        throw new QlValidationError(
+          `Unknown query field '${name}' on computed model '${modelName}'.`,
+        );
+      }
+      validateFieldValue(name, field, value);
+    }
+    for (const [name, field] of Object.entries(queryFields)) {
+      if (field.required && filters[name] === undefined) {
+        throw new QlValidationError(
+          `Query field '${name}' is required for computed model '${modelName}'.`,
+        );
+      }
+    }
+
+    const computedResult: unknown = await model.compute({
+      orm: this,
+      user,
+      query: { filters: { ...filters }, limit },
+    });
+    if (!isUnknownArray(computedResult)) {
+      throw new Error(`Computed model '${modelName}' returned an invalid result.`);
+    }
+    const records = computedResult;
+    if (records.length > limit) {
+      throw new QlValidationError(
+        `Computed model '${modelName}' returned more than the requested ${limit} records.`,
+      );
+    }
+    const identifiers = new Set<string>();
+    return records.map((value) => {
+      if (!isQlRecord(value)) {
+        throw new Error(`Computed model '${modelName}' returned an invalid record.`);
+      }
+      const record = value;
+      if (
+        typeof record.id !== "string" ||
+        !record.id.trim() ||
+        record.id.length > 200 ||
+        identifiers.has(record.id)
+      ) {
+        throw new Error(
+          `Computed model '${modelName}' returned an invalid or duplicate record id.`,
+        );
+      }
+      identifiers.add(record.id);
+      for (const name of Object.keys(record)) {
+        if (name !== "id" && !model.fields[name]) {
+          throw new Error(
+            `Computed model '${modelName}' returned unknown field '${name}'.`,
+          );
+        }
+      }
+      const result: QlRecord = { id: record.id };
+      for (const [name, field] of Object.entries(model.fields)) {
+        const value = record[name];
+        if (value === undefined) {
+          if (field.required) {
+            throw new Error(
+              `Computed model '${modelName}' omitted required field '${name}'.`,
+            );
+          }
+          continue;
+        }
+        validateFieldValue(name, field, value);
+        if (!field.private) result[name] = value;
+      }
+      return result;
+    });
   }
 
   async create(
@@ -571,6 +1091,7 @@ export class QlOrm {
       values[name] = toDatabaseValue(value, field);
     }
     for (const [name, field] of Object.entries(model.fields)) {
+      if (field.compute) continue;
       if (model.ownerField === name) {
         values[name] = user.id;
       } else if (field.required && values[name] === undefined) {
@@ -686,11 +1207,17 @@ export class QlOrm {
   ): Promise<QlRecord[]> {
     const model = this.registry.getModel(modelName);
     const selected = [...Object.keys(model.fields), "id"];
+    const selectedColumns = selected.filter((name) => !model.fields[name]?.compute);
     const sql = new SqlBuilder(this.connection.driver);
     const conditions: string[] = [];
     for (const [name, value] of Object.entries(filters)) {
       if (name !== "id" && !model.fields[name]) {
         throw new QlValidationError(`Unknown field '${name}' on model '${modelName}'.`);
+      }
+      if (model.fields[name]?.compute) {
+        throw new QlValidationError(
+          `Computed field '${name}' cannot be used as a database filter.`,
+        );
       }
       conditions.push(
         `${quoteIdentifier(name)} = ${sql.param(
@@ -707,11 +1234,16 @@ export class QlOrm {
           `Unknown order field '${options.orderBy.field}' on model '${modelName}'.`,
         );
       }
+      if (model.fields[options.orderBy.field]?.compute) {
+        throw new QlValidationError(
+          `Computed field '${options.orderBy.field}' cannot be used for database ordering.`,
+        );
+      }
       orderClause = `ORDER BY ${quoteIdentifier(options.orderBy.field)} ${options.orderBy.direction.toUpperCase()}`;
     }
     orderClause += ` LIMIT ${sql.param(Math.max(1, Math.min(500, Math.floor(options.limit ?? 100))))}`;
     const result = await this.connection.execute(
-      `SELECT ${selected.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)}${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""} ${orderClause}`,
+      `SELECT ${selectedColumns.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)}${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""} ${orderClause}`,
       sql.args,
     );
     return this.mapRows(model, selected, result.rows);
@@ -738,6 +1270,7 @@ export class QlOrm {
       values[name] = toDatabaseValue(value, field);
     }
     for (const [name, field] of Object.entries(model.fields)) {
+      if (field.compute) continue;
       if (field.required && values[name] === undefined) {
         if (field.default !== undefined) {
           values[name] = toDatabaseValue(field.default, field);
@@ -796,6 +1329,11 @@ export class QlOrm {
       if (name !== "id" && !model.fields[name]) {
         throw new QlValidationError(`Unknown field '${name}' on model '${modelName}'.`);
       }
+      if (model.fields[name]?.compute) {
+        throw new QlValidationError(
+          `Computed field '${name}' cannot be used as a database filter.`,
+        );
+      }
       conditions.push(
         `${quoteIdentifier(name)} = ${sql.param(
           name === "id" ? value : toDatabaseValue(value, model.fields[name]),
@@ -822,6 +1360,11 @@ export class QlOrm {
     for (const [name, value] of Object.entries(filters)) {
       if (name !== "id" && !model.fields[name]) {
         throw new QlValidationError(`Unknown field '${name}' on model '${modelName}'.`);
+      }
+      if (model.fields[name]?.compute) {
+        throw new QlValidationError(
+          `Computed field '${name}' cannot be used as a database filter.`,
+        );
       }
       conditions.push(
         `${quoteIdentifier(name)} = ${sql.param(
@@ -860,6 +1403,7 @@ export class QlOrm {
       values[name] = toDatabaseValue(value, field);
     }
     for (const [name, field] of Object.entries(model.fields)) {
+      if (field.compute) continue;
       if (name === model.ownerField) continue;
       if (field.required && values[name] === undefined) {
         if (field.default !== undefined) {
@@ -963,6 +1507,7 @@ export class QlOrm {
     const selected = Object.keys(model.fields)
       .filter((name) => !model.fields[name].private)
       .concat("id");
+    const selectedColumns = selected.filter((name) => !model.fields[name]?.compute);
     const sql = new SqlBuilder(this.connection.driver);
     const conditions = [`${quoteIdentifier("id")} = ${sql.param(id)}`];
     if (model.ownerField) {
@@ -971,7 +1516,7 @@ export class QlOrm {
       );
     }
     const result = await this.connection.execute(
-      `SELECT ${selected.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)} WHERE ${conditions.join(" AND ")} LIMIT 1`,
+      `SELECT ${selectedColumns.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)} WHERE ${conditions.join(" AND ")} LIMIT 1`,
       sql.args,
     );
     return this.mapRows(model, selected, result.rows);
@@ -985,6 +1530,7 @@ export class QlOrm {
     return rows.map((row) => {
       const record: QlRecord = {};
       for (const name of selected) {
+        if (model.fields[name]?.compute) continue;
         const value = row[name];
         const field = model.fields[name];
         if (field?.type === "boolean" && typeof value === "number") {
@@ -998,6 +1544,17 @@ export class QlOrm {
         } else {
           record[name] = null;
         }
+      }
+      for (const name of this.registry.getComputedFieldOrder(model.name)) {
+        if (!selected.includes(name)) continue;
+        const field = model.fields[name];
+        const compute = field.compute;
+        if (!compute) {
+          throw new Error(`Computed field '${model.name}.${name}' is missing its resolver.`);
+        }
+        const value = compute.resolve(Object.freeze({ ...record }));
+        validateComputedValue(name, field, value);
+        record[name] = value;
       }
       return record;
     });
@@ -1039,6 +1596,7 @@ export async function createQlOrm(
   try {
     const orm = new QlOrm(connection, new QlModelRegistry(manifests));
     await orm.syncSchema();
+    await orm.loadDefaultData();
     return { orm, close: () => connection.close() };
   } catch (error) {
     connection.close();

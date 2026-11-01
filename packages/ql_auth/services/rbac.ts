@@ -91,20 +91,7 @@ export function groupsForRole(code: string | undefined): string[] {
  * repairs rows that an older catalog left behind.
  */
 export async function seedRoles(orm: QlOrm): Promise<void> {
-  for (const role of ROLE_CATALOG) {
-    const values = {
-      name: role.name,
-      description: role.description,
-      groups: role.groups.join(","),
-      assignable: role.assignable,
-    };
-    const existing = await orm.findOneByService(ROLE_MODEL, { code: role.code });
-    if (existing) {
-      await orm.updateRecordsForService(ROLE_MODEL, { code: role.code }, values);
-      continue;
-    }
-    await orm.createRecordForService(ROLE_MODEL, { code: role.code, ...values });
-  }
+  await orm.seedAddonData("ql_auth");
 }
 
 export async function countUsersWithRole(

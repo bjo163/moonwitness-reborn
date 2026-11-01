@@ -1,5 +1,17 @@
 # GitHub Governance and Automation
 
+## Verified account and repository access snapshot at 2026-11-01T16:37:50Z
+
+Read-only observation for the authenticated GitHub account; no permissions, branch rules, secrets, or organization settings were changed.
+
+- **Account:** `bjo163`, GitHub user, not a site administrator. `gh auth status` reported token scopes `gist`, `read:org`, `repo`, and `workflow`; these scopes do not establish access to every GitHub resource.
+- **Organizations:** `GET /user/memberships/orgs?state=active` returned active administrator memberships in `zenix-id` and `ArsyBelovedLabs`.
+- **Teams:** `GET /user/teams` and `GET /orgs/{zenix-id,ArsyBelovedLabs}/teams` returned empty lists. This verifies no teams were returned by these authorized reads; inaccessible or otherwise unenumerated team data remains **UNKNOWN**.
+- **Repositories:** `GET /user/repos?affiliation=owner,collaborator,organization_member&per_page=100` with pagination returned 312 accessible repositories: 167 private and 145 public. Owner/visibility counts: `bjo163` 130 private / 132 public; `ArsyBelovedLabs` 25 / 2; `zenix-id` 5 / 11; `rinaldycodes` 6 / 0; `pundidigitaldynamics` 1 / 0. Across the 312 returned records, effective permission flags were `admin` 305, `maintain` 305, `push` 312, `triage` 312, and `pull` 312. These are endpoint-returned flags, not a claim about repositories outside the returned account scope.
+- **Primary repository:** `bjo163/moonwitness-reborn` is public, reports default branch `main`, and returned all five effective flags (`admin`, `maintain`, `push`, `triage`, `pull`) as true.
+- **Unknown / not assessed:** Repositories not visible to this account or token, any organization/team data omitted by the API, and access or settings not represented by these endpoints remain **UNKNOWN**. Branch protection, secrets, Actions configuration, and other repository settings were not audited in this inventory.
+- **Evidence:** GitHub CLI/API GET responses and `gh auth status`, observed at the timestamp in this heading. No write-capable GitHub operation was performed.
+
 **Status: historical snapshot and recommendation — overtaken in part by another session while this audit ran.** The owner has ratified the target repository. Nothing was changed by this audit: no issue, project, rule or branch was touched here. Between 08:30Z and 09:00Z a parallel session merged two pull requests, published tag and release `v0.1.0`, and enabled classic protection on `main`; the section §Re-observed at 2026-11-01T09:00Z records what the repository said at that time. The D30 requirement catalog and this document's later snapshots, not the retired source, are current references.
 
 ## Verified `moonwitnessxv` snapshot

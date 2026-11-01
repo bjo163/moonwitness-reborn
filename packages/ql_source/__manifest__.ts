@@ -196,6 +196,7 @@ const manifest: QlAddonManifest = {
     },
   ],
   views,
+  data: [],
 };
 
 export default manifest;

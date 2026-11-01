@@ -7,6 +7,8 @@
 - All application tables are described by TypeScript `ql_*` addon models and synchronized automatically by QlOrm.
 - Do not add Drizzle, Drizzle schemas or migration files.
 - Addon manifests declare fields, type, length/validation, owner, ACL, views and dependencies.
+- Every addon manifest declares a `data` array. QlOrm validates and loads default records after schema sync in dependency order, using stable addon external IDs (`ir.model.data`) and a per-record `insert_only` or `reconcile` policy. Empty arrays are valid when no safe system/reference defaults exist; user-owned and rights-sensitive domain records must not be fabricated as seed data.
+- `ql_geo` owns the shared `res.country` reference catalog. It seeds the ISO 3166-1 alpha-2 set with English names; country subdivisions and user addresses are outside this scope.
 - Domain reads/writes go through QlOrm. Do not create a parallel CRUD/domain layer in API or database packages.
 - Test manifest/model/ACL behavior, cross-owner isolation, private fields and internal service calls.
 

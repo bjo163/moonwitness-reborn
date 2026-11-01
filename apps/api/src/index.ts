@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import { OpenAICompatibleProvider } from "@moonwitness/agent-runtime";
 import { createConversationStore } from "@moonwitness/database";
 import { createQlOrm } from "ql_orm";
-import { seedRoles } from "ql_auth/services/rbac";
 import aiManifest from "ql_ai/__manifest__";
 import authManifest from "ql_auth/__manifest__";
 import baseManifest from "ql_base/__manifest__";
@@ -13,9 +12,10 @@ import cloudflareManifest from "ql_cloudflare/__manifest__";
 import corpusManifest from "ql_corpus/__manifest__";
 import integrationManifest from "ql_integration/__manifest__";
 import i18nManifest from "ql_i18n/__manifest__";
+import geoManifest from "ql_geo/__manifest__";
 import sourceManifest from "ql_source/__manifest__";
+import researchManifest from "ql_research/__manifest__";
 import workflowManifest from "ql_workflow/__manifest__";
-import { seedCatalogs, seedLanguages } from "ql_i18n/services/catalog-service";
 import { resolveModelProviderConfig } from "./ai/model-config.js";
 import { parseProviderEncryptionKey } from "./ai/provider-secrets.js";
 import { createApiServer } from "./http/server.js";
@@ -38,14 +38,13 @@ const { orm, close: closeOrm } = await createQlOrm(databaseUrl, [
   chatManifest,
   integrationManifest,
   i18nManifest,
+  geoManifest,
   cloudflareManifest,
   workflowManifest,
   sourceManifest,
   corpusManifest,
+  researchManifest,
 ]);
-await seedLanguages(orm);
-await seedCatalogs(orm);
-await seedRoles(orm);
 const store = createConversationStore(orm);
 const server = createApiServer(provider, store, orm, {
   encryptionKey: parseProviderEncryptionKey(

@@ -7,6 +7,7 @@ import {
   type QlAddonManifest,
   type QlOrm,
 } from "ql_orm";
+import { stubAddonManifest } from "ql_orm/testing";
 import authManifest from "../__manifest__.js";
 import {
   DEFAULT_ROLE,
@@ -17,15 +18,7 @@ import {
   seedRoles,
 } from "./rbac.js";
 
-const baseStub: QlAddonManifest = {
-  name: "ql_base",
-  version: "1.0.0",
-  description: "Base stub for role tests.",
-  depends: [],
-  models: [],
-  access: [],
-  views: [],
-};
+const baseStub = stubAddonManifest("ql_base");
 
 async function memoryOrm(): Promise<{ orm: QlOrm; close(): void }> {
   return createQlOrm("file::memory:", [baseStub, authManifest]);
@@ -211,5 +204,38 @@ void test("seedRoles repairs rows left behind by an older catalog", async () => 
     assert.equal(rows[0].assignable, definition.assignable);
   } finally {
     close();
+  }
+});
+
+void test("default role seeds adopt existing records without creating duplicates", async () => {
+  const manifestWithoutSeeds: QlAddonManifest = {
+    ...authManifest,
+    data: [],
+  };
+  const runtime = await createQlOrm("file::memory:", [
+    baseStub,
+    manifestWithoutSeeds,
+  ]);
+  try {
+    const legacy = await runtime.orm.createRecordForService("res.role", {
+      code: "member",
+      name: "Old member label",
+      description: "Existing row",
+      groups: "user",
+      assignable: true,
+    });
+    manifestWithoutSeeds.data = authManifest.data;
+    await runtime.orm.loadDefaultData();
+
+    const rows = await runtime.orm.findManyByService(
+      "res.role",
+      { code: "member" },
+      { limit: 10 },
+    );
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].id, legacy.id);
+    assert.equal(rows[0].name, findRoleDefinition("member")?.name);
+  } finally {
+    runtime.close();
   }
 });

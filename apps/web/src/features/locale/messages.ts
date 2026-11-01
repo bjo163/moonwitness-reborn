@@ -145,6 +145,8 @@ export interface AppMessages {
     queueSubtitle: string;
     loading: string;
     empty: string;
+    noReviewerActions: string;
+    noSubmitterActions: string;
     errorQueue: string;
     errorTransition: string;
     transitionSaved: string;
@@ -167,6 +169,37 @@ export interface AppMessages {
     auditReason: string;
     stateLabels: Record<string, string>;
     actionLabels: Record<string, string>;
+  };
+  research: {
+    navLabel: string;
+    title: string;
+    description: string;
+    reviewerRequired: string;
+    edition: string;
+    loadingEditions: string;
+    noEditions: string;
+    loadingCandidates: string;
+    emptyCandidates: string;
+    candidate: string;
+    normalizedForm: string;
+    occurrenceCount: string;
+    verseCount: string;
+    reviewStatus: string;
+    unreviewed: string;
+    sourceVersion: string;
+    algorithmVersion: string;
+    normalizationVersion: string;
+    evidenceReferences: string;
+    referenceId: string;
+    checksum: string;
+    decision: string;
+    rationale: string;
+    rationalePlaceholder: string;
+    submitReview: string;
+    saving: string;
+    saved: string;
+    decisions: Record<string, string>;
+    researchDisclaimer: string;
   };
 }
 
