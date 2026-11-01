@@ -31,21 +31,9 @@
 
 The owner has ratified `moonwitness-reborn` as the primary repo. Before implementation, add branch protection/rulesets and repair clean-checkout CI after the remaining planning review. No issue or settings changes were made.
 
-## Selected CI/CD policy
+## Proposed policy after repository selection
 
-The owner selected direct pushes to `dev`, followed by automatic latest-green promotion and release:
-
-- Direct pushes to `dev` are allowed. CI still runs `validate`, but that check is not a branch-required gate on `dev`; the release workflow itself promotes only after a successful CI push run. This avoids GitHub's required-check bypass warning for direct pushes.
-- A successful CI push run on `dev` starts the release workflow. A queued run is skipped if its SHA is no longer the current `dev` head; an already-started release is allowed to finish.
-- The release workflow creates a candidate PR to protected `main`, explicitly runs `validate` against the exact candidate SHA, and enables auto-merge only after success.
-- The workflow increments the patch version by default, tags and publishes a GitHub Release from the exact merged `main` SHA, then opens a validated PR to sync `main` back into `dev`.
-- `workflow_dispatch` and dry-run remain available. A push to `main` can trigger production deployment only if the external deployment service is configured to watch that branch; GitHub workflow success alone is not deployment evidence.
-- This policy intentionally means green `dev` changes can reach production without a separate human release approval. Add an approval gate before enabling production deployment if that is not acceptable.
-- The initial dry-run against `dev` returned `v0.1.1` with 22 commits since `v0.1.0`. Review this initial release scope before merging the automatic workflow into `dev`.
-
-The workflow definition and live branch-protection settings must both be present for this policy to be active; confirm the latest Actions run and deployment result by exact SHA.
-
-The live `dev` protection now permits direct pushes while preventing force-pushes and deletion; it no longer has required status checks or PR reviews. The automation changes are still local and are not active until merged into the default branch. The repository allows Actions to create PRs and auto-merge, and `main` still requires a PR plus strict `validate`.
+`main` protected release branch; `dev` protected integration branch; short-lived `feat/*`, `fix/*`, `docs/*`, `test/*` branches; PRs target `dev`; required checks include lint, typecheck, tests and build; no force-push or deletion; release to `main` only after release acceptance. Sensitive auth, ACL, rights, schema and secret changes require human review.
 
 ## Task and issue governance
 

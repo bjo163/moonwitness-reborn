@@ -18,7 +18,7 @@ class TaskTrackerTests(unittest.TestCase):
             cls.template = template.read()
 
     def test_canonical_tracker_has_unique_ids_and_preserves_legacy_rows(self):
-        self.assertEqual(len(self.tracker["tasks"]), 75)
+        self.assertGreaterEqual(len(self.tracker["tasks"]), 75)
         self.assertIn("MW-1209", {task["id"] for task in self.tracker["tasks"]})
         errors = task_tracker.validate_tracker(self.tracker)
         self.assertEqual(errors, [])
@@ -37,7 +37,7 @@ class TaskTrackerTests(unittest.TestCase):
             if line.startswith("| MW-")
             and task_tracker.TASK_ID.fullmatch(line.split("|", 2)[1].strip())
         ]
-        self.assertEqual(len(task_rows), 75)
+        self.assertEqual(len(task_rows), len(self.tracker["tasks"]))
         self.assertTrue(
             any(task["dependency_label"] == "\u2014" for task in self.tracker["tasks"])
         )

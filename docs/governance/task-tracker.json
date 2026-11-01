@@ -1727,29 +1727,6 @@
       },
       "completed_at": "2026-11-01T13:08:16Z",
       "dependency_label": "—"
-    },
-    {
-      "id": "MW-1210",
-      "title": "Automate CI-gated promotion and release from dev",
-      "section": "Developer tooling — protected CI/CD delivery",
-      "state": "in_progress",
-      "status_label": "Workflow validated locally; review 22-commit initial release before activation",
-      "owner": "Owner",
-      "depends_on": [],
-      "acceptance_criteria": "Direct pushes to dev run CI without a required-check bypass warning; only a successful CI run for the latest green dev SHA can promote through a protected PR to main; the exact candidate is validated before auto-merge; a unique patch tag and GitHub Release are published from the merged main SHA; failed or stale runs do not promote or release; manual dry-run remains available; main still requires a PR and validate; focused workflow and tracker checks pass.",
-      "table_headers": [
-        "ID",
-        "Goal",
-        "Master-prompt mapping",
-        "Depends on",
-        "Status",
-        "Acceptance criterion"
-      ],
-      "metadata": {
-        "Master-prompt mapping": "D30 — CI/CD and release governance"
-      },
-      "completed_at": null,
-      "dependency_label": "—"
     }
   ]
 }

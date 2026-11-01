@@ -2,7 +2,6 @@ name: CI
 
 on:
   pull_request:
-  workflow_dispatch:
   # Semua branch tetap terscan; hanya tag (dorong workflow Release) yang tidak memicu suite.
   push:
     branches:
