@@ -1,10 +1,13 @@
-# Coolify deployment stack: db + api + web.
+# Coolify deployment stack: api + web.
 #
 # Bedanya dengan docker-compose.yml (dev lokal):
 # - Tidak ada published port di host. Traefik milik Coolify sudah memegang 80/443
 #   dan menjangkau container lewat network aplikasi, jadi routing diarahkan lewat
 #   label di bawah. Compose ini tidak mendeklarasikan `networks:` supaya Coolify
 #   yang menghubungkannya ke Traefik.
+# - Tidak ada service Postgres: QlOrm masih memakai driver @libsql/client, jadi api
+#   menulis ke file SQLite di volume `api_data`. Database ditambahkan ke stack ini
+#   setelah packages/ql-orm pindah ke driver pg.
 # - Nama domain memakai wildcard *.apps.mycocolink.com yang sudah mengarah ke server.
 # - PROVIDER_ENCRYPTION_KEY diisi lewat environment Coolify, bukan dari repo. Kosong
 #   berarti penyimpanan credential provider /providers dinonaktifkan (api tetap jalan).
@@ -14,31 +17,12 @@
 name: moonwitness-reborn
 
 services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: moonwitness
-      POSTGRES_PASSWORD: moonwitness
-      POSTGRES_DB: moonwitness
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U moonwitness -d moonwitness"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
-
   api:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
     restart: unless-stopped
     init: true
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
       TZ: Asia/Jakarta
       PORT: 3000
@@ -100,5 +84,4 @@ services:
       - traefik.http.services.moonwitness-reborn-web.loadbalancer.server.port=3001
 
 volumes:
-  postgres_data:
   api_data:
