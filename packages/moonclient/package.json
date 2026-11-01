@@ -12,5 +12,8 @@
     "build": "tsc -p tsconfig.json",
     "test": "tsx --test src/index.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@moonwitness/types": "workspace:*"
   }
 }

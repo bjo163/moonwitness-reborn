@@ -27,7 +27,13 @@ export class AuthenticationError extends Error {
 }
 
 export function publicUser(user: User): PublicUser {
-  return { id: user.id, name: user.name, email: user.email, role: user.role };
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    preferredLocale: user.preferredLocale,
+  };
 }
 
 export function normalizeEmail(email: string): string {

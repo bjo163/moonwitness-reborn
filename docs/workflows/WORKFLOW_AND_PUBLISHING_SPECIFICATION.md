@@ -1,6 +1,6 @@
 # Workflow and Publishing Specification
 
-**Status: PROPOSED.** `ql_workflow` owns transitions and review tasks; domain addons own content; `ql_auth` owns actor identity.
+**Status: PARTIALLY IMPLEMENTED (MVP slice, MW-ADR-017).** `ql_workflow` ships the state machine below verbatim as four models (`workflow.project` + `workflow.task` for the PM tracker, `workflow.change` + `workflow.transition` for the CAB queue) behind a `/workflow/*` prefix handler. Reviewer group reuses existing `admin`/`operator` — a dedicated `reviewer` role is deferred to its own ADR. `ql_workflow` owns transitions and review tasks; domain addons own content; `ql_auth` owns actor identity. Rights clearance, publication handoff (`ql_publication`), and notification fan-out (`ql_ops`) remain PROPOSED and out of MVP scope.
 
 ## Content workflow
 

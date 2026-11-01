@@ -17,6 +17,10 @@ import {
 } from "@moonwitness/ui";
 import { ArrowLeft, ShieldCheck, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { apiErrorMessage } from "../locale/api-error-message";
+import { translateMetadata } from "../locale/translate-metadata";
+import { useTranslationCatalog } from "../locale/translation-catalog";
+import { useLocalePreference } from "../locale/use-locale-preference";
 
 interface UserRow {
   [column: string]: string;
@@ -27,25 +31,26 @@ interface UserRow {
   joined: string;
 }
 
-const columns: readonly DataTableColumn<UserRow>[] = [
-  { key: "name", label: "Nama" },
-  { key: "email", label: "Email" },
-  { key: "status", label: "Status" },
-  { key: "joined", label: "Terdaftar" },
-];
-
-function toRow(user: AdminUserDto): UserRow {
+function toRow(
+  user: AdminUserDto,
+  t: ReturnType<typeof useTranslationCatalog>["t"],
+  locale: "id" | "en",
+): UserRow {
   return {
     id: user.id,
     name: user.name,
     email: user.email,
-    status: user.active ? "Aktif" : "Nonaktif",
-    joined: user.createdAt ? new Date(user.createdAt).toLocaleString("id-ID") : "—",
+    status: user.active ? t("web.adminUsers.active") : t("web.adminUsers.inactive"),
+    joined: user.createdAt
+      ? new Date(user.createdAt).toLocaleString(locale === "id" ? "id-ID" : "en-US")
+      : "—",
   };
 }
 
 export default function UserAdminPage() {
   const [user, setUser] = useState<AuthUserDto | null>(null);
+  useLocalePreference(user);
+  const { t, tm, locale } = useTranslationCatalog();
   const [users, setUsers] = useState<AdminUserDto[]>([]);
   const [roles, setRoles] = useState<RoleDto[]>([]);
   const [pendingRole, setPendingRole] = useState<Record<string, string>>({});
@@ -74,11 +79,7 @@ export default function UserAdminPage() {
         await loadDirectory();
       } catch (loadError) {
         if (!cancelled) {
-          setError(
-            loadError instanceof Error
-              ? loadError.message
-              : "Gagal memuat daftar pengguna.",
-          );
+          setError(apiErrorMessage(loadError, t));
         }
       } finally {
         if (!cancelled) setBusy(false);
@@ -88,7 +89,7 @@ export default function UserAdminPage() {
     return () => {
       cancelled = true;
     };
-  }, [loadDirectory]);
+  }, [loadDirectory, t]);
 
   async function applyRole(target: AdminUserDto) {
     const role = pendingRole[target.id];
@@ -104,12 +105,14 @@ export default function UserAdminPage() {
         return next;
       });
       await loadDirectory();
-      setNotice(`Peran ${target.name} diperbarui. Sesi akun tersebut langsung dihapus.`);
+      setNotice(t("web.adminUsers.roleUpdated", { name: target.name }));
     } catch (saveError) {
-      setError(
-        saveError instanceof Error ? saveError.message : "Gagal mengubah peran.",
-      );
-      await loadDirectory();
+      setError(apiErrorMessage(saveError, t));
+      try {
+        await loadDirectory();
+      } catch (loadError) {
+        setError(apiErrorMessage(loadError, t));
+      }
     } finally {
       setWorkingId(null);
     }
@@ -127,13 +130,9 @@ export default function UserAdminPage() {
     try {
       await moonClient.deactivateUser(target.id);
       await loadDirectory();
-      setNotice(`${target.name} dinonaktifkan dan semua sesinya dihapus.`);
+      setNotice(t("web.adminUsers.deactivated", { name: target.name }));
     } catch (removeError) {
-      setError(
-        removeError instanceof Error
-          ? removeError.message
-          : "Gagal menonaktifkan pengguna.",
-      );
+      setError(apiErrorMessage(removeError, t));
     } finally {
       setWorkingId(null);
     }
@@ -142,7 +141,7 @@ export default function UserAdminPage() {
   if (busy) {
     return (
       <main className="ql-hud-app flex min-h-dvh items-center justify-center text-sm text-stone-500">
-        Memuat pengguna...
+        {t("web.adminUsers.loading")}
       </main>
     );
   }
@@ -150,15 +149,15 @@ export default function UserAdminPage() {
   if (!user) {
     return (
       <CenteredAuth>
-        <h1 className="text-xl font-semibold">Masuk untuk mengelola pengguna</h1>
+        <h1 className="text-xl font-semibold">{t("web.adminUsers.signIn")}</h1>
         <p className="mt-2 text-sm text-stone-500">
-          Manajemen peran hanya tersedia untuk akun dengan grup admin.
+          {t("web.adminUsers.signInDescription")}
         </p>
         <Button
           className="mt-5 w-full"
           onClick={() => (window.location.href = "/auth")}
         >
-          Ke halaman masuk
+          {t("web.auth.loginAction")}
         </Button>
       </CenteredAuth>
     );
@@ -167,12 +166,24 @@ export default function UserAdminPage() {
   const groups = user.groups ?? [];
   const canAssignRoot = groups.includes("root");
   const roleName = (code: string) =>
-    roles.find((role) => role.code === code)?.name ?? code;
+    (() => {
+      const role = roles.find((item) => item.code === code);
+      return role
+        ? translateMetadata(role.nameKey, role.name, tm)
+        : code;
+    })();
+  const columns: readonly DataTableColumn<UserRow>[] = [
+    { key: "name", label: t("web.adminUsers.name") },
+    { key: "email", label: t("web.adminUsers.email") },
+    { key: "status", label: t("web.adminUsers.status") },
+    { key: "joined", label: t("web.adminUsers.joined") },
+  ];
 
   return (
     <WorkspaceTemplate
       sidebarOpen={false}
       onCloseSidebar={() => undefined}
+      closeLabel={t("web.common.closeMenu")}
       sidebar={
         <div className="space-y-5">
           <a
@@ -184,9 +195,9 @@ export default function UserAdminPage() {
             </span>
             MoonWitness
           </a>
-          <a href="/command-center" className="ql-nav-link">
+          <a href="/command-center/chat" className="ql-nav-link">
             <ArrowLeft size={16} />
-            Kembali ke chat
+            {t("web.adminUsers.backToChat")}
           </a>
           <div className="border-t border-stone-200 px-2 pt-4">
             <p className="truncate text-xs font-medium text-stone-700">
@@ -201,9 +212,9 @@ export default function UserAdminPage() {
       header={
         <>
           <div className="text-sm font-medium text-stone-700">
-            Manajemen pengguna
+            {t("web.adminUsers.title")}
           </div>
-          <Badge variant="live">{users.length} akun</Badge>
+          <Badge variant="live">{t("web.adminUsers.accountCount", { count: users.length })}</Badge>
         </>
       }
     >
@@ -211,27 +222,28 @@ export default function UserAdminPage() {
         <div className="mx-auto max-w-5xl space-y-7">
           <header>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">
-              MoonWitness · Access
+              {t("web.adminUsers.eyebrow")}
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-950">
-              Peran &amp; akun
+              {t("web.adminUsers.heading")}
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-500">
-              Ubah peran untuk mengendalikan siapa yang boleh mengelola konektor
-              dan DNS. Setiap perubahan peran menghapus sesi akun target,
-              sehingga hak akses baru berlaku seketika.
+              {t("web.adminUsers.description")}
             </p>
           </header>
 
           {error && <Alert variant="error">{error}</Alert>}
           {notice && <Alert>{notice}</Alert>}
 
-          <section aria-label="Daftar pengguna">
+          <section aria-label={t("web.adminUsers.userList")}>
             <DataTable
               columns={columns}
-              rows={users.map(toRow)}
+              rows={users.map((item) => toRow(item, t, locale))}
               rowKey="id"
-              emptyMessage="Belum ada akun terdaftar."
+              actionsLabel={t("web.common.actions")}
+              yesLabel={t("web.common.yes")}
+              noLabel={t("web.common.no")}
+              emptyMessage={t("web.adminUsers.empty")}
               renderActions={(row) => {
                 const target = users.find((item) => item.id === row.id);
                 if (!target) return null;
@@ -240,11 +252,11 @@ export default function UserAdminPage() {
                 return (
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     {isSelf ? (
-                      <Badge variant="default">Akun Anda</Badge>
+                      <Badge variant="default">{t("web.adminUsers.yourAccount")}</Badge>
                     ) : (
                       <>
                         <label className="sr-only" htmlFor={`role-${target.id}`}>
-                          Peran untuk {target.name}
+                          {t("web.adminUsers.roleFor", { name: target.name })}
                         </label>
                         <select
                           id={`role-${target.id}`}
@@ -267,7 +279,7 @@ export default function UserAdminPage() {
                             )
                             .map((role) => (
                               <option key={role.code} value={role.code}>
-                                {role.name}
+                                {translateMetadata(role.nameKey, role.name, tm)}
                               </option>
                             ))}
                         </select>
@@ -279,7 +291,7 @@ export default function UserAdminPage() {
                           }
                           onClick={() => void applyRole(target)}
                         >
-                          Terapkan
+                          {t("web.adminUsers.apply")}
                         </Button>
                         {target.active && (
                           <Button
@@ -293,8 +305,8 @@ export default function UserAdminPage() {
                             onClick={() => void deactivate(target)}
                           >
                             {confirmDeactivate === target.id
-                              ? "Konfirmasi nonaktifkan"
-                              : "Nonaktifkan"}
+                              ? t("web.adminUsers.confirmDeactivate")
+                              : t("web.adminUsers.deactivate")}
                           </Button>
                         )}
                       </>
@@ -308,23 +320,33 @@ export default function UserAdminPage() {
           <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
             <div className="mb-4 flex items-center gap-2 text-stone-900">
               <Users size={17} />
-              <h2 className="text-lg font-semibold">Katalog peran</h2>
+              <h2 className="text-lg font-semibold">{t("web.adminUsers.roleCatalog")}</h2>
             </div>
             <ul className="space-y-3">
               {roles.map((role) => (
                 <li key={role.code} className="text-sm">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-stone-900">{role.name}</span>
+                    <span className="font-medium text-stone-900">
+                      {translateMetadata(role.nameKey, role.name, tm)}
+                    </span>
                     <code className="rounded bg-stone-100 px-1.5 py-0.5 text-[11px] text-stone-600">
                       {role.code}
                     </code>
                     {!role.assignable && (
-                      <Badge variant="default">Hanya root</Badge>
+                      <Badge variant="default">{t("web.adminUsers.rootOnly")}</Badge>
                     )}
                   </div>
-                  <p className="mt-1 text-stone-500">{role.description}</p>
+                  <p className="mt-1 text-stone-500">
+                    {translateMetadata(
+                      role.descriptionKey,
+                      role.description,
+                      tm,
+                    )}
+                  </p>
                   <p className="mt-1 text-[11px] text-stone-400">
-                    Grup: {role.groups.join(", ")}
+                    {t("web.adminUsers.groups", {
+                      groups: role.groups.join(", "),
+                    })}
                   </p>
                 </li>
               ))}

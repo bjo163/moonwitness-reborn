@@ -12,15 +12,22 @@ export interface DataTableProps<
   columns: readonly DataTableColumn<Row>[];
   rows: readonly Row[];
   rowKey: keyof Row & string;
-  onRowClick?: (row: Row) => void;
-  renderActions?: (row: Row) => ReactNode;
+  onRowClick?(row: Row): void;
+  renderActions?(row: Row): ReactNode;
   emptyMessage?: string;
+  actionsLabel?: string;
+  yesLabel?: string;
+  noLabel?: string;
   className?: string;
 }
 
-function formatCell(value: string | number | boolean | null): string {
+function formatCell(
+  value: string | number | boolean | null,
+  yesLabel: string,
+  noLabel: string,
+): string {
   if (value === null) return "—";
-  if (typeof value === "boolean") return value ? "Ya" : "Tidak";
+  if (typeof value === "boolean") return value ? yesLabel : noLabel;
   return String(value);
 }
 
@@ -33,6 +40,9 @@ export function DataTable<
   onRowClick,
   renderActions,
   emptyMessage = "Belum ada data.",
+  actionsLabel = "Aksi",
+  yesLabel = "Ya",
+  noLabel = "Tidak",
   className,
 }: DataTableProps<Row>) {
   return (
@@ -45,7 +55,7 @@ export function DataTable<
                 {column.label}
               </th>
             ))}
-            {renderActions && <th scope="col">Aksi</th>}
+            {renderActions && <th scope="col">{actionsLabel}</th>}
           </tr>
         </thead>
         <tbody>
@@ -77,7 +87,9 @@ export function DataTable<
                 className={onRowClick ? "ql-data-table__selectable" : undefined}
               >
                 {columns.map((column) => (
-                  <td key={column.key}>{formatCell(row[column.key])}</td>
+                  <td key={column.key}>
+                    {formatCell(row[column.key], yesLabel, noLabel)}
+                  </td>
                 ))}
                 {renderActions && (
                   <td

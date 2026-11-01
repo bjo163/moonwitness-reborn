@@ -18,6 +18,33 @@ async function createStore() {
   };
 }
 
+void test("user locale is persisted independently for each account", async () => {
+  const { store, close } = await createStore();
+  try {
+    const first = await store.createUser({
+      name: "First User",
+      email: "first-locale@example.com",
+      passwordHash: "scrypt$salt$hash",
+      preferredLocale: "en",
+    });
+    const second = await store.createUser({
+      name: "Second User",
+      email: "second-locale@example.com",
+      passwordHash: "scrypt$salt$hash",
+    });
+
+    assert.equal(first.preferredLocale, "en");
+    assert.equal(second.preferredLocale, "id");
+    assert.equal(
+      (await store.updateUserPreferredLocale(first.id, "id"))?.preferredLocale,
+      "id",
+    );
+    assert.equal((await store.getUserById(second.id))?.preferredLocale, "id");
+  } finally {
+    close();
+  }
+});
+
 void test("conversation store persists ordered messages and deletes cascaded rows", async () => {
   const { store, close } = await createStore();
   try {

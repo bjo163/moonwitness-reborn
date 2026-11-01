@@ -15,6 +15,9 @@ import {
   WorkspaceTemplate,
   cn,
 } from "@moonwitness/ui";
+import { LocaleSwitcher } from "../locale/locale-switcher";
+import { useMessages } from "../locale/messages";
+import { useLocalePreference } from "../locale/use-locale-preference";
 import {
   ArrowUp,
   Bot,
@@ -23,7 +26,6 @@ import {
   LogOut,
   MessageSquare,
   Menu,
-  PanelLeftClose,
   Plug,
   Plus,
   ShieldCheck,
@@ -41,7 +43,7 @@ import {
 } from "react";
 export default function Home() {
   const router = useRouter();
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null | undefined>(undefined);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -50,6 +52,11 @@ export default function Home() {
   const [sending, setSending] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { locale, changeLocale, saving, error: localeError } =
+    useLocalePreference(user);
+  const copy = useMessages();
+  const copyRef = useRef(copy);
+  copyRef.current = copy;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -72,7 +79,7 @@ export default function Home() {
       setError(
         requestError instanceof Error
           ? requestError.message
-          : "Gagal membuat percakapan.",
+          : copyRef.current.assistant.conversationError,
       );
     }
   }, []);
@@ -100,7 +107,7 @@ export default function Home() {
             setError(
               requestError instanceof Error
                 ? requestError.message
-                : "Failed to load the assistant workspace.",
+                : copyRef.current.assistant.conversationError,
             );
           }
         }
@@ -122,7 +129,7 @@ export default function Home() {
       setError(
         requestError instanceof Error
           ? requestError.message
-          : "Gagal keluar.",
+          : copy.assistant.logoutError,
       );
     }
   }
@@ -143,7 +150,7 @@ export default function Home() {
           setError(
             requestError instanceof Error
               ? requestError.message
-              : "Gagal memuat pesan.",
+              : copy.assistant.conversationError,
           );
         }
       }
@@ -152,7 +159,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [activeId]);
+  }, [activeId, copy.assistant.conversationError]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -187,7 +194,7 @@ export default function Home() {
       setError(
         requestError instanceof Error
           ? requestError.message
-          : "Pesan gagal dikirim.",
+          : copy.assistant.sendError,
       );
       try {
         const result = await moonClient.listMessages(activeId);
@@ -223,7 +230,7 @@ export default function Home() {
       setError(
         requestError instanceof Error
           ? requestError.message
-          : "Gagal menghapus percakapan.",
+          : copy.assistant.deleteError,
       );
     }
   }
@@ -231,7 +238,7 @@ export default function Home() {
   if (loading) {
     return (
       <main className="ql-hud-app flex min-h-dvh items-center justify-center text-sm text-stone-500">
-        Memuat MoonWitness...
+        {copy.common.loading}
       </main>
     );
   }
@@ -239,7 +246,7 @@ export default function Home() {
   if (!user) {
     return (
       <main className="ql-hud-app flex min-h-dvh items-center justify-center text-sm text-stone-500">
-        Membuka Command Center...
+        {copy.common.loading}
       </main>
     );
   }
@@ -248,6 +255,7 @@ export default function Home() {
     <WorkspaceTemplate
       sidebarOpen={sidebarOpen}
       onCloseSidebar={() => setSidebarOpen(false)}
+      closeLabel={copy.common.closeMenu}
       sidebar={
         <>
         <div className="flex h-12 items-center justify-between px-2">
@@ -261,57 +269,57 @@ export default function Home() {
             variant="ghost"
             size="icon"
             className="md:hidden"
-            aria-label="Tutup menu"
+            aria-label={copy.common.closeMenu}
             onClick={() => setSidebarOpen(false)}
           >
             <X size={18} />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden md:inline-flex"
-            aria-label="Tutup panel"
-          >
-            <PanelLeftClose size={18} />
-          </Button>
         </div>
 
+        <a
+          href="/command-center"
+          className="ql-nav-link mt-4"
+          onClick={() => setSidebarOpen(false)}
+        >
+          <Boxes aria-hidden="true" size={16} />
+          {copy.common.dashboard}
+        </a>
         <Button
           variant="secondary"
           className="mt-5 w-full justify-start gap-2.5"
           onClick={() => void createConversation()}
         >
           <Plus size={17} />
-          Percakapan baru
+          {copy.assistant.newConversation}
         </Button>
 
         <a href="/models" className="ql-nav-link mt-2">
           <Boxes size={16} />
-          Data models
+          {copy.common.models}
         </a>
         <a href="/providers" className="ql-nav-link mt-2">
           <KeyRound size={16} />
-          Model providers
+          {copy.common.providers}
         </a>
         {(user?.groups ?? []).some((group) =>
           group === "connector" || group === "operator",
         ) && (
           <a href="/connectors" className="ql-nav-link mt-2">
             <Plug size={16} />
-            Integrasi eksternal
+            {copy.common.integrations}
           </a>
         )}
         {(user?.groups ?? []).includes("admin") && (
           <a href="/admin/users" className="ql-nav-link mt-2">
             <ShieldCheck size={16} />
-            Manajemen pengguna
+            {copy.common.users}
           </a>
         )}
 
         <div className="mb-2 mt-7 px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">
-          Riwayat
+          {copy.assistant.history}
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto" aria-label="Riwayat chat">
+        <nav className="flex-1 space-y-1 overflow-y-auto" aria-label={copy.assistant.history}>
           {conversations.map((conversation) => (
             <div
               key={conversation.id}
@@ -342,8 +350,8 @@ export default function Home() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label={`Hapus ${conversation.title}`}
-                title="Hapus percakapan"
+                aria-label={`${copy.assistant.deleteNamedConversation} ${conversation.title}`}
+                title={copy.assistant.deleteConversation}
                 onClick={(event) =>
                   void deleteConversation(event, conversation.id)
                 }
@@ -355,7 +363,7 @@ export default function Home() {
           ))}
           {!loading && conversations.length === 0 && (
             <p className="px-3 py-2 text-xs leading-5 text-stone-500">
-              Percakapan yang dibuat akan muncul di sini.
+              {copy.assistant.emptyHistory}
             </p>
           )}
         </nav>
@@ -372,8 +380,8 @@ export default function Home() {
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Keluar"
-            title="Keluar"
+            aria-label={copy.common.logout}
+            title={copy.common.logout}
             onClick={() => void logout()}
           >
             <LogOut size={16} />
@@ -387,17 +395,23 @@ export default function Home() {
             <Button
               variant="ghost"
               size="icon"
-              aria-label="Buka menu"
+              aria-label={copy.common.openMenu}
               className="md:hidden"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu size={19} />
             </Button>
-            <div className="text-sm font-medium text-stone-700">Chat</div>
+            <div className="text-sm font-medium text-stone-700">{copy.common.chat}</div>
           </div>
           <Badge variant="live" className="ql-hud-status">
-            AI assistant
+            {copy.assistant.aiAssistant}
           </Badge>
+          <LocaleSwitcher
+            locale={locale}
+            label={copy.common.localeLabel}
+            onChange={(nextLocale) => void changeLocale(nextLocale)}
+            disabled={saving}
+          />
         </>
       }
     >
@@ -410,14 +424,14 @@ export default function Home() {
                   <Bot size={25} className="text-[#d7ff63]" />
                 </div>
                 <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
-                  Apa yang ingin kamu bahas?
+                  {copy.assistant.startPrompt}
                 </h1>
                 <p className="mt-2 max-w-sm text-sm leading-6 text-stone-500">
-                  Mulai percakapan baru. Riwayat chat akan tersimpan di perangkat ini.
+                  {copy.assistant.startDescription}
                 </p>
                 <Button className="mt-6" onClick={() => void createConversation()}>
                   <Plus size={16} />
-                  Mulai percakapan
+                  {copy.assistant.startAction}
                 </Button>
               </div>
             )}
@@ -428,10 +442,10 @@ export default function Home() {
                   <Sparkles size={24} className="text-stone-700" />
                 </div>
                 <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
-                  Ada yang bisa saya bantu?
+                  {copy.assistant.activePrompt}
                 </h1>
                 <p className="mt-2 text-sm text-stone-500">
-                  Kirim pesan untuk memulai percakapan.
+                  {copy.assistant.activeDescription}
                 </p>
               </div>
             )}
@@ -467,7 +481,7 @@ export default function Home() {
                   <div className="ql-hud-assistant-mark flex size-8 items-center justify-center">
                     <Sparkles size={15} />
                   </div>
-                  <span className="animate-pulse">Sedang berpikir...</span>
+                  <span className="animate-pulse">{copy.assistant.thinking}</span>
                 </div>
               )}
               <div ref={bottomRef} />
@@ -477,9 +491,9 @@ export default function Home() {
 
         <div className="w-full px-4 pb-5 pt-2 md:px-8">
           <div className="mx-auto max-w-3xl">
-            {error && (
+            {(error || localeError) && (
               <Alert variant="error" className="mb-3">
-                {error}
+                {error ?? localeError}
               </Alert>
             )}
             <form
@@ -493,10 +507,10 @@ export default function Home() {
                 onKeyDown={handleKeyDown}
                 placeholder={
                   activeId
-                    ? "Tanyakan apa saja..."
-                    : "Buat percakapan baru untuk mulai mengetik"
+                    ? copy.assistant.activeInputPlaceholder
+                    : copy.assistant.newConversationPlaceholder
                 }
-                aria-label="Pesan"
+                aria-label={copy.assistant.inputPlaceholder}
                 maxLength={16_000}
                 disabled={!activeId || sending}
                 rows={2}
@@ -504,12 +518,12 @@ export default function Home() {
               />
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-stone-400">
-                  Enter untuk kirim · Shift + Enter untuk baris baru
+                  {copy.assistant.sendHint}
                 </span>
                 <Button
                   type="submit"
                   size="icon"
-                  aria-label="Kirim pesan"
+                  aria-label={copy.assistant.sendMessage}
                   disabled={!input.trim() || !activeId || sending}
                   className="size-8 rounded-full"
                 >
@@ -518,7 +532,7 @@ export default function Home() {
               </div>
             </form>
             <p className="mt-2 text-center text-[11px] text-stone-400">
-              AI dapat membuat kesalahan. Periksa kembali informasi penting.
+              {copy.assistant.savedNotice}
             </p>
           </div>
         </div>

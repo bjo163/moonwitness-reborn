@@ -36,4 +36,4 @@ Every cross-domain relation has a stable relation type, source owner, subject an
 
 ## Implementation boundary
 
-Define TypeScript types in the appropriate addon or shared package only when they are stable across domains. Model declarations, view metadata, field ACL and owner information remain in `ql_*` packages and QlOrm. Do not add generic SQL schema, Drizzle metadata or migration files.
+Define TypeScript types in the appropriate addon or shared package only when they are stable across domains. The workspace's shared type-only package is `@moonwitness/types`; it holds the transport-neutral primitives (`FieldType`, `ViewType`, `Operation`, `RecordValue`/`RecordValues`, `ConnectorTokenSource`, `ConnectorVerifyStatus`, `ChatRole`) reused by `ql_orm`, `@moonwitness/moonclient`, and every `ql_*` addon, and it must remain free of DTOs, routes, runtime values, and domain models — those belong to `moonclient` (MW-ADR-004) or to the owning `ql_*` addon. Model declarations, view metadata, field ACL and owner information remain in `ql_*` packages and QlOrm. Do not add generic SQL schema, Drizzle metadata or migration files.

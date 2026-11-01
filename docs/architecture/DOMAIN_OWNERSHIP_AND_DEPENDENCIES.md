@@ -2,16 +2,17 @@
 
 **Status: PROPOSED.** Each canonical object has one owner. Package names are candidate `ql_*` addon names consistent with local policy; approve names before adding models. Consumers store typed references, not shadow copies.
 
-This table now covers **all 23 domains of `masterprompt.md` §4.3** plus four addons the prompt does not name as domains (`ql_base` shared kernel, `ql_chat`, `ql_integration`, `ql_cloudflare`). The mapping is checked row by row in *§4.3 coverage* below and enforced by `docs/audit/tools/prompt_coverage_gate.py`; six of those 23 (Evidence, Legal/AWS, Creative, Publication, Search, Platform Operations) were absent from this registry until this pass, which is recorded as R-44 in `docs/audit/ARCHITECTURE_AND_DOCUMENTATION_RECONCILIATION.md`.
+This table now covers **all 23 domains mapped from the D30 legacy requirement catalog's §4.3** plus four addons not listed as domains (`ql_base` shared kernel, `ql_chat`, `ql_integration`, `ql_cloudflare`). The row-by-row mapping is shown in *§4.3 coverage* below; six of those 23 (Evidence, Legal/AWS, Creative, Publication, Search, Platform Operations) were absent from this registry until this pass, which is recorded as R-44 in `docs/audit/ARCHITECTURE_AND_DOCUMENTATION_RECONCILIATION.md`.
 
 | Addon/domain | Canonical ownership | Explicit non-ownership / consumers |
 |---|---|---|
 | `ql_base` / shared kernel | shared identifiers, locale primitives, temporal primitives, common errors and the metadata shapes other domains reuse | No universal business entity table; holds no operational or domain records itself |
+| `@moonwitness/types` / type-only vocabulary kernel | transport-neutral TypeScript unions reused by `ql_orm`, `@moonwitness/moonclient`, and every `ql_*` addon: `FieldType`, `ViewType`, `Operation`, `RecordValue`/`RecordValues`, `ConnectorTokenSource`, `ConnectorVerifyStatus`, `ChatRole` | Not a domain model. Holds no `*Dto`, no routes, no runtime values. Request/response contracts and the SDK still live in `@moonwitness/moonclient` (MW-ADR-004). `ql_base` remains the shared *addon* kernel that owns models. |
 | `ql_auth` / identity | user principals, credentials, sessions, roles/grants, single-use verification tokens (`res.verification`) | Not a historical/fictional person registry; no addon stores message content — the API-side SMTP adapter and password-reset email were removed |
 | `ql_org` / organization | organizations, tenant scopes, memberships/groups if required | Not product navigation or person biography |
-| `ql_source` / source registry | source artifact, source version, source citation, rights record and provenance | Does not own normalized corpus text or research conclusions |
-| `ql_corpus` / RGBL | work, expression/edition, passage, exact text, translation/lexical records | Does not own evidence verdicts, rights authority, or all annotation |
-| `ql_ontology` / UNILEX | canonical term/concept, definition, alias, semantic mapping | Does not own every domain's descriptive text |
+| `ql_source` / source registry | source artifact, source version, source citation, rights record and provenance — **first-slice MVP implemented** as four models (`source.artifact`, `source.version`, `source.rights`, append-only `source.provenance`) behind a `/source/*` read-only prefix handler; the 9-stage lifecycle from `docs/data/DATA_LIFECYCLE_AND_PROVENANCE.md:8-12` is a required field on every record with `rights_status` defaulting to `"unknown"` (deny-by-default); rights/provenance transitions only via service path per MW-ADR-019 | Does not own normalized corpus text or research conclusions — that is `ql_corpus` |
+| `ql_corpus` / RGBL | work, expression/edition, passage, exact text, translation and lexical records — **first-slice MVP implemented** as four models (`corpus.work`, `corpus.edition`, `corpus.passage`, `corpus.annotation`) with the storage-level religious-integrity invariant from MW-ADR-019: `corpus.passage.authority` accepts only `"revelation_verbatim"` or `"translation"` via `authorityValidator(TEXT_AUTHORITIES)`, `corpus.annotation.authority` rejects `"revelation_verbatim"` via `authorityValidator(ANNOTATION_AUTHORITIES)`, and `assertEditionKindLocaleInvariant` closes the cross-field gap that a single-value QlOrm validator cannot express; text is imported exclusively via the offline `pnpm --filter ql_corpus import:quran` CLI (bulk HTTP is disallowed by `apps/api/src/http/server.ts:111` body cap and by the capability-surface rule in `AGENTS.md:20`); nothing renders publicly until `source.rights.rights_status === "cleared"` and an operator publish action flips `stage` from `"staged"` to `"published"` | Does not own evidence verdicts, rights authority, or all annotation — rights/provenance live in `ql_source`, research conclusions live in `ql_research` |
+| `ql_ontology` / UNILEX | canonical term/concept, definition, alias, semantic mapping — **deferred, not implemented**; nothing in reading or attributing the Al-Qur'an requires canonical-term mapping in this slice. `mw:dataset:lexicon:quran-arabic-core` (14 rows supplemental, per `docs/knowledge/CORPUS_INTEGRATION_PLAN.md:73`) is the first candidate once UNILEX ships. | Does not own every domain's descriptive text |
 | `ql_person` | real/historical person identity, sourced roles/biography | Not user account, fictional character or AI agent |
 | `ql_character` | fictional character, universe membership, canon, arc | Not a real person, prophet, angel, user or executable agent |
 | `ql_witness` | testimony, observation, witness statement and transmission | References person/source/event; no duplicate identity |
@@ -22,7 +23,7 @@ This table now covers **all 23 domains of `masterprompt.md` §4.3** plus four ad
 | `ql_law` / AWS | legal sources, jurisdiction, legal applicability and legal arguments | Not a general ethics engine; the underlying text stays in `ql_source`/`ql_corpus` |
 | `ql_mizan` | named method/framework, rubric and versioned assessment method | Research owns each application/result; Mizan is not an overlapping verdict store |
 | `ql_relationship` / CORRELATION | typed relationship assertion, direction, scope and supporting sources | No implicit truth; endpoint entity remains with its domain |
-| `ql_workflow` | process definitions, review tasks, states, transitions and their executions | Does not own domain content, author identity, or the published record itself (that is `ql_publication`) |
+| `ql_workflow` | process definitions, review tasks, states, transitions and their executions — **first-slice MVP implemented** as four models (`workflow.project`, `workflow.task` for PM tracker; `workflow.change` and append-only `workflow.transition` for CAB) behind a `/workflow/*` prefix handler; reviewer group reuses `admin`/`operator` per MW-ADR-017 | Does not own domain content, author identity, or the published record itself (that is `ql_publication`); `ql_ops` (run/notification records) and rights clearance remain out of scope for MVP |
 | `ql_publication` | editorial decisions and publication records: what was released, in which version, when, under what approval and rights state | Not the authoring data of any domain; cannot expose unlicensed or private content |
 | `ql_journey` | user/organization journey plan and accountable action records | References research/content; does not certify external outcomes |
 | `ql_creative` | original creative works, drafts, production records and derivative metadata | Not canonical ownership of the source content a derivative is based on |
@@ -59,9 +60,9 @@ ql_cloudflare ──► ql_integration (connector scope), ql_ops (sync run/notif
 
 The graph is a planning hypothesis. Avoid cyclic addon dependencies; cross-links should use IDs and stable contracts. Keep package dependencies explicit in manifests and API bootstrap as required by `AGENTS.md`.
 
-## §4.3 coverage — every domain required by `masterprompt.md`
+## §4.3 coverage — every domain in the D30 legacy requirement crosswalk
 
-`masterprompt.md` §4.3 fixes 23 domains and, for each, what it owns and what it must never own. This table is the row-by-row proof that this registry covers all 23 with exactly one owner each; `docs/audit/tools/prompt_coverage_gate.py` re-reads the prompt table and fails if a domain is missing, mapped twice, or mapped to an addon that does not exist in the registry above. The "must not own" column is reproduced from §4.3, not paraphrased, so a future edit that widens an owner is visible as a diff against the prompt.
+The D30 catalog preserves the §4.3 source requirements. This table records the proposed row-by-row ownership mapping and the "must not own" boundaries; the 23-row count is checked by the independent D30 requirement gate, but owner correctness and future changes still require review against the catalog and this registry.
 
 | §4.3 domain | Registry owner | Must not own (§4.3) | Owner status here |
 |---|---|---|---|
@@ -101,7 +102,7 @@ The five §4.3-specific boundary rules in §4.3 ("Identity vs Person", "Person v
 
 ## §4.4 domain contract coverage
 
-`masterprompt.md` §4.4 requires each domain to define 20 attributes. This table records where each attribute is defined today and, honestly, whether it exists **per domain** or only as an estate-wide rule. `AGENTS.md` makes the per-domain detail live in addon manifests and models, which cannot be written before ratification, so "estate-wide rule only" is the accurate current state for most rows rather than a claim of completion.
+The D30 catalog preserves the legacy §4.4 requirement for 20 attributes per domain. This table records where each attribute is defined today and, honestly, whether it exists **per domain** or only as an estate-wide rule. `AGENTS.md` makes the per-domain detail live in addon manifests and models, which cannot be written before ratification, so "estate-wide rule only" is the accurate current state for most rows rather than a claim of completion.
 
 | # | §4.4 attribute | Where it is defined today | Per-domain completeness |
 |---|---|---|---|
@@ -134,7 +135,7 @@ Three rows are load-bearing for ratification: #4 (six domains have no entity inv
 
 ## ROCKSOUL Ecosystem Mapping
 
-This section maps each rocksoul repository to its relationship with the canonical `ql_*` addon domains per `AGENTS.md`. The estate-wide roll-up in `docs/audit/REPOSITORY_CAPABILITY_MATRIX.md` is the authoritative per-repository assignment; `docs/audit/tools/prompt_coverage_gate.py` compares the two and fails on any disagreement, which is how four stale rows in this table (the LAW corpus under `ql_ai`, the observability node under `ql_person`, the STORY corpus under `ql_research`, the operational console under `ql_corpus`) were found and corrected. The mapping confirms that rocksoul repositories are external reference sources only; actual domain ownership resides in QlOrm addons.
+This section maps each rocksoul repository to its relationship with the canonical `ql_*` addon domains per `AGENTS.md`. The estate-wide roll-up in `docs/audit/REPOSITORY_CAPABILITY_MATRIX.md` is the authoritative per-repository assignment; `docs/audit/tools/requirements_traceability_gate.py` compares the two and fails on any disagreement, which is how four stale rows in this table (the LAW corpus under `ql_ai`, the observability node under `ql_person`, the STORY corpus under `ql_research`, the operational console under `ql_corpus`) were found and corrected. The mapping confirms that rocksoul repositories are external reference sources only; actual domain ownership resides in QlOrm addons.
 
 | Repository | Related ql* Domain | Relationship Type | Notes |
 |---|---|---|---|

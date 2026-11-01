@@ -1,5 +1,7 @@
+import type { ChatRole } from "@moonwitness/types";
+
 export interface AgentMessage {
-  role: "system" | "user" | "assistant";
+  role: "system" | ChatRole;
   content: string;
 }
 
@@ -17,7 +19,7 @@ export interface AgentRequest {
 }
 
 export interface AgentHistoryMessage {
-  role: "user" | "assistant";
+  role: ChatRole;
   content: string;
 }
 

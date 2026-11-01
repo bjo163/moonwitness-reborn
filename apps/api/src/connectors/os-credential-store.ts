@@ -8,6 +8,12 @@ import { join } from "node:path";
  * it must never shell out, log, or return the value to a client.
  */
 
+/**
+ * Narrower than `ConnectorTokenSource` in `@moonwitness/types`: the credential
+ * resolver never returns `unresolved` (that state means the store produced no
+ * candidate at all, which surfaces as `ConnectorCredentialError`). Ordered in
+ * the same sequence as `TOKEN_SOURCES` in `ql_integration/services/connector-vocabulary`.
+ */
 export type CredentialSourceName = "env" | "keychain" | "config_file";
 
 export interface ResolvedCredential {
@@ -27,8 +33,8 @@ export class ConnectorCredentialError extends Error {
 export interface CredentialStoreRuntime {
   env: Record<string, string | undefined>;
   platform: NodeJS.Platform;
-  homedir: () => string;
-  readFile: (path: string) => Promise<string>;
+  homedir(): string;
+  readFile(path: string): Promise<string>;
 }
 
 const TOKEN_ENV_VAR = "CLOUDFLARE_API_TOKEN";

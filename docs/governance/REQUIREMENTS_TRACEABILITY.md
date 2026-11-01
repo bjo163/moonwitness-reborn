@@ -1,6 +1,14 @@
 # Requirements Traceability Matrix
 
-**Status: expanded prompt crosswalk.** The target repository (`moonwitness-reborn`) is ratified. This matrix maps all 12 pillars, all 31 deliverables, the execution phases, acceptance criteria, final-assignment steps, and the absolute constitution to canonical documents and TODO goals. A mapped requirement is not evidence that it is implemented or tested. `TODO.md` is the sole task-status register; test IDs, implementation evidence, and issue links are filled as tasks are approved and executed.
+**Status: canonical requirement catalog and traceability authority.** The target repository (`moonwitness-reborn`) is ratified. The companion [`requirement-catalog.json`](./requirement-catalog.json) preserves 1,891 atomic source statements from the retired planning prompt as stable `MWREQ-*` records. Each record links one canonical specification owner and one or more TODO tasks, while specification review and implementation evidence remain separate status fields. This document maps all 12 pillars, all 31 deliverables, execution phases, acceptance criteria, final-assignment steps, and the absolute constitution. [`task-tracker.json`](./task-tracker.json) is the sole task-status register; [`TODO.md`](../../TODO.md) is a generated Markdown view. A catalog row does not imply implementation, testing, owner ratification, or release approval.
+
+The current code/test/CI evidence snapshot is recorded separately in
+[`IMPLEMENTATION_CONFORMANCE_AUDIT.md`](../audit/IMPLEMENTATION_CONFORMANCE_AUDIT.md).
+The audit assigns a status and rationale to every catalog row; those triage dispositions do
+not certify product conformance. The current counts are 369 `GAP`, 267 `PARTIAL`, 1,255
+`UNKNOWN`, and zero `UNVERIFIED`.
+
+The catalog is the canonical atomic requirements inventory, not a second detailed architecture or product specification. The `canonical_home` field assigns exactly one document that owns each requirement's detailed definition; all other documents may reference that ID. Legacy line spans are provenance only and do not keep the deleted source file authoritative. Requirements with unresolved decisions stay `REVIEW_REQUIRED`. `implementation_status` and `implementation_review_basis` are mutable audit fields; the inventory digest covers only immutable migrated source fields. `UNKNOWN` means no direct requirement-specific code/test evidence was established, not that the requirement is implemented.
 
 | Requirement ID | Requirement | Canonical spec | Candidate task(s) | Evidence / test status |
 |---|---|---|---|---|
@@ -24,11 +32,11 @@
 
 Add requirements through a stable ID process. Every accepted requirement links to one canonical spec, domain owner, task, test/evidence and release gate. Do not mark complete by document presence alone.
 
-## Master prompt end-to-end crosswalk
+## Legacy requirement end-to-end crosswalk
 
-The prompt has four independently checked layers: its 12 product/architecture pillars, the execution protocol's 87 planning-list entries, its 35 enumerated build/verification/release entries, and its nine acceptance criteria. The tables below expose both mapping coverage and implementation evidence; `MAPPED / UNVERIFIED` means a canonical home exists but the implementation audit has not established the behavior.
+The source inventory has four mapped layers: 12 product/architecture pillars, 87 execution-protocol planning-list entries, 35 enumerated build/verification/release entries, and nine acceptance criteria. The tables below preserve the migration crosswalk; `MAPPED / NOT VERIFIED` means a canonical home exists but direct implementation behavior has not been established.
 
-| Prompt scope | Requirement coverage | Canonical carrier(s) | Mapping / evidence state | Goal(s) |
+| Legacy scope | Requirement coverage | Canonical carrier(s) | Mapping / evidence state | Goal(s) |
 |---|---|---|---|---|
 | PILLAR 01 §§1.1–1.5 — Constitution, identity, vision | Product identity, ecosystem boundaries, spiritual/editorial safeguards, north star, principles | `docs/vision/ALLAH_COM_OFFICIAL_CANON.md`; D04; D05 | Identity/narrative canon ratified; product scope/first journey remain proposed; implementation unverified | MW-0601, MW-0602, MW-0616 |
 | PILLAR 02 §§2.1–2.6 — Repository intelligence and migration | Audit scope/depth/classification, preservation, reconciliation | D01, D02, D03; `docs/audit/tools/repository_census_gate.py` | Census and 102-row owner roll-up gate pass at recorded HEAD; source-depth, rights, permission scopes, and implementation evidence remain limited | MW-0601, MW-0603, MW-0616 |
@@ -59,6 +67,29 @@ The prompt has four independently checked layers: its 12 product/architecture pi
 | 7 | Convert approved requirements to unique bounded microtasks with dependencies | TODO.md; MW-0601–MW-1208 | MW-0612, MW-0616 | 58 proposed goals/tasks now have IDs, acceptance criteria, owners, and an acyclic dependency map; implementation tasks remain gated |
 | 8 | Present the twelve-item STEP 8 report | This report | — | 12/12 requested report items present; factual evidence remains separately qualified |
 
+## Historical implementation audit snapshot
+
+This earlier baseline is retained for audit history only. Its package and workspace findings
+were superseded by the current [Implementation Conformance Audit](../audit/IMPLEMENTATION_CONFORMANCE_AUDIT.md).
+
+| Requirement area | Evidence observed | State and limitation |
+|---|---|---|
+| Workspace build/type safety | `pnpm typecheck` passed: 26 Turbo tasks succeeded; 25 were cached. | PARTIAL — a workspace-level result only; it does not prove runtime behavior or acceptance of the dirty changes. |
+| Lint | `pnpm lint` exited successfully. | PARTIAL — current dirty workspace only; not a clean-SHA verification. |
+| Automated tests | `pnpm test` exited successfully: 20 Turbo tasks succeeded. | PARTIAL — suite coverage is not equivalent to every requirement's positive/negative acceptance evidence. |
+| Addon implementation coverage | The workspace contains manifests for `ql_ai`, `ql_auth`, `ql_base`, `ql_chat`, `ql_cloudflare`, and `ql_integration`. Of these, `ql_ai` and `ql_auth` are §4.3 domain owners; the other four are listed as non-domain addons by the coverage gate. | GAP — the proposed §4.3 registry has 23 domains, but this scan found no implementation manifests for the other 21 domain owners. Scope and implementation order remain governed by owner ratification and TODO. |
+| Web HTTP boundary | A source scan found no direct `fetch`, `XMLHttpRequest`, or `axios` use under `apps/web`. `apps/web/src/features/auth/auth-page.tsx` imports `moonClient` for session, registration, and login operations. | PARTIAL — this is a targeted source scan and one inspected flow, not a route-by-route audit of every web feature or transport path. |
+| ORM constraint | A source scan found no `drizzle` references under `apps/` or `packages/`. | PARTIAL — the scan does not prove all schema and persistence behavior is implemented through QlOrm; addon/model/bootstrap review remains pending. |
+
+The source file has been retired independently of product implementation because every source
+block is preserved in D30 and both catalog-backed gates and their prompt-free regression tests
+pass. The latest audit found addon implementations for only three of 23 target domains in the
+dirty workspace; 20 target domains have no addon manifest. The detailed findings and command
+evidence are in [Implementation Conformance Audit](../audit/IMPLEMENTATION_CONFORMANCE_AUDIT.md).
+MW-0601 remains in progress because the 1,891 catalog entries have not yet been individually
+mapped to implementation evidence or an explicit `GAP` / `UNKNOWN` status. Retirement does not
+imply product readiness or owner ratification.
+
 ## Goal links for planning-list gaps
 
 Each PARTIAL/NONE entry in PHASE 0–7 has a concrete TODO goal. These goals make the gap actionable; they do not upgrade its coverage status until the acceptance criterion is evidenced.
@@ -81,19 +112,17 @@ Each PARTIAL/NONE entry in PHASE 0–7 has a concrete TODO goal. These goals mak
 
 ## PHASE 0–7 deliverable coverage (planning phases)
 
-`masterprompt.md` §EXECUTION PROTOCOL gives every phase its own list of things to produce. The
-`## PHASE n` title check in `docs/audit/tools/prompt_coverage_gate.py` only proved the phase had a
-TODO row, so the lists themselves were unverified: a requirement could be dropped silently and no
-check would notice. This table is the mapping the gate compares against the prompt line by line.
+The legacy §EXECUTION PROTOCOL gave every phase its own list of things to produce. This table
+preserves the migration mapping for the 87 planning-list entries; its source line spans now live in
+the D30 catalog and are provenance, not a live-file dependency.
 
-Carrier names are the deliverable IDs in `docs/audit/DELIVERABLE_REGISTER.md` plus a section name in
-that file; the gate resolves each ID against the register and fails if the register does not name a
-file that exists. Status is one of `COVERED` (the list item has a written home), `PARTIAL` (it is
-named and constrained somewhere but not specified as such) or `NONE` (nothing in the baseline carries
-it). Every non-`COVERED` row names the reconciliation entry that records the gap; the gate fails if
-that entry is missing.
+Carrier names are deliverable IDs in `docs/audit/DELIVERABLE_REGISTER.md` plus a section name in
+that file. Status is one of `COVERED` (the list item has a written home), `PARTIAL` (it is named and
+constrained somewhere but not specified as such) or `NONE` (nothing in the baseline carries it).
+Every non-`COVERED` row names the reconciliation entry that records the gap. These statuses were
+assigned during the migration and are not recalculated by the independent catalog-integrity gate.
 
-| Phase | Deliverable required by the prompt | Carrier in this baseline | Status | Gap entry |
+| Phase | Legacy deliverable requirement | Carrier in this baseline | Status | Gap entry |
 |---|---|---|---|---|
 | 0 | Identify the correct main repository | D01 §Selected repository findings summary; D26 owner selection of `moonwitness-reborn` | COVERED | — |
 | 0 | Inspect GitHub permissions | D27 §Verified `moonwitnessxv` snapshot and §Verified current workspace repository (account `bjo163` admin on both); full organization/team scope remains unverified | PARTIAL | R-51 |
@@ -185,15 +214,15 @@ that entry is missing.
 
 ## PHASE 8–12 lists (build phases)
 
-These phases list implementation work rather than documents, so the honest mapping is the count the
-prompt requires against what the task register actually decomposes. The gate recomputes each count
-from the prompt on every run; a number typed here that no longer matches is a failure, not a typo.
+These phases list implementation work rather than documents. The counts below are the migration
+crosswalk, not live parsing results. The independent gate checks catalog integrity and links; it does
+not compare this table with a retired source file or certify task decomposition.
 
-| Phase | Items listed by the prompt | Decomposed into microtasks | State |
+| Phase | Legacy catalog items | Decomposed into microtasks | State |
 |---|---|---|---|
 | 8 | 14 | 0 | BUILD — one D31 row stands in for the whole foundation list (R-52) |
-| 9 | 0 | 0 | BUILD — the prompt gives this phase prose only, no deliverable list |
-| 10 | 0 | 0 | BUILD — prose only; dependency order comes from D08 §Dependency graph |
+| 9 | 0 | 0 | BUILD — the legacy catalog gives this phase prose only, no deliverable list |
+| 10 | 0 | 0 | BUILD — prose-only legacy requirements; dependency order comes from D08 §Dependency graph |
 | 11 | 13 | 0 | BUILD — verification list, no checklist item exists yet (R-52) |
 | 12 | 8 | 0 | BUILD — `TODO.md` §2 has no row for this ladder; the release steps have already been executed end to end by another session (PR #1/#2 merged, tag and release `v0.1.0` at `4fdb7c7…`, release workflow `286bde5…` on `dev`) while the plan that governs them is still unratified (R-52) |
 

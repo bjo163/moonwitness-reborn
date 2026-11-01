@@ -1,20 +1,18 @@
-"""Prompt-coverage gate: does the planning baseline cover what `masterprompt.md` requires?
+"""Check that the D30 requirement crosswalk and repository audit tables stay consistent.
 
 Unlike `repository_census_gate.py`, which proves the repository census is complete, this
-script proves the *architecture* baseline is complete against the normative lists in the
-prompt. It re-reads the prompt on every run, so a requirement the prompt adds or renames
-shows up here as a failure rather than as a stale document.
+script checks the catalog-backed architecture crosswalk, including its domain, phase,
+deliverable, acceptance-criteria, TODO and repository-matrix links.
 
-    PYTHONIOENCODING=utf-8 python docs/audit/tools/prompt_coverage_gate.py
+    python docs/audit/tools/requirements_traceability_gate.py
 
 Checks:
-  1. §4.3 Canonical Ownership Matrix — every prompt domain appears exactly once in the
-     registry's coverage table, maps to an addon that exists in the registry, and repeats
-     the prompt's "must not own" text verbatim.
+  1. §4.3 Canonical Ownership Matrix — every catalog domain appears exactly once in the
+     registry's coverage table and maps to an addon that exists in the registry.
   2. §4.4 Domain Contract — all 20 required attributes are addressed in the registry.
   3. D01–D31 — every deliverable has exactly one row in the deliverable register and the
      canonical document it names exists on disk.
-  4. EXECUTION PROTOCOL PHASE 0–12 — each phase is represented in TODO.md by number, and every
+  4. EXECUTION PROTOCOL PHASE 0–12 — each catalog phase is represented in TODO.md by number, and every
      item in each planning phase's own deliverable list has a row in the traceability matrix
      naming a carrier document that exists, with a status and, when it is not covered, a
      reconciliation entry that exists (D30 §PHASE 0–7 / §PHASE 8–12 lists).
@@ -25,21 +23,22 @@ Checks:
      so do the migration-decision counts quoted in the STEP 8 report.
   9. Reconciliation bookkeeping — D03's own entry count and blocker count match its table and
      list, and `TODO.md` mirrors that blocker list item-for-item instead of drifting.
- 10. STEP 8 report — the twelve numbered items `masterprompt.md` requires of the final report
-     each appear once as a heading of the coverage report, with the prompt's own wording.
+ 10. STEP 8 report — the twelve numbered legacy items each appear once as a heading in the
+     archived coverage report.
  11. Baseline tracking — how much of the canonical document set is not in git yet, and how far
      local HEAD runs ahead of `origin/main`; printed every run so prose cannot go stale.
 
 Nothing here is wired into CI by design; the estate scan is a planning tool, not a build
-gate. It reads local files only and makes no network calls.
+gate. It reads local files only and makes no network calls. It does not certify implementation.
 """
 
+import json
 import os
 import re
 import sys
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-PROMPT = os.path.join(ROOT, "masterprompt.md")
+CATALOG = os.path.join(ROOT, "docs", "governance", "requirement-catalog.json")
 REGISTRY = os.path.join(ROOT, "docs", "architecture", "DOMAIN_OWNERSHIP_AND_DEPENDENCIES.md")
 MATRIX = os.path.join(ROOT, "docs", "audit", "REPOSITORY_CAPABILITY_MATRIX.md")
 REGISTER = os.path.join(ROOT, "docs", "audit", "DELIVERABLE_REGISTER.md")
@@ -73,6 +72,11 @@ def read(path):
         return fh.read().split("\n")
 
 
+def read_text(path):
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
 def cells(line):
     if not line.startswith("|"):
         return None
@@ -90,53 +94,61 @@ def section_table(lines, heading_prefix, width):
             if c and len(c) == width and not set(c[0]) <= set("-: |")]
 
 
-def prompt_domains():
-    rows = section_table(read(PROMPT), "## 4.3 Canonical Ownership Matrix", 3)
-    return {c[0]: c[2] for c in rows or [] if c[0] != "Domain"}
+def catalog_entries():
+    with open(CATALOG, encoding="utf-8") as fh:
+        return json.load(fh)["entries"]
 
 
-def prompt_attributes():
-    lines = read(PROMPT)
-    try:
-        start = next(i for i, l in enumerate(lines) if l.startswith("## 4.4 Domain Contract"))
-    except StopIteration:
-        return {}
+def legacy_domains():
     out = {}
-    for l in lines[start:start + 60]:
-        m = re.match(r"^(\d+)\.\s+(.+?)\.?$", l.strip())
-        if m:
-            out[int(m.group(1))] = m.group(2).rstrip(".").strip()
-        if l.startswith("## 4.5"):
-            break
-    return out
-
-
-def prompt_deliverables():
-    rows = section_table(read(PROMPT), "# FINAL REQUIRED DELIVERABLE REGISTRY", 3)
-    return {c[0]: (c[1], c[2]) for c in rows or [] if c[0] != "ID"}
-
-
-def prompt_phases():
-    out = {}
-    for l in read(PROMPT):
-        m = re.match(r"^## PHASE (\d+) — (.+?)\s*$", l)
-        if m:
-            out[int(m.group(1))] = m.group(2).strip()
-    return out
-
-
-def prompt_criteria():
-    out = {}
-    started = False
-    for l in read(PROMPT):
-        if l.startswith("# MASTER ACCEPTANCE CRITERIA"):
-            started = True
+    for entry in catalog_entries():
+        if "4.3 Canonical Ownership Matrix" not in entry["source_section"] or entry["source_kind"] != "table_row":
             continue
-        if started and l.startswith("# FINAL REQUIRED DELIVERABLE"):
-            break
-        m = re.match(r"^## ([A-I])\. (.+?)\s*$", l)
-        if started and m:
-            out[m.group(1)] = m.group(2).strip()
+        row = cells(entry["statement"])
+        if row and len(row) == 3 and row[0] != "Domain":
+            out[row[0]] = row[2]
+    return out
+
+
+def legacy_attributes():
+    out = {}
+    for entry in catalog_entries():
+        if "4.4 Domain Contract" not in entry["source_section"] or entry["source_kind"] != "list_item":
+            continue
+        match = re.match(r"^(\d+)\.\s+(.+?)\.?$", entry["statement"])
+        if match:
+            out[int(match.group(1))] = match.group(2).rstrip(".").strip()
+    return out
+
+
+def legacy_deliverables():
+    out = {}
+    for entry in catalog_entries():
+        if entry["source_section"] != "FINAL REQUIRED DELIVERABLE REGISTRY" or entry["source_kind"] != "table_row":
+            continue
+        row = cells(entry["statement"])
+        if row and len(row) == 3 and row[0] != "ID":
+            out[row[0]] = (row[1], row[2])
+    return out
+
+
+def legacy_phases():
+    out = {}
+    for entry in catalog_entries():
+        match = re.search(r"(?:^|>\s*)PHASE (\d+)\s+[—-]\s+(.+)$", entry["source_section"])
+        if match:
+            out[int(match.group(1))] = match.group(2).strip()
+    return out
+
+
+def legacy_criteria():
+    out = {}
+    for entry in catalog_entries():
+        if "MASTER ACCEPTANCE CRITERIA" not in entry["source_section"]:
+            continue
+        match = re.search(r"(?:^|>\s*)([A-I])\.\s+(.+)$", entry["source_section"])
+        if match:
+            out[match.group(1)] = match.group(2).strip()
     return out
 
 
@@ -151,9 +163,9 @@ def registry_addons():
 
 
 def check_domain_coverage(failures):
-    pdom, cov = prompt_domains(), section_table(read(REGISTRY), "## §4.3 coverage", 4)
+    pdom, cov = legacy_domains(), section_table(read(REGISTRY), "## §4.3 coverage", 4)
     if cov is None:
-        print("PROMPT_43_COVERAGE: SECTION MISSING")
+        print("CATALOG_43_COVERAGE: SECTION MISSING")
         failures.append("registry has no §4.3 coverage table")
         return
     cov = [c for c in cov if c[0] != "§4.3 domain"]
@@ -173,8 +185,8 @@ def check_domain_coverage(failures):
     missing = sorted(set(pdom) - set(seen))
     extra = sorted(set(seen) - set(pdom))
     dupes = sorted({d for d in seen if seen.count(d) > 1})
-    print("PROMPT_43_COVERAGE", len(seen), "of", len(pdom), "domains |",
-          "missing:", missing or "none", "| not in prompt:", extra or "none",
+    print("CATALOG_43_COVERAGE", len(seen), "of", len(pdom), "domains |",
+          "missing:", missing or "none", "| not in catalog:", extra or "none",
           "| duplicated:", dupes or "none", "| unresolved owner:", dangling or "none")
     failures += missing + extra + dupes + dangling
     owners = {t for c in cov for t in re.findall(r"`?(ql_[a-z_]+)`?", c[1])}
@@ -185,9 +197,9 @@ def check_domain_coverage(failures):
 
 
 def check_contract_attributes(failures):
-    pattr, cov = prompt_attributes(), section_table(read(REGISTRY), "## §4.4 domain contract", 4)
+    pattr, cov = legacy_attributes(), section_table(read(REGISTRY), "## §4.4 domain contract", 4)
     if cov is None:
-        print("PROMPT_44_COVERAGE: SECTION MISSING")
+        print("CATALOG_44_COVERAGE: SECTION MISSING")
         failures.append("registry has no §4.4 contract coverage table")
         return
     cov = [c for c in cov if c[0] != "#"]
@@ -197,14 +209,14 @@ def check_contract_attributes(failures):
     named = {c[1].rstrip(".").strip() for c in cov}
     wrong = sorted(a for n, a in pattr.items() if n <= len(cov)
                    and a not in {c[1].rstrip(".").strip() for c in cov})
-    print("PROMPT_44_COVERAGE", len(cov), "of", len(pattr), "attributes |",
+    print("CATALOG_44_COVERAGE", len(cov), "of", len(pattr), "attributes |",
           "missing:", missing or "none", "| duplicated:", dupes or "none",
           "| attribute-name mismatch:", wrong or "none")
     failures += missing + dupes + wrong
 
 
 def check_deliverables(failures):
-    pdel, reg = prompt_deliverables(), section_table(read(REGISTER), "| ID | Canonical document |", 3)
+    pdel, reg = legacy_deliverables(), section_table(read(REGISTER), "| ID | Canonical document |", 3)
     if reg is None:
         print("D01_D31_REGISTER: TABLE MISSING")
         failures.append("deliverable register has no table")
@@ -303,17 +315,17 @@ def check_baseline_tracking():
 
 
 def check_phases(failures):
-    pp, todo = prompt_phases(), {}
+    pp, todo = legacy_phases(), {}
     for l in read(TODO):
         m = re.match(r"^### Phase (\d+) — (.+?)\s*$", l)
         if m:
             todo[int(m.group(1))] = m.group(2).strip()
     missing = sorted(set(pp) - set(todo) - {0})
-    print("PROMPT_PHASES", len(pp), "in prompt |", len(todo), "in TODO.md",
+    print("CATALOG_PHASES", len(pp), "in catalog |", len(todo), "in TODO.md",
           "| TODO has no row for PHASE:", missing or "none")
     unexpected = sorted(set(todo) - set(pp))
-    print("TODO_PHASES_NOT_IN_PROMPT:", unexpected or "none",
-          "(recorded as R-45; the prompt has no PHASE 13)")
+    print("TODO_PHASES_NOT_IN_CATALOG:", unexpected or "none",
+          "(recorded as R-45; the catalog has no PHASE 13)")
     def norm(s):
         s = re.sub(r"\s*\([^)]*\)\s*", " ", s)
         return re.sub(r"[^a-z]", "", s.lower())
@@ -325,23 +337,19 @@ def check_phases(failures):
     failures += ["PHASE_%d_TITLE_DRIFT" % n for n in drift]
 
 
-def prompt_phase_lists():
+def legacy_phase_lists():
     """EXECUTION PROTOCOL: the bulleted/numbered deliverable list each phase carries."""
-    out, current = {}, None
-    for l in read(PROMPT):
-        m = re.match(r"^## PHASE (\d+) — (.+?)\s*$", l)
-        if m:
-            current = int(m.group(1))
-            out[current] = []
+    out = {phase: [] for phase in range(13)}
+    for entry in catalog_entries():
+        if entry["source_kind"] != "list_item" or "EXECUTION PROTOCOL" not in entry["source_section"]:
             continue
-        if current is None:
+        match = re.search(r"> PHASE (\d+)\s+[—-]\s+", entry["source_section"])
+        if not match:
             continue
-        if l.startswith("## ") or l.startswith("# "):
-            current = None
-            continue
-        m = re.match(r"^(?:-|\d+\.)\s+(.+?)\.?\s*$", l)
-        if m:
-            out[current].append(m.group(1).strip())
+        phase = int(match.group(1))
+        item = re.match(r"^(?:-|\d+\.)\s+(.+?)\.?\s*$", entry["statement"])
+        if item:
+            out[phase].append(item.group(1).strip())
     return out
 
 
@@ -377,7 +385,7 @@ def check_phase_lists(failures):
         return
     plan = [c for c in plan if c[0] != "Phase"]
     build = [c for c in build if c[0] != "Phase"]
-    lists, known = prompt_phase_lists(), recon_entries()
+    lists, known = legacy_phase_lists(), recon_entries()
 
     def norm(s):
         return re.sub(r"[^a-z0-9/`]", "", s.lower())
@@ -433,14 +441,14 @@ def check_phase_lists(failures):
     print("PHASE_LISTS", mapped, "of", required_total, "planning items mapped across PHASE 0-7 |",
           "COVERED", counts["COVERED"], "PARTIAL", counts["PARTIAL"], "NONE", counts["NONE"])
     print("PHASE_LISTS_UNMAPPED:", unmapped or "none")
-    print("PHASE_LISTS_NOT_IN_PROMPT:", extra or "none")
+    print("PHASE_LISTS_NOT_IN_CATALOG:", extra or "none")
     print("PHASE_LISTS_BAD_CARRIER:", no_carrier or "none")
     print("PHASE_LISTS_STATUS_OR_GAP:", (bad_status + bad_gap) or "none")
     holes = [c for c in plan if c[3] != "COVERED"]
     print("PHASE_LIST_HOLES", len(holes), "item(s) not fully covered |",
           "; ".join("PHASE %s %s (%s)" % (c[0], c[1], c[3]) for c in holes))
     if os.path.exists(REPORT):
-        body = norm(open(REPORT, encoding="utf-8").read())
+        body = norm(read_text(REPORT))
         omitted = sorted({c[1] for c in holes if norm(c[1]) not in body})
         print("PHASE_LIST_HOLES_NAMED_IN_REPORT omitted:", omitted or "none")
         failures += ["REPORT: phase-list hole not named: %s" % h for h in omitted]
@@ -482,15 +490,15 @@ def check_goal_mapping(failures):
     if not os.path.exists(TRACE):
         return
     lines = read(TRACE)
-    pillar_rows = section_table(lines, "## Master prompt end-to-end crosswalk", 5)
+    pillar_rows = section_table(lines, "## Legacy requirement end-to-end crosswalk", 5)
     step_rows = section_table(lines, "## FINAL ASSIGNMENT step map", 5)
     gap_rows = section_table(lines, "## Goal links for planning-list gaps", 4)
     build_rows = section_table(lines, "## Item-level goal map", 4)
     if pillar_rows is None or step_rows is None or gap_rows is None or build_rows is None:
-        print("PROMPT_GOALS: goal mapping table missing")
-        failures.append("traceability has no prompt-to-TODO goal mapping")
+        print("CATALOG_GOALS: goal mapping table missing")
+        failures.append("traceability has no catalog-to-TODO goal mapping")
         return
-    pillar_rows = [c for c in pillar_rows if c[0] != "Prompt scope"]
+    pillar_rows = [c for c in pillar_rows if c[0] != "Legacy scope"]
     step_rows = [c for c in step_rows if c[0] != "Step"]
     gap_rows = [c for c in gap_rows if c[0] != "Phase"]
     build_rows = [c for c in build_rows if c[0] != "Phase"]
@@ -539,7 +547,7 @@ def check_goal_mapping(failures):
         if not ids or any(task_id not in todo_ids for task_id in ids):
             bad_gap_goals.append("%s %s -> %s" % (*key, mapped_gaps[key][2]))
 
-    phase_items = prompt_phase_lists()
+    phase_items = legacy_phase_lists()
     expected = {(str(phase), norm(item)) for phase in (8, 11, 12)
                 for item in phase_items.get(phase, [])}
     expected.update({
@@ -637,12 +645,12 @@ def check_goal_mapping(failures):
 
 
 def check_criteria(failures):
-    pc = prompt_criteria()
+    pc = legacy_criteria()
     if not os.path.exists(REPORT):
         print("ACCEPTANCE_CRITERIA: REPORT MISSING —", os.path.relpath(REPORT, ROOT))
         failures.append("no STEP 8 coverage report")
         return
-    body = open(REPORT, encoding="utf-8").read()
+    body = read_text(REPORT)
     not_addressed = [k for k, v in pc.items()
                      if not re.search(r"\*\*%s[\. ]" % k, body)]
     print("ACCEPTANCE_CRITERIA", len(pc) - len(not_addressed), "of", len(pc),
@@ -793,7 +801,7 @@ def check_migration_decisions(failures):
           "| no label:", len(unlabeled))
     if not os.path.exists(REPORT):
         return
-    body = open(REPORT, encoding="utf-8").read()
+    body = read_text(REPORT)
     for name in ("REFERENCE", "REBUILD", "IMPORT", "ADOPT", "RETAIN"):
         m = re.search(r"\b%s (\d+)\b" % name, body)
         if m is None:
@@ -864,18 +872,15 @@ def check_blocker_bookkeeping(failures):
 
 def check_step8(failures):
     """FINAL ASSIGNMENT STEP 8's twelve report items each need a section of that number."""
-    plines, items, active = read(PROMPT), {}, False
-    for l in plines:
-        if l.startswith("## STEP 8"):
-            active = True
+    items = {}
+    for entry in catalog_entries():
+        if entry["source_kind"] != "list_item" or not (
+            "FINAL ASSIGNMENT" in entry["source_section"] and "STEP 8" in entry["source_section"]
+        ):
             continue
-        if not active:
-            continue
-        if l.startswith("#") or l.startswith("**"):
-            break
-        m = re.match(r"^(\d+)\.\s+(.+?)\.?\s*$", l)
-        if m:
-            items[int(m.group(1))] = m.group(2).strip()
+        match = re.match(r"^(\d+)\.\s+(.+?)\.?\s*$", entry["statement"])
+        if match:
+            items[int(match.group(1))] = match.group(2).strip()
     got = {}
     if os.path.exists(REPORT):
         for l in read(REPORT):
@@ -891,12 +896,12 @@ def check_step8(failures):
           % (len(set(items) & set(got)), len(items), missing or "none", extra or "none",
              ["%d: %r vs %r" % (n, items[n], got[n]) for n in drift] or "none"))
     failures += ["STEP8_ITEM_%d_MISSING_FROM_REPORT" % n for n in missing]
-    failures += ["STEP8_SECTION_%d_NOT_IN_PROMPT" % n for n in extra]
+    failures += ["STEP8_SECTION_%d_NOT_IN_CATALOG" % n for n in extra]
     failures += ["STEP8_ITEM_%d_TITLE_MISMATCH" % n for n in drift]
 
 
 def main():
-    for path in (PROMPT, REGISTRY, MATRIX, REGISTER, RECON, TRACE, TODO):
+    for path in (CATALOG, REGISTRY, MATRIX, REGISTER, RECON, TRACE, TODO):
         if not os.path.exists(path):
             print("MISSING INPUT:", path)
             return 1

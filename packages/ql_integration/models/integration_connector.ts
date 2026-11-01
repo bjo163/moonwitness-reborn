@@ -1,9 +1,10 @@
 import type { QlModelDefinition } from "ql_orm";
 import { enumValidator } from "../services/field-validators.js";
-
-const verifyStatuses = ["unverified", "ok", "invalid", "network", "missing"];
-const syncStatuses = ["ok", "partial", "error"];
-const tokenSources = ["unresolved", "env", "keychain", "config_file"];
+import {
+  SYNC_STATUSES,
+  TOKEN_SOURCES,
+  VERIFY_STATUSES,
+} from "../services/connector-vocabulary.js";
 
 export const integrationConnector: QlModelDefinition = {
   name: "integration.connector",
@@ -27,7 +28,7 @@ export const integrationConnector: QlModelDefinition = {
       required: true,
       default: "unresolved",
       maxLength: 16,
-      validator: enumValidator("token_source", tokenSources),
+      validator: enumValidator("token_source", TOKEN_SOURCES),
     },
     token_ref: { type: "char", maxLength: 200 },
     enabled: { type: "boolean", required: true, default: true },
@@ -36,14 +37,14 @@ export const integrationConnector: QlModelDefinition = {
       required: true,
       default: "unverified",
       maxLength: 16,
-      validator: enumValidator("verify_status", verifyStatuses),
+      validator: enumValidator("verify_status", VERIFY_STATUSES),
     },
     last_verify_at: { type: "datetime" },
     last_sync_at: { type: "datetime" },
     last_sync_status: {
       type: "char",
       maxLength: 16,
-      validator: enumValidator("last_sync_status", syncStatuses),
+      validator: enumValidator("last_sync_status", SYNC_STATUSES),
     },
     owner_id: { type: "char", required: true, private: true },
     created_at: { type: "datetime", required: true },

@@ -63,4 +63,4 @@ Initial audience segments and their priority remain **PENDING owner validation**
 
 ## Ratification
 
-This narrative is a faithful planning draft from `masterprompt.md` and repository evidence. Product promise, audience, first user journey, spiritual/editorial wording, and ecosystem boundaries require owner review before implementation.
+This narrative is a planning draft traced to the D30 requirement catalog and repository evidence. Product promise, audience, first user journey, spiritual/editorial wording, and ecosystem boundaries require owner review before implementation.

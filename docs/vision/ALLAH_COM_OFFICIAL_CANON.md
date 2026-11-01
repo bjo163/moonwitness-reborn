@@ -177,7 +177,7 @@ This constitution owns the ecosystem identity and public narrative. It does not 
 | MASTER_DESIGN.md | Visual system and interaction design |
 | docs/decisions/ADR_REGISTRY.md | Accepted technical decisions and history |
 | TODO.md | Sole task and milestone status register |
-| masterprompt.md | Execution instructions and engineering constraints |
+| D30 requirement catalog and engineering specifications | Product requirements, execution governance and engineering constraints |
 | README.md | Repository entry point and verified setup/implementation guide |
 
 If documents conflict, record the conflict, identify the owning document and resolve it through an explicit decision. This constitution governs A-L-L-A-H identity and ecosystem narrative; technical decisions remain in their designated authorities.

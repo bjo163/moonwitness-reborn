@@ -1,0 +1,647 @@
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
+import {
+  loadAddons,
+  QlAccessError,
+  QlConflictError,
+  QlValidationError,
+  type QlOrm,
+  type QlRecord,
+} from "ql_orm";
+import { stubAddonManifest, withMemoryOrm } from "ql_orm/testing";
+import corpusManifest from "../__manifest__.js";
+import sourceManifest from "ql_source/__manifest__";
+import {
+  TOTAL_AYAH_COUNT,
+  SURAHS,
+} from "../services/corpus-vocabulary.js";
+import {
+  assertAnnotationAuthority,
+  assertEditionKindLocaleInvariant,
+  assertPassageAuthority,
+  publishEdition,
+  withdrawEdition,
+} from "../services/corpus-service.js";
+import {
+  importQuranSlice,
+  undoImportRun,
+} from "../services/import-service.js";
+import { readSurahWindow } from "../services/reader-service.js";
+
+// ---------------------------------------------------------------------------
+// Boot / structure.
+// ---------------------------------------------------------------------------
+
+void test("the addon is accepted by loadAddons and sorts behind ql_source", () => {
+  const sorted = loadAddons([
+    corpusManifest,
+    sourceManifest,
+    stubAddonManifest("ql_auth"),
+    stubAddonManifest("ql_base"),
+  ]);
+  const order = sorted.map((m) => m.name);
+  assert.ok(order.indexOf("ql_base") < order.indexOf("ql_auth"));
+  assert.ok(order.indexOf("ql_auth") < order.indexOf("ql_source"));
+  assert.ok(order.indexOf("ql_source") < order.indexOf("ql_corpus"));
+});
+
+function privateFieldNames(modelName: string): string[] {
+  const model = corpusManifest.models.find((m) => m.name === modelName);
+  return Object.entries(model?.fields ?? {})
+    .filter(([, field]) => field.private === true)
+    .map(([name]) => name);
+}
+
+void test("no published view exposes a private field and no passage/annotation form exists", () => {
+  for (const view of corpusManifest.views) {
+    const privates = privateFieldNames(view.model);
+    for (const field of view.fields) {
+      assert.equal(
+        privates.includes(field),
+        false,
+        `View '${view.name}' must not list private field '${field}'.`,
+      );
+    }
+  }
+  // The importer is the only writer for passage/annotation; there must be
+  // no `form` view for either so the view-driven UI never offers Add/Edit.
+  for (const model of ["corpus.passage", "corpus.annotation"]) {
+    const formView = corpusManifest.views.find(
+      (v) => v.model === model && v.type === "form",
+    );
+    assert.equal(formView, undefined, `${model} must not have a form view`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// MW-ADR-019 storage-level religious-integrity invariant.
+// ---------------------------------------------------------------------------
+
+function sha256(text: string): string {
+  return createHash("sha256").update(text, "utf8").digest("hex");
+}
+
+async function seedEditionFixture(
+  orm: QlOrm,
+  overrides: { authority: string; locale: string; editionKey: string; canonicalId: string },
+): Promise<{ work: QlRecord; version: QlRecord; rights: QlRecord; edition: QlRecord }> {
+  const work = await orm.createRecordForService("corpus.work", {
+    canonical_id: "mw:work:quran",
+    title: "Al-Qur'an",
+    work_kind: "revelation",
+    primary_locale: "ar",
+  });
+  const artifact = await orm.createRecordForService("source.artifact", {
+    canonical_id: "mw:dataset:test:fixture",
+    title: "Fixture",
+    kind: overrides.authority === "revelation_verbatim" ? "revealed_text" : "translation_source",
+    owner_id: "seed-user",
+  });
+  const version = await orm.createRecordForService("source.version", {
+    artifact_id: String(artifact.id),
+    version_key: `${String(artifact.id)}@v1`,
+    release_label: "v1",
+    row_count_expected: 1,
+    acquired_at: new Date(),
+    method: "unit-test",
+    owner_id: "seed-user",
+  });
+  const rights = await orm.createRecordForService("source.rights", {
+    version_id: String(version.id),
+    rights_key: `${String(version.id)}|display`,
+    action: "display",
+    attribution_text: "attributed",
+    owner_id: "seed-user",
+  });
+  const edition = await orm.createRecordForService("corpus.edition", {
+    canonical_id: overrides.canonicalId,
+    work_id: String(work.id),
+    source_version_id: String(version.id),
+    rights_id: String(rights.id),
+    edition_key: overrides.editionKey,
+    authority: overrides.authority,
+    locale: overrides.locale,
+    attribution_text: "Attribution text",
+    publisher: "Test publisher",
+    imported_row_count: 1,
+  });
+  return { work, version, rights, edition };
+}
+
+void test("assertPassageAuthority / assertAnnotationAuthority reject the wrong subset", () => {
+  assert.doesNotThrow(() => assertPassageAuthority("revelation_verbatim"));
+  assert.doesNotThrow(() => assertPassageAuthority("translation"));
+  assert.throws(() => assertPassageAuthority("tafsir"), QlValidationError);
+  assert.throws(() => assertPassageAuthority("reflection"), QlValidationError);
+  assert.doesNotThrow(() => assertAnnotationAuthority("tafsir"));
+  assert.doesNotThrow(() => assertAnnotationAuthority("reflection"));
+  // The most important guard in the whole feature:
+  assert.throws(() => assertAnnotationAuthority("revelation_verbatim"), QlValidationError);
+});
+
+void test("QlOrm field validator refuses cross-class writes even through `createRecordForService`", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+    ],
+    async (orm) => {
+      // `tafsir` on `corpus.passage` must throw.
+      await assert.rejects(
+        () =>
+          orm.createRecordForService("corpus.passage", {
+            canonical_id: "mw:passage:quran:bad-tafsir",
+            edition_id: "e",
+            work_id: "w",
+            authority: "tafsir",
+            locator: "1:1",
+            passage_key: "e|1:1",
+            surah: 1,
+            ayah: 1,
+            row_kind: "ayah",
+            text: "not-revelation-text",
+            text_checksum: sha256("not-revelation-text"),
+            ordinal: 1,
+            import_run_id: "run-1",
+          }),
+        QlValidationError,
+        "corpus.passage.authority must reject 'tafsir' (MW-ADR-019 \u00a7a)",
+      );
+      // `revelation_verbatim` on `corpus.annotation` must throw.
+      await assert.rejects(
+        () =>
+          orm.createRecordForService("corpus.annotation", {
+            canonical_id: "mw:annot:bad-revelation",
+            edition_id: "e",
+            work_id: "w",
+            authority: "revelation_verbatim",
+            quoted_passage_id: "p",
+            annotator: "test",
+            locale: "ar",
+            annotation_key: "e|p|revelation_verbatim",
+            body: "cannot be revelation",
+            attribution_text: "attribution",
+            rights_id: "r",
+          }),
+        QlValidationError,
+        "corpus.annotation.authority must reject 'revelation_verbatim' (MW-ADR-019 \u00a7b)",
+      );
+    },
+  );
+});
+
+void test("assertEditionKindLocaleInvariant enforces the cross-field kind/locale rule", () => {
+  assert.doesNotThrow(() =>
+    assertEditionKindLocaleInvariant({ authority: "revelation_verbatim", locale: "ar" }),
+  );
+  assert.throws(
+    () => assertEditionKindLocaleInvariant({ authority: "revelation_verbatim", locale: "en" }),
+    QlConflictError,
+  );
+  assert.throws(
+    () => assertEditionKindLocaleInvariant({ authority: "translation", locale: "ar" }),
+    QlConflictError,
+  );
+  assert.doesNotThrow(() =>
+    assertEditionKindLocaleInvariant({ authority: "translation", locale: "id" }),
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Idempotency: composite unique keys.
+// ---------------------------------------------------------------------------
+
+void test("duplicate `passage_key` on re-import throws QlConflictError (idempotency primitive)", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+    ],
+    async (orm) => {
+      const text = "bismillahir-rahmanir-rahim";
+      const checksum = sha256(text);
+      const base = {
+        edition_id: "edition-1",
+        work_id: "work-1",
+        authority: "revelation_verbatim",
+        locator: "1:1",
+        passage_key: "edition-1|1:1",
+        surah: 1,
+        ayah: 1,
+        row_kind: "basmalah",
+        text,
+        text_checksum: checksum,
+        ordinal: 1,
+        import_run_id: "run-1",
+      };
+      await orm.createRecordForService("corpus.passage", {
+        canonical_id: "mw:passage:quran:1:1:v1",
+        ...base,
+      });
+      await assert.rejects(
+        () =>
+          orm.createRecordForService("corpus.passage", {
+            canonical_id: "mw:passage:quran:1:1:v2",
+            ...base,
+          }),
+        QlConflictError,
+      );
+    },
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Reader: rights gate + publication stage gate.
+// ---------------------------------------------------------------------------
+
+void test("publishEdition refuses when display rights are not `cleared`", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+    ],
+    async (orm) => {
+      const { edition } = await seedEditionFixture(orm, {
+        authority: "revelation_verbatim",
+        locale: "ar",
+        editionKey: "mw:work:quran|ar|revelation_verbatim",
+        canonicalId: "mw:edition:quran:ar:revelation",
+      });
+      // `source.rights.rights_status` was created at default `"unknown"`.
+      await assert.rejects(
+        () =>
+          publishEdition(
+            orm,
+            { id: "publisher", groups: ["admin"] },
+            String(edition.edition_key),
+          ),
+        QlConflictError,
+        "publishEdition must refuse when rights_status is not 'cleared' (deny-by-default)",
+      );
+    },
+  );
+});
+
+void test("publishEdition + reader-surah returns the passage with authority + attribution on every row", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+    ],
+    async (orm) => {
+      const { edition, version } = await seedEditionFixture(orm, {
+        authority: "revelation_verbatim",
+        locale: "ar",
+        editionKey: "mw:work:quran|ar|revelation_verbatim",
+        canonicalId: "mw:edition:quran:ar:revelation",
+      });
+      const editionId = String(edition.id);
+      // Insert a passage first so publishEdition's bulk update flips its
+      // stage from "staged" to "published" alongside the edition.
+      await orm.createRecordForService("corpus.passage", {
+        canonical_id: "mw:passage:quran:1:1",
+        edition_id: editionId,
+        work_id: String(edition.work_id),
+        authority: "revelation_verbatim",
+        locator: "1:1",
+        passage_key: `${editionId}|1:1`,
+        surah: 1,
+        ayah: 1,
+        row_kind: "basmalah",
+        text: "bismillah",
+        text_checksum: sha256("bismillah"),
+        ordinal: 1,
+        import_run_id: "run-1",
+      });
+      // Simulate an owner signing off rights: flip status to "cleared" via
+      // the update service path (the model ACL forbids user PATCH here).
+      await orm.updateRecordsForService(
+        "source.rights",
+        { version_id: String(version.id), action: "display" },
+        { rights_status: "cleared" },
+      );
+      await publishEdition(
+        orm,
+        { id: "publisher", groups: ["admin"] },
+        "mw:work:quran|ar|revelation_verbatim",
+      );
+      const result = await readSurahWindow(
+        orm,
+        "mw:work:quran|ar|revelation_verbatim",
+        1,
+      );
+      assert.equal(result.surah, 1);
+      assert.equal(result.passages.length, 1);
+      const first = result.passages[0];
+      // MW-ADR-019 §(d): authority + attribution are non-optional on every row.
+      assert.equal(first?.authority, "revelation_verbatim");
+      assert.equal(first?.edition_authority, "revelation_verbatim");
+      assert.equal(first?.edition_locale, "ar");
+      assert.ok(first?.edition_attribution_text && first.edition_attribution_text.length > 0);
+    },
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Surah window respects the 500 read clamp.
+// ---------------------------------------------------------------------------
+
+void test("longest surah (Al-Baqarah, 286 ayahs) still fits under QlOrm's 500-row read clamp", () => {
+  assert.equal(SURAHS.length, 114, "SURAHS must contain exactly 114 entries");
+  const longest = SURAHS.reduce((acc, s) => (s.ayahCount > acc.ayahCount ? s : acc));
+  assert.equal(longest.number, 2);
+  assert.equal(longest.ayahCount, 286);
+  assert.ok(
+    longest.ayahCount <= 500,
+    "Any single surah must fit under findManyByService clamp",
+  );
+  // Sanity: total ayah count matches the canonical Tanzil/Hafs Kufi scheme
+  // encoded in `SURAHS`. The exact total is a data-quality check that guards
+  // against a typo in the 114-row table — if a row's count drifts, this
+  // assertion is what catches it before an importer miscounts a snapshot.
+  assert.equal(TOTAL_AYAH_COUNT, 6221);
+});
+
+// ---------------------------------------------------------------------------
+// Write-path ACL denies every group from generic CRUD on passage/annotation.
+// ---------------------------------------------------------------------------
+
+void test("`corpus.passage` and `corpus.annotation` reject create/write for every group via generic path", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+    ],
+    async (orm) => {
+      for (const groups of [
+        ["user"],
+        ["viewer"],
+        ["operator"],
+        ["admin"],
+        ["root"],
+      ] as const) {
+        const user = { id: `probe-${groups[0]}`, groups };
+        await assert.rejects(
+          () =>
+            orm.create("corpus.passage", user, {
+              canonical_id: "probe-passage",
+              edition_id: "e",
+              work_id: "w",
+              authority: "revelation_verbatim",
+              locator: "1:1",
+              passage_key: "e|1:1-probe",
+              surah: 1,
+              ayah: 1,
+              row_kind: "ayah",
+              text: "x",
+              text_checksum: sha256("x"),
+              ordinal: 1,
+              import_run_id: "run",
+            }),
+          QlAccessError,
+          `corpus.passage create must be denied for group ${groups[0]}`,
+        );
+        await assert.rejects(
+          () =>
+            orm.create("corpus.annotation", user, {
+              canonical_id: "probe-annot",
+              edition_id: "e",
+              work_id: "w",
+              authority: "tafsir",
+              quoted_passage_id: "p",
+              annotator: "x",
+              locale: "ar",
+              annotation_key: "e|p|annot",
+              body: "x",
+              attribution_text: "y",
+              rights_id: "r",
+            }),
+          QlAccessError,
+          `corpus.annotation create must be denied for group ${groups[0]}`,
+        );
+      }
+    },
+  );
+});
+
+void test("withdrawEdition reverts a published edition to withdrawn without erasing rows", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+    ],
+    async (orm) => {
+      const { version, edition } = await seedEditionFixture(orm, {
+        authority: "translation",
+        locale: "en",
+        editionKey: "mw:work:quran|en|translation",
+        canonicalId: "mw:edition:quran:en:translation",
+      });
+      await orm.updateRecordsForService(
+        "source.rights",
+        { version_id: String(version.id), action: "display" },
+        { rights_status: "cleared" },
+      );
+      await publishEdition(
+        orm,
+        { id: "pub", groups: ["admin"] },
+        "mw:work:quran|en|translation",
+      );
+      const withdrawn = await withdrawEdition(
+        orm,
+        { id: "pub", groups: ["admin"] },
+        "mw:work:quran|en|translation",
+        "rights re-opened",
+      );
+      assert.equal(withdrawn.stage, "withdrawn");
+      // The edition row is still there; only `stage` flipped.
+      const after = await orm.findOneByService("corpus.edition", {
+        id: String(edition.id),
+      });
+      assert.ok(after, "withdraw must not erase the row (audit-preserving rollback)");
+      assert.equal(after.stage, "withdrawn");
+    },
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Importer — reconciliation hard-gate + idempotency + undo-run.
+// ---------------------------------------------------------------------------
+
+function writeTempManifest(
+  dir: string,
+  entries: readonly {
+    id: string;
+    file: string;
+    rowsExpected: number;
+    kind: "revelation_verbatim" | "translation";
+    locale: string;
+  }[],
+): string {
+  const datasets = entries.map((entry) => ({
+    id: entry.id,
+    path: entry.file,
+    kind: entry.kind,
+    locale: entry.locale,
+    rows_expected: entry.rowsExpected,
+    edition_canonical_id: `mw:edition:${entry.id}`,
+    work_canonical_id: "mw:work:quran",
+    work_title: "Al-Qur'an",
+    work_kind: entry.kind === "revelation_verbatim" ? "revelation" : "translation_of_revelation",
+    publisher: "Fixture Publisher",
+    license_id: "Fixture-License",
+    attribution_text: "Fixture attribution — not canonical scripture.",
+    rights_status: "under_review",
+  }));
+  const manifestPath = join(dir, "quran-manifest.json");
+  writeFileSync(manifestPath, JSON.stringify({ datasets }, null, 2), "utf8");
+  return manifestPath;
+}
+
+void test("importer aborts before writing a single row when observed != rows_expected", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "ql-corpus-import-"));
+  try {
+    const file = join(dir, "ar.jsonl");
+    writeFileSync(file, '{"surah":1,"ayah":1,"text":"a"}\n{"surah":1,"ayah":2,"text":"b"}\n', "utf8");
+    const manifest = writeTempManifest(dir, [
+      {
+        id: "mw:dataset:test:ar",
+        file,
+        rowsExpected: 999,
+        kind: "revelation_verbatim",
+        locale: "ar",
+      },
+    ]);
+    await withMemoryOrm(
+      [
+        stubAddonManifest("ql_base"),
+        stubAddonManifest("ql_auth"),
+        sourceManifest,
+        corpusManifest,
+      ],
+      async (orm) => {
+        await assert.rejects(
+          () => importQuranSlice(orm, manifest, { dryRun: true }),
+          (error: unknown) =>
+            error instanceof QlValidationError &&
+            /observed=2, expected=999/.test(error.message),
+          "must abort on reconciliation mismatch",
+        );
+        // Zero rows written.
+        const stored = await orm.findManyByService("corpus.edition", {});
+        assert.equal(stored.length, 0);
+      },
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+void test("importer dry-run with a valid fixture reconciles cleanly and writes nothing", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "ql-corpus-import-"));
+  try {
+    const file = join(dir, "ar.jsonl");
+    writeFileSync(
+      file,
+      '{"surah":1,"ayah":1,"text":"a"}\n{"surah":1,"ayah":2,"text":"b"}\n',
+      "utf8",
+    );
+    const manifest = writeTempManifest(dir, [
+      {
+        id: "mw:dataset:test:ar",
+        file,
+        rowsExpected: 2,
+        kind: "revelation_verbatim",
+        locale: "ar",
+      },
+    ]);
+    await withMemoryOrm(
+      [
+        stubAddonManifest("ql_base"),
+        stubAddonManifest("ql_auth"),
+        sourceManifest,
+        corpusManifest,
+      ],
+      async (orm) => {
+        const reports = await importQuranSlice(orm, manifest, { dryRun: true });
+        assert.equal(reports.length, 1);
+        const report = reports[0];
+        assert.equal(report?.expected, 2);
+        assert.equal(report?.observed, 2);
+        assert.equal(report?.rejected.length, 0);
+        // Dry-run skipped row writes; the artifact/version/edition scaffolding
+        // is still created so an operator can inspect it before the real run.
+        const editions = await orm.findManyByService("corpus.edition", {});
+        assert.equal(editions.length, 1);
+      },
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+void test("importer is idempotent: a second real run skips via passage_key UNIQUE and undo-run removes the newly-created rows", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "ql-corpus-import-"));
+  try {
+    const file = join(dir, "ar.jsonl");
+    writeFileSync(
+      file,
+      '{"surah":1,"ayah":1,"text":"a"}\n{"surah":1,"ayah":2,"text":"b"}\n',
+      "utf8",
+    );
+    const manifest = writeTempManifest(dir, [
+      {
+        id: "mw:dataset:test:ar",
+        file,
+        rowsExpected: 2,
+        kind: "revelation_verbatim",
+        locale: "ar",
+      },
+    ]);
+    await withMemoryOrm(
+      [
+        stubAddonManifest("ql_base"),
+        stubAddonManifest("ql_auth"),
+        sourceManifest,
+        corpusManifest,
+      ],
+      async (orm) => {
+        const first = await importQuranSlice(orm, manifest, {
+          dryRun: false,
+          importRunId: "run-1",
+        });
+        assert.equal(first[0]?.inserted, 2);
+        const second = await importQuranSlice(orm, manifest, {
+          dryRun: false,
+          importRunId: "run-2",
+        });
+        // The unique `passage_key` fires `QlConflictError` per row, treated
+        // as "already imported" by the importer.
+        assert.equal(second[0]?.inserted, 0);
+        assert.equal(second[0]?.skippedConflict, 2);
+        const removed = await undoImportRun(orm, "run-1");
+        assert.equal(removed, 2);
+        const remaining = await orm.findManyByService("corpus.passage", {});
+        assert.equal(remaining.length, 0);
+      },
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

@@ -1,0 +1,44 @@
+{
+  "name": "ql_workflow",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./__manifest__": {
+      "types": "./dist/__manifest__.d.ts",
+      "import": "./dist/__manifest__.js"
+    },
+    "./models": {
+      "types": "./dist/models/index.d.ts",
+      "import": "./dist/models/index.js"
+    },
+    "./views": {
+      "types": "./dist/views/index.d.ts",
+      "import": "./dist/views/index.js"
+    },
+    "./services/workflow-vocabulary": {
+      "types": "./dist/services/workflow-vocabulary.d.ts",
+      "import": "./dist/services/workflow-vocabulary.js"
+    },
+    "./services/state-machine": {
+      "types": "./dist/services/state-machine.d.ts",
+      "import": "./dist/services/state-machine.js"
+    },
+    "./services/workflow-service": {
+      "types": "./dist/services/workflow-service.d.ts",
+      "import": "./dist/services/workflow-service.js"
+    },
+    "./services/field-validators": {
+      "types": "./dist/services/field-validators.d.ts",
+      "import": "./dist/services/field-validators.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsx --test models/index.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@moonwitness/types": "workspace:*",
+    "ql_orm": "workspace:*"
+  }
+}

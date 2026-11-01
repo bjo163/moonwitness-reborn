@@ -1,6 +1,6 @@
 # Knowledge and Corpus Integration Plan
 
-**Status: PROPOSED; import is blocked until source, edition and rights are identified.**
+**Status: PARTIALLY UNBLOCKED.** General rule holds — "import is blocked until source, edition and rights are identified". The **Al-Qur'an first slice** (three datasets under MW-0560 / MW-ADR-019) is explicitly unblocked by owner directive on 2026-11-01 and its per-edition rights decisions are recorded in §*Al-Qur'an first-slice datasets* below; every other dataset in the registry stays blocked until the same per-edition entry is written. `ql_source` and `ql_corpus` ship as the QlOrm addon pair that implements this plan; `ql_ontology` (UNILEX) is deferred to its own slice.
 
 ## Ownership
 
@@ -100,6 +100,23 @@ These counts describe the archived browser database, not a rebuild from the curr
 | Existing API/web app | REFERENCE; rebuild needed reader workflows in unified app | No second corpus service or frontend |
 | Research labels / assessments | IMPORT only after method and provenance audit | Research domain owns result; Mizan method not duplicated |
 
+## Al-Qur'an first-slice datasets (MW-0560, MW-ADR-019)
+
+Owner directive on 2026-11-01 unblocks ratification blockers #1 and #2 **for these three datasets only**. Every other dataset in the registry above remains blocked until the owner records the same per-edition decision. The importer CLI (`pnpm --filter ql_corpus import:quran`) is a hard reconciliation gate — it refuses to write a single row if `observed ≠ expected` — so the row-count resolution below is a machine-enforced precondition, not a suggestion.
+
+| Dataset id | Kind / authority | Locale | Publisher / release | `rows_expected` (importer reconciliation gate) | Rights basis to record at `source.rights` |
+|---|---|---|---|---|---|
+| `mw:dataset:quran:tanzil-uthmani` | `revelation_verbatim` | `ar` | Tanzil.net — Uthmani script (Tajweed-annotated variant excluded). Snapshot commit **must** be pinned in `source.version.snapshot_sha` before any import run. | **12,594** — this is the archived release record count at `:77`; the reconciliation gate aborts if the actual JSONL line count differs. The 12,594 vs. 6,240 delta means Tanzil's Uthmani export contains rows beyond per-ayah text (basmalah rows per surah and/or per-word segments) — the importer preserves the upstream granularity by tagging extras via `corpus.passage.row_kind ∈ {"ayah","basmalah","surah_header","word","footnote"}` and never rewrites `source_record_id`, per the "do not rewrite IDs or normalize punctuation silently" rule at `:105`. Owner is expected to *verify* the exact count against the frozen snapshot at dry-run time (MW-0561); if the observed count differs from 12,594, the plan **requires** the owner update this cell with the verified number before a real run — the importer will not accept anything else. | `license_id` = `Tanzil-Public` per Tanzil.net's stated grant; `attribution_required = true`; `attribution_text` = "Quran text © Tanzil.net, Uthmani script edition, distributed under the Tanzil public usage grant"; `permitted_actions = ["import","index","display","export","publish"]`; `rights_status` must be flipped to `"cleared"` by the owner (via admin UI editing `source.rights`) before `publishEdition` succeeds (`packages/ql_corpus/services/corpus-service.ts`) |
+| `mw:dataset:quranenc:english-rwwad` | `translation` | `en` | QuranEnc.org — *Revised Wahdatul Quran Translation with Word-by-Word Annotations* | **6,240** — one row per ayah (the translation is verse-scoped, no separate basmalah rows); the importer rejects an `observed ≠ 6,240` at dry-run. Any ayah/translation misalignment is reported as `rejected[]` (with reason) and *not* silently skipped. | `license_id` = `QuranEnc-RWWAD-NonCommercial` per QuranEnc's stated usage terms (verify against the frozen snapshot; the release repo has no root LICENSE per `:11`, so the *publisher's own page* is the rights basis, not repo visibility — `DATA_LIFECYCLE_AND_PROVENANCE.md:27`); `attribution_required = true`; `attribution_text` = "English translation: Revised Wahdatul Quran Translation with Word-by-Word Annotations © QuranEnc.org"; `permitted_actions = ["import","index","display","export","publish"]`; owner flips `rights_status` to `"cleared"` per-edition |
+| `mw:dataset:quranenc:indonesian-kemenag` | `translation` | `id` | QuranEnc.org — Kemenag RI (Kementerian Agama Republik Indonesia) official Indonesian translation | **6,240** — same per-ayah granularity as the English set | `license_id` = `Kemenag-PublicDomain-ID` — the Indonesian Ministry of Religious Affairs publishes this translation for public use, but the *specific QuranEnc re-release* may add its own attribution; the owner must verify the frozen snapshot's manifest rights block before flipping to `"cleared"`; `attribution_required = true`; `attribution_text` = "Terjemahan Kementerian Agama RI, disalin dari QuranEnc.org dengan atribusi"; `permitted_actions = ["import","index","display","export","publish"]` |
+
+**Supplemental datasets deliberately NOT in this slice**:
+
+- `mw:dataset:islam:quran-tafsir-sample` (20 rows, `:68`) — `corpus.annotation` model ships with the storage-level validator (`authorityValidator(ANNOTATION_AUTHORITIES)` refuses `"revelation_verbatim"`) so the invariant is regression-tested on day one; the table stays **empty** until the owner records per-tafsir-edition rights. MW-ADR-019 makes it structurally impossible for a future tafsir row to be mistaken for revelation text.
+- `mw:dataset:lexicon:quran-arabic-core` (14 rows, `:73`) — belongs to `ql_ontology` (UNILEX), which is deferred to its own slice per `docs/architecture/DOMAIN_OWNERSHIP_AND_DEPENDENCIES.md`.
+
+**Prohibited inputs**: `moonwitness-II-q4q`'s closed `QURAN_CORE_V1` and Supabase runtime (line `:15`) may not be used as a source for these datasets — no edition, completeness, or reuse rights are established by that lineage. Importers must consume the Tanzil.net and QuranEnc.org upstreams directly, frozen at a recorded commit SHA.
+
 ## Minimum mapping
 
 Source repo + commit/release → source artifact/version → work → edition/expression + locale + publisher/translator → passage locator → exact segment + checksum → rights/provenance → canonical ID mapping. Keep original identifiers and provide explicit mapping records. Do not rewrite IDs or normalize punctuation silently.
@@ -110,4 +127,4 @@ Select a small, rights-cleared sample; publish the rights/edition rationale; imp
 
 ## Blockers
 
-Exact dataset snapshot/branch/SHA, actual record counts, generated/materialized status, source editions, license coverage, quality and duplicate strategy remain unresolved. No dataset is selected in this blueprint.
+Exact dataset snapshot/branch/SHA, actual record counts, generated/materialized status, source editions, license coverage, quality and duplicate strategy remain unresolved **for every dataset except the three Al-Qur'an datasets named in §*Al-Qur'an first-slice datasets*** — those have `rows_expected` pinned by the importer's hard reconciliation gate (MW-0565) and rights bases named per edition (MW-0561), but the owner must still verify the counts against the actual frozen snapshot at dry-run time before a real import is permitted. Other datasets are not selected for import.

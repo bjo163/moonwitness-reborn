@@ -250,7 +250,6 @@ before(async () => {
   closeOrm = runtime.close;
   store = createConversationStore(orm);
   server = createApiServer(undefined, store, orm, {
-    bootstrapAdmin: { email: ownerEmail, token: "one-time" },
     resolveConnectorToken: () => resolveToken(),
     cloudflareFetcher: fakeFetcher,
   });
@@ -260,7 +259,17 @@ before(async () => {
   const where = server.address();
   assert.ok(where && typeof where !== "string");
   address = `http://127.0.0.1:${where.port}`;
-  ownerCookie = await register(ownerEmail);
+  const setup = await fetch(`${address}${apiRoutes.auth.setup}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      name: "Tester",
+      email: ownerEmail,
+      password: testPassword,
+    }),
+  });
+  assert.equal(setup.status, 201);
+  ownerCookie = (setup.headers.get("set-cookie") ?? "").split(";", 1)[0];
   memberCookie = await register(memberEmail);
 });
 
@@ -290,6 +299,15 @@ void test("the catalog lists both kinds and no field can carry a token", async (
   );
   assert.equal(empty.body.connectors.length, 0);
   assert.equal(empty.text.includes(apiToken), false);
+  assert.equal(
+    empty.body.kinds.find((kind) => kind.kind === "cloudflare")?.labelKey,
+    "web.connectors.kinds.cloudflare.label",
+  );
+  assert.equal(
+    empty.body.kinds.find((kind) => kind.kind === "cloudflare_read")
+      ?.credentialHelpKey,
+    "web.connectors.kinds.cloudflareRead.credentialHelp",
+  );
 
   const dnsKinds = empty.body.kinds.filter((kind) =>
     kind.capabilities.includes("dns"),

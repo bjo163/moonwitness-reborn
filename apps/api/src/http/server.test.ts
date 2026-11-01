@@ -5,12 +5,14 @@ import {
   createConversationStore,
   type ConversationStore,
 } from "@moonwitness/database";
+import { apiRoutes } from "@moonwitness/moonclient";
 import { createQlOrm, type QlOrm } from "ql_orm";
 import aiManifest from "ql_ai/__manifest__";
 import authManifest from "ql_auth/__manifest__";
 import baseManifest from "ql_base/__manifest__";
 import chatManifest from "ql_chat/__manifest__";
 import { createApiServer } from "./server.js";
+import { listProjectTasks } from "../project-progress/tracker.js";
 
 let server: ReturnType<typeof createApiServer>;
 let address: string;
@@ -64,7 +66,10 @@ after(async () => {
   store.close();
 });
 
-async function register(email: string): Promise<string> {
+async function register(
+  email: string,
+  preferredLocale?: "id" | "en",
+): Promise<string> {
   const response = await fetch(`${address}/auth/register`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -72,6 +77,7 @@ async function register(email: string): Promise<string> {
       name: "Test User",
       email,
       password: "correct horse battery staple",
+      ...(preferredLocale ? { preferredLocale } : {}),
     }),
   });
   assert.equal(response.status, 201);
@@ -84,6 +90,256 @@ void test("GET /health returns service status", async () => {
   const response = await fetch(`${address}/health`);
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { status: "ok" });
+});
+
+void test("first-use onboarding grants exactly one super admin", async () => {
+  const runtime = await createQlOrm("file::memory:", [
+    authManifest,
+    baseManifest,
+    aiManifest,
+    chatManifest,
+  ]);
+  const setupStore = createConversationStore(runtime.orm);
+  const setupServer = createApiServer(undefined, setupStore, runtime.orm);
+  await new Promise<void>((resolve) => {
+    setupServer.listen(0, "127.0.0.1", resolve);
+  });
+  const setupAddress = setupServer.address();
+  assert.ok(setupAddress && typeof setupAddress !== "string");
+  const setupBaseUrl = `http://127.0.0.1:${setupAddress.port}`;
+
+  try {
+    const setupStatus = await fetch(`${setupBaseUrl}/auth/setup`);
+    assert.equal(setupStatus.status, 200);
+    assert.equal(setupStatus.headers.get("cache-control"), "no-store");
+    assert.deepEqual(await setupStatus.json(), { required: true });
+
+    const setupRequests = await Promise.all(
+      ["initial-owner@example.com", "racing-owner@example.com"].map((email) =>
+        fetch(`${setupBaseUrl}/auth/setup`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            name: "Initial Owner",
+            email,
+            password: "correct horse battery staple",
+            role: "member",
+          }),
+        }),
+      ),
+    );
+    assert.deepEqual(
+      setupRequests.map((response) => response.status).sort(),
+      [201, 409],
+    );
+
+    const ownerResponse = setupRequests.find((response) => response.status === 201);
+    assert.ok(ownerResponse);
+    const ownerCookie = ownerResponse.headers.get("set-cookie");
+    assert.ok(ownerCookie);
+    const owner = await fetch(`${setupBaseUrl}/auth/me`, {
+      headers: { cookie: ownerCookie.split(";", 1)[0] },
+    });
+    assert.equal(owner.status, 200);
+    const ownerBody = (await owner.json()) as {
+      user: { role: string; setup_claim?: string };
+    };
+    assert.equal(ownerBody.user.role, "super_admin");
+    assert.equal("setup_claim" in ownerBody.user, false);
+
+    const publicSummary = await fetch(
+      `${setupBaseUrl}${apiRoutes.projectProgress.summary}`,
+    );
+    assert.equal(publicSummary.status, 200);
+    const summaryBody = await publicSummary.json() as {
+      total: number;
+      readyCount: number;
+      states: Record<string, number>;
+    };
+    const projectTasks = await listProjectTasks();
+    assert.equal(summaryBody.total, projectTasks.length);
+    assert.equal(
+      Object.values(summaryBody.states).reduce((sum, count) => sum + count, 0),
+      projectTasks.length,
+    );
+    assert.equal("tasks" in summaryBody, false);
+
+    const anonymousDetails = await fetch(
+      `${setupBaseUrl}${apiRoutes.projectProgress.tasks}`,
+    );
+    assert.equal(anonymousDetails.status, 401);
+
+    const ownerDetails = await fetch(
+      `${setupBaseUrl}${apiRoutes.projectProgress.tasks}`,
+      { headers: { cookie: ownerCookie.split(";", 1)[0] } },
+    );
+    assert.equal(ownerDetails.status, 200);
+    const ownerDetailsBody = await ownerDetails.json() as {
+      tasks: unknown[];
+      readyTaskIds: string[];
+    };
+    assert.equal(ownerDetailsBody.tasks.length, projectTasks.length);
+    assert.equal(ownerDetailsBody.readyTaskIds.length, summaryBody.readyCount);
+
+    const closedSetup = await fetch(`${setupBaseUrl}/auth/setup`);
+    assert.deepEqual(await closedSetup.json(), { required: false });
+    const repeatedSetup = await fetch(`${setupBaseUrl}/auth/setup`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Second Owner",
+        email: "second-owner@example.com",
+        password: "correct horse battery staple",
+      }),
+    });
+    assert.equal(repeatedSetup.status, 409);
+
+    const memberResponse = await fetch(`${setupBaseUrl}/auth/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Ordinary Member",
+        email: "ordinary-member@example.com",
+        password: "correct horse battery staple",
+        role: "super_admin",
+      }),
+    });
+    assert.equal(memberResponse.status, 201);
+    const memberCookie = memberResponse.headers.get("set-cookie");
+    assert.ok(memberCookie);
+    const memberDetails = await fetch(
+      `${setupBaseUrl}${apiRoutes.projectProgress.tasks}`,
+      { headers: { cookie: memberCookie.split(";", 1)[0] } },
+    );
+    assert.equal(memberDetails.status, 403);
+    const member = await fetch(`${setupBaseUrl}/auth/me`, {
+      headers: { cookie: memberCookie.split(";", 1)[0] },
+    });
+    assert.equal(
+      (await member.json() as { user: { role: string } }).user.role,
+      "member",
+    );
+  } finally {
+    await new Promise<void>((resolve, reject) => {
+      setupServer.close((error) => (error ? reject(error) : resolve()));
+    });
+    setupStore.close();
+    runtime.close();
+  }
+});
+
+void test("first-use setup remains available when only member accounts exist", async () => {
+  const runtime = await createQlOrm("file::memory:", [
+    authManifest,
+    baseManifest,
+    aiManifest,
+    chatManifest,
+  ]);
+  const setupStore = createConversationStore(runtime.orm);
+  const setupServer = createApiServer(undefined, setupStore, runtime.orm);
+  await new Promise<void>((resolve) => {
+    setupServer.listen(0, "127.0.0.1", resolve);
+  });
+  const setupAddress = setupServer.address();
+  assert.ok(setupAddress && typeof setupAddress !== "string");
+  const setupBaseUrl = `http://127.0.0.1:${setupAddress.port}`;
+
+  try {
+    const registration = await fetch(`${setupBaseUrl}/auth/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Existing Member",
+        email: "existing-member@example.com",
+        password: "correct horse battery staple",
+      }),
+    });
+    assert.equal(registration.status, 201);
+
+    const setupStatus = await fetch(`${setupBaseUrl}/auth/setup`);
+    assert.deepEqual(await setupStatus.json(), { required: true });
+    const setupAttempt = await fetch(`${setupBaseUrl}/auth/setup`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Initial Owner",
+        email: "initial-owner-after-member@example.com",
+        password: "correct horse battery staple",
+      }),
+    });
+    assert.equal(setupAttempt.status, 201);
+    const closedSetup = await fetch(`${setupBaseUrl}/auth/setup`);
+    assert.deepEqual(await closedSetup.json(), { required: false });
+  } finally {
+    await new Promise<void>((resolve, reject) => {
+      setupServer.close((error) => (error ? reject(error) : resolve()));
+    });
+    setupStore.close();
+    runtime.close();
+  }
+});
+
+void test("account locale updates are validated and scoped to the session user", async () => {
+  const firstCookie = await register("locale-first@example.com", "en");
+  const secondCookie = await register("locale-second@example.com");
+  const firstUserResponse = await fetch(`${address}/auth/me`, {
+    headers: { cookie: firstCookie },
+  });
+  const secondUserResponse = await fetch(`${address}/auth/me`, {
+    headers: { cookie: secondCookie },
+  });
+  const firstUser = (await firstUserResponse.json()) as {
+    user: { id: string; preferredLocale: string; passwordHash?: string };
+  };
+  const secondUser = (await secondUserResponse.json()) as {
+    user: { id: string; preferredLocale: string };
+  };
+  assert.equal(firstUser.user.preferredLocale, "en");
+  assert.equal(secondUser.user.preferredLocale, "id");
+  assert.equal("passwordHash" in firstUser.user, false);
+
+  const unauthenticated = await fetch(`${address}/auth/me/preferences`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ preferredLocale: "en" }),
+  });
+  assert.equal(unauthenticated.status, 401);
+
+  const invalidLocale = await fetch(`${address}/auth/me/preferences`, {
+    method: "PATCH",
+    headers: {
+      cookie: firstCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ preferredLocale: "fr" }),
+  });
+  assert.equal(invalidLocale.status, 400);
+
+  const updated = await fetch(`${address}/auth/me/preferences`, {
+    method: "PATCH",
+    headers: {
+      cookie: firstCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      preferredLocale: "id",
+      userId: secondUser.user.id,
+    }),
+  });
+  assert.equal(updated.status, 200);
+  const updatedBody = (await updated.json()) as {
+    user: { id: string; preferredLocale: string };
+  };
+  assert.equal(updatedBody.user.id, firstUser.user.id);
+  assert.equal(updatedBody.user.preferredLocale, "id");
+
+  const secondAfterUpdate = await fetch(`${address}/auth/me`, {
+    headers: { cookie: secondCookie },
+  });
+  const secondAfterBody = (await secondAfterUpdate.json()) as {
+    user: { preferredLocale: string };
+  };
+  assert.equal(secondAfterBody.user.preferredLocale, "id");
 });
 
 void test("registration, login and logout manage a secure session cookie", async () => {
@@ -324,13 +580,18 @@ void test("authenticated model metadata exposes addon views without private fiel
   const { models } = (await response.json()) as {
     models: Array<{
       name: string;
-      fields: Record<string, unknown>;
-      views: Array<{ type: string; fields: string[] }>;
+      labelKey: string;
+      descriptionKey: string;
+      fields: Record<string, { labelKey: string }>;
+      views: Array<{ labelKey: string; type: string; fields: string[] }>;
       permissions: { create: boolean; write: boolean; unlink: boolean };
     }>;
   };
   const partner = models.find((model) => model.name === "res.partner");
   assert.ok(partner);
+  assert.equal(partner.labelKey, "web.models.entities.res_partner");
+  assert.equal(partner.descriptionKey, "web.models.descriptions.res_partner");
+  assert.equal(partner.fields.name.labelKey, "web.models.fieldName");
   assert.deepEqual(Object.keys(partner.fields), [
     "name",
     "email",
@@ -352,6 +613,7 @@ void test("authenticated model metadata exposes addon views without private fiel
       },
     ],
   );
+  assert.equal(partner.views[0]?.labelKey, "web.models.viewList");
   assert.deepEqual(partner.permissions, {
     create: true,
     write: true,
@@ -485,5 +747,8 @@ void test("registration validates passwords and rejects duplicate emails", async
 void test("unknown routes return 404", async () => {
   const response = await fetch(`${address}/unknown`);
   assert.equal(response.status, 404);
-  assert.deepEqual(await response.json(), { error: "Not found" });
+  assert.deepEqual(await response.json(), {
+    error: "Not found",
+    code: "RESOURCE_NOT_FOUND",
+  });
 });

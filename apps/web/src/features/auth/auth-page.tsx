@@ -1,6 +1,11 @@
 "use client";
 
-import { moonClient } from "@moonwitness/moonclient";
+import {
+  moonClient,
+  MoonClientError,
+  type AuthUserDto,
+  type UiLocale,
+} from "@moonwitness/moonclient";
 import {
   Alert,
   Button,
@@ -9,45 +14,84 @@ import {
   Input,
 } from "@moonwitness/ui";
 import { Sparkles } from "lucide-react";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { LocaleSwitcher } from "../locale/locale-switcher";
+import { apiErrorMessage } from "../locale/api-error-message";
+import { useMessages } from "../locale/messages";
+import { useTranslationCatalog } from "../locale/translation-catalog";
+import {
+  GUEST_LOCALE_KEY,
+  isUiLocale,
+} from "../locale/use-locale-preference";
 
-type AuthMode = "login" | "register";
-
-const HEADINGS: Record<AuthMode, string> = {
-  login: "Selamat datang kembali",
-  register: "Buat akun",
-};
+type AuthMode = "login" | "register" | "setup";
 
 export default function AuthPage() {
   const [mode, setMode] = useState<AuthMode>("register");
+  const [locale, setLocale] = useState<UiLocale>("id");
+  const [user, setUser] = useState<AuthUserDto | null | undefined>(undefined);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { setLocale: setCatalogLocale, t } = useTranslationCatalog();
+  const copy = useMessages();
+  const copyRef = useRef(copy);
+  copyRef.current = copy;
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("mode") === "login") {
-      setMode("login");
+    const params = new URLSearchParams(window.location.search);
+    const requestedMode: AuthMode =
+      params.get("mode") === "login" ? "login" : "register";
+    setMode(requestedMode);
+    const requestedLocale = params.get("locale");
+    try {
+      const savedLocale = window.localStorage.getItem(GUEST_LOCALE_KEY);
+      let nextLocale: UiLocale;
+      if (isUiLocale(requestedLocale)) {
+        nextLocale = requestedLocale;
+      } else if (isUiLocale(savedLocale)) {
+        nextLocale = savedLocale;
+      } else {
+        nextLocale = "id";
+      }
+      setLocale(nextLocale);
+      setCatalogLocale(nextLocale);
+      window.localStorage.setItem(GUEST_LOCALE_KEY, nextLocale);
+    } catch (storageError) {
+      console.error("Could not save the selected interface language.", storageError);
+      setError(copyRef.current.auth.localeSaveError);
     }
     let cancelled = false;
     void moonClient.currentUser()
-      .then(() => {
-        if (!cancelled) window.location.replace("/command-center");
+      .then(({ user: currentUser }) => {
+        if (!cancelled) {
+          setUser(currentUser);
+          window.location.replace("/command-center");
+        }
       })
-      .catch((requestError: unknown) => {
+      .catch(async (requestError: unknown) => {
+        if (cancelled) return;
+        setUser(null);
         if (
-          !cancelled &&
-          (!(requestError instanceof Error) ||
-            requestError.message !== "Authentication required.")
+          requestError instanceof MoonClientError &&
+          requestError.status === 401
         ) {
-          setError(
-            requestError instanceof Error
-              ? requestError.message
-              : "Gagal memeriksa sesi.",
-          );
+          try {
+            const { required } = await moonClient.initialSetupStatus();
+            if (!cancelled) setMode(required ? "setup" : requestedMode);
+          } catch (setupError: unknown) {
+            if (!cancelled) {
+              setError(
+                apiErrorMessage(setupError, t),
+              );
+            }
+          }
+        } else {
+          setError(apiErrorMessage(requestError, t));
         }
       })
       .finally(() => {
@@ -56,7 +100,23 @@ export default function AuthPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [setCatalogLocale, t]);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
+  function changeAuthLocale(nextLocale: UiLocale) {
+    setError(null);
+    try {
+      window.localStorage.setItem(GUEST_LOCALE_KEY, nextLocale);
+      setLocale(nextLocale);
+      setCatalogLocale(nextLocale);
+    } catch (storageError) {
+      console.error("Could not save the selected interface language.", storageError);
+      setError(copy.auth.localeSaveError);
+    }
+  }
 
   function switchMode(next: AuthMode) {
     setMode(next);
@@ -68,18 +128,26 @@ export default function AuthPage() {
     setError(null);
     setBusy(true);
     try {
-      if (mode === "register") {
-        await moonClient.register({ name, email, password });
+      if (mode === "setup") {
+        await moonClient.completeInitialSetup({
+          name,
+          email,
+          password,
+          preferredLocale: locale,
+        });
+      } else if (mode === "register") {
+        await moonClient.register({
+          name,
+          email,
+          password,
+          preferredLocale: locale,
+        });
       } else {
         await moonClient.login({ email, password });
       }
       window.location.assign("/command-center");
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Autentikasi gagal.",
-      );
+      setError(apiErrorMessage(requestError, t));
     } finally {
       setBusy(false);
     }
@@ -88,31 +156,60 @@ export default function AuthPage() {
   if (checking) {
     return (
       <main className="ql-hud-app flex min-h-dvh items-center justify-center text-sm text-stone-500">
-        Memeriksa sesi...
+        {copy.common.loading}
       </main>
     );
   }
 
-  const needsNewPassword = mode === "register";
+  const isSetup = mode === "setup";
+  const needsNewPassword = mode !== "login";
+
+  let pageTitle: string;
+  if (isSetup) {
+    pageTitle = copy.auth.setupTitle;
+  } else if (mode === "login") {
+    pageTitle = copy.auth.loginTitle;
+  } else {
+    pageTitle = copy.auth.registerTitle;
+  }
+
+  let buttonText: string;
+  if (busy) {
+    buttonText = copy.auth.busy;
+  } else if (isSetup) {
+    buttonText = copy.auth.setupAction;
+  } else if (mode === "register") {
+    buttonText = copy.auth.registerAction;
+  } else {
+    buttonText = copy.auth.loginAction;
+  }
 
   return (
     <CenteredAuth>
-      <Link href="/" className="mb-7 flex items-center gap-3">
-        <span className="flex size-10 items-center justify-center rounded-xl bg-stone-900 text-white">
-          <Sparkles size={18} />
-        </span>
-        <span>
-          <span className="block font-semibold tracking-tight">MoonWitness</span>
-          <span className="block text-sm text-stone-500">Command Center</span>
-        </span>
-      </Link>
-      <h1 className="text-2xl font-semibold tracking-tight">{HEADINGS[mode]}</h1>
+      <div className="mb-7 flex flex-wrap items-center justify-between gap-3">
+        <Link href={`/?locale=${locale}`} className="flex items-center gap-3">
+          <span className="flex size-10 items-center justify-center rounded-xl border border-[#354135] bg-[#121a13] text-[#d7ff63]">
+            <Sparkles aria-hidden="true" size={18} />
+          </span>
+          <span>
+            <span className="block font-semibold tracking-tight">MoonWitness</span>
+            <span className="block text-sm text-stone-500">{copy.common.dashboard}</span>
+          </span>
+        </Link>
+        <LocaleSwitcher
+          locale={locale}
+          label={copy.common.localeLabel}
+          onChange={changeAuthLocale}
+          disabled={checking || Boolean(user)}
+        />
+      </div>
+      <h1 className="text-2xl font-semibold tracking-tight">{pageTitle}</h1>
       <p className="mt-2 text-sm leading-6 text-stone-500">
-        Masuk untuk melanjutkan ke ruang kerja pribadi MoonWitness.
+        {isSetup ? copy.auth.setupDescription : copy.auth.loginDescription}
       </p>
       <form onSubmit={(event) => void submit(event)} className="mt-6 space-y-4">
-        {mode === "register" && (
-          <FormField label="Nama" htmlFor="auth-name">
+        {mode !== "login" && (
+          <FormField label={copy.auth.name} htmlFor="auth-name">
             <Input
               id="auth-name"
               autoComplete="name"
@@ -120,11 +217,11 @@ export default function AuthPage() {
               maxLength={100}
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Nama kamu"
+              placeholder={copy.auth.namePlaceholder}
             />
           </FormField>
         )}
-        <FormField label="Email" htmlFor="auth-email">
+        <FormField label={copy.auth.email} htmlFor="auth-email">
           <Input
             id="auth-email"
             type="email"
@@ -132,10 +229,10 @@ export default function AuthPage() {
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder="nama@email.com"
+            placeholder={copy.auth.emailPlaceholder}
           />
         </FormField>
-        <FormField label="Kata sandi" htmlFor="auth-password">
+        <FormField label={copy.auth.password} htmlFor="auth-password">
           <Input
             id="auth-password"
             type="password"
@@ -145,41 +242,49 @@ export default function AuthPage() {
             maxLength={256}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            placeholder={needsNewPassword ? "Minimal 12 karakter" : "Kata sandi akun"}
+            placeholder={
+              needsNewPassword
+                ? copy.auth.passwordMinimum
+                : copy.auth.passwordPlaceholder
+            }
           />
         </FormField>
         {error && <Alert variant="error">{error}</Alert>}
-        <Button className="w-full" disabled={busy}>
-          {busy ? "Mohon tunggu..." : mode === "register" ? "Buat akun" : "Masuk"}
-        </Button>
+        <Button className="w-full" disabled={busy}>{buttonText}</Button>
       </form>
-      <p className="mt-5 text-center text-sm text-stone-500">
-        {mode === "register" ? (
-          <>
-            Sudah punya akun?{" "}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => switchMode("login")}
-            >
-              Masuk
-            </Button>
-          </>
-        ) : (
-          <>
-            Belum punya akun?{" "}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => switchMode("register")}
-            >
-              Daftar
-            </Button>
-          </>
-        )}
-      </p>
+      {isSetup ? (
+        <p className="mt-5 text-center text-sm text-stone-500">
+          {copy.auth.setupSecurityNote}
+        </p>
+      ) : (
+        <p className="mt-5 text-center text-sm text-stone-500">
+          {mode === "register" ? (
+            <>
+              {copy.auth.existingAccount}{" "}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => switchMode("login")}
+              >
+                {copy.auth.loginLink}
+              </Button>
+            </>
+          ) : (
+            <>
+              {copy.auth.newAccount}{" "}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => switchMode("register")}
+              >
+                {copy.auth.registerLink}
+              </Button>
+            </>
+          )}
+        </p>
+      )}
     </CenteredAuth>
   );
 }

@@ -26,7 +26,7 @@ Object storage, email, AI providers and possible MOONSKY/ECHOLOG adapters are op
 
 ## Transactional mail
 
-Not implemented. Email delivery was removed: the SMTP adapter in `apps/api/src/mail`, the `/auth/forgot-password` and `/auth/reset-password` routes, their `@moonwitness/moonclient` contract, and every `SMTP_*` environment are gone. There is therefore no self-service password recovery — an owner account is claimed once through `BOOTSTRAP_ADMIN_EMAIL`/`BOOTSTRAP_ADMIN_TOKEN`, and any later password change is manual work on the database. The Stalwart mail server and Roundcube webmail that were deployed on the Coolify host for this feature are separate infrastructure and still need teardown.
+Not implemented. Email delivery was removed: the SMTP adapter in `apps/api/src/mail`, the `/auth/forgot-password` and `/auth/reset-password` routes, their `@moonwitness/moonclient` contract, and every `SMTP_*` environment are gone. There is therefore no self-service password recovery; password changes remain manual work on the database. The first owner is created through the one-time setup flow, which is available only while the installation has no active super admin; later public registrations receive the `member` role. Complete this setup from a trusted network before exposing a fresh installation publicly. The Stalwart mail server and Roundcube webmail that were deployed on the Coolify host for the removed email feature are separate infrastructure and still need teardown.
 
 ## Current status and gaps
 

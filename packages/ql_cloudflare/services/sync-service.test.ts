@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import integrationManifest from "ql_integration/__manifest__";
-import { createQlOrm, type QlAddonManifest, type QlOrm } from "ql_orm";
+import { type QlOrm } from "ql_orm";
+import { stubAddonManifest, withMemoryOrm } from "ql_orm/testing";
 import cloudflareManifest from "../__manifest__.js";
 import type {
   CloudflareClient,
@@ -18,15 +19,7 @@ import {
 /** Tests re-run sync back to back, so the production cooldown is switched off unless under test. */
 const noCooldown = { cooldownMs: 0 };
 
-const stub = (name: string): QlAddonManifest => ({
-  name,
-  version: "1.0.0",
-  description: name,
-  depends: [],
-  models: [],
-  access: [],
-  views: [],
-});
+const stub = stubAddonManifest;
 
 function zone(id: string, name: string): CloudflareZoneSummary {
   return { id, name, status: "active", paused: false, accountId: "acct-1" };
@@ -108,29 +101,24 @@ async function withConnector(
   ) => Promise<void>,
   connectorOverrides: Record<string, unknown> = {},
 ): Promise<void> {
-  const runtime = await createQlOrm("file::memory:", [
-    stub("ql_base"),
-    stub("ql_auth"),
-    integrationManifest,
-    cloudflareManifest,
-  ]);
-  try {
-    const connector = await runtime.orm.createRecordForService("integration.connector", {
-      kind: "cloudflare",
-      label: "Produksi",
-      token_source: "config_file",
-      token_ref: "file:~/.config/cloudflare/token",
-      owner_id: ownerId,
-      ...connectorOverrides,
-    });
-    const scope = { connectorId: String(connector.id), ownerId };
-    await run(runtime.orm, scope, {
-      connector_id: scope.connectorId,
-      owner_id: scope.ownerId,
-    });
-  } finally {
-    runtime.close();
-  }
+  await withMemoryOrm(
+    [stub("ql_base"), stub("ql_auth"), integrationManifest, cloudflareManifest],
+    async (orm) => {
+      const connector = await orm.createRecordForService("integration.connector", {
+        kind: "cloudflare",
+        label: "Produksi",
+        token_source: "config_file",
+        token_ref: "file:~/.config/cloudflare/token",
+        owner_id: ownerId,
+        ...connectorOverrides,
+      });
+      const scope = { connectorId: String(connector.id), ownerId };
+      await run(orm, scope, {
+        connector_id: scope.connectorId,
+        owner_id: scope.ownerId,
+      });
+    },
+  );
 }
 
 void test("sync mirrors zones and records and stamps the connector", async () => {

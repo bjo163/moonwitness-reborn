@@ -46,7 +46,7 @@ const manifest: QlAddonManifest = {
       name: "res.users.list",
       model: "res.users",
       type: "list",
-      fields: ["name", "email", "active"],
+      fields: ["name", "email", "preferred_locale", "active"],
     },
     {
       name: "res.role.list",

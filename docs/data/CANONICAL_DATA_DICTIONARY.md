@@ -2,7 +2,7 @@
 
 **Status: initial entity registry; field-level definitions require addon design and ratification.** One row means one canonical owner, not a commitment to implement every entity in the first release.
 
-This dictionary now reaches every domain in `docs/architecture/DOMAIN_OWNERSHIP_AND_DEPENDENCIES.md`, including the six §4.3 domains added by the prompt-coverage pass (Evidence, Law/AWS, Creative, Publication, Search, Platform Operations). `masterprompt.md` §4.4 requires entities, schema, lifecycle, routes, permissions, read models and tests **per domain**; those attributes exist today only as estate-wide rules, which is tracked as R-46. Events and notifications (§4.4 item 13) had no specification anywhere until this pass assigned them to `ql_ops`.
+This dictionary now reaches every domain in `docs/architecture/DOMAIN_OWNERSHIP_AND_DEPENDENCIES.md`, including the six §4.3 domains added during requirement-catalog coverage (Evidence, Law/AWS, Creative, Publication, Search, Platform Operations). The D30 catalog tracks the legacy §4.4 requirement for entities, schema, lifecycle, routes, permissions, read models and tests **per domain**; those attributes exist today only as estate-wide rules, which is tracked as R-46. Events and notifications (catalog item 13) had no specification anywhere until this pass assigned them to `ql_ops`.
 
 | Entity | Canonical owner | Core meaning | Key references / constraints |
 |---|---|---|---|

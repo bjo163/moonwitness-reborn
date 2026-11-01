@@ -1,5 +1,9 @@
-export { default } from "../../features/assistant/assistant-page";
+import DashboardPage from "../../features/dashboard/dashboard-page";
 
 export const metadata = {
-  title: "Command Center",
+  title: "Dashboard",
 };
+
+export default function CommandCenterRoute() {
+  return <DashboardPage />;
+}

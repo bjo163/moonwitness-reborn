@@ -1,13 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  createQlOrm,
   loadAddons,
   QlAccessError,
   QlValidationError,
-  type QlAddonManifest,
-  type QlOrm,
 } from "ql_orm";
+import { stubAddonManifest, withMemoryOrm } from "ql_orm/testing";
 import integrationManifest from "../__manifest__.js";
 import { integrationConnector } from "../models/integration_connector.js";
 import {
@@ -21,15 +19,7 @@ const user = { id: "owner-1", groups: ["user"] };
 const other = { id: "owner-2", groups: ["user"] };
 
 // Stub owners of the declared dependencies so this addon is tested in isolation.
-const stub = (name: string): QlAddonManifest => ({
-  name,
-  version: "1.0.0",
-  description: name,
-  depends: [],
-  models: [],
-  access: [],
-  views: [],
-});
+const stub = stubAddonManifest;
 
 function privateFieldNames(modelName: string): string[] {
   const addon = loadAddons([
@@ -51,17 +41,8 @@ function connectorValues(overrides: Record<string, unknown> = {}) {
   };
 }
 
-async function withOrm(run: (orm: QlOrm) => Promise<void>): Promise<void> {
-  const runtime = await createQlOrm("file::memory:", [
-    stub("ql_base"),
-    stub("ql_auth"),
-    integrationManifest,
-  ]);
-  try {
-    await run(runtime.orm);
-  } finally {
-    runtime.close();
-  }
+function withOrm(run: Parameters<typeof withMemoryOrm>[1]): Promise<void> {
+  return withMemoryOrm([stub("ql_base"), stub("ql_auth"), integrationManifest], run);
 }
 
 void test("the addon topologically sorts behind its dependencies", () => {

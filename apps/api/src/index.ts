@@ -4,16 +4,20 @@ import dotenv from "dotenv";
 import { OpenAICompatibleProvider } from "@moonwitness/agent-runtime";
 import { createConversationStore } from "@moonwitness/database";
 import { createQlOrm } from "ql_orm";
-import { countUsersWithRole, seedRoles } from "ql_auth/services/rbac";
+import { seedRoles } from "ql_auth/services/rbac";
 import aiManifest from "ql_ai/__manifest__";
 import authManifest from "ql_auth/__manifest__";
 import baseManifest from "ql_base/__manifest__";
 import chatManifest from "ql_chat/__manifest__";
 import cloudflareManifest from "ql_cloudflare/__manifest__";
+import corpusManifest from "ql_corpus/__manifest__";
 import integrationManifest from "ql_integration/__manifest__";
+import i18nManifest from "ql_i18n/__manifest__";
+import sourceManifest from "ql_source/__manifest__";
+import workflowManifest from "ql_workflow/__manifest__";
+import { seedCatalogs, seedLanguages } from "ql_i18n/services/catalog-service";
 import { resolveModelProviderConfig } from "./ai/model-config.js";
 import { parseProviderEncryptionKey } from "./ai/provider-secrets.js";
-import { readBootstrapAdmin } from "./auth/bootstrap.js";
 import { createApiServer } from "./http/server.js";
 
 dotenv.config({
@@ -33,20 +37,20 @@ const { orm, close: closeOrm } = await createQlOrm(databaseUrl, [
   aiManifest,
   chatManifest,
   integrationManifest,
+  i18nManifest,
   cloudflareManifest,
+  workflowManifest,
+  sourceManifest,
+  corpusManifest,
 ]);
+await seedLanguages(orm);
+await seedCatalogs(orm);
 await seedRoles(orm);
-if ((await countUsersWithRole(orm, "super_admin")) === 0) {
-  console.warn(
-    "Belum ada super_admin. Isi BOOTSTRAP_ADMIN_EMAIL dan BOOTSTRAP_ADMIN_TOKEN, daftar, lalu cabut kedua env itu.",
-  );
-}
 const store = createConversationStore(orm);
 const server = createApiServer(provider, store, orm, {
   encryptionKey: parseProviderEncryptionKey(
     process.env.PROVIDER_ENCRYPTION_KEY,
   ),
-  bootstrapAdmin: readBootstrapAdmin(process.env),
 });
 
 server.listen(port, () => {

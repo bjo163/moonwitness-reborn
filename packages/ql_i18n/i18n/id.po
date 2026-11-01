@@ -1,0 +1,2469 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\n"
+"Language: id\n"
+
+msgctxt "web:common.dashboard"
+msgid "Ringkasan"
+msgstr "Ringkasan"
+
+msgctxt "web:common.chat"
+msgid "Percakapan AI"
+msgstr "Percakapan AI"
+
+msgctxt "web:common.models"
+msgid "Model data"
+msgstr "Model data"
+
+msgctxt "web:common.providers"
+msgid "Provider model"
+msgstr "Provider model"
+
+msgctxt "web:common.integrations"
+msgid "Integrasi"
+msgstr "Integrasi"
+
+msgctxt "web:common.users"
+msgid "Manajemen pengguna"
+msgstr "Manajemen pengguna"
+
+msgctxt "web:common.account"
+msgid "Akun"
+msgstr "Akun"
+
+msgctxt "web:common.logout"
+msgid "Keluar"
+msgstr "Keluar"
+
+msgctxt "web:common.loading"
+msgid "Memuat MoonWitness..."
+msgstr "Memuat MoonWitness..."
+
+msgctxt "web:common.closeMenu"
+msgid "Tutup menu"
+msgstr "Tutup menu"
+
+msgctxt "web:common.openMenu"
+msgid "Buka menu"
+msgstr "Buka menu"
+
+msgctxt "web:common.localeLabel"
+msgid "Bahasa antarmuka"
+msgstr "Bahasa antarmuka"
+
+msgctxt "web:common.mainNavigation"
+msgid "Navigasi utama"
+msgstr "Navigasi utama"
+
+msgctxt "web:common.error"
+msgid "Terjadi kendala."
+msgstr "Terjadi kendala."
+
+msgctxt "web:common.statusAvailable"
+msgid "TERSEDIA"
+msgstr "TERSEDIA"
+
+msgctxt "web:common.statusProposed"
+msgid "USULAN"
+msgstr "USULAN"
+
+msgctxt "web:auth.setupTitle"
+msgid "Siapkan MoonWitness"
+msgstr "Siapkan MoonWitness"
+
+msgctxt "web:auth.setupDescription"
+msgid ""
+"Buat akun pemilik pertama untuk mengamankan dan mengelola workspace ini."
+msgstr ""
+"Buat akun pemilik pertama untuk mengamankan dan mengelola workspace ini."
+
+msgctxt "web:auth.setupSecurityNote"
+msgid ""
+"Penyiapan ini hanya tersedia sekali. Akun setelahnya akan menjadi member."
+msgstr ""
+"Penyiapan ini hanya tersedia sekali. Akun setelahnya akan menjadi member."
+
+msgctxt "web:auth.setupAction"
+msgid "Buat akun pemilik"
+msgstr "Buat akun pemilik"
+
+msgctxt "web:auth.loginTitle"
+msgid "Selamat datang kembali"
+msgstr "Selamat datang kembali"
+
+msgctxt "web:auth.registerTitle"
+msgid "Buat akun"
+msgstr "Buat akun"
+
+msgctxt "web:auth.loginDescription"
+msgid "Masuk untuk melanjutkan ke workspace pribadi MoonWitness."
+msgstr "Masuk untuk melanjutkan ke workspace pribadi MoonWitness."
+
+msgctxt "web:auth.name"
+msgid "Nama"
+msgstr "Nama"
+
+msgctxt "web:auth.namePlaceholder"
+msgid "Nama kamu"
+msgstr "Nama kamu"
+
+msgctxt "web:auth.email"
+msgid "Email"
+msgstr "Email"
+
+msgctxt "web:auth.emailPlaceholder"
+msgid "nama@email.com"
+msgstr "nama@email.com"
+
+msgctxt "web:auth.password"
+msgid "Kata sandi"
+msgstr "Kata sandi"
+
+msgctxt "web:auth.passwordPlaceholder"
+msgid "Kata sandi akun"
+msgstr "Kata sandi akun"
+
+msgctxt "web:auth.passwordMinimum"
+msgid "Minimal 12 karakter"
+msgstr "Minimal 12 karakter"
+
+msgctxt "web:auth.busy"
+msgid "Mohon tunggu..."
+msgstr "Mohon tunggu..."
+
+msgctxt "web:auth.registerAction"
+msgid "Buat akun"
+msgstr "Buat akun"
+
+msgctxt "web:auth.loginAction"
+msgid "Masuk"
+msgstr "Masuk"
+
+msgctxt "web:auth.existingAccount"
+msgid "Sudah punya akun?"
+msgstr "Sudah punya akun?"
+
+msgctxt "web:auth.newAccount"
+msgid "Belum punya akun?"
+msgstr "Belum punya akun?"
+
+msgctxt "web:auth.registerLink"
+msgid "Daftar"
+msgstr "Daftar"
+
+msgctxt "web:auth.loginLink"
+msgid "Masuk"
+msgstr "Masuk"
+
+msgctxt "web:auth.localeSaveError"
+msgid "Bahasa belum dapat disimpan. Coba lagi."
+msgstr "Bahasa belum dapat disimpan. Coba lagi."
+
+msgctxt "web:landing.title"
+msgid "Menjaga pengetahuan. Menelusuri sumber. Memahami konteks."
+msgstr "Menjaga pengetahuan. Menelusuri sumber. Memahami konteks."
+
+msgctxt "web:landing.description"
+msgid ""
+"MoonWitness adalah platform perangkat lunak dalam ekosistem A-L-L-A-H.COM—"
+"dibangun untuk membantu orang menjaga pengetahuan, menelusuri sumber, "
+"memahami konteks, dan bertindak secara bertanggung jawab."
+msgstr ""
+"MoonWitness adalah platform perangkat lunak dalam ekosistem A-L-L-A-H.COM—"
+"dibangun untuk membantu orang menjaga pengetahuan, menelusuri sumber, "
+"memahami konteks, dan bertindak secara bertanggung jawab."
+
+msgctxt "web:landing.ecosystemRelation"
+msgid "Satu platform produk di dalam ekosistem A-L-L-A-H.COM."
+msgstr "Satu platform produk di dalam ekosistem A-L-L-A-H.COM."
+
+msgctxt "web:landing.ecosystemContextTitle"
+msgid "Bagian dari ekosistem A-L-L-A-H.COM"
+msgstr "Bagian dari ekosistem A-L-L-A-H.COM"
+
+msgctxt "web:landing.ecosystemContext"
+msgid ""
+"A-L-L-A-H.COM adalah identitas publik dan gerbang ekosistem yang mendorong "
+"pembelajaran, teknologi yang bertanggung jawab, kreativitas, dan kontribusi "
+"bermakna. MoonWitness adalah platform perangkat lunak terintegrasi di "
+"dalamnya—bukan keseluruhan ekosistem."
+msgstr ""
+"A-L-L-A-H.COM adalah identitas publik dan gerbang ekosistem yang mendorong "
+"pembelajaran, teknologi yang bertanggung jawab, kreativitas, dan kontribusi "
+"bermakna. MoonWitness adalah platform perangkat lunak terintegrasi di "
+"dalamnya—bukan keseluruhan ekosistem."
+
+msgctxt "web:landing.ecosystemLinkLabel"
+msgid "Tentang hubungan ekosistem"
+msgstr "Tentang hubungan ekosistem"
+
+msgctxt "web:landing.primaryAction"
+msgid "Masuk atau mulai"
+msgstr "Masuk atau mulai"
+
+msgctxt "web:landing.signedInAction"
+msgid "Buka dashboard"
+msgstr "Buka dashboard"
+
+msgctxt "web:landing.login"
+msgid "Masuk"
+msgstr "Masuk"
+
+msgctxt "web:landing.currentFoundation"
+msgid "Fondasi yang tersedia saat ini"
+msgstr "Fondasi yang tersedia saat ini"
+
+msgctxt "web:landing.currentFoundationDescription"
+msgid ""
+"Implementasi saat ini berfokus pada fondasi AI dan workspace model-first—"
+"bukan klaim bahwa seluruh visi produk telah terwujud."
+msgstr ""
+"Implementasi saat ini berfokus pada fondasi AI dan workspace model-first—"
+"bukan klaim bahwa seluruh visi produk telah terwujud."
+
+msgctxt "web:landing.foundationChat"
+msgid "Percakapan AI"
+msgstr "Percakapan AI"
+
+msgctxt "web:landing.foundationModels"
+msgid "Runtime model addon"
+msgstr "Runtime model addon"
+
+msgctxt "web:landing.foundationProviders"
+msgid "Konfigurasi provider model"
+msgstr "Konfigurasi provider model"
+
+msgctxt "web:landing.foundationConnectors"
+msgid "Konektor eksternal"
+msgstr "Konektor eksternal"
+
+msgctxt "web:landing.productDirection"
+msgid "Arah produk"
+msgstr "Arah produk"
+
+msgctxt "web:landing.journey.step_1"
+msgid "Jaga"
+msgstr "Jaga"
+
+msgctxt "web:landing.journey.step_2"
+msgid "Temukan"
+msgstr "Temukan"
+
+msgctxt "web:landing.journey.step_3"
+msgid "Telusuri"
+msgstr "Telusuri"
+
+msgctxt "web:landing.journey.step_4"
+msgid "Hubungkan"
+msgstr "Hubungkan"
+
+msgctxt "web:landing.journey.step_5"
+msgid "Pahami"
+msgstr "Pahami"
+
+msgctxt "web:landing.journey.step_6"
+msgid "Teliti"
+msgstr "Teliti"
+
+msgctxt "web:landing.journey.step_7"
+msgid "Berkreasi"
+msgstr "Berkreasi"
+
+msgctxt "web:landing.journey.step_8"
+msgid "Tinjau"
+msgstr "Tinjau"
+
+msgctxt "web:landing.journey.step_9"
+msgid "Terbitkan"
+msgstr "Terbitkan"
+
+msgctxt "web:landing.journey.step_10"
+msgid "Bertindak"
+msgstr "Bertindak"
+
+msgctxt "web:landing.journeyNote"
+msgid ""
+"Alur sumber hingga publikasi adalah arah bertahap; kemampuan tersebut belum "
+"seluruhnya tersedia di aplikasi."
+msgstr ""
+"Alur sumber hingga publikasi adalah arah bertahap; kemampuan tersebut belum "
+"seluruhnya tersedia di aplikasi."
+
+msgctxt "web:landing.footer"
+msgid ""
+"MoonWitness adalah platform dalam ekosistem A-L-L-A-H.COM. Status produk dan "
+"fitur mengikuti bukti implementasi."
+msgstr ""
+"MoonWitness adalah platform dalam ekosistem A-L-L-A-H.COM. Status produk dan "
+"fitur mengikuti bukti implementasi."
+
+msgctxt "web:landing.localeSaveError"
+msgid "Bahasa belum dapat disimpan. Coba lagi."
+msgstr "Bahasa belum dapat disimpan. Coba lagi."
+
+msgctxt "web:landing.progressTitle"
+msgid "Progres pekerjaan"
+msgstr "Progres pekerjaan"
+
+msgctxt "web:landing.progressDescription"
+msgid ""
+"Ringkasan ini menunjukkan status tracker proyek, bukan tingkat kesiapan "
+"produk atau rilis."
+msgstr ""
+"Ringkasan ini menunjukkan status tracker proyek, bukan tingkat kesiapan "
+"produk atau rilis."
+
+msgctxt "web:landing.progressLoading"
+msgid "Memuat ringkasan progres..."
+msgstr "Memuat ringkasan progres..."
+
+msgctxt "web:landing.progressError"
+msgid "Ringkasan progres tidak dapat dimuat."
+msgstr "Ringkasan progres tidak dapat dimuat."
+
+msgctxt "web:landing.progressDone"
+msgid "Selesai"
+msgstr "Selesai"
+
+msgctxt "web:landing.progressReady"
+msgid "Siap dikerjakan"
+msgstr "Siap dikerjakan"
+
+msgctxt "web:landing.progressBlocked"
+msgid "Terblokir"
+msgstr "Terblokir"
+
+msgctxt "web:landing.progressNote"
+msgid ""
+"Status Done tidak berarti sudah dirilis. Riwayat rilis tetap tercatat "
+"terpisah."
+msgstr ""
+"Status Done tidak berarti sudah dirilis. Riwayat rilis tetap tercatat "
+"terpisah."
+
+msgctxt "web:dashboard.greeting"
+msgid "Selamat datang,"
+msgstr "Selamat datang,"
+
+msgctxt "web:dashboard.description"
+msgid ""
+"Satu workspace untuk percakapan AI, konfigurasi model, dan integrasi. "
+"Gunakan hasil AI sebagai bantuan; keputusan dan publikasi tetap memerlukan "
+"tanggung jawab manusia."
+msgstr ""
+"Satu workspace untuk percakapan AI, konfigurasi model, dan integrasi. "
+"Gunakan hasil AI sebagai bantuan; keputusan dan publikasi tetap memerlukan "
+"tanggung jawab manusia."
+
+msgctxt "web:dashboard.continueChat"
+msgid "Buka percakapan"
+msgstr "Buka percakapan"
+
+msgctxt "web:dashboard.availableTitle"
+msgid "Kemampuan yang tersedia"
+msgstr "Kemampuan yang tersedia"
+
+msgctxt "web:dashboard.availableDescription"
+msgid "Pintasan di bawah membuka area yang sudah ada di aplikasi."
+msgstr "Pintasan di bawah membuka area yang sudah ada di aplikasi."
+
+msgctxt "web:dashboard.chatDescription"
+msgid ""
+"Mulai percakapan atau lanjutkan riwayat dengan provider model yang "
+"dikonfigurasi."
+msgstr ""
+"Mulai percakapan atau lanjutkan riwayat dengan provider model yang "
+"dikonfigurasi."
+
+msgctxt "web:dashboard.modelsDescription"
+msgid "Jelajahi model dan metadata addon yang tersedia sesuai akses akun."
+msgstr "Jelajahi model dan metadata addon yang tersedia sesuai akses akun."
+
+msgctxt "web:dashboard.providersDescription"
+msgid "Kelola endpoint dan pilihan provider untuk percakapan AI."
+msgstr "Kelola endpoint dan pilihan provider untuk percakapan AI."
+
+msgctxt "web:dashboard.integrationsDescription"
+msgid "Kelola konektor eksternal yang tersedia bagi peran akunmu."
+msgstr "Kelola konektor eksternal yang tersedia bagi peran akunmu."
+
+msgctxt "web:dashboard.directionTitle"
+msgid "Dari sumber menuju tindakan yang bertanggung jawab"
+msgstr "Dari sumber menuju tindakan yang bertanggung jawab"
+
+msgctxt "web:dashboard.directionDescription"
+msgid ""
+"Misi jangka panjang MoonWitness adalah membuat pengetahuan lebih mudah "
+"dijaga, ditelusuri, dan dipahami."
+msgstr ""
+"Misi jangka panjang MoonWitness adalah membuat pengetahuan lebih mudah "
+"dijaga, ditelusuri, dan dipahami."
+
+msgctxt "web:dashboard.directionNote"
+msgid "Tahapan ini adalah arah produk, bukan daftar fitur yang sudah tersedia."
+msgstr ""
+"Tahapan ini adalah arah produk, bukan daftar fitur yang sudah tersedia."
+
+msgctxt "web:dashboard.logoutError"
+msgid "Gagal keluar. Coba lagi."
+msgstr "Gagal keluar. Coba lagi."
+
+msgctxt "web:dashboard.trackerTitle"
+msgid "Tracker pekerjaan"
+msgstr "Tracker pekerjaan"
+
+msgctxt "web:dashboard.trackerDescription"
+msgid ""
+"Tampilan baca-saja dari task proyek. Task berikutnya hanya dihitung siap "
+"jika semua dependensinya selesai."
+msgstr ""
+"Tampilan baca-saja dari task proyek. Task berikutnya hanya dihitung siap "
+"jika semua dependensinya selesai."
+
+msgctxt "web:dashboard.trackerLoading"
+msgid "Memuat task proyek..."
+msgstr "Memuat task proyek..."
+
+msgctxt "web:dashboard.trackerError"
+msgid "Detail tracker tidak dapat dimuat."
+msgstr "Detail tracker tidak dapat dimuat."
+
+msgctxt "web:dashboard.trackerReadyTitle"
+msgid "Langkah berikutnya"
+msgstr "Langkah berikutnya"
+
+msgctxt "web:dashboard.trackerEmptyReady"
+msgid "Belum ada task yang siap berdasarkan dependensinya."
+msgstr "Belum ada task yang siap berdasarkan dependensinya."
+
+msgctxt "web:dashboard.trackerAllTitle"
+msgid "Semua task"
+msgstr "Semua task"
+
+msgctxt "web:dashboard.trackerStateLabels.done"
+msgid "Selesai"
+msgstr "Selesai"
+
+msgctxt "web:dashboard.trackerStateLabels.in_progress"
+msgid "Sedang dikerjakan"
+msgstr "Sedang dikerjakan"
+
+msgctxt "web:dashboard.trackerStateLabels.proposed"
+msgid "Usulan"
+msgstr "Usulan"
+
+msgctxt "web:dashboard.trackerStateLabels.blocked"
+msgid "Terblokir"
+msgstr "Terblokir"
+
+msgctxt "web:dashboard.trackerStateLabels.pending"
+msgid "Menunggu"
+msgstr "Menunggu"
+
+msgctxt "web:dashboard.trackerAcceptance"
+msgid "Kriteria penerimaan"
+msgstr "Kriteria penerimaan"
+
+msgctxt "web:dashboard.trackerDependencies"
+msgid "Dependensi"
+msgstr "Dependensi"
+
+msgctxt "web:dashboard.trackerOwner"
+msgid "Pemilik"
+msgstr "Pemilik"
+
+msgctxt "web:dashboard.trackerCompletedAt"
+msgid "Selesai pada"
+msgstr "Selesai pada"
+
+msgctxt "web:dashboard.trackerHistoryNote"
+msgid ""
+"Tanggal penyelesaian historis yang tidak tercatat tidak ditampilkan; status "
+"selesai bukan bukti rilis."
+msgstr ""
+"Tanggal penyelesaian historis yang tidak tercatat tidak ditampilkan; status "
+"selesai bukan bukti rilis."
+
+msgctxt "web:assistant.newConversation"
+msgid "Percakapan baru"
+msgstr "Percakapan baru"
+
+msgctxt "web:assistant.history"
+msgid "Riwayat"
+msgstr "Riwayat"
+
+msgctxt "web:assistant.emptyHistory"
+msgid "Percakapan yang dibuat akan muncul di sini."
+msgstr "Percakapan yang dibuat akan muncul di sini."
+
+msgctxt "web:assistant.deleteConversation"
+msgid "Hapus percakapan"
+msgstr "Hapus percakapan"
+
+msgctxt "web:assistant.deleteNamedConversation"
+msgid "Hapus"
+msgstr "Hapus"
+
+msgctxt "web:assistant.aiAssistant"
+msgid "Asisten AI"
+msgstr "Asisten AI"
+
+msgctxt "web:assistant.startPrompt"
+msgid "Apa yang ingin kamu bahas?"
+msgstr "Apa yang ingin kamu bahas?"
+
+msgctxt "web:assistant.startDescription"
+msgid "Mulai percakapan baru. Riwayat chat tersimpan di akunmu."
+msgstr "Mulai percakapan baru. Riwayat chat tersimpan di akunmu."
+
+msgctxt "web:assistant.startAction"
+msgid "Mulai percakapan"
+msgstr "Mulai percakapan"
+
+msgctxt "web:assistant.inputPlaceholder"
+msgid "Kirim pesan..."
+msgstr "Kirim pesan..."
+
+msgctxt "web:assistant.activeInputPlaceholder"
+msgid "Tanyakan apa saja..."
+msgstr "Tanyakan apa saja..."
+
+msgctxt "web:assistant.sendMessage"
+msgid "Kirim pesan"
+msgstr "Kirim pesan"
+
+msgctxt "web:assistant.noMessages"
+msgid "Belum ada pesan di percakapan ini."
+msgstr "Belum ada pesan di percakapan ini."
+
+msgctxt "web:assistant.loadingMessages"
+msgid "Memuat percakapan..."
+msgstr "Memuat percakapan..."
+
+msgctxt "web:assistant.conversationError"
+msgid "Gagal memuat percakapan."
+msgstr "Gagal memuat percakapan."
+
+msgctxt "web:assistant.sendError"
+msgid "Pesan gagal dikirim."
+msgstr "Pesan gagal dikirim."
+
+msgctxt "web:assistant.deleteError"
+msgid "Gagal menghapus percakapan."
+msgstr "Gagal menghapus percakapan."
+
+msgctxt "web:assistant.logoutError"
+msgid "Gagal keluar."
+msgstr "Gagal keluar."
+
+msgctxt "web:assistant.savedNotice"
+msgid ""
+"Jawaban AI dapat keliru atau tidak lengkap; periksa sumber dan konteks "
+"sebelum mengandalkannya."
+msgstr ""
+"Jawaban AI dapat keliru atau tidak lengkap; periksa sumber dan konteks "
+"sebelum mengandalkannya."
+
+msgctxt "web:assistant.homeLink"
+msgid "Kembali ke dashboard"
+msgstr "Kembali ke dashboard"
+
+msgctxt "web:assistant.activePrompt"
+msgid "Ada yang bisa saya bantu?"
+msgstr "Ada yang bisa saya bantu?"
+
+msgctxt "web:assistant.activeDescription"
+msgid "Kirim pesan untuk memulai percakapan."
+msgstr "Kirim pesan untuk memulai percakapan."
+
+msgctxt "web:assistant.thinking"
+msgid "Menyiapkan jawaban..."
+msgstr "Menyiapkan jawaban..."
+
+msgctxt "web:assistant.newConversationPlaceholder"
+msgid "Buat percakapan baru untuk mulai mengetik"
+msgstr "Buat percakapan baru untuk mulai mengetik"
+
+msgctxt "web:assistant.sendHint"
+msgid "Enter untuk kirim · Shift + Enter untuk baris baru"
+msgstr "Enter untuk kirim · Shift + Enter untuk baris baru"
+
+msgctxt "web:workflow.navLabel"
+msgid "Antrean review"
+msgstr "Antrean review"
+
+msgctxt "web:workflow.queueTitle"
+msgid "Antrean review CAB"
+msgstr "Antrean review CAB"
+
+msgctxt "web:workflow.queueSubtitle"
+msgid ""
+"Perubahan yang diusulkan oleh anggota workspace; reviewer (admin/operator) "
+"memberi keputusan. Transisi tercatat permanen."
+msgstr ""
+"Perubahan yang diusulkan oleh anggota workspace; reviewer (admin/operator) "
+"memberi keputusan. Transisi tercatat permanen."
+
+msgctxt "web:workflow.loading"
+msgid "Memuat antrean review..."
+msgstr "Memuat antrean review..."
+
+msgctxt "web:workflow.empty"
+msgid "Belum ada perubahan yang menunggu review."
+msgstr "Belum ada perubahan yang menunggu review."
+
+msgctxt "web:workflow.errorQueue"
+msgid "Antrean review gagal dimuat."
+msgstr "Antrean review gagal dimuat."
+
+msgctxt "web:workflow.errorTransition"
+msgid "Transisi ditolak server; perubahan tidak tersimpan."
+msgstr "Transisi ditolak server; perubahan tidak tersimpan."
+
+msgctxt "web:workflow.transitionSaved"
+msgid "Transisi tercatat."
+msgstr "Transisi tercatat."
+
+msgctxt "web:workflow.columnTitle"
+msgid "Judul"
+msgstr "Judul"
+
+msgctxt "web:workflow.columnState"
+msgid "Status"
+msgstr "Status"
+
+msgctxt "web:workflow.columnUrgency"
+msgid "Urgensi"
+msgstr "Urgensi"
+
+msgctxt "web:workflow.columnRevision"
+msgid "Revisi"
+msgstr "Revisi"
+
+msgctxt "web:workflow.columnUpdated"
+msgid "Diperbarui"
+msgstr "Diperbarui"
+
+msgctxt "web:workflow.detailTitle"
+msgid "Detail perubahan"
+msgstr "Detail perubahan"
+
+msgctxt "web:workflow.detailBody"
+msgid "Deskripsi"
+msgstr "Deskripsi"
+
+msgctxt "web:workflow.detailSubject"
+msgid "Objek"
+msgstr "Objek"
+
+msgctxt "web:workflow.reasonLabel"
+msgid "Alasan"
+msgstr "Alasan"
+
+msgctxt "web:workflow.reasonPlaceholder"
+msgid "Tuliskan alasan transisi (opsional)"
+msgstr "Tuliskan alasan transisi (opsional)"
+
+msgctxt "web:workflow.auditTitle"
+msgid "Riwayat transisi"
+msgstr "Riwayat transisi"
+
+msgctxt "web:workflow.auditEmpty"
+msgid "Belum ada transisi tercatat."
+msgstr "Belum ada transisi tercatat."
+
+msgctxt "web:workflow.auditFrom"
+msgid "Dari"
+msgstr "Dari"
+
+msgctxt "web:workflow.auditTo"
+msgid "Ke"
+msgstr "Ke"
+
+msgctxt "web:workflow.auditAction"
+msgid "Aksi"
+msgstr "Aksi"
+
+msgctxt "web:workflow.auditWhen"
+msgid "Waktu"
+msgstr "Waktu"
+
+msgctxt "web:workflow.auditReason"
+msgid "Alasan"
+msgstr "Alasan"
+
+msgctxt "web:workflow.stateLabels.draft"
+msgid "Draf"
+msgstr "Draf"
+
+msgctxt "web:workflow.stateLabels.submitted"
+msgid "Terkirim"
+msgstr "Terkirim"
+
+msgctxt "web:workflow.stateLabels.in_review"
+msgid "Sedang direview"
+msgstr "Sedang direview"
+
+msgctxt "web:workflow.stateLabels.changes_requested"
+msgid "Perubahan diminta"
+msgstr "Perubahan diminta"
+
+msgctxt "web:workflow.stateLabels.approved"
+msgid "Disetujui"
+msgstr "Disetujui"
+
+msgctxt "web:workflow.stateLabels.rejected"
+msgid "Ditolak"
+msgstr "Ditolak"
+
+msgctxt "web:workflow.stateLabels.withdrawn"
+msgid "Ditarik"
+msgstr "Ditarik"
+
+msgctxt "web:workflow.stateLabels.superseded"
+msgid "Digantikan"
+msgstr "Digantikan"
+
+msgctxt "web:workflow.stateLabels.published"
+msgid "Terbit"
+msgstr "Terbit"
+
+msgctxt "web:workflow.actionLabels.submit"
+msgid "Kirim"
+msgstr "Kirim"
+
+msgctxt "web:workflow.actionLabels.start_review"
+msgid "Mulai review"
+msgstr "Mulai review"
+
+msgctxt "web:workflow.actionLabels.approve"
+msgid "Setujui"
+msgstr "Setujui"
+
+msgctxt "web:workflow.actionLabels.request_changes"
+msgid "Minta perubahan"
+msgstr "Minta perubahan"
+
+msgctxt "web:workflow.actionLabels.reject"
+msgid "Tolak"
+msgstr "Tolak"
+
+msgctxt "web:workflow.actionLabels.publish"
+msgid "Terbitkan"
+msgstr "Terbitkan"
+
+msgctxt "web:workflow.actionLabels.withdraw"
+msgid "Tarik"
+msgstr "Tarik"
+
+msgctxt "web:workflow.actionLabels.supersede"
+msgid "Gantikan"
+msgstr "Gantikan"
+
+msgctxt "web:common.catalogUnavailable"
+msgid "Katalog terjemahan tidak tersedia. Katalog bawaan sedang digunakan."
+msgstr "Katalog terjemahan tidak tersedia. Katalog bawaan sedang digunakan."
+
+msgctxt "web:common.retry"
+msgid "Coba lagi"
+msgstr "Coba lagi"
+
+msgctxt "web:translationAdmin.title"
+msgid "Terjemahan antarmuka"
+msgstr "Terjemahan antarmuka"
+
+msgctxt "web:translationAdmin.description"
+msgid "Kelola katalog UI per bahasa. Simpan perubahan sebagai draf, tinjau, lalu setujui sebelum diterbitkan."
+msgstr "Kelola katalog UI per bahasa. Simpan perubahan sebagai draf, tinjau, lalu setujui sebelum diterbitkan."
+
+msgctxt "web:translationAdmin.back"
+msgid "Kembali ke pusat kendali"
+msgstr "Kembali ke pusat kendali"
+
+msgctxt "web:translationAdmin.loading"
+msgid "Memuat katalog terjemahan..."
+msgstr "Memuat katalog terjemahan..."
+
+msgctxt "web:translationAdmin.signIn"
+msgid "Masuk untuk mengelola terjemahan"
+msgstr "Masuk untuk mengelola terjemahan"
+
+msgctxt "web:translationAdmin.accessDenied"
+msgid "Pengelolaan katalog hanya tersedia untuk admin."
+msgstr "Pengelolaan katalog hanya tersedia untuk admin."
+
+msgctxt "web:translationAdmin.targetLanguage"
+msgid "Bahasa katalog"
+msgstr "Bahasa katalog"
+
+msgctxt "web:translationAdmin.search"
+msgid "Cari namespace, key, sumber, atau terjemahan"
+msgstr "Cari namespace, key, sumber, atau terjemahan"
+
+msgctxt "web:translationAdmin.allStatuses"
+msgid "Semua status"
+msgstr "Semua status"
+
+msgctxt "web:translationAdmin.draftStatus"
+msgid "Draf"
+msgstr "Draf"
+
+msgctxt "web:translationAdmin.publishedStatus"
+msgid "Diterbitkan"
+msgstr "Diterbitkan"
+
+msgctxt "web:translationAdmin.entries"
+msgid "{count} entri"
+msgstr "{count} entri"
+
+msgctxt "web:translationAdmin.noResults"
+msgid "Tidak ada terjemahan yang cocok dengan filter."
+msgstr "Tidak ada terjemahan yang cocok dengan filter."
+
+msgctxt "web:translationAdmin.selectEntry"
+msgid "Pilih entri untuk meninjau atau mengubah terjemahannya."
+msgstr "Pilih entri untuk meninjau atau mengubah terjemahannya."
+
+msgctxt "web:translationAdmin.source"
+msgid "Teks sumber"
+msgstr "Teks sumber"
+
+msgctxt "web:translationAdmin.translated"
+msgid "Terjemahan"
+msgstr "Terjemahan"
+
+msgctxt "web:translationAdmin.context"
+msgid "Konteks"
+msgstr "Konteks"
+
+msgctxt "web:translationAdmin.catalogKey"
+msgid "Key katalog"
+msgstr "Key katalog"
+
+msgctxt "web:translationAdmin.provenance"
+msgid "Asal draf"
+msgstr "Asal draf"
+
+msgctxt "web:translationAdmin.saveDraft"
+msgid "Simpan sebagai draf"
+msgstr "Simpan sebagai draf"
+
+msgctxt "web:translationAdmin.approve"
+msgid "Setujui dan terbitkan"
+msgstr "Setujui dan terbitkan"
+
+msgctxt "web:translationAdmin.aiDraft"
+msgid "Buat draf dengan AI"
+msgstr "Buat draf dengan AI"
+
+msgctxt "web:translationAdmin.importPo"
+msgid "Impor PO"
+msgstr "Impor PO"
+
+msgctxt "web:translationAdmin.exportPo"
+msgid "Ekspor PO"
+msgstr "Ekspor PO"
+
+msgctxt "web:translationAdmin.statusSaved"
+msgid "Draf terjemahan berhasil disimpan."
+msgstr "Draf terjemahan berhasil disimpan."
+
+msgctxt "web:translationAdmin.statusApproved"
+msgid "Terjemahan disetujui dan katalog diperbarui."
+msgstr "Terjemahan disetujui dan katalog diperbarui."
+
+msgctxt "web:translationAdmin.statusAiDraft"
+msgid "AI membuat draf. Tinjau hasilnya sebelum menyetujui."
+msgstr "AI membuat draf. Tinjau hasilnya sebelum menyetujui."
+
+msgctxt "web:translationAdmin.statusImported"
+msgid "{count} entri PO diimpor sebagai draf."
+msgstr "{count} entri PO diimpor sebagai draf."
+
+msgctxt "web:translationAdmin.statusExported"
+msgid "Katalog PO berhasil diekspor."
+msgstr "Katalog PO berhasil diekspor."
+
+msgctxt "web:translationAdmin.fileReadError"
+msgid "Berkas PO tidak dapat dibaca."
+msgstr "Berkas PO tidak dapat dibaca."
+
+msgctxt "web:translationAdmin.sourceManual"
+msgid "Manual"
+msgstr "Manual"
+
+msgctxt "web:translationAdmin.sourceImport"
+msgid "Impor"
+msgstr "Impor"
+
+msgctxt "web:translationAdmin.sourceAi"
+msgid "Draf AI"
+msgstr "Draf AI"
+
+msgctxt "web:translationAdmin.sourceSeed"
+msgid "Katalog bawaan"
+msgstr "Katalog bawaan"
+
+msgctxt "web:translationAdmin.filterLabel"
+msgid "Filter entri katalog"
+msgstr "Filter entri katalog"
+
+msgctxt "web:translationAdmin.importing"
+msgid "Mengimpor..."
+msgstr "Mengimpor..."
+
+msgctxt "web:translationAdmin.exporting"
+msgid "Mengekspor..."
+msgstr "Mengekspor..."
+
+msgctxt "web:translationAdmin.aiReviewNotice"
+msgid "Draf AI tidak pernah diterbitkan otomatis."
+msgstr "Draf AI tidak pernah diterbitkan otomatis."
+
+msgctxt "web:translationAdmin.updated"
+msgid "Diperbarui {date}"
+msgstr "Diperbarui {date}"
+
+msgctxt "web:translationAdmin.languageId"
+msgid "Bahasa Indonesia"
+msgstr "Bahasa Indonesia"
+
+msgctxt "web:translationAdmin.languageEn"
+msgid "Inggris"
+msgstr "Inggris"
+
+msgctxt "web:translationAdmin.pluralOne"
+msgid "Bentuk tunggal"
+msgstr "Bentuk tunggal"
+
+msgctxt "web:translationAdmin.pluralOther"
+msgid "Bentuk jamak"
+msgstr "Bentuk jamak"
+
+msgctxt "web:errors.authentication"
+msgid "Sesi tidak valid. Masuk kembali untuk melanjutkan."
+msgstr "Sesi tidak valid. Masuk kembali untuk melanjutkan."
+
+msgctxt "web:errors.accessDenied"
+msgid "Akun ini tidak memiliki izin untuk melakukan tindakan tersebut."
+msgstr "Akun ini tidak memiliki izin untuk melakukan tindakan tersebut."
+
+msgctxt "web:errors.invalidRequest"
+msgid "Permintaan tidak valid. Periksa isian dan coba lagi."
+msgstr "Permintaan tidak valid. Periksa isian dan coba lagi."
+
+msgctxt "web:errors.notFound"
+msgid "Data yang diminta tidak ditemukan."
+msgstr "Data yang diminta tidak ditemukan."
+
+msgctxt "web:errors.conflict"
+msgid "Data berubah atau bertentangan dengan tindakan ini. Muat ulang lalu coba lagi."
+msgstr "Data berubah atau bertentangan dengan tindakan ini. Muat ulang lalu coba lagi."
+
+msgctxt "web:errors.rateLimited"
+msgid "Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi."
+msgstr "Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi."
+
+msgctxt "web:errors.server"
+msgid "Layanan mengalami kendala. Coba lagi nanti."
+msgstr "Layanan mengalami kendala. Coba lagi nanti."
+
+msgctxt "web:errors.network"
+msgid "Tidak dapat terhubung ke layanan. Periksa koneksi lalu coba lagi."
+msgstr "Tidak dapat terhubung ke layanan. Periksa koneksi lalu coba lagi."
+
+msgctxt "web:errors.generic"
+msgid "Tindakan tidak dapat diselesaikan. Coba lagi."
+msgstr "Tindakan tidak dapat diselesaikan. Coba lagi."
+
+msgctxt "web.models:title"
+msgid "Workspace model"
+msgstr "Workspace model"
+
+msgctxt "web.models:loading"
+msgid "Memuat model MoonWitness..."
+msgstr "Memuat model MoonWitness..."
+
+msgctxt "web.common:actions"
+msgid "Aksi"
+msgstr "Aksi"
+
+msgctxt "web.common:yes"
+msgid "Ya"
+msgstr "Ya"
+
+msgctxt "web.common:no"
+msgid "Tidak"
+msgstr "Tidak"
+
+msgctxt "web.models:signIn"
+msgid "Masuk untuk mengakses data addon."
+msgstr "Masuk untuk mengakses data addon."
+
+msgctxt "web.models:back"
+msgid "Kembali ke autentikasi"
+msgstr "Kembali ke autentikasi"
+
+msgctxt "web.models:aiWorkspace"
+msgid "Workspace AI"
+msgstr "Workspace AI"
+
+msgctxt "web.models:providers"
+msgid "Provider model"
+msgstr "Provider model"
+
+msgctxt "web.models:addonModels"
+msgid "Model addon"
+msgstr "Model addon"
+
+msgctxt "web.models:noModel"
+msgid "Tidak ada model"
+msgstr "Tidak ada model"
+
+msgctxt "web.models:dataViews"
+msgid "Tampilan data dari metadata addon"
+msgstr "Tampilan data dari metadata addon"
+
+msgctxt "web.models:section"
+msgid "DATA BERDASARKAN MODEL"
+msgstr "DATA BERDASARKAN MODEL"
+
+msgctxt "web.models:chooseModel"
+msgid "Pilih model dari addon."
+msgstr "Pilih model dari addon."
+
+msgctxt "web.models:addRecord"
+msgid "Tambah record"
+msgstr "Tambah record"
+
+msgctxt "web.models:emptyModels"
+msgid "Model yang dapat diakses belum tersedia."
+msgstr "Model yang dapat diakses belum tersedia."
+
+msgctxt "web.models:emptyRecords"
+msgid "Belum ada data. Tambahkan record untuk memulai."
+msgstr "Belum ada data. Tambahkan record untuk memulai."
+
+msgctxt "web.models:deleteRecord"
+msgid "Hapus {name}"
+msgstr "Hapus {name}"
+
+msgctxt "web.models:formRecord"
+msgid "Form record"
+msgstr "Form record"
+
+msgctxt "web.models:editRecord"
+msgid "EDIT RECORD"
+msgstr "EDIT RECORD"
+
+msgctxt "web.models:newRecord"
+msgid "RECORD BARU"
+msgstr "RECORD BARU"
+
+msgctxt "web.models:editData"
+msgid "Edit data"
+msgstr "Edit data"
+
+msgctxt "web.models:addData"
+msgid "Tambah data"
+msgstr "Tambah data"
+
+msgctxt "web.models:closeForm"
+msgid "Tutup form"
+msgstr "Tutup form"
+
+msgctxt "web.models:cancel"
+msgid "Batal"
+msgstr "Batal"
+
+msgctxt "web.models:save"
+msgid "Simpan"
+msgstr "Simpan"
+
+msgctxt "web.models:saving"
+msgid "Menyimpan..."
+msgstr "Menyimpan..."
+
+msgctxt "web.providers:loading"
+msgid "Memuat provider..."
+msgstr "Memuat provider..."
+
+msgctxt "web.providers:signIn"
+msgid "Masuk untuk mengatur provider"
+msgstr "Masuk untuk mengatur provider"
+
+msgctxt "web.providers:description"
+msgid "Konfigurasi provider tersimpan terpisah untuk setiap akun."
+msgstr "Konfigurasi provider tersimpan terpisah untuk setiap akun."
+
+msgctxt "web.providers:back"
+msgid "Kembali ke chat"
+msgstr "Kembali ke chat"
+
+msgctxt "web.providers:gateway"
+msgid "Gateway model"
+msgstr "Gateway model"
+
+msgctxt "web.providers:personal"
+msgid "Provider pribadi"
+msgstr "Provider pribadi"
+
+msgctxt "web.providers:eyebrow"
+msgid "MoonWitness · Gateway"
+msgstr "MoonWitness · Gateway"
+
+msgctxt "web.providers:title"
+msgid "Provider model"
+msgstr "Provider model"
+
+msgctxt "web.providers:intro"
+msgid "Hubungkan endpoint OpenAI-compatible milikmu. Saat provider gagal, MoonWitness mencoba provider aktif berikutnya sesuai urutan."
+msgstr "Hubungkan endpoint OpenAI-compatible milikmu. Saat provider gagal, MoonWitness mencoba provider aktif berikutnya sesuai urutan."
+
+msgctxt "web.providers:empty"
+msgid "Belum ada provider. Tambahkan provider OpenAI-compatible untuk mengaktifkan chat."
+msgstr "Belum ada provider. Tambahkan provider OpenAI-compatible untuk mengaktifkan chat."
+
+msgctxt "web.providers:active"
+msgid "Aktif"
+msgstr "Aktif"
+
+msgctxt "web.providers:inactive"
+msgid "Nonaktif"
+msgstr "Nonaktif"
+
+msgctxt "web.providers:priority"
+msgid "Prioritas {number}"
+msgstr "Prioritas {number}"
+
+msgctxt "web.providers:keyStored"
+msgid "API key tersimpan terenkripsi"
+msgstr "API key tersimpan terenkripsi"
+
+msgctxt "web.providers:keyMissing"
+msgid "API key belum tersimpan"
+msgstr "API key belum tersimpan"
+
+msgctxt "web.providers:raisePriority"
+msgid "Naikkan prioritas"
+msgstr "Naikkan prioritas"
+
+msgctxt "web.providers:lowerPriority"
+msgid "Turunkan prioritas"
+msgstr "Turunkan prioritas"
+
+msgctxt "web.providers:edit"
+msgid "Edit"
+msgstr "Edit"
+
+msgctxt "web.providers:delete"
+msgid "Hapus {name}"
+msgstr "Hapus {name}"
+
+msgctxt "web.providers:editTitle"
+msgid "Edit provider"
+msgstr "Edit provider"
+
+msgctxt "web.providers:addTitle"
+msgid "Tambah provider"
+msgstr "Tambah provider"
+
+msgctxt "web.providers:securityNote"
+msgid "MoonWitness hanya menyimpan API key dalam bentuk terenkripsi."
+msgstr "MoonWitness hanya menyimpan API key dalam bentuk terenkripsi."
+
+msgctxt "web.providers:cancelEdit"
+msgid "Batal edit"
+msgstr "Batal edit"
+
+msgctxt "web.providers:name"
+msgid "Nama provider"
+msgstr "Nama provider"
+
+msgctxt "web.providers:namePlaceholder"
+msgid "Provider saya"
+msgstr "Provider saya"
+
+msgctxt "web.providers:modelId"
+msgid "ID model"
+msgstr "ID model"
+
+msgctxt "web.providers:modelPlaceholder"
+msgid "model-id atau auto"
+msgstr "model-id atau auto"
+
+msgctxt "web.providers:baseUrl"
+msgid "Base URL OpenAI-compatible"
+msgstr "Base URL OpenAI-compatible"
+
+msgctxt "web.providers:newApiKey"
+msgid "API key baru (opsional)"
+msgstr "API key baru (opsional)"
+
+msgctxt "web.providers:apiKey"
+msgid "API key"
+msgstr "API key"
+
+msgctxt "web.providers:keepKey"
+msgid "Kosongkan untuk mempertahankan key saat ini"
+msgstr "Kosongkan untuk mempertahankan key saat ini"
+
+msgctxt "web.providers:yourKey"
+msgid "Key milikmu dari provider"
+msgstr "Key milikmu dari provider"
+
+msgctxt "web.providers:enable"
+msgid "Aktifkan untuk chat dan fallback"
+msgstr "Aktifkan untuk chat dan fallback"
+
+msgctxt "web.providers:saving"
+msgid "Menyimpan..."
+msgstr "Menyimpan..."
+
+msgctxt "web.providers:save"
+msgid "Simpan perubahan"
+msgstr "Simpan perubahan"
+
+msgctxt "web.providers:add"
+msgid "Tambah provider"
+msgstr "Tambah provider"
+
+msgctxt "web.providers:securityGuidance"
+msgid "Masukkan hanya API key yang kamu miliki atau berwenang gunakan. Kuota, kebijakan, dan akses free-tier tetap ditentukan masing-masing provider. URL harus HTTPS; HTTP hanya diizinkan untuk localhost."
+msgstr "Masukkan hanya API key yang kamu miliki atau berwenang gunakan. Kuota, kebijakan, dan akses free-tier tetap ditentukan masing-masing provider. URL harus HTTPS; HTTP hanya diizinkan untuk localhost."
+
+msgctxt "web.connectors:unresolved"
+msgid "Belum terhubung"
+msgstr "Belum terhubung"
+
+msgctxt "web.connectors:environment"
+msgid "Variabel environment"
+msgstr "Variabel environment"
+
+msgctxt "web.connectors:keychain"
+msgid "Keychain OS"
+msgstr "Keychain OS"
+
+msgctxt "web.connectors:configFile"
+msgid "File konfigurasi CLI"
+msgstr "File konfigurasi CLI"
+
+msgctxt "web.connectors:unverified"
+msgid "Belum diverifikasi"
+msgstr "Belum diverifikasi"
+
+msgctxt "web.connectors:tokenOk"
+msgid "Token aktif"
+msgstr "Token aktif"
+
+msgctxt "web.connectors:tokenInvalid"
+msgid "Token ditolak"
+msgstr "Token ditolak"
+
+msgctxt "web.connectors:networkIssue"
+msgid "Jaringan bermasalah"
+msgstr "Jaringan bermasalah"
+
+msgctxt "web.connectors:tokenMissing"
+msgid "Token tidak ditemukan"
+msgstr "Token tidak ditemukan"
+
+msgctxt "web.connectors:signIn"
+msgid "Masuk untuk mengatur connector"
+msgstr "Masuk untuk mengatur connector"
+
+msgctxt "web.connectors:description"
+msgid "Connector layanan eksternal dikelola per akun."
+msgstr "Connector layanan eksternal dikelola per akun."
+
+msgctxt "web.connectors:loading"
+msgid "Memuat connector..."
+msgstr "Memuat connector..."
+
+msgctxt "web.connectors:back"
+msgid "Kembali ke chat"
+msgstr "Kembali ke chat"
+
+msgctxt "web.connectors:models"
+msgid "Model data"
+msgstr "Model data"
+
+msgctxt "web.connectors:providers"
+msgid "Provider model"
+msgstr "Provider model"
+
+msgctxt "web.connectors:users"
+msgid "Manajemen pengguna"
+msgstr "Manajemen pengguna"
+
+msgctxt "web.connectors:integrations"
+msgid "Integrasi eksternal"
+msgstr "Integrasi eksternal"
+
+msgctxt "web.connectors:integrationsDescription"
+msgid "Cloudflare, DNS, dan layanan lain"
+msgstr "Cloudflare, DNS, dan layanan lain"
+
+msgctxt "web.connectors:eyebrow"
+msgid "PENGELOLAAN CONNECTOR"
+msgstr "PENGELOLAAN CONNECTOR"
+
+msgctxt "web.connectors:title"
+msgid "Connector"
+msgstr "Connector"
+
+msgctxt "web.connectors:securityDescription"
+msgid "MoonWitness tidak pernah menyimpan token. Kredensial dibaca dari OS credential store milik CLI layanan setiap kali permintaan diproses, jadi mencabut akses cukup dilakukan di sisi penyedia."
+msgstr "MoonWitness tidak pernah menyimpan token. Kredensial dibaca dari OS credential store milik CLI layanan setiap kali permintaan diproses, jadi mencabut akses cukup dilakukan di sisi penyedia."
+
+msgctxt "web.connectors:empty"
+msgid "Belum ada connector. Tambahkan satu untuk mulai mengelola DNS dari MoonWitness."
+msgstr "Belum ada connector. Tambahkan satu untuk mulai mengelola DNS dari MoonWitness."
+
+msgctxt "web.connectors:enabled"
+msgid "Aktif"
+msgstr "Aktif"
+
+msgctxt "web.connectors:disabled"
+msgid "Nonaktif"
+msgstr "Nonaktif"
+
+msgctxt "web.connectors:readOnly"
+msgid "Hanya baca"
+msgstr "Hanya baca"
+
+msgctxt "web.connectors:tokenSource"
+msgid "Sumber token: {source}"
+msgstr "Sumber token: {source}"
+
+msgctxt "web.connectors:neverRead"
+msgid "Token belum pernah terbaca."
+msgstr "Token belum pernah terbaca."
+
+msgctxt "web.connectors:lastVerified"
+msgid "Verifikasi terakhir {date}"
+msgstr "Verifikasi terakhir {date}"
+
+msgctxt "web.connectors:lastSynced"
+msgid "Sinkron terakhir {date}"
+msgstr "Sinkron terakhir {date}"
+
+msgctxt "web.connectors:lastSyncStatus"
+msgid "Status sinkron terakhir: {status}"
+msgstr "Status sinkron terakhir: {status}"
+
+msgctxt "web.connectors:syncStatuses.ok"
+msgid "Berhasil"
+msgstr "Berhasil"
+
+msgctxt "web.connectors:syncStatuses.partial"
+msgid "Sebagian"
+msgstr "Sebagian"
+
+msgctxt "web.connectors:syncStatuses.error"
+msgid "Gagal"
+msgstr "Gagal"
+
+msgctxt "web.connectors:capabilities.dns"
+msgid "DNS"
+msgstr "DNS"
+
+msgctxt "web.connectors:dns"
+msgid "DNS"
+msgstr "DNS"
+
+msgctxt "web.connectors:verify"
+msgid "Verifikasi"
+msgstr "Verifikasi"
+
+msgctxt "web.connectors:deactivate"
+msgid "Nonaktifkan"
+msgstr "Nonaktifkan"
+
+msgctxt "web.connectors:activate"
+msgid "Aktifkan"
+msgstr "Aktifkan"
+
+msgctxt "web.connectors:edit"
+msgid "Edit"
+msgstr "Edit"
+
+msgctxt "web.connectors:delete"
+msgid "Hapus {name}"
+msgstr "Hapus {name}"
+
+msgctxt "web.connectors:sync"
+msgid "Sinkronkan"
+msgstr "Sinkronkan"
+
+msgctxt "web.connectors:editLabel"
+msgid "Ubah connector"
+msgstr "Ubah connector"
+
+msgctxt "web.connectors:newLabel"
+msgid "Tambah connector"
+msgstr "Tambah connector"
+
+msgctxt "web.connectors:cancelEdit"
+msgid "Batal edit"
+msgstr "Batal edit"
+
+msgctxt "web.connectors:kind"
+msgid "Jenis layanan"
+msgstr "Jenis layanan"
+
+msgctxt "web.connectors:label"
+msgid "Nama connector"
+msgstr "Nama connector"
+
+msgctxt "web.connectors:labelPlaceholder"
+msgid "Produksi pribadi"
+msgstr "Produksi pribadi"
+
+msgctxt "web.connectors:confirmName"
+msgid "Konfirmasi nama"
+msgstr "Konfirmasi nama"
+
+msgctxt "web.connectors:saving"
+msgid "Menyimpan..."
+msgstr "Menyimpan..."
+
+msgctxt "web.connectors:save"
+msgid "Simpan perubahan"
+msgstr "Simpan perubahan"
+
+msgctxt "web.connectors:add"
+msgid "Tambah connector"
+msgstr "Tambah connector"
+
+msgctxt "web.dns:signIn"
+msgid "Masuk untuk mengelola DNS"
+msgstr "Masuk untuk mengelola DNS"
+
+msgctxt "web.dns:signInDescription"
+msgid "Zone dan record hanya tampil untuk pemilik connector."
+msgstr "Zone dan record hanya tampil untuk pemilik connector."
+
+msgctxt "web.dns:back"
+msgid "Ke halaman masuk"
+msgstr "Ke halaman masuk"
+
+msgctxt "web.dns:loading"
+msgid "Memuat DNS..."
+msgstr "Memuat DNS..."
+
+msgctxt "web.dns:zones"
+msgid "Zone tersalin"
+msgstr "Zone tersalin"
+
+msgctxt "web.dns:zoneList"
+msgid "Daftar zone"
+msgstr "Daftar zone"
+
+msgctxt "web.dns:stale"
+msgid "Usang"
+msgstr "Usang"
+
+msgctxt "web.dns:readOnly"
+msgid "Hanya baca"
+msgstr "Hanya baca"
+
+msgctxt "web.dns:connectorDisabled"
+msgid "Connector nonaktif"
+msgstr "Connector nonaktif"
+
+msgctxt "web.dns:mirror"
+msgid "Cermin Cloudflare"
+msgstr "Cermin Cloudflare"
+
+msgctxt "web.dns:zoneFallback"
+msgid "Zone DNS"
+msgstr "Zone DNS"
+
+msgctxt "web.dns:mirrorDescription"
+msgid "Daftar ini adalah cermin Cloudflare. Setiap mutasi langsung mengubah zona aslinya, jadi periksa nama dan content sebelum menyimpan."
+msgstr "Daftar ini adalah cermin Cloudflare. Setiap mutasi langsung mengubah zona aslinya, jadi periksa nama dan content sebelum menyimpan."
+
+msgctxt "web.dns:newRecord"
+msgid "Record baru"
+msgstr "Record baru"
+
+msgctxt "web.dns:readOnlyWarning"
+msgid "Connector hanya baca atau nonaktif; mutasi ditolak server."
+msgstr "Connector hanya baca atau nonaktif; mutasi ditolak server."
+
+msgctxt "web.dns:search"
+msgid "Cari nama atau content"
+msgstr "Cari nama atau content"
+
+msgctxt "web.dns:searchPlaceholder"
+msgid "mis. api atau v=spf1"
+msgstr "mis. api atau v=spf1"
+
+msgctxt "web.dns:type"
+msgid "Tipe"
+msgstr "Tipe"
+
+msgctxt "web.dns:all"
+msgid "Semua"
+msgstr "Semua"
+
+msgctxt "web.dns:apply"
+msgid "Terapkan"
+msgstr "Terapkan"
+
+msgctxt "web.dns:clear"
+msgid "Bersihkan"
+msgstr "Bersihkan"
+
+msgctxt "web.dns:zoneStatus"
+msgid "Status zone: {status}"
+msgstr "Status zone: {status}"
+
+msgctxt "web.dns:paused"
+msgid "dijeda"
+msgstr "dijeda"
+
+msgctxt "web.dns:truncated"
+msgid "Daftar record dipotong, perbaiki pencarian"
+msgstr "Daftar record dipotong, perbaiki pencarian"
+
+msgctxt "web.dns:emptyRecords"
+msgid "Tidak ada record yang cocok dengan pencarian ini."
+msgstr "Tidak ada record yang cocok dengan pencarian ini."
+
+msgctxt "web.dns:selectZone"
+msgid "Pilih zone di panel kiri untuk melihat record."
+msgstr "Pilih zone di panel kiri untuk melihat record."
+
+msgctxt "web.dns:edit"
+msgid "Edit"
+msgstr "Edit"
+
+msgctxt "web.dns:auditEyebrow"
+msgid "RIWAYAT AKSI"
+msgstr "RIWAYAT AKSI"
+
+msgctxt "web.dns:auditTitle"
+msgid "Aksi terbaru untuk {connector}"
+msgstr "Aksi terbaru untuk {connector}"
+
+msgctxt "web.dns:auditEmpty"
+msgid "Belum ada aksi tercatat."
+msgstr "Belum ada aksi tercatat."
+
+msgctxt "web.dns:recordForm"
+msgid "Form record DNS"
+msgstr "Form record DNS"
+
+msgctxt "web.dns:editRecord"
+msgid "EDIT RECORD"
+msgstr "EDIT RECORD"
+
+msgctxt "web.dns:newRecordLabel"
+msgid "RECORD BARU"
+msgstr "RECORD BARU"
+
+msgctxt "web.dns:closeForm"
+msgid "Tutup form"
+msgstr "Tutup form"
+
+msgctxt "web.dns:name"
+msgid "Nama record"
+msgstr "Nama record"
+
+msgctxt "web.dns:content"
+msgid "Content"
+msgstr "Content"
+
+msgctxt "web.dns:contentPlaceholder"
+msgid "mis. 203.0.113.10"
+msgstr "mis. 203.0.113.10"
+
+msgctxt "web.dns:ttl"
+msgid "TTL (detik, 1 = Auto)"
+msgstr "TTL (detik, 1 = Auto)"
+
+msgctxt "web.dns:comment"
+msgid "Catatan (opsional)"
+msgstr "Catatan (opsional)"
+
+msgctxt "web.dns:commentPlaceholder"
+msgid "Menjelaskan record ini untuk siapa pun yang membuka"
+msgstr "Menjelaskan record ini untuk siapa pun yang membuka"
+
+msgctxt "web.dns:confirmName"
+msgid "Konfirmasi nama"
+msgstr "Konfirmasi nama"
+
+msgctxt "web.adminUsers:loading"
+msgid "Memuat pengguna..."
+msgstr "Memuat pengguna..."
+
+msgctxt "web.adminUsers:signIn"
+msgid "Masuk untuk mengelola pengguna"
+msgstr "Masuk untuk mengelola pengguna"
+
+msgctxt "web.adminUsers:signInDescription"
+msgid "Manajemen peran hanya tersedia untuk akun dengan grup admin."
+msgstr "Manajemen peran hanya tersedia untuk akun dengan grup admin."
+
+msgctxt "web.adminUsers:back"
+msgid "Ke halaman masuk"
+msgstr "Ke halaman masuk"
+
+msgctxt "web.adminUsers:backToChat"
+msgid "Kembali ke chat"
+msgstr "Kembali ke chat"
+
+msgctxt "web.adminUsers:title"
+msgid "Manajemen pengguna"
+msgstr "Manajemen pengguna"
+
+msgctxt "web.adminUsers:accountCount"
+msgid "{count} akun"
+msgstr "{count} akun"
+
+msgctxt "web.adminUsers:eyebrow"
+msgid "MoonWitness · Akses"
+msgstr "MoonWitness · Akses"
+
+msgctxt "web.adminUsers:heading"
+msgid "Peran dan akun"
+msgstr "Peran dan akun"
+
+msgctxt "web.adminUsers:description"
+msgid "Ubah peran untuk mengendalikan siapa yang boleh mengelola konektor dan DNS. Setiap perubahan peran menghapus sesi akun target, sehingga hak akses baru berlaku seketika."
+msgstr "Ubah peran untuk mengendalikan siapa yang boleh mengelola konektor dan DNS. Setiap perubahan peran menghapus sesi akun target, sehingga hak akses baru berlaku seketika."
+
+msgctxt "web.adminUsers:name"
+msgid "Nama"
+msgstr "Nama"
+
+msgctxt "web.adminUsers:email"
+msgid "Email"
+msgstr "Email"
+
+msgctxt "web.adminUsers:status"
+msgid "Status"
+msgstr "Status"
+
+msgctxt "web.adminUsers:joined"
+msgid "Terdaftar"
+msgstr "Terdaftar"
+
+msgctxt "web.adminUsers:active"
+msgid "Aktif"
+msgstr "Aktif"
+
+msgctxt "web.adminUsers:inactive"
+msgid "Nonaktif"
+msgstr "Nonaktif"
+
+msgctxt "web.adminUsers:empty"
+msgid "Belum ada akun terdaftar."
+msgstr "Belum ada akun terdaftar."
+
+msgctxt "web.adminUsers:yourAccount"
+msgid "Akun Anda"
+msgstr "Akun Anda"
+
+msgctxt "web.adminUsers:roleFor"
+msgid "Peran untuk {name}"
+msgstr "Peran untuk {name}"
+
+msgctxt "web.adminUsers:apply"
+msgid "Terapkan"
+msgstr "Terapkan"
+
+msgctxt "web.adminUsers:confirmDeactivate"
+msgid "Konfirmasi nonaktifkan"
+msgstr "Konfirmasi nonaktifkan"
+
+msgctxt "web.adminUsers:deactivate"
+msgid "Nonaktifkan"
+msgstr "Nonaktifkan"
+
+msgctxt "web.adminUsers:roleCatalog"
+msgid "Katalog peran"
+msgstr "Katalog peran"
+
+msgctxt "web.adminUsers:rootOnly"
+msgid "Hanya root"
+msgstr "Hanya root"
+
+msgctxt "web.adminUsers:groups"
+msgid "Grup: {groups}"
+msgstr "Grup: {groups}"
+
+msgctxt "web.adminUsers:roleUpdated"
+msgid "Peran {name} diperbarui. Sesi akun tersebut langsung dihapus."
+msgstr "Peran {name} diperbarui. Sesi akun tersebut langsung dihapus."
+
+msgctxt "web.adminUsers:deactivated"
+msgid "{name} dinonaktifkan dan semua sesinya dihapus."
+msgstr "{name} dinonaktifkan dan semua sesinya dihapus."
+
+msgctxt "web.providers:modelGateway"
+msgid "Gateway model"
+msgstr "Gateway model"
+
+msgctxt "web.providers:savedProviders"
+msgid "Provider tersimpan"
+msgstr "Provider tersimpan"
+
+msgctxt "web.providers:addedNotice"
+msgid "Provider ditambahkan."
+msgstr "Provider ditambahkan."
+
+msgctxt "web.providers:updatedNotice"
+msgid "Provider diperbarui."
+msgstr "Provider diperbarui."
+
+msgctxt "web.providers:deletedNotice"
+msgid "Provider dihapus."
+msgstr "Provider dihapus."
+
+msgctxt "web.providers:confirmDelete"
+msgid "Hapus provider {name}?"
+msgstr "Hapus provider {name}?"
+
+msgctxt "web.connectors:zoneCount"
+msgid "{count} connector tersimpan"
+msgstr "{count} connector tersimpan"
+
+msgctxt "web.connectors:saved"
+msgid "Connector diperbarui."
+msgstr "Connector diperbarui."
+
+msgctxt "web.connectors:addedNotice"
+msgid "Connector ditambahkan. Jalankan verifikasi untuk memastikan token terbaca."
+msgstr "Connector ditambahkan. Jalankan verifikasi untuk memastikan token terbaca."
+
+msgctxt "web.connectors:verifyCompleted"
+msgid "Verifikasi connector selesai."
+msgstr "Verifikasi connector selesai."
+
+msgctxt "web.connectors:syncCompleted"
+msgid "Sinkronisasi connector selesai."
+msgstr "Sinkronisasi connector selesai."
+
+msgctxt "web.connectors:disabledNotice"
+msgid "Connector {name} dinonaktifkan."
+msgstr "Connector {name} dinonaktifkan."
+
+msgctxt "web.connectors:enabledNotice"
+msgid "Connector {name} diaktifkan."
+msgstr "Connector {name} diaktifkan."
+
+msgctxt "web.connectors:deletedNotice"
+msgid "Connector {name} dihapus. Riwayat audit tetap tersimpan."
+msgstr "Connector {name} dihapus. Riwayat audit tetap tersimpan."
+
+msgctxt "web.connectors:confirmDelete"
+msgid "Hapus connector {name}?"
+msgstr "Hapus connector {name}?"
+
+msgctxt "web.connectors:editEyebrow"
+msgid "EDIT"
+msgstr "EDIT"
+
+msgctxt "web.connectors:newEyebrow"
+msgid "BARU"
+msgstr "BARU"
+
+msgctxt "web.connectors:capabilities"
+msgid "Kapabilitas: {capabilities}."
+msgstr "Kapabilitas: {capabilities}."
+
+msgctxt "web.connectors:readOnlyCapability"
+msgid "Hanya cermin dan baca; mutasi ditolak server."
+msgstr "Hanya cermin dan baca; mutasi ditolak server."
+
+msgctxt "web.connectors:writableCapability"
+msgid "Boleh membaca dan memutasi."
+msgstr "Boleh membaca dan memutasi."
+
+msgctxt "web.connectors:configureToken"
+msgid "Atur token di konsol penyedia"
+msgstr "Atur token di konsol penyedia"
+
+msgctxt "web.connectors:enableConnector"
+msgid "Aktifkan connector ini"
+msgstr "Aktifkan connector ini"
+
+msgctxt "web.connectors:deleteHeading"
+msgid "Hapus {name}?"
+msgstr "Hapus {name}?"
+
+msgctxt "web.connectors:deleteDescription"
+msgid "Cermin zona dan record ikut terhapus dari MoonWitness; riwayat audit tetap tersimpan. Ketik nama connector persis untuk mengonfirmasi."
+msgstr "Cermin zona dan record ikut terhapus dari MoonWitness; riwayat audit tetap tersimpan. Ketik nama connector persis untuk mengonfirmasi."
+
+msgctxt "web.connectors:cancel"
+msgid "Batal"
+msgstr "Batal"
+
+msgctxt "web.connectors:deleteAction"
+msgid "Hapus connector"
+msgstr "Hapus connector"
+
+msgctxt "web.dns:allConnectors"
+msgid "Semua connector"
+msgstr "Semua connector"
+
+msgctxt "web.dns:chat"
+msgid "Kembali ke chat"
+msgstr "Kembali ke chat"
+
+msgctxt "web.dns:zonesEmpty"
+msgid "Belum ada zone tersalin. Jalankan sinkronisasi lebih dulu."
+msgstr "Belum ada zone tersalin. Jalankan sinkronisasi lebih dulu."
+
+msgctxt "web.dns:noZone"
+msgid "Pilih zone"
+msgstr "Pilih zone"
+
+msgctxt "web.dns:connector"
+msgid "Connector"
+msgstr "Connector"
+
+msgctxt "web.dns:closeAudit"
+msgid "Tutup riwayat"
+msgstr "Tutup riwayat"
+
+msgctxt "web.dns:audit"
+msgid "Riwayat aksi"
+msgstr "Riwayat aksi"
+
+msgctxt "web.dns:syncing"
+msgid "Menyinkronkan..."
+msgstr "Menyinkronkan..."
+
+msgctxt "web.dns:searchAction"
+msgid "Terapkan"
+msgstr "Terapkan"
+
+msgctxt "web.dns:clearAction"
+msgid "Bersihkan"
+msgstr "Bersihkan"
+
+msgctxt "web.dns:deleteRecord"
+msgid "Hapus {name}"
+msgstr "Hapus {name}"
+
+msgctxt "web.dns:close"
+msgid "Tutup"
+msgstr "Tutup"
+
+msgctxt "web.dns:createRecord"
+msgid "Buat record"
+msgstr "Buat record"
+
+msgctxt "web.dns:saveChanges"
+msgid "Simpan perubahan"
+msgstr "Simpan perubahan"
+
+msgctxt "web.dns:proxied"
+msgid "Proxied (hanya {types})"
+msgstr "Proxied (hanya {types})"
+
+msgctxt "web.dns:none"
+msgid "tidak ada"
+msgstr "tidak ada"
+
+msgctxt "web.dns:notWritable"
+msgid "Connector ini read-only; MoonWitness menolak mutasi."
+msgstr "Connector ini read-only; MoonWitness menolak mutasi."
+
+msgctxt "web.dns:activateConnector"
+msgid "Connector nonaktif. Aktifkan dulu di halaman connector."
+msgstr "Connector nonaktif. Aktifkan dulu di halaman connector."
+
+msgctxt "web.dns:deleteDescription"
+msgid "Record ini hilang dari Cloudflare, bukan hanya dari cermin. Ketik nama record persis untuk mengonfirmasi."
+msgstr "Record ini hilang dari Cloudflare, bukan hanya dari cermin. Ketik nama record persis untuk mengonfirmasi."
+
+msgctxt "web.dns:deleteAction"
+msgid "Hapus record"
+msgstr "Hapus record"
+
+msgctxt "web.dns:recordDeleted"
+msgid "Record {name} dihapus dari Cloudflare."
+msgstr "Record {name} dihapus dari Cloudflare."
+
+msgctxt "web.dns:recordCreated"
+msgid "Record ditambahkan ke Cloudflare."
+msgstr "Record ditambahkan ke Cloudflare."
+
+msgctxt "web.dns:recordUpdated"
+msgid "Record {name} diperbarui di Cloudflare."
+msgstr "Record {name} diperbarui di Cloudflare."
+
+msgctxt "web.dns:syncCompleted"
+msgid "Sinkronisasi selesai."
+msgstr "Sinkronisasi selesai."
+
+msgctxt "web.adminUsers:userList"
+msgid "Daftar pengguna"
+msgstr "Daftar pengguna"
+
+msgctxt "web.dns:managed"
+msgid "Dikelola Cloudflare"
+msgstr "Dikelola Cloudflare"
+
+msgctxt "web.dns:mirrorStale"
+msgid "Cermin usang"
+msgstr "Cermin usang"
+
+msgctxt "web.dns:auto"
+msgid "Otomatis"
+msgstr "Otomatis"
+
+msgctxt "web.dns:ttlSeconds"
+msgid "{count} detik"
+msgstr "{count} detik"
+
+msgctxt "web.dns:yes"
+msgid "Ya"
+msgstr "Ya"
+
+msgctxt "web.dns:no"
+msgid "Tidak"
+msgstr "Tidak"
+
+msgctxt "web.dns:ttlColumn"
+msgid "TTL"
+msgstr "TTL"
+
+msgctxt "web.dns:proxiedColumn"
+msgid "Proxied"
+msgstr "Proxied"
+
+msgctxt "web.dns:notes"
+msgid "Catatan"
+msgstr "Catatan"
+
+msgctxt "web.dns:dateTime"
+msgid "Waktu"
+msgstr "Waktu"
+
+msgctxt "web.dns:action"
+msgid "Aksi"
+msgstr "Aksi"
+
+msgctxt "web.dns:result"
+msgid "Hasil"
+msgstr "Hasil"
+
+msgctxt "web.dns:target"
+msgid "Target"
+msgstr "Target"
+
+msgctxt "web.dns:detail"
+msgid "Detail"
+msgstr "Detail"
+
+msgctxt "web.dns:connectorNotFound"
+msgid "Connector ini tidak ada di akun kamu."
+msgstr "Connector ini tidak ada di akun kamu."
+
+msgctxt "web.dns:invalidTtl"
+msgid "TTL harus bilangan bulat; isi 1 untuk Auto."
+msgstr "TTL harus bilangan bulat; isi 1 untuk Auto."
+
+msgctxt "web.models:fieldName"
+msgid "Nama"
+msgstr "Nama"
+
+msgctxt "web.models:fieldEmail"
+msgid "Email"
+msgstr "Email"
+
+msgctxt "web.models:fieldActive"
+msgid "Aktif"
+msgstr "Aktif"
+
+msgctxt "web.models:fieldRole"
+msgid "Peran"
+msgstr "Peran"
+
+msgctxt "web.models:fieldDescription"
+msgid "Deskripsi"
+msgstr "Deskripsi"
+
+msgctxt "web.models:fieldCreatedAt"
+msgid "Dibuat pada"
+msgstr "Dibuat pada"
+
+msgctxt "web.models:fieldUpdatedAt"
+msgid "Diperbarui pada"
+msgstr "Diperbarui pada"
+
+msgctxt "web.models:fieldOwner"
+msgid "Pemilik"
+msgstr "Pemilik"
+
+msgctxt "web.models:fieldType"
+msgid "Tipe"
+msgstr "Tipe"
+
+msgctxt "web.models:fieldStatus"
+msgid "Status"
+msgstr "Status"
+
+msgctxt "web.models:fieldLabel"
+msgid "Label"
+msgstr "Label"
+
+msgctxt "web.models:fieldKind"
+msgid "Jenis"
+msgstr "Jenis"
+
+msgctxt "web.models:fieldEnabled"
+msgid "Aktif"
+msgstr "Aktif"
+
+msgctxt "web.models:fieldPriority"
+msgid "Prioritas"
+msgstr "Prioritas"
+
+msgctxt "web.models:fieldBaseUrl"
+msgid "Base URL"
+msgstr "Base URL"
+
+msgctxt "web.models:fieldModel"
+msgid "Model"
+msgstr "Model"
+
+msgctxt "web.models:fieldContent"
+msgid "Content"
+msgstr "Content"
+
+msgctxt "web.models:fieldId"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "web.models:fieldTokenRef"
+msgid "Referensi token"
+msgstr "Referensi token"
+
+msgctxt "web.models:fieldExternalId"
+msgid "ID eksternal"
+msgstr "ID eksternal"
+
+msgctxt "web.models:invalidDate"
+msgid "Nilai {name} bukan tanggal yang valid."
+msgstr "Nilai {name} bukan tanggal yang valid."
+
+msgctxt "web.models:fieldOwnerId"
+msgid "Pemilik"
+msgstr "Pemilik"
+
+msgctxt "web.models:entities.ai_provider"
+msgid "Penyedia model AI"
+msgstr "Penyedia model AI"
+
+msgctxt "web.models:descriptions.ai_provider"
+msgid "Endpoint model dan prioritas fallback milik pengguna."
+msgstr "Endpoint model dan prioritas fallback milik pengguna."
+
+msgctxt "web.models:entities.res_role"
+msgid "Peran pengguna"
+msgstr "Peran pengguna"
+
+msgctxt "web.models:descriptions.res_role"
+msgid "Katalog peran dan grup akses yang diberikan."
+msgstr "Katalog peran dan grup akses yang diberikan."
+
+msgctxt "web.models:entities.res_sessions"
+msgid "Sesi pengguna"
+msgstr "Sesi pengguna"
+
+msgctxt "web.models:descriptions.res_sessions"
+msgid "Sesi autentikasi pengguna."
+msgstr "Sesi autentikasi pengguna."
+
+msgctxt "web.models:entities.res_users"
+msgid "Pengguna"
+msgstr "Pengguna"
+
+msgctxt "web.models:descriptions.res_users"
+msgid "Akun pengguna."
+msgstr "Akun pengguna."
+
+msgctxt "web.models:entities.res_verification"
+msgid "Verifikasi pengguna"
+msgstr "Verifikasi pengguna"
+
+msgctxt "web.models:descriptions.res_verification"
+msgid "Token sekali pakai untuk pemulihan akun."
+msgstr "Token sekali pakai untuk pemulihan akun."
+
+msgctxt "web.models:entities.res_partner"
+msgid "Kontak"
+msgstr "Kontak"
+
+msgctxt "web.models:descriptions.res_partner"
+msgid "Contact dan organisasi."
+msgstr "Contact dan organisasi."
+
+msgctxt "web.models:entities.chat_conversation"
+msgid "Percakapan"
+msgstr "Percakapan"
+
+msgctxt "web.models:descriptions.chat_conversation"
+msgid "Percakapan milik pengguna."
+msgstr "Percakapan milik pengguna."
+
+msgctxt "web.models:entities.chat_message"
+msgid "Pesan chat"
+msgstr "Pesan chat"
+
+msgctxt "web.models:descriptions.chat_message"
+msgid "Pesan berurutan dalam percakapan."
+msgstr "Pesan berurutan dalam percakapan."
+
+msgctxt "web.models:entities.cloudflare_record"
+msgid "Record DNS Cloudflare"
+msgstr "Record DNS Cloudflare"
+
+msgctxt "web.models:descriptions.cloudflare_record"
+msgid "Mirror DNS record Cloudflare milik konektor seorang pengguna."
+msgstr "Mirror DNS record Cloudflare milik konektor seorang pengguna."
+
+msgctxt "web.models:entities.cloudflare_zone"
+msgid "Zone DNS Cloudflare"
+msgstr "Zone DNS Cloudflare"
+
+msgctxt "web.models:descriptions.cloudflare_zone"
+msgid "Mirror zone Cloudflare milik konektor seorang pengguna."
+msgstr "Mirror zone Cloudflare milik konektor seorang pengguna."
+
+msgctxt "web.models:entities.corpus_annotation"
+msgid "Anotasi korpus"
+msgstr "Anotasi korpus"
+
+msgctxt "web.models:descriptions.corpus_annotation"
+msgid "Tafsir, refleksi, atau anotasi yang merujuk ke satu passage; tidak pernah boleh berisi teks revelation."
+msgstr "Tafsir, refleksi, atau anotasi yang merujuk ke satu passage; tidak pernah boleh berisi teks revelation."
+
+msgctxt "web.models:entities.corpus_edition"
+msgid "Edisi korpus"
+msgstr "Edisi korpus"
+
+msgctxt "web.models:descriptions.corpus_edition"
+msgid "Edisi work dalam bahasa dan authority tertentu; stage mengontrol visibilitas publik."
+msgstr "Edisi work dalam bahasa dan authority tertentu; stage mengontrol visibilitas publik."
+
+msgctxt "web.models:entities.corpus_passage"
+msgid "Passage korpus"
+msgstr "Passage korpus"
+
+msgctxt "web.models:descriptions.corpus_passage"
+msgid "Satu baris teks milik satu edisi + locator (ayat Arab, terjemahan, dsb)."
+msgstr "Satu baris teks milik satu edisi + locator (ayat Arab, terjemahan, dsb)."
+
+msgctxt "web.models:entities.corpus_work"
+msgid "Karya korpus"
+msgstr "Karya korpus"
+
+msgctxt "web.models:descriptions.corpus_work"
+msgid "Karya tingkat atas (mis. Al-Qur'an); banyak edisi/bahasa dapat merujuk ke satu work."
+msgstr "Karya tingkat atas (mis. Al-Qur'an); banyak edisi/bahasa dapat merujuk ke satu work."
+
+msgctxt "web.models:entities.i18n_language"
+msgid "Bahasa antarmuka"
+msgstr "Bahasa antarmuka"
+
+msgctxt "web.models:descriptions.i18n_language"
+msgid "Bahasa antarmuka yang diaktifkan untuk MoonWitness."
+msgstr "Bahasa antarmuka yang diaktifkan untuk MoonWitness."
+
+msgctxt "web.models:entities.i18n_translation"
+msgid "Terjemahan antarmuka"
+msgstr "Terjemahan antarmuka"
+
+msgctxt "web.models:descriptions.i18n_translation"
+msgid "Entri katalog UI dan status terjemahannya."
+msgstr "Entri katalog UI dan status terjemahannya."
+
+msgctxt "web.models:entities.integration_audit"
+msgid "Audit integrasi"
+msgstr "Audit integrasi"
+
+msgctxt "web.models:descriptions.integration_audit"
+msgid "Jejak append-only untuk setiap aksi pada konektor eksternal."
+msgstr "Jejak append-only untuk setiap aksi pada konektor eksternal."
+
+msgctxt "web.models:entities.integration_connector"
+msgid "Connector integrasi"
+msgstr "Connector integrasi"
+
+msgctxt "web.models:descriptions.integration_connector"
+msgid "Konektor layanan eksternal; kredensialnya tinggal di OS credential store, tidak di sini."
+msgstr "Konektor layanan eksternal; kredensialnya tinggal di OS credential store, tidak di sini."
+
+msgctxt "web.models:entities.source_artifact"
+msgid "Artefak sumber"
+msgstr "Artefak sumber"
+
+msgctxt "web.models:descriptions.source_artifact"
+msgid "Registrasi sumber eksternal (senjata: edisi Al-Qur'an, korpus tafsir, leksikon)."
+msgstr "Registrasi sumber eksternal (senjata: edisi Al-Qur'an, korpus tafsir, leksikon)."
+
+msgctxt "web.models:entities.source_provenance"
+msgid "Provenance sumber"
+msgstr "Provenance sumber"
+
+msgctxt "web.models:descriptions.source_provenance"
+msgid "Ledger append-only setiap transisi lifecycle/keputusan atas sumber dan korpus."
+msgstr "Ledger append-only setiap transisi lifecycle/keputusan atas sumber dan korpus."
+
+msgctxt "web.models:entities.source_rights"
+msgid "Hak sumber"
+msgstr "Hak sumber"
+
+msgctxt "web.models:descriptions.source_rights"
+msgid "Keputusan rights untuk satu aksi spesifik terhadap satu versi sumber; deny-by-default."
+msgstr "Keputusan rights untuk satu aksi spesifik terhadap satu versi sumber; deny-by-default."
+
+msgctxt "web.models:entities.source_version"
+msgid "Versi sumber"
+msgstr "Versi sumber"
+
+msgctxt "web.models:descriptions.source_version"
+msgid "Snapshot beku dari sebuah artifact: repo, branch, SHA, checksum, jumlah baris."
+msgstr "Snapshot beku dari sebuah artifact: repo, branch, SHA, checksum, jumlah baris."
+
+msgctxt "web.models:entities.workflow_change"
+msgid "Perubahan workflow"
+msgstr "Perubahan workflow"
+
+msgctxt "web.models:descriptions.workflow_change"
+msgid "Change request CAB: satu perubahan yang diusulkan, direview, dan diputuskan oleh board."
+msgstr "Change request CAB: satu perubahan yang diusulkan, direview, dan diputuskan oleh board."
+
+msgctxt "web.models:entities.workflow_project"
+msgid "Proyek workflow"
+msgstr "Proyek workflow"
+
+msgctxt "web.models:descriptions.workflow_project"
+msgid "Wadah pelacak proyek PM; mengelompokkan task dan menyimpan metadata dasar."
+msgstr "Wadah pelacak proyek PM; mengelompokkan task dan menyimpan metadata dasar."
+
+msgctxt "web.models:entities.workflow_task"
+msgid "Task workflow"
+msgstr "Task workflow"
+
+msgctxt "web.models:descriptions.workflow_task"
+msgid "Item pelacak proyek milik satu pengguna; terhubung ke workflow.project via project_id."
+msgstr "Item pelacak proyek milik satu pengguna; terhubung ke workflow.project via project_id."
+
+msgctxt "web.models:entities.workflow_transition"
+msgid "Transisi workflow"
+msgstr "Transisi workflow"
+
+msgctxt "web.models:descriptions.workflow_transition"
+msgid "Jejak append-only setiap transisi state pada workflow.change; tidak dapat diubah atau dihapus."
+msgstr "Jejak append-only setiap transisi state pada workflow.change; tidak dapat diubah atau dihapus."
+
+msgctxt "web.corpus:shelfTitle"
+msgid "Kitab & Sumber"
+msgstr "Kitab & Sumber"
+
+msgctxt "web.corpus:shelfDescription"
+msgid "Setiap edisi menampilkan otoritas teks (revelation vs. terjemahan) dan atribusi penerbit. Edisi yang hak tayangnya belum disahkan tidak muncul di daftar ini sama sekali — server tidak mengembalikannya."
+msgstr "Setiap edisi menampilkan otoritas teks (revelation vs. terjemahan) dan atribusi penerbit. Edisi yang hak tayangnya belum disahkan tidak muncul di daftar ini sama sekali — server tidak mengembalikannya."
+
+msgctxt "web.corpus:loadingEditions"
+msgid "Memuat daftar edisi..."
+msgstr "Memuat daftar edisi..."
+
+msgctxt "web.corpus:noEditions"
+msgid "Belum ada edisi yang diterbitkan."
+msgstr "Belum ada edisi yang diterbitkan."
+
+msgctxt "web.corpus:authority"
+msgid "Authority"
+msgstr "Authority"
+
+msgctxt "web.corpus:publisher"
+msgid "Penerbit"
+msgstr "Penerbit"
+
+msgctxt "web.corpus:attribution"
+msgid "Atribusi"
+msgstr "Atribusi"
+
+msgctxt "web.corpus:stage"
+msgid "Tahap"
+msgstr "Tahap"
+
+msgctxt "web.corpus:emptyShelf"
+msgid "Tidak ada edisi yang tersedia."
+msgstr "Tidak ada edisi yang tersedia."
+
+msgctxt "web.corpus:authorityVerbatim"
+msgid "Teks Al-Qur'an (verbatim, {locale})"
+msgstr "Teks Al-Qur'an (verbatim, {locale})"
+
+msgctxt "web.corpus:authorityTranslation"
+msgid "Terjemahan ({locale})"
+msgstr "Terjemahan ({locale})"
+
+msgctxt "web.corpus:authorityAttributed"
+msgid "{authority} (beratribusi)"
+msgstr "{authority} (beratribusi)"
+
+msgctxt "web.corpus:backToShelf"
+msgid "Kembali ke daftar kitab"
+msgstr "Kembali ke daftar kitab"
+
+msgctxt "web.corpus:backToShelfEnglish"
+msgid "Kembali ke daftar sumber"
+msgstr "Kembali ke daftar sumber"
+
+msgctxt "web.corpus:quranTitle"
+msgid "Al-Qur'an — Surah {surah}"
+msgstr "Al-Qur'an — Surah {surah}"
+
+msgctxt "web.corpus:translationTitle"
+msgid "Terjemahan — Surah {surah}"
+msgstr "Terjemahan — Surah {surah}"
+
+msgctxt "web.corpus:quranHeading"
+msgid "Teks Al-Qur'an (verbatim)"
+msgstr "Teks Al-Qur'an (verbatim)"
+
+msgctxt "web.corpus:translationHeading"
+msgid "Terjemahan — karya beratribusi, bukan teks sumber"
+msgstr "Terjemahan — karya beratribusi, bukan teks sumber"
+
+msgctxt "web.corpus:attributedHeading"
+msgid "{authority} (beratribusi)"
+msgstr "{authority} (beratribusi)"
+
+msgctxt "web.corpus:loadingSurah"
+msgid "Memuat surah..."
+msgstr "Memuat surah..."
+
+msgctxt "web.corpus:emptySurah"
+msgid "Tidak ada ayat untuk surah ini."
+msgstr "Tidak ada ayat untuk surah ini."
+
+msgctxt "web.corpus:readerDisclaimer"
+msgid "Terjemahan dan tafsir bukan teks Qur'ani dan bukan pengganti ayat sumber. Platform ini tidak memiliki otoritas keagamaan."
+msgstr "Terjemahan dan tafsir bukan teks Qur'ani dan bukan pengganti ayat sumber. Platform ini tidak memiliki otoritas keagamaan."
+
+msgctxt "web.corpus:checksum"
+msgid "checksum"
+msgstr "checksum"
+
+msgctxt "web.corpus:stageDraft"
+msgid "Draf"
+msgstr "Draf"
+
+msgctxt "web.corpus:stageAccepted"
+msgid "Diterima"
+msgstr "Diterima"
+
+msgctxt "web.corpus:stagePublished"
+msgid "Diterbitkan"
+msgstr "Diterbitkan"
+
+msgctxt "web.corpus:stageOther"
+msgid "{stage}"
+msgstr "{stage}"
+
+msgctxt "web.corpus:surahTitle"
+msgid "Surah {surah}"
+msgstr "Surah {surah}"
+
+msgctxt "web.corpus:rowKindAyah"
+msgid "Ayat"
+msgstr "Ayat"
+
+msgctxt "web.corpus:rowKindTranslation"
+msgid "Terjemahan"
+msgstr "Terjemahan"
+
+msgctxt "web.corpus:rowKindOther"
+msgid "{kind}"
+msgstr "{kind}"
+
+msgctxt "web.models:viewList"
+msgid "Daftar"
+msgstr "Daftar"
+
+msgctxt "web.models:viewForm"
+msgid "Formulir"
+msgstr "Formulir"
+
+msgctxt "web.connectors:savedConnectors"
+msgid "Connector tersimpan"
+msgstr "Connector tersimpan"
+
+msgctxt "web.connectors:kinds.cloudflare.label"
+msgid "Cloudflare"
+msgstr "Cloudflare"
+
+msgctxt "web.connectors:kinds.cloudflare.credentialHelp"
+msgid "Token dibaca dari OS credential store (CLOUDFLARE_API_TOKEN, keychain, atau file konfigurasi CLI). Butuh permission Zone / DNS / Edit."
+msgstr "Token dibaca dari OS credential store (CLOUDFLARE_API_TOKEN, keychain, atau file konfigurasi CLI). Butuh permission Zone / DNS / Edit."
+
+msgctxt "web.connectors:kinds.cloudflareRead.label"
+msgid "Cloudflare (read-only)"
+msgstr "Cloudflare (hanya baca)"
+
+msgctxt "web.connectors:kinds.cloudflareRead.credentialHelp"
+msgid "Token dibaca dari OS credential store yang sama. Buat token Zone / DNS / View di Cloudflare agar pembatasan ini juga berlaku di luar MoonWitness."
+msgstr "Token dibaca dari OS credential store yang sama. Buat token Zone / DNS / View di Cloudflare agar pembatasan ini juga berlaku di luar MoonWitness."
+
+msgctxt "web.adminUsers:roles.super_admin.name"
+msgid "Super Administrator"
+msgstr "Super Administrator"
+
+msgctxt "web.adminUsers:roles.super_admin.description"
+msgid "Pemilik sistem; dapat menetapkan peran dan menghapus connector."
+msgstr "Pemilik sistem; dapat menetapkan peran dan menghapus connector."
+
+msgctxt "web.adminUsers:roles.admin.name"
+msgid "Administrator"
+msgstr "Administrator"
+
+msgctxt "web.adminUsers:roles.admin.description"
+msgid "Mengelola akun pengguna dan membaca jejak audit."
+msgstr "Mengelola akun pengguna dan membaca jejak audit."
+
+msgctxt "web.adminUsers:roles.integrations_manager.name"
+msgid "Integrations Manager"
+msgstr "Integrations Manager"
+
+msgctxt "web.adminUsers:roles.integrations_manager.description"
+msgid "Membuat dan menghapus connector serta mengatur aksesnya."
+msgstr "Membuat dan menghapus connector serta mengatur aksesnya."
+
+msgctxt "web.adminUsers:roles.operator.name"
+msgid "Operator"
+msgstr "Operator"
+
+msgctxt "web.adminUsers:roles.operator.description"
+msgid "Menjalankan sinkronisasi dan mengubah record DNS."
+msgstr "Menjalankan sinkronisasi dan mengubah record DNS."
+
+msgctxt "web.adminUsers:roles.member.name"
+msgid "Member"
+msgstr "Member"
+
+msgctxt "web.adminUsers:roles.member.description"
+msgid "Pengguna biasa dengan data miliknya sendiri."
+msgstr "Pengguna biasa dengan data miliknya sendiri."
+
+msgctxt "web.adminUsers:roles.viewer.name"
+msgid "Viewer"
+msgstr "Viewer"
+
+msgctxt "web.adminUsers:roles.viewer.description"
+msgid "Hanya membaca."
+msgstr "Hanya membaca."

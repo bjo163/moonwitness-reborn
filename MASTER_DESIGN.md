@@ -3,7 +3,7 @@
 **Ecosystem context:** Moon UI is the shared design-system identity implemented by `@moonwitness/ui`; it is not a separate application. A-L-L-A-H.COM / EMPIRE OF THE LIGHT public identity is governed by [`docs/vision/ALLAH_COM_OFFICIAL_CANON.md`](docs/vision/ALLAH_COM_OFFICIAL_CANON.md).
 
 **Status: PROPOSED · Design authority pending owner ratification**
-**Edition:** MASTER FINAL v2.0 · Derived from `masterprompt.md` PILLAR 08 and repository evidence
+**Edition:** MASTER FINAL v2.0 · Derived from the D30 requirement catalog (legacy PILLAR 08 section) and repository evidence
 
 ---
 
@@ -21,7 +21,7 @@
 
 ### 2. Visual system requirements
 
-Per `masterprompt.md` PILLAR 08 §1600–1618, the design system must include:
+The D30 requirements originating in the legacy PILLAR 08 visual-system section require:
 
 - **Dark Theme and Light Theme.** Both required; current local UI is dark-only and must be extended.
 - **Semantic Color Tokens.** Not hard-coded values; tokens carry meaning.
@@ -66,7 +66,7 @@ Both dark and light themes must be supported via semantic tokens. The theme swit
 
 ### 6. Internationalization (D21)
 
-Per `masterprompt.md` PILLAR 08 §1680–1721:
+The D30 requirements originating in the legacy PILLAR 08 internationalization section specify:
 
 **Initial locales:** Indonesian (`id`) and English (`en`).
 

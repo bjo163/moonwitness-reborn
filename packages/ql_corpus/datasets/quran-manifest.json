@@ -1,0 +1,13 @@
+{
+  "$comment": [
+    "Owner-authored dataset manifest — the importer's reconciliation hard-gate",
+    "sources `rows_expected` from these entries and aborts before writing a",
+    "single row if the observed file's line count differs. `path` values here",
+    "are placeholders; the operator passes real JSONL paths via `--dataset`",
+    "CLI or edits them inline. `rights_status` defaults to `under_review` so",
+    "publishEdition refuses until the owner records a `cleared` decision in",
+    "source.rights. See docs/knowledge/CORPUS_INTEGRATION_PLAN.md",
+    "§Al-Qur'an first-slice datasets and MW-ADR-019."
+  ],
+  "datasets": []
+}

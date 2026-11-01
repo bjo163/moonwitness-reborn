@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  MoonClientError,
   moonClient,
   type AuthUserDto as AuthUser,
   type ConnectorDto as Connector,
@@ -38,6 +39,13 @@ import {
   X,
 } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { apiErrorMessage } from "../locale/api-error-message";
+import { translateMetadata } from "../locale/translate-metadata";
+import {
+  type UiMessageKey,
+  useTranslationCatalog,
+} from "../locale/translation-catalog";
+import { useLocalePreference } from "../locale/use-locale-preference";
 
 interface ConnectorDraft {
   id?: string;
@@ -46,33 +54,33 @@ interface ConnectorDraft {
   enabled: boolean;
 }
 
-const tokenSourceLabels: Record<ConnectorTokenSource, string> = {
-  unresolved: "Belum terhubung",
-  env: "Environment variable",
-  keychain: "Keychain OS",
-  config_file: "File konfigurasi CLI",
+const tokenSourceKeys: Record<ConnectorTokenSource, UiMessageKey> = {
+  unresolved: "web.connectors.unresolved",
+  env: "web.connectors.environment",
+  keychain: "web.connectors.keychain",
+  config_file: "web.connectors.configFile",
 };
 
-const verifyStatusLabels: Record<ConnectorVerifyStatus, string> = {
-  unverified: "Belum diverifikasi",
-  ok: "Token aktif",
-  invalid: "Token ditolak",
-  network: "Jaringan bermasalah",
-  missing: "Token tidak ditemukan",
+const verifyStatusKeys: Record<ConnectorVerifyStatus, UiMessageKey> = {
+  unverified: "web.connectors.unverified",
+  ok: "web.connectors.tokenOk",
+  invalid: "web.connectors.tokenInvalid",
+  network: "web.connectors.networkIssue",
+  missing: "web.connectors.tokenMissing",
 };
 
-function formatTime(value: string | null): string {
+function formatTime(value: string | null, locale: "id" | "en"): string {
   if (!value) return "—";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("id-ID");
-}
-
-function messageOf(error: unknown, fallback: string): string {
-  return error instanceof Error && error.message ? error.message : fallback;
+  return Number.isNaN(date.getTime())
+    ? "—"
+    : date.toLocaleString(locale === "id" ? "id-ID" : "en-US");
 }
 
 export default function ConnectorWorkspace() {
   const [user, setUser] = useState<AuthUser | null>(null);
+  useLocalePreference(user);
+  const { t, tm, locale } = useTranslationCatalog();
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [kinds, setKinds] = useState<ConnectorKind[]>([]);
   const [maxPerOwner, setMaxPerOwner] = useState(0);
@@ -116,10 +124,9 @@ export default function ConnectorWorkspace() {
       } catch (loadError) {
         if (
           !cancelled &&
-          (!(loadError instanceof Error) ||
-            loadError.message !== "Authentication required.")
+          !(loadError instanceof MoonClientError && loadError.status === 401)
         ) {
-          setError(messageOf(loadError, "Gagal memuat daftar connector."));
+          setError(apiErrorMessage(loadError, t));
         }
       } finally {
         if (!cancelled) setBusy(false);
@@ -129,7 +136,7 @@ export default function ConnectorWorkspace() {
     return () => {
       cancelled = true;
     };
-  }, [loadConnectors]);
+  }, [loadConnectors, t]);
 
   const selectedKind = kinds.find((kind) => kind.kind === draft.kind);
   const limitReached = maxPerOwner > 0 && connectors.length >= maxPerOwner;
@@ -149,20 +156,20 @@ export default function ConnectorWorkspace() {
           label: draft.label,
           enabled: draft.enabled,
         });
-        setNotice("Connector diperbarui.");
+        setNotice(t("web.connectors.saved"));
       } else {
         await moonClient.createConnector({
           kind: draft.kind,
           label: draft.label,
         });
         setNotice(
-          "Connector ditambahkan. Jalankan verifikasi untuk memastikan token terbaca.",
+          t("web.connectors.addedNotice"),
         );
       }
       resetDraft();
       await loadConnectors();
     } catch (saveError) {
-      setError(messageOf(saveError, "Gagal menyimpan connector."));
+      setError(apiErrorMessage(saveError, t));
     } finally {
       setSaving(false);
     }
@@ -174,15 +181,21 @@ export default function ConnectorWorkspace() {
     setNotice(null);
     try {
       if (action === "verify") {
-        setNotice((await moonClient.verifyConnector(connector.id)).message);
+        await moonClient.verifyConnector(connector.id);
+        setNotice(t("web.connectors.verifyCompleted"));
       } else {
-        setNotice((await moonClient.syncConnector(connector.id)).message);
+        await moonClient.syncConnector(connector.id);
+        setNotice(t("web.connectors.syncCompleted"));
       }
     } catch (actionError) {
-      setError(messageOf(actionError, "Aksi connector gagal."));
+      setError(apiErrorMessage(actionError, t));
     } finally {
       setPendingRow(null);
-      await loadConnectors().catch(() => undefined);
+      try {
+        await loadConnectors();
+      } catch (refreshError) {
+        setError(apiErrorMessage(refreshError, t));
+      }
     }
   }
 
@@ -196,14 +209,18 @@ export default function ConnectorWorkspace() {
       });
       setNotice(
         connector.enabled
-          ? `Connector ${connector.label} dinonaktifkan.`
-          : `Connector ${connector.label} diaktifkan.`,
+          ? t("web.connectors.disabledNotice", { name: connector.label })
+          : t("web.connectors.enabledNotice", { name: connector.label }),
       );
     } catch (toggleError) {
-      setError(messageOf(toggleError, "Gagal mengubah status connector."));
+      setError(apiErrorMessage(toggleError, t));
     } finally {
       setPendingRow(null);
-      await loadConnectors().catch(() => undefined);
+      try {
+        await loadConnectors();
+      } catch (refreshError) {
+        setError(apiErrorMessage(refreshError, t));
+      }
     }
   }
 
@@ -216,16 +233,20 @@ export default function ConnectorWorkspace() {
         confirmLabel: confirmLabel.trim(),
       });
       setNotice(
-        `Connector ${deleteTarget.label} dihapus. Riwayat audit tetap tersimpan.`,
+        t("web.connectors.deletedNotice", { name: deleteTarget.label }),
       );
       if (draft.id === deleteTarget.id) resetDraft();
       setDeleteTarget(null);
       setConfirmLabel("");
     } catch (deleteError) {
-      setError(messageOf(deleteError, "Gagal menghapus connector."));
+      setError(apiErrorMessage(deleteError, t));
     } finally {
       setSaving(false);
-      await loadConnectors().catch(() => undefined);
+      try {
+        await loadConnectors();
+      } catch (refreshError) {
+        setError(apiErrorMessage(refreshError, t));
+      }
     }
   }
 
@@ -234,14 +255,14 @@ export default function ConnectorWorkspace() {
       await moonClient.logout();
       window.location.href = "/command-center";
     } catch (logoutError) {
-      setError(messageOf(logoutError, "Gagal keluar."));
+      setError(apiErrorMessage(logoutError, t));
     }
   }
 
   if (busy) {
     return (
       <main className="ql-hud-app flex min-h-dvh items-center justify-center text-sm text-stone-400">
-        Memuat connector...
+        {t("web.connectors.loading")}
       </main>
     );
   }
@@ -251,10 +272,10 @@ export default function ConnectorWorkspace() {
       <CenteredAuth>
         <div className="mb-5 flex items-center gap-3">
           <Plug size={20} className="text-[#d7ff63]" />
-          <h1 className="text-lg font-semibold">Masuk untuk mengatur connector</h1>
+          <h1 className="text-lg font-semibold">{t("web.connectors.signIn")}</h1>
         </div>
         <p className="text-sm leading-6 text-stone-400">
-          Connector layanan eksternal dikelola per akun.
+          {t("web.connectors.description")}
         </p>
         {error && (
           <Alert variant="error" className="mt-4">
@@ -266,16 +287,26 @@ export default function ConnectorWorkspace() {
           onClick={() => (window.location.href = "/auth")}
         >
           <ArrowLeft size={16} />
-          Ke halaman masuk
+          {t("web.auth.loginAction")}
         </Button>
       </CenteredAuth>
     );
+  }
+
+  let buttonLabel: string;
+  if (saving) {
+    buttonLabel = t("web.connectors.saving");
+  } else if (draft.id) {
+    buttonLabel = t("web.connectors.save");
+  } else {
+    buttonLabel = t("web.connectors.add");
   }
 
   return (
     <WorkspaceTemplate
       sidebarOpen={sidebarOpen}
       onCloseSidebar={() => setSidebarOpen(false)}
+      closeLabel={t("web.common.closeMenu")}
       sidebar={
         <>
           <div className="flex h-12 items-center justify-between px-2">
@@ -290,32 +321,32 @@ export default function ConnectorWorkspace() {
               variant="ghost"
               size="icon"
               className="md:hidden"
-              aria-label="Tutup menu"
+              aria-label={t("web.common.closeMenu")}
               onClick={() => setSidebarOpen(false)}
             >
               <X size={18} />
             </Button>
           </div>
-          <a href="/command-center" className="ql-nav-link mt-4">
+          <a href="/command-center/chat" className="ql-nav-link mt-4">
             <ArrowLeft size={16} />
-            Kembali ke chat
+            {t("web.connectors.back")}
           </a>
           <a href="/models" className="ql-nav-link mt-2">
             <Boxes size={16} />
-            Data models
+            {t("web.connectors.models")}
           </a>
           <a href="/providers" className="ql-nav-link mt-2">
             <KeyRound size={16} />
-            Model providers
+            {t("web.connectors.providers")}
           </a>
           <a href="/connectors" className="ql-nav-link is-active mt-2">
             <Plug size={16} />
-            Integrasi
+            {t("web.common.integrations")}
           </a>
           {user.groups.includes("admin") && (
             <a href="/admin/users" className="ql-nav-link mt-2">
               <ShieldCheck size={16} />
-              Manajemen pengguna
+              {t("web.connectors.users")}
             </a>
           )}
           <div className="mt-3 flex items-center gap-2 border-t border-stone-700 px-2 pt-4">
@@ -328,7 +359,7 @@ export default function ConnectorWorkspace() {
             <Button
               variant="ghost"
               size="icon"
-              aria-label="Keluar"
+              aria-label={t("web.common.logout")}
               onClick={() => void logout()}
             >
               <LogOut size={16} />
@@ -343,31 +374,29 @@ export default function ConnectorWorkspace() {
               variant="ghost"
               size="icon"
               className="md:hidden"
-              aria-label="Buka menu"
+              aria-label={t("web.common.openMenu")}
               onClick={() => setSidebarOpen(true)}
             >
               <Menu size={18} />
             </Button>
             <div>
-              <div className="text-sm font-semibold">Integrasi eksternal</div>
+              <div className="text-sm font-semibold">{t("web.connectors.integrations")}</div>
               <div className="text-xs text-stone-500">
-                Cloudflare, DNS, dan layanan lain
+                {t("web.connectors.integrationsDescription")}
               </div>
             </div>
           </div>
-          <Badge variant="outline">{`${connectors.length} connector tersimpan`}</Badge>
+          <Badge variant="outline">{t("web.connectors.zoneCount", { count: connectors.length })}</Badge>
         </>
       }
     >
       <div className="ql-model-workspace">
         <div className="ql-model-heading">
           <div>
-            <div className="ql-eyebrow">CONNECTOR MANAGEMENT</div>
-            <h1>Connector</h1>
+            <div className="ql-eyebrow">{t("web.connectors.eyebrow")}</div>
+            <h1>{t("web.connectors.title")}</h1>
             <p>
-              MoonWitness tidak pernah menyimpan token. Kredensial dibaca dari OS
-              credential store milik CLI layanan setiap kali permintaan diproses,
-              jadi mencabut akses cukup dilakukan di sisi penyedia.
+              {t("web.connectors.securityDescription")}
             </p>
           </div>
         </div>
@@ -379,19 +408,21 @@ export default function ConnectorWorkspace() {
         )}
         {notice && <Alert className="mt-5">{notice}</Alert>}
 
-        <section className="mt-6 space-y-3" aria-label="Connector tersimpan">
+        <section
+          className="mt-6 space-y-3"
+          aria-label={t("web.connectors.savedConnectors")}
+        >
           {connectors.length === 0 && (
             <Card>
               <CardContent>
-                Belum ada connector. Tambahkan satu untuk mulai mengelola DNS
-                dari MoonWitness.
+                    {t("web.connectors.empty")}
               </CardContent>
             </Card>
           )}
           {connectors.map((connector) => {
             const kind = kinds.find((item) => item.kind === connector.kind);
             const isPending = pendingRow?.startsWith(`${connector.id}:`) ?? false;
-            return (
+  return (
               <Card
                 key={connector.id}
                 className={cn(connector.enabled || "opacity-70")}
@@ -404,31 +435,45 @@ export default function ConnectorWorkspace() {
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-sm font-semibold">{connector.label}</h2>
                       <Badge variant={connector.enabled ? "live" : "default"}>
-                        {connector.enabled ? "Aktif" : "Nonaktif"}
+                        {connector.enabled ? t("web.connectors.enabled") : t("web.connectors.disabled")}
                       </Badge>
                       <Badge
                         variant={
                           connector.verifyStatus === "ok" ? "default" : "outline"
                         }
                       >
-                        {verifyStatusLabels[connector.verifyStatus]}
+                        {t(verifyStatusKeys[connector.verifyStatus])}
                       </Badge>
-                      {kind?.readonly && <Badge variant="outline">Read-only</Badge>}
+                      {kind?.readonly && <Badge variant="outline">{t("web.connectors.readOnly")}</Badge>}
                     </div>
                     <p className="mt-1 text-xs text-stone-500">
-                      {kind?.label ?? connector.kind} · Sumber token:{" "}
-                      {tokenSourceLabels[connector.tokenSource]}
+                      {kind
+                        ? translateMetadata(kind.labelKey, kind.label, tm)
+                        : connector.kind} ·{" "}
+                      {t("web.connectors.tokenSource", {
+                        source: t(tokenSourceKeys[connector.tokenSource]),
+                      })}
                     </p>
                     <p className="mt-1 break-all text-[11px] text-stone-600">
-                      {connector.tokenRef || "Token belum pernah terbaca."}
+                      {connector.tokenRef || t("web.connectors.neverRead")}
                     </p>
                     <p className="mt-1 text-[11px] text-stone-500">
-                      Verifikasi terakhir {formatTime(connector.lastVerifyAt)} ·
-                      Sinkron terakhir {formatTime(connector.lastSyncAt)}
+                      {t("web.connectors.lastVerified", {
+                        date: formatTime(connector.lastVerifyAt, locale),
+                      })} ·{" "}
+                      {t("web.connectors.lastSynced", {
+                        date: formatTime(connector.lastSyncAt, locale),
+                      })}
                     </p>
                     {connector.lastSyncStatus && (
                       <p className="mt-1 text-[11px] text-stone-500">
-                        Status sinkron terakhir: {connector.lastSyncStatus}
+                        {t("web.connectors.lastSyncStatus", {
+                          status: translateMetadata(
+                            `web.connectors.syncStatuses.${connector.lastSyncStatus}`,
+                            connector.lastSyncStatus,
+                            tm,
+                          ),
+                        })}
                       </p>
                     )}
                   </div>
@@ -442,7 +487,7 @@ export default function ConnectorWorkspace() {
                         }
                       >
                         <Globe size={15} />
-                        DNS
+                        {t("web.connectors.dns")}
                       </Button>
                     )}
                     {canManage && (
@@ -454,7 +499,7 @@ export default function ConnectorWorkspace() {
                           onClick={() => void runAction(connector, "verify")}
                         >
                           <ShieldCheck size={15} />
-                          Verifikasi
+                          {t("web.connectors.verify")}
                         </Button>
                         <Button
                           variant="ghost"
@@ -462,7 +507,9 @@ export default function ConnectorWorkspace() {
                           disabled={isPending}
                           onClick={() => void toggleEnabled(connector)}
                         >
-                          {connector.enabled ? "Nonaktifkan" : "Aktifkan"}
+                          {connector.enabled
+                            ? t("web.connectors.deactivate")
+                            : t("web.connectors.activate")}
                         </Button>
                         <Button
                           variant="secondary"
@@ -476,12 +523,14 @@ export default function ConnectorWorkspace() {
                             })
                           }
                         >
-                          Edit
+                          {t("web.connectors.edit")}
                         </Button>
                         <Button
                           variant="danger"
                           size="icon"
-                          aria-label={`Hapus ${connector.label}`}
+                          aria-label={t("web.connectors.delete", {
+                            name: connector.label,
+                          })}
                           onClick={() => {
                             setDeleteTarget(connector);
                             setConfirmLabel("");
@@ -500,7 +549,7 @@ export default function ConnectorWorkspace() {
                         onClick={() => void runAction(connector, "sync")}
                       >
                         <RefreshCw size={15} />
-                        Sinkronkan
+                        {t("web.connectors.sync")}
                       </Button>
                     )}
                   </div>
@@ -516,9 +565,9 @@ export default function ConnectorWorkspace() {
               <form onSubmit={(event) => void save(event)}>
                 <div className="mb-5 flex items-start justify-between gap-4">
                   <div>
-                    <div className="ql-eyebrow">{draft.id ? "EDIT" : "BARU"}</div>
+                    <div className="ql-eyebrow">{draft.id ? t("web.connectors.editEyebrow") : t("web.connectors.newEyebrow")}</div>
                     <h2 className="mt-1 text-lg font-semibold">
-                      {draft.id ? "Ubah connector" : "Tambah connector"}
+                      {draft.id ? t("web.connectors.editLabel") : t("web.connectors.newLabel")}
                     </h2>
                   </div>
                   {draft.id && (
@@ -528,12 +577,12 @@ export default function ConnectorWorkspace() {
                       size="sm"
                       onClick={resetDraft}
                     >
-                      Batal edit
+                      {t("web.connectors.cancelEdit")}
                     </Button>
                   )}
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <FormField label="Jenis layanan" htmlFor="connector-kind">
+                  <FormField label={t("web.connectors.kind")} htmlFor="connector-kind">
                     <Select
                       id="connector-kind"
                       required
@@ -545,13 +594,13 @@ export default function ConnectorWorkspace() {
                     >
                       {kinds.map((kind) => (
                         <option key={kind.kind} value={kind.kind}>
-                          {kind.label}
-                          {kind.readonly ? " (read-only)" : ""}
+                          {translateMetadata(kind.labelKey, kind.label, tm)}
+                          {kind.readonly ? ` (${t("web.connectors.readOnly")})` : ""}
                         </option>
                       ))}
                     </Select>
                   </FormField>
-                  <FormField label="Nama connector" htmlFor="connector-label">
+                  <FormField label={t("web.connectors.label")} htmlFor="connector-label">
                     <Input
                       id="connector-label"
                       required
@@ -560,7 +609,7 @@ export default function ConnectorWorkspace() {
                       onChange={(event) =>
                         setDraft({ ...draft, label: event.target.value })
                       }
-                      placeholder="Produksi pribadi"
+                      placeholder={t("web.connectors.labelPlaceholder")}
                     />
                   </FormField>
                 </div>
@@ -568,13 +617,28 @@ export default function ConnectorWorkspace() {
                 {selectedKind && (
                   <div className="mt-4 border border-stone-700 bg-stone-900/60 p-4">
                     <p className="text-xs leading-6 text-stone-400">
-                      {selectedKind.credentialHelp}
+                      {translateMetadata(
+                        selectedKind.credentialHelpKey,
+                        selectedKind.credentialHelp,
+                        tm,
+                      )}
                     </p>
                     <p className="mt-2 text-[11px] text-stone-500">
-                      Kapabilitas: {selectedKind.capabilities.join(", ") || "—"}.{" "}
+                      {t("web.connectors.capabilities", {
+                        capabilities:
+                          selectedKind.capabilities
+                            .map((capability) =>
+                              translateMetadata(
+                                `web.connectors.capabilities.${capability}`,
+                                capability.toUpperCase(),
+                                tm,
+                              ),
+                            )
+                            .join(", ") || "—",
+                      })}{" "}
                       {selectedKind.readonly
-                        ? "Hanya cermin dan baca; mutasi ditolak server."
-                        : "Boleh membaca dan memutasi."}
+                        ? t("web.connectors.readOnlyCapability")
+                        : t("web.connectors.writableCapability")}
                     </p>
                     <a
                       href={selectedKind.helpUrl}
@@ -582,7 +646,7 @@ export default function ConnectorWorkspace() {
                       rel="noreferrer"
                       className="mt-2 inline-flex items-center gap-1.5 text-xs text-[#d7ff63]"
                     >
-                      Atur token di konsol penyedia
+                      {t("web.connectors.configureToken")}
                       <ExternalLink size={13} />
                     </a>
                   </div>
@@ -596,7 +660,7 @@ export default function ConnectorWorkspace() {
                       setDraft({ ...draft, enabled: event.target.checked })
                     }
                   />
-                  Aktifkan connector ini
+                  {t("web.connectors.enableConnector")}
                 </label>
 
                 <div className="mt-5 flex justify-end">
@@ -605,11 +669,7 @@ export default function ConnectorWorkspace() {
                     disabled={saving || (!draft.id && limitReached)}
                   >
                     <Save size={15} />
-                    {saving
-                      ? "Menyimpan..."
-                      : draft.id
-                        ? "Simpan perubahan"
-                        : "Tambah connector"}
+                    {buttonLabel}
                   </Button>
                 </div>
               </form>
@@ -621,16 +681,17 @@ export default function ConnectorWorkspace() {
           <Card className="mt-6">
             <CardContent>
               <h2 className="text-lg font-semibold">
-                Hapus {deleteTarget.label}?
+                {t("web.connectors.deleteHeading", {
+                  name: deleteTarget.label,
+                })}
               </h2>
               <p className="mt-2 text-sm leading-6 text-stone-400">
-                Cermin zona dan record ikut terhapus dari MoonWitness; riwayat
-                audit tetap tersimpan. Ketik{" "}
+                {t("web.connectors.deleteDescription")}{" "}
                 <span className="text-[#d7ff63]">{deleteTarget.label}</span>{" "}
                 persis untuk mengonfirmasi.
               </p>
               <div className="mt-4 max-w-md">
-                <FormField label="Konfirmasi nama" htmlFor="delete-confirm">
+                <FormField label={t("web.connectors.confirmName")} htmlFor="delete-confirm">
                   <Input
                     id="delete-confirm"
                     value={confirmLabel}
@@ -647,7 +708,7 @@ export default function ConnectorWorkspace() {
                     setConfirmLabel("");
                   }}
                 >
-                  Batal
+                  {t("web.connectors.cancel")}
                 </Button>
                 <Button
                   variant="danger"
@@ -657,7 +718,7 @@ export default function ConnectorWorkspace() {
                   onClick={() => void confirmDelete()}
                 >
                   <Trash2 size={15} />
-                  Hapus connector
+                  {t("web.connectors.deleteAction")}
                 </Button>
               </div>
             </CardContent>

@@ -20,9 +20,30 @@ import {
   type ChatResponseDto,
   type ConversationDto,
   type ConversationListResponseDto,
+  type CorpusEditionDto,
+  type CorpusEditionListResponseDto,
+  type CorpusPassageDto,
+  type CorpusSurahDto,
+  type CorpusSurahResponseDto,
+  type CorpusVerseResponseDto,
   type ModelProviderDto,
+  type ProjectTaskListResponseDto,
   type RoleDto,
   type RoleListResponseDto,
+  type SourceArtifactDto,
+  type SourceArtifactListResponseDto,
+  type SourceArtifactResponseDto,
+  type SourceRightsSummaryDto,
+  type PassageKindDto,
+  type UiLocale,
+  type WorkflowChangeDto,
+  type WorkflowChangeListResponseDto,
+  type WorkflowStateDto,
+  type WorkflowTransitionDto,
+  type WorkflowTransitionListResponseDto,
+  type TranslationDraftRequestDto,
+  type TranslationAiDraftRequestDto,
+  type UiLanguageDto,
 } from "@moonwitness/moonclient";
 import {
   QlAccessError,
@@ -49,6 +70,21 @@ import {
   SyncCooldownError,
 } from "ql_cloudflare/services/sync-service";
 import {
+  listOpenChanges,
+  listTransitionsForChange,
+  requestTransition,
+} from "ql_workflow/services/workflow-service";
+import {
+  publishEdition,
+  withdrawEdition,
+} from "ql_corpus/services/corpus-service";
+import {
+  readSurahWindow,
+  readVerse,
+  type PassageReadDto,
+} from "ql_corpus/services/reader-service";
+import { PASSAGE_KINDS } from "ql_corpus/services/corpus-vocabulary";
+import {
   ROLE_CATALOG,
   countUsersWithRole,
   findRoleDefinition,
@@ -56,9 +92,17 @@ import {
   isKnownRole,
 } from "ql_auth/services/rbac";
 import {
-  shouldGrantSuperAdmin,
-  type BootstrapAdminSettings,
-} from "../auth/bootstrap.js";
+  approveTranslation,
+  exportPoCatalog,
+  getPublishedCatalog,
+  importPoDrafts,
+  isEnabledLocale,
+  listAdminTranslations,
+  listEnabledLanguages,
+  saveTranslationDraft,
+  type EnabledLocale,
+} from "ql_i18n/services/catalog-service";
+import { firstUseSetupRequired } from "../auth/setup.js";
 import { ConnectorAccessError } from "../connectors/connector-boundary.js";
 import {
   ConnectorCredentialError,
@@ -99,6 +143,11 @@ import {
   decryptProviderSecret,
   encryptProviderSecret,
 } from "../ai/provider-secrets.js";
+import {
+  listProjectTasks,
+  projectProgressSummary,
+  readyProjectTaskIds,
+} from "../project-progress/tracker.js";
 
 const MAX_BODY_BYTES = 64 * 1024;
 const MAX_INPUT_LENGTH = 16_000;
@@ -138,13 +187,14 @@ class RequestError extends Error {
 
 async function readJsonBody(
   request: IncomingMessage,
+  maximumBytes = MAX_BODY_BYTES,
 ): Promise<unknown> {
   const chunks: Uint8Array[] = [];
   let size = 0;
   for await (const chunk of request) {
     const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
     size += buffer.length;
-    if (size > MAX_BODY_BYTES) {
+    if (size > maximumBytes) {
       throw new RequestError("Request body is too large.", 413);
     }
     chunks.push(buffer);
@@ -161,6 +211,125 @@ function parseObject(body: unknown): Record<string, unknown> {
     throw new RequestError("Request body must be a JSON object.", 400);
   }
   return body as Record<string, unknown>;
+}
+
+function parseUiLocale(value: unknown): UiLocale {
+  if (value !== "id" && value !== "en") {
+    throw new RequestError("Field 'preferredLocale' must be 'id' or 'en'.", 400);
+  }
+  return value;
+}
+
+function parseEnabledLocale(value: unknown): EnabledLocale {
+  if (!isEnabledLocale(value)) {
+    throw new RequestError("The requested interface language is unsupported.", 400);
+  }
+  return value;
+}
+
+function parseTranslationDraft(body: unknown): TranslationDraftRequestDto {
+  const input = parseObject(body);
+  const requiredText = (key: string, maximum: number): string => {
+    const value = input[key];
+    if (
+      typeof value !== "string" ||
+      !value.trim() ||
+      value.length > maximum
+    ) {
+      throw new RequestError(`Field '${key}' is invalid.`, 400);
+    }
+    return value;
+  };
+  const context = input.context;
+  if (context !== undefined && (
+    typeof context !== "string" || context.length > 2000
+  )) {
+    throw new RequestError("Field 'context' is invalid.", 400);
+  }
+  const sourcePluralText = input.sourcePluralText;
+  const pluralForms = input.translatedPluralTexts;
+  if (
+    sourcePluralText !== undefined &&
+    (typeof sourcePluralText !== "string" ||
+      !sourcePluralText.trim() ||
+      sourcePluralText.length > 4000)
+  ) {
+    throw new RequestError("Field 'sourcePluralText' is invalid.", 400);
+  }
+  let translatedPluralTexts:
+    | TranslationDraftRequestDto["translatedPluralTexts"]
+    | undefined;
+  if (pluralForms !== undefined) {
+    if (
+      typeof pluralForms !== "object" ||
+      pluralForms === null ||
+      Array.isArray(pluralForms)
+    ) {
+      throw new RequestError("Field 'translatedPluralTexts' is invalid.", 400);
+    }
+    translatedPluralTexts = {};
+    for (const [category, value] of Object.entries(pluralForms)) {
+      if (
+        (category !== "one" && category !== "other") ||
+        typeof value !== "string" ||
+        value.length > 4000
+      ) {
+        throw new RequestError("Field 'translatedPluralTexts' is invalid.", 400);
+      }
+      translatedPluralTexts[category] = value;
+    }
+  }
+  return {
+    locale: parseEnabledLocale(input.locale),
+    namespace: requiredText("namespace", 80),
+    key: requiredText("key", 160),
+    sourceText: requiredText("sourceText", 4000),
+    translatedText: requiredText("translatedText", 4000),
+    ...(typeof sourcePluralText === "string" ? { sourcePluralText } : {}),
+    ...(translatedPluralTexts ? { translatedPluralTexts } : {}),
+    ...(typeof context === "string" ? { context } : {}),
+  };
+}
+
+function parseTranslationAiDraft(
+  body: unknown,
+): TranslationAiDraftRequestDto {
+  const input = parseObject(body);
+  const requiredText = (key: string, maximum: number): string => {
+    const value = input[key];
+    if (
+      typeof value !== "string" ||
+      !value.trim() ||
+      value.length > maximum
+    ) {
+      throw new RequestError(`Field '${key}' is invalid.`, 400);
+    }
+    return value;
+  };
+  const context = input.context;
+  if (
+    context !== undefined &&
+    (typeof context !== "string" || context.length > 2000)
+  ) {
+    throw new RequestError("Field 'context' is invalid.", 400);
+  }
+  const sourcePluralText = input.sourcePluralText;
+  if (
+    sourcePluralText !== undefined &&
+    (typeof sourcePluralText !== "string" ||
+      !sourcePluralText.trim() ||
+      sourcePluralText.length > 4000)
+  ) {
+    throw new RequestError("Field 'sourcePluralText' is invalid.", 400);
+  }
+  return {
+    locale: parseEnabledLocale(input.locale),
+    namespace: requiredText("namespace", 80),
+    key: requiredText("key", 160),
+    sourceText: requiredText("sourceText", 4000),
+    ...(typeof sourcePluralText === "string" ? { sourcePluralText } : {}),
+    ...(typeof context === "string" ? { context } : {}),
+  };
 }
 
 function parseAgentRequest(body: unknown): AgentRequest & ChatRequestDto {
@@ -199,8 +368,39 @@ function sendJson(
   body: object,
   headers: Record<string, string> = {},
 ) {
+  const bodyRecord = body as Record<string, unknown>;
+  const errorBody =
+    statusCode >= 400 &&
+    typeof bodyRecord.error === "string" &&
+    typeof bodyRecord.code !== "string"
+      ? {
+          ...bodyRecord,
+          code:
+            statusCode === 400
+              ? "REQUEST_INVALID"
+              : statusCode === 401
+                ? "AUTHENTICATION_REQUIRED"
+                : statusCode === 403
+                  ? "ACCESS_DENIED"
+                  : statusCode === 404
+                    ? "RESOURCE_NOT_FOUND"
+                    : statusCode === 405
+                      ? "METHOD_NOT_ALLOWED"
+                      : statusCode === 409
+                        ? "RESOURCE_CONFLICT"
+                        : statusCode === 413
+                          ? "REQUEST_TOO_LARGE"
+                          : statusCode === 429
+                            ? "RATE_LIMITED"
+                            : statusCode === 502
+                              ? "UPSTREAM_FAILURE"
+                              : statusCode === 503
+                                ? "SERVICE_UNAVAILABLE"
+                                : "INTERNAL_ERROR",
+        }
+      : body;
   response.writeHead(statusCode, { "content-type": "application/json", ...headers });
-  response.end(JSON.stringify(body));
+  response.end(JSON.stringify(errorBody));
 }
 
 function retryAfterHeaders(retryAfterMs: number): Record<string, string> {
@@ -261,6 +461,60 @@ function handleRequestError(
   }
   console.error("API request failed.", error);
   sendJson(response, 500, { error: "Internal server error." });
+}
+
+function handleI18nRequestError(
+  response: ServerResponse,
+  error: unknown,
+): void {
+  if (error instanceof RequestError) {
+    let code = "I18N_REQUEST_INVALID";
+    if (error.statusCode === 403) {
+      code = "I18N_ACCESS_DENIED";
+    } else if (error.statusCode === 405) {
+      code = "I18N_METHOD_NOT_ALLOWED";
+    } else if (error.statusCode >= 500) {
+      code = "I18N_SERVICE_UNAVAILABLE";
+    }
+    sendJson(response, error.statusCode, {
+      code,
+      error: error.message,
+    });
+    return;
+  }
+  if (error instanceof QlAccessError) {
+    sendJson(response, 403, {
+      code: "I18N_ACCESS_DENIED",
+      error: "Access denied.",
+    });
+    return;
+  }
+  if (error instanceof QlConflictError) {
+    sendJson(response, 409, {
+      code: "I18N_CONFLICT",
+      error: error.message,
+    });
+    return;
+  }
+  if (error instanceof QlNotFoundError) {
+    sendJson(response, 404, {
+      code: "I18N_NOT_FOUND",
+      error: error.message,
+    });
+    return;
+  }
+  if (error instanceof QlValidationError) {
+    sendJson(response, 400, {
+      code: "I18N_VALIDATION",
+      error: error.message,
+    });
+    return;
+  }
+  console.error("Translation request failed.", error);
+  sendJson(response, 500, {
+    code: "I18N_INTERNAL",
+    error: "Translation request failed.",
+  });
 }
 
 function requireAuthenticatedUser(
@@ -446,7 +700,7 @@ function providerInput(
 }
 
 interface ConnectorCredentials {
-  resolveToken: () => Promise<ResolvedCredential>;
+  resolveToken(): Promise<ResolvedCredential>;
   fetcher: typeof fetch;
 }
 
@@ -630,6 +884,385 @@ async function handleConnectorRequest(
   return false;
 }
 
+/**
+ * Maps a `workflow.change` QlRecord to the public DTO. Private fields
+ * (`owner_id`, `actor_id`) are dropped here per `AGENTS.md` — the ORM's
+ * `findMany` already strips them on the user path, but the queue handler
+ * reads via `findManyByService` and must redact before crossing the wire.
+ */
+function toWorkflowChangeDto(record: QlRecord): WorkflowChangeDto {
+  return {
+    id: String(record.id ?? ""),
+    title: String(record.title ?? ""),
+    body: String(record.body ?? ""),
+    subject_type: String(record.subject_type ?? ""),
+    subject_id: String(record.subject_id ?? ""),
+    state: String(record.state ?? "draft") as WorkflowStateDto,
+    urgency: String(record.urgency ?? "medium"),
+    revision: Number(record.revision ?? 1),
+    created_at: Number(record.created_at ?? 0),
+    updated_at: Number(record.updated_at ?? 0),
+  };
+}
+
+function toWorkflowTransitionDto(record: QlRecord): WorkflowTransitionDto {
+  return {
+    id: String(record.id ?? ""),
+    change_id: String(record.change_id ?? ""),
+    from_state: String(record.from_state ?? "draft") as WorkflowStateDto,
+    to_state: String(record.to_state ?? "draft") as WorkflowStateDto,
+    action: String(record.action ?? "") as WorkflowTransitionDto["action"],
+    reason: String(record.reason ?? ""),
+    revision: Number(record.revision ?? 1),
+    created_at: Number(record.created_at ?? 0),
+  };
+}
+
+/**
+ * The `/workflow/*` prefix handler. Mirrors `handleConnectorRequest`: one
+ * bounded function returning `Promise<boolean>` so the outer dispatcher can
+ * fall through to the generic `/models` CRUD when nothing matches. Reviewer
+ * gates fire **before** body reads so an unauthorised probe never allocates
+ * a JSON buffer.
+ */
+async function handleWorkflowRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+  user: User,
+  orm: QlOrm,
+  pathname: string,
+): Promise<boolean> {
+  const method = request.method ?? "GET";
+  const ctx = userContext(user);
+
+  if (pathname === apiRoutes.workflow.queue) {
+    if (method !== "GET") return false;
+    requireGroup(user, "admin", "operator");
+    const rows = await listOpenChanges(orm);
+    sendJson(response, 200, {
+      changes: rows.map(toWorkflowChangeDto),
+    } satisfies WorkflowChangeListResponseDto);
+    return true;
+  }
+
+  const transitionMatch = pathname.match(
+    new RegExp(`^${apiRoutes.workflow.prefix}([^/]+)/transition$`),
+  );
+  if (transitionMatch && method === "POST") {
+    const changeId = decodeURIComponent(transitionMatch[1]);
+    const raw = parseObject(await readJsonBody(request));
+    const action = typeof raw.action === "string" ? raw.action : "";
+    const reason = typeof raw.reason === "string" ? raw.reason : undefined;
+    const result = await requestTransition(orm, ctx, changeId, action, reason);
+    sendJson(response, 200, {
+      change: toWorkflowChangeDto(result.change),
+      transition: toWorkflowTransitionDto(result.transition),
+    });
+    return true;
+  }
+
+  const transitionsMatch = pathname.match(
+    new RegExp(`^${apiRoutes.workflow.prefix}([^/]+)/transitions$`),
+  );
+  if (transitionsMatch && method === "GET") {
+    const changeId = decodeURIComponent(transitionsMatch[1]);
+    const reviewer = ctx.groups.some(
+      (group) => group === "admin" || group === "operator",
+    );
+    if (!reviewer) {
+      // Members can read the audit trail only for changes they own; the
+      // generic `findMany` enforces that via `ownerField`.
+      const visible = await orm.findMany("workflow.change", ctx, 500);
+      if (!visible.some((row) => row.id === changeId)) {
+        throw new QlNotFoundError(`Change '${changeId}' not found.`);
+      }
+    }
+    const rows = await listTransitionsForChange(orm, changeId);
+    sendJson(response, 200, {
+      transitions: rows.map(toWorkflowTransitionDto),
+    } satisfies WorkflowTransitionListResponseDto);
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Public projection of a `corpus.edition` QlRecord. There is no `owner_id`
+ * on the model (editions are platform-owned reference data), so the DTO
+ * covers every column; nothing here is stripped. `attribution_text` is
+ * copied onto every passage DTO too (see `toCorpusPassageDto`) per
+ * MW-ADR-019 §(d).
+ */
+function toCorpusEditionDto(record: QlRecord): CorpusEditionDto {
+  return {
+    id: String(record.id ?? ""),
+    canonical_id: String(record.canonical_id ?? ""),
+    work_id: String(record.work_id ?? ""),
+    source_version_id: String(record.source_version_id ?? ""),
+    rights_id: String(record.rights_id ?? ""),
+    edition_key: String(record.edition_key ?? ""),
+    authority: String(record.authority ?? "") as CorpusEditionDto["authority"],
+    locale: String(record.locale ?? ""),
+    publisher: String(record.publisher ?? ""),
+    author_or_translator: String(record.author_or_translator ?? ""),
+    attribution_text: String(record.attribution_text ?? ""),
+    revision: String(record.revision ?? ""),
+    imported_row_count: Number(record.imported_row_count ?? 0),
+    materialized_row_count: Number(record.materialized_row_count ?? 0),
+    stage: String(record.stage ?? "staged") as CorpusEditionDto["stage"],
+    updated_at: Number(record.updated_at ?? 0),
+  };
+}
+
+function toCorpusPassageKind(value: string): PassageKindDto {
+  const kind = PASSAGE_KINDS.find((candidate) => candidate === value);
+  if (!kind) {
+    throw new Error(`Unsupported corpus passage authority '${value}'.`);
+  }
+  return kind;
+}
+
+function toCorpusPassageDto(passage: PassageReadDto): CorpusPassageDto {
+  return {
+    ...passage,
+    authority: toCorpusPassageKind(passage.authority),
+    edition_authority: toCorpusPassageKind(passage.edition_authority),
+  };
+}
+
+function toSourceArtifactDto(record: QlRecord): SourceArtifactDto {
+  return {
+    id: String(record.id ?? ""),
+    canonical_id: String(record.canonical_id ?? ""),
+    title: String(record.title ?? ""),
+    kind: String(record.kind ?? ""),
+    publisher: String(record.publisher ?? ""),
+    repository: String(record.repository ?? ""),
+    branch: String(record.branch ?? ""),
+    commit_sha: String(record.commit_sha ?? ""),
+    original_uri: String(record.original_uri ?? ""),
+    lifecycle_stage: String(
+      record.lifecycle_stage ?? "discovered",
+    ) as SourceArtifactDto["lifecycle_stage"],
+    updated_at: Number(record.updated_at ?? 0),
+  };
+}
+
+function toSourceRightsSummaryDto(record: QlRecord): SourceRightsSummaryDto {
+  // `verified_by_id`, `license_evidence_ref`, and `basis_notes` are
+  // `private:true` at the model layer AND intentionally absent from this
+  // projection so any client drift is a compile error, not a leak.
+  return {
+    id: String(record.id ?? ""),
+    version_id: String(record.version_id ?? ""),
+    action: String(record.action ?? "") as SourceRightsSummaryDto["action"],
+    rights_status: String(
+      record.rights_status ?? "unknown",
+    ) as SourceRightsSummaryDto["rights_status"],
+    license_id: String(record.license_id ?? ""),
+    attribution_required: record.attribution_required === true,
+    attribution_text: String(record.attribution_text ?? ""),
+    territory: String(record.territory ?? ""),
+    term_ends_at: Number(record.term_ends_at ?? 0),
+  };
+}
+
+/**
+ * Corpus reader endpoints. All GET; nothing bulk. Every response is rights-
+ * gated and stage-gated by `reader-service.ts` (MW-ADR-019 §(e)). A staged
+ * or rights-pending edition returns 403 with no passage text in the body.
+ *
+ * Publishing and withdrawal are the two exceptions: single POSTs gated on
+ * admin/operator/root, no request body required beyond an optional reason,
+ * and each one appends a `source.provenance` audit row server-side.
+ */
+async function handleCorpusRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+  user: User,
+  orm: QlOrm,
+  pathname: string,
+): Promise<boolean> {
+  const method = request.method ?? "GET";
+  const ctx = userContext(user);
+
+  if (pathname === apiRoutes.corpus.editions && method === "GET") {
+    // Only published editions surface here — the shelf never shows staged
+    // or withdrawn content, so a rights-blocked edition is not merely hidden
+    // in the UI, it is absent from the response.
+    const rows = await orm.findManyByService(
+      "corpus.edition",
+      { stage: "published" },
+      { limit: 500, orderBy: { field: "canonical_id", direction: "asc" } },
+    );
+    sendJson(response, 200, {
+      editions: rows.map(toCorpusEditionDto),
+    } satisfies CorpusEditionListResponseDto);
+    return true;
+  }
+
+  const surahMatch = pathname.match(
+    new RegExp(
+      `^${apiRoutes.corpus.prefix}editions/([^/]+)/surahs/([0-9]+)(?:/verses/([0-9]+))?$`,
+    ),
+  );
+  if (surahMatch && method === "GET") {
+    const editionKey = decodeURIComponent(surahMatch[1]);
+    const surah = Number.parseInt(surahMatch[2], 10);
+    const ayah = surahMatch[3] ? Number.parseInt(surahMatch[3], 10) : null;
+    if (ayah !== null) {
+      const passage = await readVerse(orm, editionKey, surah, ayah);
+      sendJson(response, 200, {
+        passage: toCorpusPassageDto(passage),
+      } satisfies CorpusVerseResponseDto);
+      return true;
+    }
+    const reading = await readSurahWindow(orm, editionKey, surah);
+    const readingDto: CorpusSurahDto = {
+      ...reading,
+      editionAuthority: toCorpusPassageKind(reading.editionAuthority),
+      passages: reading.passages.map(toCorpusPassageDto),
+    };
+    sendJson(response, 200, {
+      reading: readingDto,
+    } satisfies CorpusSurahResponseDto);
+    return true;
+  }
+
+  const publishMatch = pathname.match(
+    new RegExp(`^${apiRoutes.corpus.prefix}editions/([^/]+)/(publish|withdraw)$`),
+  );
+  if (publishMatch && method === "POST") {
+    requireGroup(user, "admin", "root", "operator");
+    const editionKey = decodeURIComponent(publishMatch[1]);
+    const verb = publishMatch[2];
+    const raw = parseObject(await readJsonBody(request).catch(() => ({})));
+    const reason = typeof raw.reason === "string" ? raw.reason : undefined;
+    const editionRecord =
+      verb === "publish"
+        ? await publishEdition(orm, ctx, editionKey, reason)
+        : await withdrawEdition(orm, ctx, editionKey, reason);
+    sendJson(response, 200, {
+      edition: toCorpusEditionDto(editionRecord),
+    });
+    return true;
+  }
+
+  return false;
+}
+
+async function handleSourceRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+  user: User,
+  orm: QlOrm,
+  pathname: string,
+): Promise<boolean> {
+  const method = request.method ?? "GET";
+  const ctx = userContext(user);
+
+  if (pathname === apiRoutes.source.artifacts && method === "GET") {
+    const rows = await orm.findMany("source.artifact", ctx, 500);
+    sendJson(response, 200, {
+      artifacts: rows.map(toSourceArtifactDto),
+    } satisfies SourceArtifactListResponseDto);
+    return true;
+  }
+
+  const rightsMatch = pathname.match(
+    new RegExp(`^${apiRoutes.source.prefix}artifacts/([^/]+)/rights$`),
+  );
+  if (rightsMatch && method === "GET") {
+    const artifactId = decodeURIComponent(rightsMatch[1]);
+    const versions = await orm.findManyByService("source.version", {
+      artifact_id: artifactId,
+    });
+    const rights = (
+      await Promise.all(
+        versions.map((version) =>
+          orm.findManyByService("source.rights", {
+            version_id: String(version.id),
+          }),
+        ),
+      )
+    ).flat();
+    sendJson(response, 200, {
+      rights: rights.map(toSourceRightsSummaryDto),
+    });
+    return true;
+  }
+
+  const provenanceMatch = pathname.match(
+    new RegExp(`^${apiRoutes.source.prefix}artifacts/([^/]+)/provenance$`),
+  );
+  if (provenanceMatch && method === "GET") {
+    requireGroup(user, "admin", "root", "operator");
+    const artifactId = decodeURIComponent(provenanceMatch[1]);
+    const versions = await orm.findManyByService("source.version", {
+      artifact_id: artifactId,
+    });
+    const audit = (await Promise.all(
+      versions.map((version) =>
+        orm.findManyByService(
+          "source.provenance",
+          { subject_id: String(version.id) },
+          { limit: 200, orderBy: { field: "occurred_at", direction: "desc" } },
+        ),
+      ),
+    ))
+      .flat()
+      .map((row) => ({
+        id: String(row.id ?? ""),
+        subject_type: String(row.subject_type ?? ""),
+        subject_id: String(row.subject_id ?? ""),
+        from_stage: String(row.from_stage ?? ""),
+        to_stage: String(row.to_stage ?? ""),
+        action: String(row.action ?? ""),
+        decision: String(row.decision ?? ""),
+        reason: String(row.reason ?? ""),
+        correlation_id: String(row.correlation_id ?? ""),
+        occurred_at: Number(row.occurred_at ?? 0),
+      }));
+    sendJson(response, 200, { entries: audit });
+    return true;
+  }
+
+  const itemMatch = pathname.match(
+    new RegExp(`^${apiRoutes.source.prefix}artifacts/([^/]+)$`),
+  );
+  if (itemMatch && method === "GET") {
+    const artifactId = decodeURIComponent(itemMatch[1]);
+    const artifact = await orm.findOneByService("source.artifact", {
+      id: artifactId,
+    });
+    if (!artifact) {
+      throw new QlNotFoundError(`source.artifact '${artifactId}' not found.`);
+    }
+    const versions = await orm.findManyByService("source.version", {
+      artifact_id: artifactId,
+    });
+    const rights = (
+      await Promise.all(
+        versions.map((version) =>
+          orm.findManyByService("source.rights", {
+            version_id: String(version.id),
+          }),
+        ),
+      )
+    )
+      .flat()
+      .map(toSourceRightsSummaryDto);
+    sendJson(response, 200, {
+      artifact: toSourceArtifactDto(artifact),
+      rights,
+    } satisfies SourceArtifactResponseDto);
+    return true;
+  }
+
+  return false;
+}
+
 export function createApiServer(
   provider: ModelProvider | undefined,
   store: ConversationStore,
@@ -637,8 +1270,7 @@ export function createApiServer(
   options: {
     encryptionKey?: Buffer<ArrayBufferLike>;
     providerFactory?: ModelProviderFactory;
-    bootstrapAdmin?: BootstrapAdminSettings;
-    resolveConnectorToken?: () => Promise<ResolvedCredential>;
+    resolveConnectorToken?(): Promise<ResolvedCredential>;
     cloudflareFetcher?: typeof fetch;
   } = {},
 ) {
@@ -658,6 +1290,285 @@ export function createApiServer(
       return;
     }
 
+    if (
+      request.method === "GET" &&
+      pathname === apiRoutes.translations.languages
+    ) {
+      try {
+        const languages: UiLanguageDto[] = await listEnabledLanguages(orm);
+        sendJson(response, 200, { languages });
+      } catch (error) {
+        handleI18nRequestError(response, error);
+      }
+      return;
+    }
+
+    if (
+      request.method === "GET" &&
+      pathname === apiRoutes.translations.catalog
+    ) {
+      try {
+        const url = new URL(request.url ?? "/", "http://localhost");
+        const locale = parseEnabledLocale(url.searchParams.get("locale"));
+        const namespace = url.searchParams.get("namespace") ?? undefined;
+        if (namespace && namespace.length > 80) {
+          throw new RequestError("The requested namespace is invalid.", 400);
+        }
+        sendJson(
+          response,
+          200,
+          {
+            locale,
+            entries: await getPublishedCatalog(orm, locale, namespace),
+          },
+          { "cache-control": "no-store" },
+        );
+      } catch (error) {
+        handleI18nRequestError(response, error);
+      }
+      return;
+    }
+
+    const translationApproveMatch = pathname.match(
+      new RegExp(
+        `^${apiRoutes.admin.translations.collection}/([^/]+)/approve$`,
+      ),
+    );
+    const translationAdminPath =
+      pathname === apiRoutes.admin.translations.collection ||
+      pathname === apiRoutes.admin.translations.import ||
+      pathname === apiRoutes.admin.translations.export ||
+      pathname === apiRoutes.admin.translations.aiDraft ||
+      translationApproveMatch !== null;
+    if (translationAdminPath) {
+      if (request.method !== "GET" && request.method !== "POST") {
+        sendJson(response, 405, {
+          code: "I18N_METHOD_NOT_ALLOWED",
+          error: "Method not allowed.",
+        });
+        return;
+      }
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        requireGroup(user, "admin");
+        if (
+          request.method === "GET" &&
+          pathname === apiRoutes.admin.translations.collection
+        ) {
+          const url = new URL(request.url ?? "/", "http://localhost");
+          const localeValue = url.searchParams.get("locale");
+          const translations = await listAdminTranslations(
+            orm,
+            localeValue ? parseEnabledLocale(localeValue) : undefined,
+          );
+          sendJson(response, 200, { translations });
+        } else if (
+          request.method === "POST" &&
+          pathname === apiRoutes.admin.translations.collection
+        ) {
+          const input = parseTranslationDraft(await readJsonBody(request));
+          sendJson(response, 200, {
+            translation: await saveTranslationDraft(orm, input, user.id),
+          });
+        } else if (translationApproveMatch && request.method === "POST") {
+          sendJson(response, 200, {
+            translation: await approveTranslation(
+              orm,
+              decodeURIComponent(translationApproveMatch[1]),
+              user.id,
+            ),
+          });
+        } else if (
+          request.method === "POST" &&
+          pathname === apiRoutes.admin.translations.aiDraft
+        ) {
+          if (!provider) {
+            throw new RequestError(
+              "AI translation drafting is unavailable until a server-side model provider is configured.",
+              503,
+            );
+          }
+          const input = parseTranslationAiDraft(
+            await readJsonBody(request),
+          );
+          const languageName =
+            input.locale === "id" ? "Indonesian" : "English";
+          const generateDraft = async (sourceText: string, form: string) => {
+            const result = await provider.generate([
+              {
+                role: "system",
+                content:
+                  `Translate the supplied ${form} into ${languageName}. ` +
+                  "Return only the translated text. Preserve every {placeholder} exactly. " +
+                  "Keep the translation faithful to the source and its provided UI context.",
+              },
+              {
+                role: "user",
+                content: JSON.stringify({
+                  sourceText,
+                  context: input.context ?? "",
+                }),
+              },
+            ]);
+            if (!result.trim() || result.length > 4000) {
+              throw new RequestError(
+                "The AI provider returned an empty or oversized translation draft.",
+                502,
+              );
+            }
+            return result.trim();
+          };
+          let translatedPluralTexts:
+            | TranslationDraftRequestDto["translatedPluralTexts"]
+            | undefined;
+          let translatedText: string;
+          if (input.sourcePluralText && input.locale === "en") {
+            const [one, other] = await Promise.all([
+              generateDraft(input.sourceText, "singular form"),
+              generateDraft(input.sourcePluralText, "plural form"),
+            ]);
+            translatedPluralTexts = { one, other };
+            translatedText = one;
+          } else if (input.sourcePluralText) {
+            translatedText = await generateDraft(
+              input.sourcePluralText,
+              "plural form",
+            );
+            translatedPluralTexts = { other: translatedText };
+          } else {
+            translatedText = await generateDraft(input.sourceText, "text");
+          }
+          sendJson(response, 200, {
+            translation: await saveTranslationDraft(
+              orm,
+              {
+                ...input,
+                translatedText,
+                ...(translatedPluralTexts ? { translatedPluralTexts } : {}),
+                source: "ai",
+              },
+              user.id,
+            ),
+          });
+        } else if (
+          request.method === "POST" &&
+          pathname === apiRoutes.admin.translations.import
+        ) {
+          const body = parseObject(await readJsonBody(request, 512 * 1024));
+          if (typeof body.content !== "string") {
+            throw new RequestError("Field 'content' is required.", 400);
+          }
+          const translations = await importPoDrafts(
+            orm,
+            parseEnabledLocale(body.locale),
+            body.content,
+            user.id,
+          );
+          sendJson(response, 200, { translations });
+        } else if (
+          request.method === "GET" &&
+          pathname === apiRoutes.admin.translations.export
+        ) {
+          const url = new URL(request.url ?? "/", "http://localhost");
+          const locale = parseEnabledLocale(url.searchParams.get("locale"));
+          sendJson(response, 200, {
+            content: await exportPoCatalog(orm, locale),
+          });
+        } else {
+          sendJson(response, 405, {
+            code: "I18N_METHOD_NOT_ALLOWED",
+            error: "Method not allowed.",
+          });
+        }
+      } catch (error) {
+        handleI18nRequestError(response, error);
+      }
+      return;
+    }
+
+    if (
+      request.method === "GET" &&
+      pathname === apiRoutes.projectProgress.summary
+    ) {
+      try {
+        const tasks = await listProjectTasks();
+        sendJson(response, 200, projectProgressSummary(tasks));
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    if (
+      request.method === "GET" &&
+      pathname === apiRoutes.projectProgress.tasks
+    ) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        requireGroup(user, "admin", "operator");
+        const tasks = await listProjectTasks();
+        sendJson(response, 200, {
+          tasks,
+          readyTaskIds: readyProjectTaskIds(tasks),
+        } satisfies ProjectTaskListResponseDto);
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    if (pathname === apiRoutes.auth.setup && request.method === "GET") {
+      try {
+        sendJson(
+          response,
+          200,
+          { required: await firstUseSetupRequired(orm) },
+          { "cache-control": "no-store" },
+        );
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    if (pathname === apiRoutes.auth.setup && request.method === "POST") {
+      try {
+        if (!(await firstUseSetupRequired(orm))) {
+          throw new RequestError(
+            "Penyiapan awal sudah selesai atau tidak tersedia pada instalasi ini.",
+            409,
+          );
+        }
+        const body = parseObject(await readJsonBody(request));
+        const credentials = validateCredentials(
+          body.name,
+          body.email,
+          body.password,
+        );
+        const preferredLocale =
+          body.preferredLocale === undefined
+            ? "id"
+            : parseUiLocale(body.preferredLocale);
+        const user = await store.createUser({
+          name: credentials.name,
+          email: credentials.email,
+          passwordHash: await hashPassword(credentials.password),
+          role: "super_admin",
+          initialSetupOwner: true,
+          preferredLocale,
+        });
+        await issueSession(response, store, user.id);
+        sendJson(response, 201, {
+          user: sessionUser(user),
+        } satisfies AuthResponseDto);
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
     if (request.method === "POST" && pathname === apiRoutes.auth.register) {
       try {
         const body = parseObject(await readJsonBody(request));
@@ -666,28 +1577,22 @@ export function createApiServer(
           body.email,
           body.password,
         );
+        const preferredLocale =
+          body.preferredLocale === undefined
+            ? "id"
+            : parseUiLocale(body.preferredLocale);
         if (await store.getUserByEmail(credentials.email)) {
           sendJson(response, 409, { error: "Email sudah terdaftar." });
           return;
         }
         let user;
         try {
-          const grantRoot = await shouldGrantSuperAdmin(
-            orm,
-            credentials.email,
-            options.bootstrapAdmin ?? {},
-          );
           user = await store.createUser({
             name: credentials.name,
             email: credentials.email,
             passwordHash: await hashPassword(credentials.password),
-            ...(grantRoot ? { role: "super_admin" } : {}),
+            preferredLocale,
           });
-          if (grantRoot) {
-            console.log(
-              "Peran super_admin di-bootstrap dari BOOTSTRAP_ADMIN_EMAIL; cabut env tersebut setelah akun owner jadi.",
-            );
-          }
         } catch (error) {
           if (await store.getUserByEmail(credentials.email)) {
             sendJson(response, 409, { error: "Email sudah terdaftar." });
@@ -752,6 +1657,30 @@ export function createApiServer(
       return;
     }
 
+    if (
+      request.method === "PATCH" &&
+      pathname === apiRoutes.auth.preferences
+    ) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        const body = parseObject(await readJsonBody(request));
+        const updated = await store.updateUserPreferredLocale(
+          user.id,
+          parseUiLocale(body.preferredLocale),
+        );
+        if (!updated) {
+          throw new RequestError("Account not found.", 404);
+        }
+        sendJson(response, 200, {
+          user: sessionUser(updated),
+        } satisfies AuthResponseDto);
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
     if (request.method === "POST" && pathname === apiRoutes.auth.logout) {
       try {
         await clearSession(request, response, store);
@@ -770,26 +1699,55 @@ export function createApiServer(
         const models = orm.registry
           .getModels()
           .filter((model) => orm.registry.can(model.name, groups, "read"))
-          .map((model) => ({
-            name: model.name,
-            description: model.description,
-            fields: Object.fromEntries(
-              Object.entries(model.fields).filter(([, field]) => !field.private),
-            ),
-            views: orm.registry
-              .getViews(model.name)
-              .map((view) => ({
-                ...view,
-                fields: view.fields.filter(
-                  (field) => !model.fields[field]?.private,
-                ),
-              })),
-            permissions: {
-              create: orm.registry.can(model.name, groups, "create"),
-              write: orm.registry.can(model.name, groups, "write"),
-              unlink: orm.registry.can(model.name, groups, "unlink"),
-            },
-          }));
+          .map((model) => {
+            const modelKey = model.name.replaceAll(".", "_");
+            return {
+              name: model.name,
+              labelKey:
+                model.labelKey ?? `web.models.entities.${modelKey}`,
+              description: model.description,
+              descriptionKey:
+                model.descriptionKey ??
+                `web.models.descriptions.${modelKey}`,
+              fields: Object.fromEntries(
+                Object.entries(model.fields)
+                  .filter(([, field]) => !field.private)
+                  .map(([fieldName, field]) => [
+                    fieldName,
+                    {
+                      ...field,
+                      labelKey:
+                        field.labelKey ??
+                        `web.models.field${fieldName
+                          .split("_")
+                          .map(
+                            (part) =>
+                              part.charAt(0).toUpperCase() + part.slice(1),
+                          )
+                          .join("")}`,
+                    },
+                  ]),
+              ),
+              views: orm.registry
+                .getViews(model.name)
+                .map((view) => ({
+                  ...view,
+                  labelKey:
+                    view.labelKey ??
+                    (view.type === "list"
+                      ? "web.models.viewList"
+                      : "web.models.viewForm"),
+                  fields: view.fields.filter(
+                    (field) => !model.fields[field]?.private,
+                  ),
+                })),
+              permissions: {
+                create: orm.registry.can(model.name, groups, "create"),
+                write: orm.registry.can(model.name, groups, "write"),
+                unlink: orm.registry.can(model.name, groups, "unlink"),
+              },
+            };
+          });
         sendJson(response, 200, { models });
       } catch (error) {
         handleRequestError(response, error);
@@ -926,6 +1884,73 @@ export function createApiServer(
       return;
     }
 
+    if (
+      pathname === apiRoutes.workflow.queue ||
+      pathname === apiRoutes.workflow.collection ||
+      pathname.startsWith(apiRoutes.workflow.prefix)
+    ) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        const handled = await handleWorkflowRequest(
+          request,
+          response,
+          user,
+          orm,
+          pathname,
+        );
+        if (!handled) {
+          sendJson(response, 405, { error: "Method not allowed." });
+        }
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    if (
+      pathname === apiRoutes.corpus.editions ||
+      pathname.startsWith(apiRoutes.corpus.prefix)
+    ) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        const handled = await handleCorpusRequest(
+          request,
+          response,
+          user,
+          orm,
+          pathname,
+        );
+        if (!handled) {
+          sendJson(response, 405, { error: "Method not allowed." });
+        }
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    if (pathname.startsWith(apiRoutes.source.prefix)) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        const handled = await handleSourceRequest(
+          request,
+          response,
+          user,
+          orm,
+          pathname,
+        );
+        if (!handled) {
+          sendJson(response, 405, { error: "Method not allowed." });
+        }
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
     if (request.method === "GET" && pathname === apiRoutes.admin.users.collection) {
       const user = await requireAuthenticatedUser(request, response, store);
       if (!user) return;
@@ -955,14 +1980,18 @@ export function createApiServer(
           rows.length > 0
             ? rows.map((row) => ({
                 code: String(row.code),
+                nameKey: `web.adminUsers.roles.${String(row.code)}.name`,
                 name: String(row.name ?? ""),
+                descriptionKey: `web.adminUsers.roles.${String(row.code)}.description`,
                 description: String(row.description ?? ""),
                 groups: splitGroups(String(row.groups ?? "user")),
                 assignable: row.assignable === true,
               }))
             : ROLE_CATALOG.map((role) => ({
                 code: role.code,
+                nameKey: `web.adminUsers.roles.${role.code}.name`,
                 name: role.name,
+                descriptionKey: `web.adminUsers.roles.${role.code}.description`,
                 description: role.description,
                 groups: [...role.groups],
                 assignable: role.assignable,
