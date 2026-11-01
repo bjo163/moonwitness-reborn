@@ -7,7 +7,7 @@ This table now covers **all 23 domains of `masterprompt.md` §4.3** plus four ad
 | Addon/domain | Canonical ownership | Explicit non-ownership / consumers |
 |---|---|---|
 | `ql_base` / shared kernel | shared identifiers, locale primitives, temporal primitives, common errors and the metadata shapes other domains reuse | No universal business entity table; holds no operational or domain records itself |
-| `ql_auth` / identity | user principals, credentials, sessions, roles/grants, single-use verification tokens (`res.verification`) | Not a historical/fictional person registry; does not deliver mail — sending stays an API-side SMTP adapter, and no addon stores message content |
+| `ql_auth` / identity | user principals, credentials, sessions, roles/grants, single-use verification tokens (`res.verification`) | Not a historical/fictional person registry; no addon stores message content — the API-side SMTP adapter and password-reset email were removed |
 | `ql_org` / organization | organizations, tenant scopes, memberships/groups if required | Not product navigation or person biography |
 | `ql_source` / source registry | source artifact, source version, source citation, rights record and provenance | Does not own normalized corpus text or research conclusions |
 | `ql_corpus` / RGBL | work, expression/edition, passage, exact text, translation/lexical records | Does not own evidence verdicts, rights authority, or all annotation |

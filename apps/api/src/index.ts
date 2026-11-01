@@ -14,8 +14,6 @@ import integrationManifest from "ql_integration/__manifest__";
 import { resolveModelProviderConfig } from "./ai/model-config.js";
 import { parseProviderEncryptionKey } from "./ai/provider-secrets.js";
 import { readBootstrapAdmin } from "./auth/bootstrap.js";
-import { resolveAppBaseUrl, resolveMailConfig } from "./mail/mail-config.js";
-import { createMailer, type MailSender } from "./mail/mailer.js";
 import { createApiServer } from "./http/server.js";
 
 dotenv.config({
@@ -44,20 +42,11 @@ if ((await countUsersWithRole(orm, "super_admin")) === 0) {
   );
 }
 const store = createConversationStore(orm);
-const mailConfig = resolveMailConfig(process.env);
-const mail: MailSender | undefined = mailConfig.enabled
-  ? createMailer(mailConfig.config)
-  : undefined;
-if (!mailConfig.enabled) {
-  console.warn(`Email dinonaktifkan (${mailConfig.reason})`);
-}
 const server = createApiServer(provider, store, orm, {
   encryptionKey: parseProviderEncryptionKey(
     process.env.PROVIDER_ENCRYPTION_KEY,
   ),
   bootstrapAdmin: readBootstrapAdmin(process.env),
-  mail,
-  appBaseUrl: resolveAppBaseUrl(process.env),
 });
 
 server.listen(port, () => {
@@ -72,7 +61,6 @@ server.listen(port, () => {
 
 function closeServer() {
   server.close((error) => {
-    mail?.close();
     store.close();
     closeOrm();
     if (error) {

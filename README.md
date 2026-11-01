@@ -42,27 +42,6 @@ Untuk instalasi sederhana atau kompatibilitas sebelumnya, konfigurasi opsional `
 
 Gateway ini adalah fondasi internal untuk routing chat MoonWitness, bukan clone fitur penuh FreeLLMAPI: katalog/model discovery otomatis, pengelolaan kuota dan biaya, rate limiting, serta endpoint publik OpenAI-compatible belum termasuk. Provider dan model ditambahkan manual memakai kredensial yang memang kamu miliki.
 
-### Email transaksional (atur ulang kata sandi)
-
-`/auth/forgot-password` mengirim email reset lewat adapter SMTP di `apps/api/src/mail` (nodemailer pool, 1 koneksi, timeout 5 s kirim/greeting dan 10 s socket, 1 percobaan, batas 10 s). Tidak ada `ql_mail` dan tidak ada message store: server SMTP (Stalwart) yang mengelola antrian dan retry. Kegagalan kirim mengembalikan `200 {sent:false}` yang sama dengan email yang tidak terdaftar, jadi endpoint ini tidak bisa mengonfirmasi keberadaan akun. Tanpa `SMTP_HOST`/`SMTP_USERNAME`/`SMTP_PASSWORD`/`SMTP_FROM`, API tetap boot dan email dinonaktifkan.
-
-```dotenv
-# Transactional email (password reset). Leave SMTP_HOST empty to keep mail disabled;
-# /auth/forgot-password then answers 200 {sent:false} instead of failing.
-SMTP_HOST=
-SMTP_PORT=465
-# true = implicit TLS (port 465). Leave unset to infer from the port; STARTTLS is forced on 587/2525.
-SMTP_SECURE=
-SMTP_USERNAME=
-SMTP_PASSWORD=
-# Display name is allowed: "MoonWitness <app@a-l-l-a-h.com>". DKIM must sign for that domain.
-SMTP_FROM=
-# Public web origin used inside reset links. Keep it pointed at the web app, not the API.
-APP_BASE_URL=http://localhost:3001
-```
-
-Link reset dibuat `/?mode=reset&token=<43-char-token>`, berlaku 30 menit dan sekali pakai (row di-delete, jadi dua request bersamaan tidak bisa mengklaim token yang sama). Setelah reset, semua sesi pemilik diinvalidasi dan login dengan kata sandi lama ditolak.
-
 ## Struktur
 
 ```text

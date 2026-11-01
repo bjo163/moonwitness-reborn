@@ -26,9 +26,7 @@ Object storage, email, AI providers and possible MOONSKY/ECHOLOG adapters are op
 
 ## Transactional mail
 
-`/auth/forgot-password` sends through an SMTP adapter in `apps/api/src/mail` (nodemailer pool, implicit TLS on 465 or forced STARTTLS on 587/2525, one connection, 5 s connect/greeting and 10 s socket timeouts, one attempt and a 10 s hard deadline). There is no `ql_mail` addon and no message store: Stalwart owns queueing and retries, and a submission failure returns the same `200 {sent:false}` shape as an unknown address. With `SMTP_HOST`/`SMTP_USERNAME`/`SMTP_PASSWORD`/`SMTP_FROM` unset the API still boots and mail stays disabled.
-
-Planned sender infrastructure is a self-hosted Stalwart container on the Coolify host `163.61.134.104`, submitting as `app@a-l-l-a-h.com`, with DNS-only MX/SPF/DKIM/DMARC records in Cloudflare. Two gates remain outside the repository: outbound port 25 from that VPS, and a PTR the owner does not control from a panel — the current reverse of `.104` is `mail.e-isp.id`, so either the hosting provider issues `mail.a-l-l-a-h.com` or the HELO name must match the existing PTR. Records must stay DNS-only; Cloudflare cannot proxy MX or SMTP.
+Not implemented. Email delivery was removed: the SMTP adapter in `apps/api/src/mail`, the `/auth/forgot-password` and `/auth/reset-password` routes, their `@moonwitness/moonclient` contract, and every `SMTP_*` environment are gone. There is therefore no self-service password recovery — an owner account is claimed once through `BOOTSTRAP_ADMIN_EMAIL`/`BOOTSTRAP_ADMIN_TOKEN`, and any later password change is manual work on the database. The Stalwart mail server and Roundcube webmail that were deployed on the Coolify host for this feature are separate infrastructure and still need teardown.
 
 ## Current status and gaps
 

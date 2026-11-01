@@ -54,9 +54,6 @@ catalogs:
     next:
       specifier: ^15.1.3
       version: 15.5.28
-    nodemailer:
-      specifier: ^10.3.1
-      version: 10.3.1
     pg:
       specifier: ^8.23.1
       version: 8.23.1
@@ -134,9 +131,6 @@ importers:
       dotenv:
         specifier: 'catalog:'
         version: 16.6.1
-      nodemailer:
-        specifier: 'catalog:'
-        version: 10.3.1
       ql_ai:
         specifier: workspace:*
         version: link:../../packages/ql_ai
@@ -1569,10 +1563,6 @@ packages:
     resolution: {integrity: sha512-6li2QanLsAXpIH2R6j77MzRyvOyrvdTqlKtO4CgBdHGNvN99ZZfyxszHc5o5+IZBWD5u6Hzwg83JoGXmqZNG9Q==}
     engines: {node: '>=18'}
 
-  nodemailer@10.3.1:
-    resolution: {integrity: sha512-uF0AFsJC07Y1vdW7p580DKAnh7rAO+4UPSSB3mDCPNDufoiaOebV6JmrzpxB14OjEEEiBsNdYoM2Y+fN8M7BBA==}
-    engines: {node: '>=20.0.0'}
-
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
@@ -2998,8 +2988,6 @@ snapshots:
       formdata-polyfill: 4.0.10
 
   node-releases@2.0.63: {}
-
-  nodemailer@10.3.1: {}
 
   optionator@0.9.4:
     dependencies:

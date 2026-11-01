@@ -25,24 +25,6 @@ export interface AuthResponseDto {
   user: AuthUserDto;
 }
 
-export interface ForgotPasswordRequestDto {
-  email: string;
-}
-
-/** Always the same shape, so a caller cannot learn whether an address exists. */
-export interface ForgotPasswordResponseDto {
-  sent: boolean;
-}
-
-export interface ResetPasswordRequestDto {
-  token: string;
-  password: string;
-}
-
-export interface ResetPasswordResponseDto {
-  reset: boolean;
-}
-
 export interface ConversationDto {
   id: string;
   title: string;
@@ -328,8 +310,6 @@ export const apiRoutes = {
     register: "/auth/register",
     login: "/auth/login",
     logout: "/auth/logout",
-    forgotPassword: "/auth/forgot-password",
-    resetPassword: "/auth/reset-password",
   },
   chat: "/chat",
   conversations: {
@@ -412,18 +392,6 @@ export class MoonClient {
 
   logout(): Promise<{ loggedOut: boolean }> {
     return this.request(apiRoutes.auth.logout, "POST");
-  }
-
-  requestPasswordReset(
-    input: ForgotPasswordRequestDto,
-  ): Promise<ForgotPasswordResponseDto> {
-    return this.request(apiRoutes.auth.forgotPassword, "POST", input);
-  }
-
-  resetPassword(
-    input: ResetPasswordRequestDto,
-  ): Promise<ResetPasswordResponseDto> {
-    return this.request(apiRoutes.auth.resetPassword, "POST", input);
   }
 
   sendChat(input: ChatRequestDto): Promise<ChatResponseDto> {

@@ -20,9 +20,7 @@ import {
   type ChatResponseDto,
   type ConversationDto,
   type ConversationListResponseDto,
-  type ForgotPasswordResponseDto,
   type ModelProviderDto,
-  type ResetPasswordResponseDto,
   type RoleDto,
   type RoleListResponseDto,
 } from "@moonwitness/moonclient";
@@ -85,21 +83,14 @@ import {
 import {
   AuthenticationError,
   clearSession,
-  generateVerificationToken,
   getAuthenticatedUser,
   hashPassword,
-  hashVerificationToken,
   issueSession,
   normalizeEmail,
-  normalizeVerificationToken,
   publicUser,
   validateCredentials,
-  validatePassword,
   verifyPassword,
-  VERIFICATION_RESEND_COOLDOWN_SECONDS,
-  VERIFICATION_TTL_SECONDS,
 } from "../auth/auth.js";
-import type { MailSender } from "../mail/mailer.js";
 import {
   createFallbackProvider,
   type ModelProviderFactory,
@@ -647,8 +638,6 @@ export function createApiServer(
     encryptionKey?: Buffer<ArrayBufferLike>;
     providerFactory?: ModelProviderFactory;
     bootstrapAdmin?: BootstrapAdminSettings;
-    mail?: MailSender;
-    appBaseUrl?: string;
     resolveConnectorToken?: () => Promise<ResolvedCredential>;
     cloudflareFetcher?: typeof fetch;
   } = {},
@@ -741,92 +730,6 @@ export function createApiServer(
         sendJson(response, 200, {
           user: sessionUser(user),
         } satisfies AuthResponseDto);
-      } catch (error) {
-        handleRequestError(response, error);
-      }
-      return;
-    }
-
-    if (request.method === "POST" && pathname === apiRoutes.auth.forgotPassword) {
-      try {
-        const body = parseObject(await readJsonBody(request));
-        if (typeof body.email !== "string" || body.email.length > 254) {
-          throw new AuthenticationError("Alamat email tidak valid.", 400);
-        }
-        const email = normalizeEmail(body.email);
-        // One shape and one status for every outcome, so this endpoint cannot
-        // confirm whether an address has an account.
-        const user = await store.getUserByEmail(email);
-        if (!user || !options.mail) {
-          sendJson(response, 200, { sent: false } satisfies ForgotPasswordResponseDto);
-          return;
-        }
-        const lastSentAt = await store.findLatestVerification(
-          user.id,
-          "password_reset",
-        );
-        if (
-          lastSentAt &&
-          lastSentAt.createdAt.getTime() >
-            Date.now() - VERIFICATION_RESEND_COOLDOWN_SECONDS * 1000
-        ) {
-          sendJson(response, 200, { sent: false } satisfies ForgotPasswordResponseDto);
-          return;
-        }
-        // A fresh request replaces any earlier link for this purpose.
-        await store.deleteVerifications(user.id, "password_reset");
-        const { token, tokenHash } = generateVerificationToken();
-        await store.createVerification({
-          userId: user.id,
-          purpose: "password_reset",
-          tokenHash,
-          expiresAt: new Date(Date.now() + VERIFICATION_TTL_SECONDS * 1000),
-        });
-        try {
-          await options.mail.sendPasswordReset({
-            to: email,
-            name: user.name,
-            resetUrl: `${options.appBaseUrl ?? ""}/?mode=reset&token=${encodeURIComponent(token)}`,
-            ttlMinutes: Math.round(VERIFICATION_TTL_SECONDS / 60),
-          });
-          sendJson(response, 200, { sent: true } satisfies ForgotPasswordResponseDto);
-        } catch (error) {
-          console.error("Pengiriman email reset kata sandi gagal.", error);
-          await store.deleteVerifications(user.id, "password_reset");
-          sendJson(response, 200, { sent: false } satisfies ForgotPasswordResponseDto);
-        }
-      } catch (error) {
-        handleRequestError(response, error);
-      }
-      return;
-    }
-
-    if (request.method === "POST" && pathname === apiRoutes.auth.resetPassword) {
-      try {
-        const body = parseObject(await readJsonBody(request));
-        const token = normalizeVerificationToken(body.token);
-        if (!token) {
-          throw new AuthenticationError("Tautan reset tidak valid.", 400);
-        }
-        const password = validatePassword(body.password);
-        const tokenHash = hashVerificationToken(token);
-        const verification = await store.findVerification(
-          "password_reset",
-          tokenHash,
-        );
-        if (!verification || verification.expiresAt.getTime() <= Date.now()) {
-          throw new AuthenticationError("Tautan reset sudah tidak berlaku.", 400);
-        }
-        // Deleting the row is the claim: only one concurrent caller can win it.
-        if (!(await store.claimVerification(tokenHash))) {
-          throw new AuthenticationError("Tautan reset sudah dipakai.", 400);
-        }
-        const user = await store.getUserById(verification.userId);
-        if (!user || !(await store.setPasswordHash(user.id, await hashPassword(password)))) {
-          throw new AuthenticationError("Tautan reset sudah tidak berlaku.", 400);
-        }
-        await store.deleteSessionsForUser(user.id);
-        sendJson(response, 200, { reset: true } satisfies ResetPasswordResponseDto);
       } catch (error) {
         handleRequestError(response, error);
       }
