@@ -199,3 +199,22 @@ void test("no connector contract surface accepts a credential", () => {
     }
   }
 });
+
+// Browser melempar "Failed to execute 'fetch' on 'Window': Illegal invocation"
+// kalau fetch menerima this selain global, dan klien menyimpannya sebagai field.
+void test("default fetcher calls fetch with the global as receiver", async () => {
+  const originalFetch = globalThis.fetch;
+  const receivers: unknown[] = [];
+  globalThis.fetch = function (this: unknown) {
+    receivers.push(this);
+    return Promise.resolve(new Response(JSON.stringify({ user: null }), { status: 200 }));
+  };
+  try {
+    await new MoonClient({ baseUrl: "/api" }).currentUser();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(receivers.length, 1);
+  assert.equal(receivers[0], globalThis);
+});
