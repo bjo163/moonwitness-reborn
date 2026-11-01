@@ -1,6 +1,14 @@
-import assert from "node:assert/strict";
+import { mkdtempSync, rmSync } from "node:fs";
 import test from "node:test";
-import { createQlOrm, loadAddons, QlModelRegistry } from "./index.js";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import assert from "node:assert/strict";
+import {
+  createQlOrm,
+  loadAddons,
+  type QlFieldDefinition,
+  QlModelRegistry,
+} from "./index.js";
 
 const base = {
   name: "ql_base",
@@ -295,9 +303,116 @@ void test("service CRUD and ACL hold on libsql", async () => {
   await runRecordSuite("file::memory:", "ai_provider_libsql_test");
 });
 
+// Release yang menambah field harus tetap membuka tabel yang sudah berisi data,
+// jadi jalur ALTER TABLE diuji pada database yang sama, bukan tabel baru.
+async function runEvolutionSuite(
+  databaseUrl: string,
+  tableName: string,
+): Promise<void> {
+  const manifest = (extraFields: Record<string, QlFieldDefinition>) => ({
+    ...base,
+    access: [
+      {
+        model: "ai.note",
+        group: "user",
+        read: true,
+        write: true,
+        create: true,
+        unlink: true,
+      },
+    ],
+    models: [
+      {
+        name: "ai.note",
+        description: "Evolving note",
+        tableName,
+        ownerField: "owner_id",
+        fields: {
+          name: { type: "char" as const, required: true },
+          owner_id: { type: "char" as const, required: true, private: true },
+          ...extraFields,
+        },
+      },
+    ],
+  });
+
+  const before = await createQlOrm(databaseUrl, [manifest({})]);
+  try {
+    await before.orm.createRecordForService("ai.note", {
+      name: "Kept",
+      owner_id: "owner-1",
+    });
+  } finally {
+    before.close();
+  }
+
+  const after = await createQlOrm(databaseUrl, [
+    manifest({
+      label: { type: "char" as const, default: "gene'ric" },
+      score: { type: "integer" as const, default: 7 },
+      active: { type: "boolean" as const, required: true, default: true },
+    }),
+  ]);
+  try {
+    const rows = await after.orm.findManyForService("ai.note", "owner-1");
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0]?.name, "Kept");
+    assert.equal(rows[0]?.label, "gene'ric");
+    assert.equal(rows[0]?.score, 7);
+    assert.equal(rows[0]?.active, true);
+    await after.orm.createRecordForService("ai.note", {
+      name: "Added",
+      owner_id: "owner-1",
+    });
+    assert.deepEqual(
+      (
+        await after.orm.findManyByService(
+          "ai.note",
+          { owner_id: "owner-1" },
+          { orderBy: "rowid-asc" },
+        )
+      ).map((record) => record.name),
+      ["Kept", "Added"],
+    );
+  } finally {
+    after.close();
+  }
+}
+
+// Handle file libsql baru dilepaskan beberapa ratus ms setelah close(),
+// sehingga rmSync di Windows bisa melaporkan EPERM pada percobaan pertama.
+async function removeTempDir(dir: string): Promise<void> {
+  const deadline = Date.now() + 3000;
+  for (;;) {
+    try {
+      rmSync(dir, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      const retryable = (error as { code?: unknown }).code === "EPERM";
+      if (!retryable || Date.now() > deadline) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+}
+
+void test("added fields keep existing rows on libsql", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "ql-orm-evolve-"));
+  try {
+    await runEvolutionSuite(
+      `file:${join(dir, "evolve.db").replace(/\\/g, "/")}`,
+      "ai_note_libsql_evolve",
+    );
+  } finally {
+    await removeTempDir(dir);
+  }
+});
+
 const postgresUrl = process.env.QL_ORM_PG_URL;
 if (postgresUrl) {
   void test("service CRUD and ACL hold on postgres", async () => {
     await runRecordSuite(postgresUrl, `ai_provider_pg_${Date.now().toString(36)}`);
+  });
+  void test("added fields keep existing rows on postgres", async () => {
+    await runEvolutionSuite(postgresUrl, `ai_note_pg_${Date.now().toString(36)}`);
   });
 }
