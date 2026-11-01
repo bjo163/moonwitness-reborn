@@ -31,6 +31,9 @@ run-name: Rilis ${{ github.event.inputs.version || format('({0})', github.event.
 permissions:
   contents: write
   pull-requests: write
+  # PR rilis dibuat oleh bot, jadi GitHub menahan run CI-nya menunggu persetujuan.
+  # Tanpa hak ini, auto-merge menggantung selamanya dan rilis harus diklik manual.
+  actions: write
 
 jobs:
   release:
@@ -157,6 +160,50 @@ jobs:
           printf 'url=%s\n' "${url}" >>"${GITHUB_OUTPUT}"
           echo "${url}" >>"${GITHUB_STEP_SUMMARY}"
           gh pr merge --auto --merge "${url}"
+
+      - name: Setujui run CI milik PR rilis
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          head_sha="$(gh pr view "${{ steps.pr.outputs.url }}" --json headRefOid --jq .headRefOid)"
+          runs_api="repos/${GITHUB_REPOSITORY}/actions/runs"
+          for _ in $(seq 1 30); do
+            rows="$(gh api "${runs_api}" -X GET -f head_sha="${head_sha}" -f event=pull_request \
+              --jq '.workflow_runs[] | "\(.id):\(.status)"')" || rows=""
+            if [ -z "${rows}" ]; then
+              sleep 4
+              continue
+            fi
+            perlu_persetujuan=""
+            sudah_jalan=0
+            for baris in ${rows}; do
+              id="${baris%%:*}"
+              status="${baris##*:}"
+              case "${status}" in
+                action_required | requested | waiting)
+                  perlu_persetujuan="${perlu_persetujuan} ${id}"
+                  ;;
+                *)
+                  sudah_jalan=1
+                  ;;
+              esac
+            done
+            if [ -n "${perlu_persetujuan}" ]; then
+              for id in ${perlu_persetujuan}; do
+                gh api -X POST "${runs_api}/${id}/approve" >/dev/null
+                echo "- Run CI \`${id}\` disetujui supaya \`validate\` bisa jalan tanpa klik manual." >>"${GITHUB_STEP_SUMMARY}"
+              done
+              exit 0
+            fi
+            if [ "${sudah_jalan}" = 1 ]; then
+              echo "- Run CI PR rilis berjalan sendiri; tidak ada yang perlu disetujui." >>"${GITHUB_STEP_SUMMARY}"
+              exit 0
+            fi
+            sleep 4
+          done
+          echo "- Tidak ada run CI untuk \`${head_sha}\`; auto-merge tetap menunggu." >>"${GITHUB_STEP_SUMMARY}"
 
       - name: Tunggu PR rilis tergabung
         if: ${{ github.event.inputs.dry_run != 'true' }}
