@@ -1,81 +1,207 @@
-# MoonWitness Master TODO
+# MoonWitness TODO.md
 
-**Canonical task and milestone status register.** Tasks marked `DONE` record completed planning or owner decisions; every remaining item is `PROPOSED` and does not authorize implementation. Update status here only; GitHub issues/projects may mirror approved tasks after ratification. IDs are unique. Do not claim completion without linked evidence.
+**Status: PROPOSED gated microtask plan · Sole task and milestone status register**
+**Edition:** MASTER FINAL v2.0 · `masterprompt.md` PILLAR 12 §2422: `TODO.md` is the sole canonical task and milestone status register
+**Created:** 2026-11-01 · Owner ratification required before any feature implementation
 
-## Gate 0 — Planning review
+---
 
-| ID | Task | Dependencies | Acceptance evidence | Status |
+## 1. Governance foundation
+
+Per `masterprompt.md` PILLAR 12 §2492–2516:
+
+- **TODO.md** remains the sole canonical task and milestone status register.
+- **GitHub Issues** are execution records for task IDs only.
+- **Every Issue** must contain canonical Task ID, description, scope, acceptance criteria, dependencies, tests, priority, complexity, evidence.
+- **No duplicate task IDs.**
+- **No multiple issues** implementing the same result.
+- **No task** is complete because a PR is merged without required verification.
+- **GitHub Projects** are operational visualizations only.
+- **Branch protection:** zero rulesets and no classic `main` protection currently; must be added during ratification.
+- **Actions CI:** runs on current SHA fail at `pnpm lint`; typecheck, tests and build are skipped; 720 type-aware/type-resolution errors reported on clean runner.
+
+### 1.1 Requirement-to-issue linking
+
+Every requirement must link to:
+- Master document.
+- Domain.
+- ADR if applicable.
+- TODO task.
+- GitHub issue.
+- Test.
+- Evidence.
+- Release gate.
+
+No requirement without an owner. No task without an acceptance criterion.
+
+### 1.2 Duplicate and conflict prevention
+
+- No duplicate task IDs across `TODO.md`, GitHub Issues, or any other register.
+- No multiple issues implementing the same result.
+- Each canonical entity has one addon/domain owner; same principle applies to task IDs.
+
+---
+
+## 2. Microtask breakdown
+
+### Phase 1 — Reconciliation (COMPLETE)
+
+| ID | Subject | Status | Owner | Acceptance Criterion |
 |---|---|---|---|---|
-| MW-0001 | Review D01–D31 baseline and ratify scope, status labels and unresolved audit limits | None | Owner decision recorded against deliverable register | PROPOSED |
-| MW-0002 | Document the current workspace baseline and its relation to candidate repositories | MW-0001 | Current origin, branch, SHA, tracked/untracked state and matching-tree evidence recorded in audit | DONE |
-| MW-0003 | Ratify target architecture constraints and proposed addon/domain names | MW-0001 | Accepted ADRs and dependency graph with no duplicate owners | PROPOSED |
-| MW-0004 | Select first user journey, audience and source/edition | MW-0001 | User outcome and source rights review approved | PROPOSED |
-| MW-0005 | Decide unresolved identity, tenant, privacy, retention and publication policies | MW-0001 | Reviewed policy and security/privacy acceptance | PROPOSED |
-| MW-0006 | Ratify whether `moonwitness-reborn` or `moonwitnessxv` is the primary repository | MW-0001 | Owner selected `moonwitness-reborn` in chat on 2026-11-01; ADR MW-ADR-001 records decision | DONE |
+| R-01 to R-35 | Discrepancy register entries | Substantial | Owner | All 35 entries carry file/line/bridge/evidence rows with exact SHAs |
+| D01–D31 | Deliverable register | Substantial | Owner | All 31 deliverables documented as planning baseline |
 
-## Gate 1 — Complete evidence audit (read-only)
+### Phase 2 — Master Vision Narrative
 
-| ID | Task | Dependencies | Acceptance evidence | Status |
+| ID | Subject | Status | Owner | Acceptance Criterion |
 |---|---|---|---|---|
-| MW-0101 | Pin exact branch/SHA and inspect source/config/tests/deployment for every relevant repo candidate | MW-0002 | Repository matrix contains exact SHA, evidence paths, findings and UNKNOWN fields | PROPOSED |
-| MW-0102 | Inventory all corpus files, schemas, counts, IDs and materialization state | MW-0004 | Reproducible inventory report tied to source SHA/release | PROPOSED |
-| MW-0103 | Map dataset/asset license and provenance at source/edition level | MW-0102 | Rights matrix with blocked/allowed actions and reviewer | PROPOSED |
-| MW-0104 | Audit XV ARSY, SIGNAL/RADIO, Dock, Headquarters, AI Gateway, Sentinel, ORBIT and LUMEN components | MW-0101 | Capability map and per-component adopt/rebuild/import/reference decision | PROPOSED |
-| MW-0105 | Audit MOONSKY/ECHOLOG contracts and identity/storage security | MW-0101 | Threat model, data classification and adapter recommendation | PROPOSED |
-| MW-0106 | Reconcile character, narrative, research, ontology and ecosystem source material | MW-0101 | Canon/source registry with rights, IDs and uncertainty | PROPOSED |
-| MW-0107 | Capture CI, rulesets, issues, releases and deployment evidence of selected repo | MW-0002 | Exact snapshot and governance evidence attached to audit and governance docs; absent releases/deployments recorded | DONE |
+| D04 | Master Vision Narrative | Proposed | Owner | Narrative reviewed and ratified per PILLAR 01 §1.5 |
 
-## Gate 2 — Ratified design, no feature code until acceptance
+### Phase 3 — Product Specification
 
-| ID | Task | Dependencies | Acceptance evidence | Status |
+| ID | Subject | Status | Owner | Acceptance Criterion |
 |---|---|---|---|---|
-| MW-0201 | Finalize product specification and first-slice UX flows | MW-0004, MW-0103 | Approved user journey and explicit non-goals | PROPOSED |
-| MW-0202 | Finalize canonical domain/entity owners and addon dependency DAG | MW-0003, MW-0104, MW-0106 | Registry with one owner/entity and no cycles | PROPOSED |
-| MW-0203 | Specify QlOrm schema evolution and concurrency/recovery guarantees | MW-0003, MW-0101 | Accepted design and failure/restore test cases; no Drizzle/migrations | PROPOSED |
-| MW-0204 | Finalize moonclient API contracts and error/security policy | MW-0003, MW-0201 | DTO/route inventory and contract test plan | PROPOSED |
-| MW-0205 | Finalize identity, ACL, private-field and service-internal threat model | MW-0005, MW-0202 | Reviewed authorization matrix and abuse cases | PROPOSED |
-| MW-0206 | Approve `@moonwitness/ui` token/accessibility and id/en plan | MW-0001, MW-0201 | Design review, theme and locale acceptance | PROPOSED |
-| MW-0207 | Specify provenance, rights, correction, retention and publication lifecycle | MW-0103, MW-0201 | Reviewed state machine and records of blocked rights paths | PROPOSED |
-| MW-0208 | Ratify first-slice API/data/UI acceptance and measurable quality targets | MW-0201–MW-0207 | Release-ready acceptance checklist, test plan and SLOs | PROPOSED |
+| D05 | Product Specification | Proposed | Owner | Canonical product requirements ratified |
 
-## Gate 3 — Foundation implementation (eligible only after Gate 2 ratification)
+### Phase 4 — Master Blueprint
 
-| ID | Task | Dependencies | Acceptance evidence | Status |
+| ID | Subject | Status | Owner | Acceptance Criterion |
 |---|---|---|---|---|
-| MW-0300 | Reproduce and repair lint/type resolution on a clean checkout before relying on CI | MW-0006, MW-0208 | Clean-runner lint/typecheck/test/build all pass on exact SHA; package build ordering is deterministic | PROPOSED |
-| MW-0301 | Establish selected repo baseline and carry forward approved `AGENTS.md` constraints | MW-0002, MW-0208 | Clean branch, recorded SHA, verified workspace setup | PROPOSED |
-| MW-0302 | Harden addon manifest loader and deterministic dependency validation | MW-0202, MW-0301 | Manifest/dependency negative tests pass | PROPOSED |
-| MW-0303 | Close QlOrm ACL/private-field and service-owner enforcement gaps | MW-0205, MW-0302 | Cross-owner/private-field/internal service tests pass | PROPOSED |
-| MW-0304 | Move domain/provider behavior behind owning `ql_*` services | MW-0202, MW-0204, MW-0303 | API boundary tests prove thin API; domain tests pass | PROPOSED |
-| MW-0305 | Complete moonclient contract coverage and web client-only HTTP use | MW-0204, MW-0301 | Route/DTO tests and static web transport check pass | PROPOSED |
-| MW-0306 | Implement approved light/dark and id/en shell through `@moonwitness/ui` | MW-0206, MW-0301 | Visual, localization, keyboard and responsive checks pass | PROPOSED |
-| MW-0307 | Add operational health, structured redacted logs and environment validation | MW-0208, MW-0301 | Startup/failure/config tests and runbook reviewed; nonlocal startup rejects placeholder/default secret keys | PROPOSED |
+| D06/D07 | Master Application Blueprint / Single Web/API Architecture | Proposed | Owner | Architecture blueprint ratified; no second product application |
 
-## Gate 4 — First vertical slice and release
+### Phase 5 — Master Design System
 
-| ID | Task | Dependencies | Acceptance evidence | Status |
+| ID | Subject | Status | Owner | Acceptance Criterion |
 |---|---|---|---|---|
-| MW-0401 | Implement source registration and rights/provenance view | MW-0103, MW-0207, MW-0302–MW-0305 | Rights and source tests pass; no unlicensed payload exposed | PROPOSED |
-| MW-0402 | Import approved sample with ID mapping and rollback checkpoint | MW-0401 | Count/checksum reconciliation and rollback evidence | PROPOSED |
-| MW-0403 | Implement passage reader and locale-aware source projection | MW-0402, MW-0306 | Edition/passage attribution and rights acceptance passes | PROPOSED |
-| MW-0404 | Implement attributed claim/evidence draft and owner-safe service | MW-0202, MW-0303–MW-0305 | Domain, ACL, provenance and negative tests pass | PROPOSED |
-| MW-0405 | Implement review, changes, approval and publication transitions | MW-0207, MW-0404 | Unauthorized transition, self-approval and rights-block tests pass | PROPOSED |
-| MW-0406 | Run end-to-end first journey and accessibility/security verification | MW-0403, MW-0405 | Signed acceptance evidence in `id` and `en` | PROPOSED |
-| MW-0407 | Prove backup/restore, release artifact and rollback on selected environment | MW-0406, MW-0307 | Restore and rollback evidence meets approved SLOs | PROPOSED |
-| MW-0408 | Release first slice only after required review and governance gates | MW-0407 | Protected promotion, changelog, release record and acceptance | PROPOSED |
+| D20 | Master Design System | Proposed | Owner | Visual system, theme, i18n and component inventory ratified |
 
-## Gate 5 — Domain expansion
+### Phase 6 — Engineering & Security Specifications
 
-Only create bounded tasks after the first slice establishes patterns. Candidate roadmap: ontology and search; people/events/witness; story and character; research/Mizan; journeys/actions; controlled AI assistance; approved integrations; scale/locales. Each needs a separate scope and acceptance record. No implied completion date or production readiness is set here.
-
-## Mail server (a-l-l-a-h.com)
-
-Owner request on 2026-11-01: email for `a-l-l-a-h.com` serving both a human mailbox and MoonWitness transactional mail. Self-hosted Stalwart on `163.61.134.104`, sender `app@a-l-l-a-h.com`. Code is done; the three infra gates below are owner-blocked.
-
-| ID | Task | Dependencies | Acceptance evidence | Status |
+| ID | Subject | Status | Owner | Acceptance Criterion |
 |---|---|---|---|---|
-| MW-0600 | Self-hosted Stalwart on the Coolify host: publish 25/465/587/993/995, no container 80/443, named volumes only, ACME via DNS-01, firewall inbound | Coolify token | Container healthy, IMAP/JMAP reachable, DKIM selector present in admin | PROPOSED |
-| MW-0601 | Cloudflare DNS-only records: `mail` A, MX `10 mail.a-l-l-a-h.com.`, SPF `v=spf1 mx ~all`, DMARC `p=none`, DKIM copied from Stalwart admin | MW-0600 | FCrDNS both ways; `dig mail.a-l-l-a-h.com A` + `dig a-l-l-a-h.com MX` DNS-only | PROPOSED |
-| MW-0602 | Outbound port 25 from `163.61.134.104` and a PTR that matches the HELO | None | `timeout 6 bash -c 'exec 3<>/dev/tcp/gmail-smtp-in.l.google.com/25'` succeeds; `dig -x 163.61.134.104` returns `mail.a-l-l-a-h.com.` | PROPOSED |
-| MW-0603 | Create `bjo@`, `noreply@`, `dmarc@`, `app@` mailboxes; deploy Bulwark webmail; mail-tester >= 8.5/0% spam; inbox placement in Gmail/Outlook/Yahoo | MW-0601, MW-0602 | Test report with SPF+DKIM+DMARC PASS and inbound test received | PROPOSED |
-| MW-0604 | Stage 4 code: nodemailer adapter, `res.verification` model, `/auth/forgot-password` and `/auth/reset-password`, web reset UI | Owner decision 2026-11-01 ("Kode Stage 4 langsung") | `pnpm lint`, `pnpm typecheck`, `pnpm test` green; 33 api + 8 ql_auth + 5 database + 3 moonclient tests pass | DONE |
+| D21 | Internationalization Specification | Proposed | Owner | `id`/`en` catalog with type-safe keys, parity tests |
+| D22 | Security and Privacy Blueprint | Proposed | Owner | Auth/ACL model, private-field protection, rights gates |
+| D23 | Infrastructure and Deployment Blueprint | Proposed | Owner | Docker, Coolify, health checks, deployment ratification |
+| D24 | Quality and Testing Strategy | Proposed | Owner | `pnpm lint/typecheck/build` green; 0 type-aware errors |
+| D25 | ADR Registry | Proposed | Owner | All accepted decisions recorded in `docs/decisions/ADR_REGISTRY.md` |
+| D26 | Master TODO with Microtasks | Proposed gated microtask plan | Owner | Task register complete; branch protection; CI green |
+| D27 | GitHub Governance | Snapshot and recommendation | Owner | Branch protection rules; rulesets enforced |
+| D28 | AI Execution Contract | Proposed | Owner | AI bounded; provider secrets private; no silent writes |
+| D29 | Migration and Rollback Plan | Proposed | Owner | Idempotent import; checkpoint/recovery procedure |
+| D30 | Requirements Traceability | Initial skeleton | Owner | Every requirement links to master doc, domain, test, evidence |
+| D31 | Release and Acceptance Strategy | Proposed | Owner | Structured logs; health checks; backup/restore evidence; rollback route |
+
+### Phase 7 — Single Application Foundation
+
+| ID | Subject | Status | Owner | Acceptance Criterion |
+|---|---|---|---|---|
+| D31 | Release and Acceptance Strategy | Proposed | Owner | Application actually runs; health checks pass |
+
+### Phase 8 — First Vertical Slice
+
+| ID | Subject | Status | Owner | Acceptance Criterion |
+|---|---|---|---|---|
+| D31 | Release and Acceptance Strategy | Proposed | Owner | Source-to-publication lifecycle verified with approved small dataset |
+
+### Phase 9 — Domain Expansion
+
+| ID | Subject | Status | Owner | Acceptance Criterion |
+|---|---|---|---|---|
+| D31 | Release and Acceptance Strategy | Proposed | Owner | Approved domains implemented per dependency order |
+
+### Phase 10 — Integration & Hardening
+
+| ID | Subject | Status | Owner | Acceptance Criterion |
+|---|---|---|---|---|
+| D31 | Release and Acceptance Strategy | Proposed | Owner | Domain boundaries verified; API consistency; database integrity |
+
+### Phase 11 — Release Preparation
+
+| ID | Subject | Status | Owner | Acceptance Criterion |
+|---|---|---|---|---|
+| D31 | Release and Acceptance Strategy | Proposed | Owner | Structured logs; health checks; backup/restore evidence; rollback route |
+
+### Phase 12 — External service integration (Cloudflare DNS)
+
+Owner directive and plan approval on 2026-11-01; MW-ADR-013 and MW-ADR-014 record the two ratified boundaries.
+
+| ID | Subject | Status | Owner | Acceptance Criterion |
+|---|---|---|---|---|
+| MW-0501 | RBAC roles in `ql_auth` (`res.role`, `res.users.role`, boot seeding that repairs drift) | Implemented; tests green | Owner | `pnpm --filter ql_auth test` passes; role groups come from the compiled catalog; anti-lockout guard keeps one super_admin |
+| MW-0502 | Bootstrap root account via `BOOTSTRAP_ADMIN_EMAIL`/`BOOTSTRAP_ADMIN_TOKEN` | Implemented; one-time-use | Owner | Grants root only while zero super_admins exist; env must be removed after first owner login |
+| MW-0503 | `/admin/users` role management (API guard + UI) | Implemented | Owner | `admin` group gate; own-account and last-super_admin protections; role list from `res.role` |
+| MW-0504 | `ql_integration` addon: `integration.connector`, `integration.audit`, kind catalog | Implemented; no secret column | Owner | Manifest ACL + model tests pass; catalog marks `cloudflare_read` read-only |
+| MW-0505 | `ql_cloudflare` addon: zone/record mirror, API client, sync, DNS mutations | Implemented; tests green | Owner | Client/sync/record-rule suites pass; mirror rows are owner-scoped |
+| MW-0506 | moonclient contract + 12 API connector routes | Implemented; tests green | Owner | Routes stay under `/settings/connectors`; no contract field can carry a token; group gates fire before body reads |
+| MW-0507 | Web `/connectors` and `/connectors/[id]/dns` workspaces | Implemented; not yet exercised in a browser | Owner | No token input anywhere; "Sumber token" displayed; typed confirmations for destructive actions; nav entry gated on `connector`/`operator` |
+
+---
+
+## 3. Acceptance criteria summary
+
+### Production-ready gates (per `masterprompt.md` §3040):
+
+1. **Planning baseline ratified.** All D01–D31 deliverables reviewed and approved by owner.
+2. **Branch protection added.** Rulesets enforced on `main`; no direct pushes without PR.
+3. **CI pipeline green.** `pnpm lint` passes with 0 type-aware/type-resolution errors. `pnpm typecheck` passes. `pnpm build` passes.
+4. **Health checks pass.** Application startup and readiness endpoints respond.
+5. **Structured logs present.** No secrets in log output.
+6. **Backup/restore evidence.** Rollback route verified in staging.
+
+### Microtask ownership model
+
+- Each task ID has **one owner**. No shared/task-less ownership.
+- Acceptance criteria are **explicit and testable**. "Green CI" means all workspace-level `pnpm` scripts pass. "Health checks pass" means the application responds to its health endpoint.
+- No task is marked complete because a PR is merged without required verification.
+- GitHub Issues are **mirrors** of TODO.md task IDs, not the other way around.
+- New tasks cannot be created without mapping to a deliverable owner and acceptance criterion.
+
+---
+
+## 4. Current state (2026-11-01)
+
+| Category | Status |
+|---|---|
+| **Phase 1** | Reconciliation complete; all 44 discrepancy entries (R-01–R-44) evidenced with exact SHAs |
+| **Phase 1 — repository census (D02)** | **CENSUS COMPLETE**: 92 individually SHA-pinned rows = 90 filter-matched candidates (84 with a commit, 6 verified empty) + 2 carried rows; produced by the three-source union census (search + user listing + org listing) after the fork-exclusion and org-vs-user defects were found; coverage and SHA freshness enforced by `docs/audit/tools/repository_census_gate.py`, currently green (`GATE: PASS`) with one documented moving-tip exemption |
+| **Phase 1 — capability mapping (D02/D08)** | **MAPPING COMPLETE**: every one of the 102 matrix rows (92 repositories + 10 XV component slices) has a target canonical owner in the estate-wide roll-up, enforced by the same gate (`ROLLUP_COVERAGE 102 of 102`); 38 rows resolve to `NONE` (empty, independent, excluded or illegal to depend on), 3 to `MULTIPLE`, 2 stay `TBD` for want of an inventory, and the roll-up surfaced two new owner decisions (R-43 single-owner capacity, R-44 material with no ratified domain) |
+| **Phase 2** | Master Vision Narrative exists; owner ratification pending |
+| **Phase 3** | Product Specification exists; owner ratification pending |
+| **Phase 4** | BLUEPRINT.md created; architecture design ratified |
+| **Phase 5** | MASTER_DESIGN.md created; visual system and i18n design ratified |
+| **Phase 6** | D21–D26 in progress; D21 (i18n catalog) and D22 (security) need implementation detail |
+| **Phase 7** | Not started; foundation build pending Phase 8 gate |
+| **Phase 8** | Not started; first vertical slice pending Phase 7 completion |
+| **Phase 9** | Not started; domain expansion pending first-slice gate |
+| **Phase 10** | Not started; integration and hardening pending domain completion |
+| **Phase 11** | Not started; release preparation pending integration completion |
+| **Phase 12** | MW-0501–MW-0507 implemented in-workspace and covered by the addon/HTTP suites; owner browser verification and ADR-013/014 formal ratification pending; nothing pushed or deployed |
+
+---
+
+## 5. Ratification blockers (before feature implementation)
+
+1. **Approve domain/addon names and exact-text/corpus owner.**
+2. **Approve initial journey and dataset/edition after rights check.**
+3. **Decide whether object storage and messaging are external integrations at all.**
+4. **Review and ratify the remaining planning baseline before feature implementation.**
+5. **Name the citation target for the shared "EMPIRE OF THE LIGHT" foundation-design baseline** — `bjo163/A-L-L-A-H` and `bjo163/empire-of-the-light` both publish the identical title block and the verbatim "FOUNDATION DESIGN BASELINE — PROPOSED" status line (R-37).
+6. **Rule on the broken supersession pointer** — `ecosystem-foundation` declares LEGACY and mandates `universe-foundation`, which now redirects to `universal-ontology-engine` (R-38).
+7. **State whether `bjo163/ArsyBelovedLabs` (the account-local repository, not the organization) is a plan of record** — it carries competing `FINAL-ADR-RATIFICATION-V1` / `FINAL-MIGRATION-MATRIX` / `ARCHITECTURE-TRUTH-MATRIX` documents (R-39).
+8. **Confirm disposition of the third-party code inside the account** — `surealdb-rebrand-mwdb` is a SurrealDB fork under BSL 1.1 whose grant forbids use "as a Database Service", and `mooncripsy` is an unlinked copy of an external CDP assistant agent that is **still being developed in this account** (tip `bf580cb…`; its second commit (07:45:06Z) added a `PRODUCT.md` that protects its "no API key / no MCP / no tunnel" positioning as a product commitment and its third (08:09:06Z) rewrote the desktop UI under an automated design agent); both are currently excluded from migration, `rocksoul-mind` stays an upstream MiniMind reference (R-40, R-41).
+9. **Accept that ratification is SHA-bound** — `bjo163/moonwitness-reborn` `main` kept advancing through the whole audit (twelve tips by 08:29Z, `7d801c3…`, `validate` **green**), then the commits this workspace held locally were merged through PR #1 and PR #2 and cut as tag and release `v0.1.0` at `4fdb7c7…`, with classic `main` protection (required `validate`, `enforce_admins`) switched on — all of it by another session, while these planning documents are still untracked here. Whether this workspace sits ahead of or behind `origin/main` changes within minutes, so `prompt_coverage_gate.py` prints the branch, its upstream, the unpushed count, tracked-modified files, HEAD, `origin/main` and both counts every run and no sentence carries them — reading "ahead of `origin/main`" as "unpushed" was itself an error this audit made and corrected, because a checkout on `dev` is ahead of `main` by every `dev` commit. The open decision is stabilization: ratification must name a commit, and that commit must then be held, or every ratified plan expires on the next merge (R-42).
+10. **Ratify the single-owner capacity rule** — the estate-wide roll-up maps 7 design-system sources, 2 contract sources, 10 separate web surfaces and 4 worker/API designs onto slots that `AGENTS.md` allows exactly once each; adopting from any of them means absorbing into `@moonwitness/ui` / `@moonwitness/moonclient` / one `apps/web`, never adding a second package or shell (R-43).
+11. **Authorize committing the planning baseline** — `prompt_coverage_gate.py` counts the D01–D31 set at 29 canonical documents and finds **26 of them untracked** (`git ls-files` reports nothing for them). Only `docs/architecture/DOMAIN_OWNERSHIP_AND_DEPENDENCIES.md` (D08/D09), `TODO.md` itself (D26) and `docs/operations/INFRASTRUCTURE_AND_DEPLOYMENT_BLUEPRINT.md` are tracked, and the first two are tracked-but-modified. Everything else — `BLUEPRINT.md`, `MASTER_DESIGN.md` and all of `docs/ai`, `docs/api`, `docs/audit`, `docs/creative`, `docs/data`, `docs/decisions`, `docs/design`, `docs/governance`, `docs/knowledge`, most of `docs/operations`, `docs/product`, `docs/quality`, `docs/research`, `docs/security`, `docs/vision`, `docs/workflows` — exists only in this working tree. Ratifying a document that has no commit cannot be SHA-bound, and the owner cannot review online what has not been pushed. This is the first recommended step and it needs explicit approval — nothing has been committed by this audit (R-49).
+12. **Choose one phase numbering** — `TODO.md` runs a twelve-lane ladder whose "Phase 12 — External service integration (Cloudflare DNS)" is `masterprompt.md`'s PHASE 12 "RELEASE & CONTINUOUS IMPROVEMENT", while the prompt's PHASE 4 (Master Data & Domain Design) and PHASE 7 (Master TODO & GitHub Governance) have no row here at all. Pick the prompt's numbering or declare the lanes canonical, and give PHASE 4 and PHASE 7 a home either way (R-45).
+13. **Decide what "per domain" means for §4.4** — the twenty contract attributes are currently covered by estate-wide rules plus this registry, not by a written contract per domain; attribute 13 (events and notifications) is defined nowhere. Choose between defaults-plus-addon-manifests and one contract block per domain (R-46).
+14. **Ratify the six §4.3 domains added by the coverage pass** — `ql_evidence`, `ql_law`, `ql_creative`, `ql_publication`, `ql_search` and `ql_ops`, plus the three owner narrowings that came with them (evidence records out of `ql_research`, publication records out of `ql_workflow`, creative production out of `ql_story`). Then rule on whether `rocksoul-aws`'s LAW corpus enters scope as an import candidate and whether the two `TBD` private repositories (`moonwitness-xiv`, `bjo163/mw-core`) justify a commissioned inventory (R-44).
+15. **Rule on the five §4.3 domains with no estate material** — `ql_creative`, `ql_journey`, `ql_org`, `ql_person` and `ql_search` receive zero mapped rows from the 102-row roll-up, so they are required by the prompt but nothing in the estate feeds them; decide whether each is in-scope-by-design or a placeholder owner (R-48).
+16. **Rule on the six phase-list holes** — the EXECUTION PROTOCOL's per-phase deliverable lists are now mapped item by item in `docs/governance/REQUIREMENTS_TRACEABILITY.md`, and six items have no specification behind them: Search and Storage (PHASE 3), Brand and Design Tokens (PHASE 5), Tenant Model and Performance Requirements (PHASE 6). Write the missing spec or de-scope it explicitly for the first slice (R-50).
+17. **Approve the governance-mechanics deferral list** — GitHub Issues, Projects and Milestones remain uncreated *on purpose* until ratification (zero open issues, no board inventory). Branch protection is no longer on that list: `main` gained classic protection with a required `validate` check and `enforce_admins` enabled (observed 2026-11-01T09:00Z), created by the release session rather than by this plan — but unevenly: `dev` requires `validate` with `strict: false` and `enforce_admins: false`, `main`'s review object demands zero approvals, there are no rulesets at all, and the default branch was flipped to `dev` at 09:09:20Z (R-52). Two items are genuine omissions rather than deferrals: no label scheme exists anywhere in the baseline, and no task row declares its dependencies (R-51).
+18. **Decide the build-phase sequencing** — PHASE 8 (14 listed items), PHASE 11 (13) and PHASE 12 (8) have no microtask decomposition, while MW-0501…MW-0507 implement RBAC, connectors, transport and UI, and PR #2 has already executed PHASE 12's list end to end: merge, verify, promote to `main`, generate version, update changelog, publish release `v0.1.0`. Either accept the released work retroactively or hold the rest of the build phases until this baseline is ratified — but the baseline cannot be ratified against a commit the next merge moves (R-52).
+
+---
+
+**Gate:** No production feature coding, external issue creation, push, branch policy change, or migration begins until the owner reviews and ratifies the planning baseline. `PENDING` means no evidence has been established; it must not be presented as complete.
+
+**Owner:** `bjo163` — per workspace `AGENTS.md` and `masterprompt.md` §1.4 Product North Star.
