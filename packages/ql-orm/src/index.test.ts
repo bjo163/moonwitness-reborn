@@ -1,8 +1,9 @@
-import { mkdtempSync, rmSync } from "node:fs";
-import test from "node:test";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
 import assert from "node:assert/strict";
+import { mkdtempSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import test from "node:test";
+import { tmpdir } from "node:os";
+import pg from "pg";
 import {
   createQlOrm,
   loadAddons,
@@ -408,11 +409,37 @@ void test("added fields keep existing rows on libsql", async () => {
 });
 
 const postgresUrl = process.env.QL_ORM_PG_URL;
+
+// Database Postgres untuk tes bisa persisten (mis. service lokal), jadi tabel
+// scratch milik suite dihapus lagi; di CI kontainernya memang sekali pakai.
+async function dropScratchTable(
+  databaseUrl: string,
+  tableName: string,
+): Promise<void> {
+  const client = new pg.Client({ connectionString: databaseUrl });
+  try {
+    await client.connect();
+    await client.query(`drop table if exists "${tableName}" cascade`);
+  } finally {
+    await client.end().catch(() => undefined);
+  }
+}
+
 if (postgresUrl) {
   void test("service CRUD and ACL hold on postgres", async () => {
-    await runRecordSuite(postgresUrl, `ai_provider_pg_${Date.now().toString(36)}`);
+    const tableName = `ai_provider_pg_${Date.now().toString(36)}`;
+    try {
+      await runRecordSuite(postgresUrl, tableName);
+    } finally {
+      await dropScratchTable(postgresUrl, tableName);
+    }
   });
   void test("added fields keep existing rows on postgres", async () => {
-    await runEvolutionSuite(postgresUrl, `ai_note_pg_${Date.now().toString(36)}`);
+    const tableName = `ai_note_pg_${Date.now().toString(36)}`;
+    try {
+      await runEvolutionSuite(postgresUrl, tableName);
+    } finally {
+      await dropScratchTable(postgresUrl, tableName);
+    }
   });
 }
