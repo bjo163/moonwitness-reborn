@@ -314,7 +314,7 @@ jobs:
           fi
           echo "needed=true" >>"${GITHUB_OUTPUT}"
           head_sha="$(git rev-parse origin/main)"
-          url="$(gh pr list --base dev --head main --state open --json url --jq '.[0].url // ""')"
+          url="$(gh pr list --base dev --head main --state open --json url --jq '.[0].url // empty')"
           if [ -z "${url}" ]; then
             url="$(gh pr create --base dev --head main --title "chore(release): sync main after v${NEXT_VERSION}" \
               --body "Sync the protected main release commit back to dev after v${NEXT_VERSION}.")
@@ -322,9 +322,11 @@ jobs:
           printf 'url=%s\nhead_sha=%s\n' "${url}" "${head_sha}" >>"${GITHUB_OUTPUT}"
           gh workflow run ci.yml --ref main
           for _ in $(seq 1 180); do
-            run="$(gh run list --workflow ci.yml --branch main --event workflow_dispatch \
-              --limit 20 --json databaseId,headSha,status,conclusion,createdAt \
-              --jq "[.[] | select(.headSha == \"${head_sha}\")] | sort_by(.createdAt) | last // {}")"
+            run="$(
+              gh run list --workflow ci.yml --branch main --event workflow_dispatch \
+                --limit 20 --json databaseId,headSha,status,conclusion,createdAt |
+                jq -c --arg sha "${head_sha}" '[.[] | select(.headSha == $sha)] | sort_by(.createdAt) | last // {}'
+            )"
             run_id="$(printf '%s' "${run}" | jq -r '.databaseId // empty')"
             status="$(printf '%s' "${run}" | jq -r '.status // empty')"
             conclusion="$(printf '%s' "${run}" | jq -r '.conclusion // empty')"
