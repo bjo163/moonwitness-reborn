@@ -2,7 +2,10 @@ name: CI
 
 on:
   pull_request:
+  # Semua branch tetap terscan; hanya tag (dorong workflow Release) yang tidak memicu suite.
   push:
+    branches:
+      - "**"
 
 permissions:
   contents: read

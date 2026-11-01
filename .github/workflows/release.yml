@@ -1,0 +1,201 @@
+name: Release
+
+# Rilis dijalankan manual dari branch dev (Actions → Run workflow). Alur kerjanya:
+# dev → branch release/vX.Y.Z → PR ke main → auto-merge begitu `validate` hijau →
+# tag vX.Y.Z + GitHub Release → CHANGELOG dibawa kembali ke dev.
+# Deploy Coolify terpicu oleh push ke main, jadi rilis yang gagal di CI tidak akan
+# pernah menyentuh produksi.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Kenaikan versi dari tag terakhir (dipakai bila version dikosongkan)"
+        type: choice
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+      version:
+        description: "Versi eksplisit, misalnya 1.2.3. Kosong = pakai bump."
+        type: string
+        default: ""
+      dry_run:
+        description: "Hitung versi dan changelog, tapi jangan menyentuh main"
+        type: boolean
+        default: false
+
+run-name: Rilis ${{ github.event.inputs.version || format('({0})', github.event.inputs.bump) }}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      marker: "<!-- bagian rilis -->"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Ambil dev dan seluruh tag
+        run: |
+          set -euo pipefail
+          git fetch origin dev --tags --force
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Hitung versi berikutnya
+        id: versi
+        run: |
+          set -euo pipefail
+          last="$(git describe --tags --abbrev=0 origin/main 2>/dev/null || true)"
+          explicit="${{ github.event.inputs.version }}"
+          if [ -n "${explicit}" ]; then
+            next="${explicit#v}"
+          elif [ -z "${last}" ]; then
+            next="0.1.0"
+          else
+            IFS='.' read -r major minor patch <<<"${last#v}"
+            case "${{ github.event.inputs.bump }}" in
+              major)
+                major=$((major + 1))
+                minor=0
+                patch=0
+                ;;
+              minor)
+                minor=$((minor + 1))
+                patch=0
+                ;;
+              *)
+                patch=$((patch + 1))
+                ;;
+            esac
+            next="${major}.${minor}.${patch}"
+          fi
+          printf 'next=%s\nlast=%s\n' "${next}" "${last}" >>"${GITHUB_OUTPUT}"
+          echo "Tag terakhir: ${last:-(belum ada)} → rilis berikutnya: v${next}"
+
+      - name: Kumpulkan commit rilis ini
+        id: notes
+        run: |
+          set -euo pipefail
+          next="${{ steps.versi.outputs.next }}"
+          last="${{ steps.versi.outputs.last }}"
+          range="${last:+${last}..}origin/dev"
+          date="$(date -u +%Y-%m-%d)"
+          commits="$(git log --no-merges --pretty=format:'- %s (%h)' "${range}")"
+          if [ -z "${commits}" ]; then
+            echo "Tidak ada commit di dev sejak ${last:-awal}; tidak ada yang bisa dirilis." >&2
+            exit 1
+          fi
+          printf '## v%s — %s\n\n%s\n\n' "${next}" "${date}" "${commits}" >"${RUNNER_TEMP}/section.md"
+          cp "${RUNNER_TEMP}/section.md" "${RUNNER_TEMP}/notes.md"
+          {
+            printf 'Rilis v%s: dev masuk ke main.\n\n' "${next}"
+            cat "${RUNNER_TEMP}/section.md"
+            printf 'Setelah digabung, Coolify mulai deploy `main`, lalu workflow ini memasang tag `v%s` dan GitHub Release.\n' "${next}"
+          } >"${RUNNER_TEMP}/pr.md"
+          cat "${RUNNER_TEMP}/section.md"
+
+      - name: Tampilkan hasil dry-run
+        if: ${{ github.event.inputs.dry_run == 'true' }}
+        run: |
+          {
+            echo "## Dry-run v${{ steps.versi.outputs.next }}"
+            echo
+            cat "${RUNNER_TEMP}/section.md"
+          } >>"${GITHUB_STEP_SUMMARY}"
+
+      - name: Buat branch rilis dari main lalu gabung dev
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: |
+          set -euo pipefail
+          git checkout -B "release/v${{ steps.versi.outputs.next }}" origin/main
+          git merge --no-edit origin/dev
+
+      - name: Tulis CHANGELOG.md
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: |
+          set -euo pipefail
+          marker="${{ env.marker }}"
+          if [ -f CHANGELOG.md ] && grep -qF "${marker}" CHANGELOG.md; then
+            line="$(grep -n -m1 -F "${marker}" CHANGELOG.md | cut -d: -f1)"
+            head -n "${line}" CHANGELOG.md >"${RUNNER_TEMP}/top.md"
+            tail -n +"$((line + 1))" CHANGELOG.md >"${RUNNER_TEMP}/body.md"
+          else
+            {
+              printf '# Changelog\n\n'
+              printf 'Daftar rilis MoonWitness. Tiap bagian ditulis oleh workflow Release saat rilis digabung ke `main`; isinya commit yang masuk sejak tag sebelumnya.\n\n'
+              printf '%s\n' "${marker}"
+            } >"${RUNNER_TEMP}/top.md"
+            : >"${RUNNER_TEMP}/body.md"
+          fi
+          cat "${RUNNER_TEMP}/top.md" "${RUNNER_TEMP}/section.md" "${RUNNER_TEMP}/body.md" >CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "chore(release): v${{ steps.versi.outputs.next }}"
+
+      - name: Push branch rilis dan minta auto-merge
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          head="release/v${{ steps.versi.outputs.next }}"
+          git push --force-with-lease -u origin "${head}"
+          url="$(gh pr list --head "${head}" --state open --json url --jq '.[0].url // ""')"
+          if [ -z "${url}" ]; then
+            url="$(gh pr create --base main --head "${head}" --title "Rilis v${{ steps.versi.outputs.next }}" --body-file "${RUNNER_TEMP}/pr.md")"
+          fi
+          printf 'url=%s\n' "${url}" >>"${GITHUB_OUTPUT}"
+          echo "${url}" >>"${GITHUB_STEP_SUMMARY}"
+          gh pr merge --auto --merge "${url}"
+
+      - name: Tunggu PR rilis tergabung
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          url="${{ steps.pr.outputs.url }}"
+          for _ in $(seq 1 90); do
+            if [ "$(gh pr view "${url}" --json state --jq .state)" = "MERGED" ]; then
+              exit 0
+            fi
+            sleep 20
+          done
+          {
+            echo "## PR rilis tidak tergabung dalam 30 menit"
+            gh pr view "${url}" --json mergeStateStatus,statusCheckRollup
+          } >>"${GITHUB_STEP_SUMMARY}"
+          exit 1
+
+      - name: Pasang tag dan GitHub Release
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          next="${{ steps.versi.outputs.next }}"
+          git fetch origin main --tags --force
+          git tag -a "v${next}" -m "MoonWitness v${next}" origin/main
+          git push origin "v${next}"
+          if ! gh release view "v${next}" >/dev/null 2>&1; then
+            gh release create "v${next}" --target main --title "MoonWitness v${next}" --notes-file "${RUNNER_TEMP}/notes.md"
+          fi
+
+      - name: Bawa CHANGELOG kembali ke dev
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: |
+          set -euo pipefail
+          git fetch origin dev main --tags --force
+          git checkout -B dev origin/dev
+          git merge --no-edit origin/main
+          git push origin dev
