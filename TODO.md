@@ -17,8 +17,8 @@ Per `masterprompt.md` PILLAR 12 §2492–2516:
 - **No multiple issues** implementing the same result.
 - **No task** is complete because a PR is merged without required verification.
 - **GitHub Projects** are operational visualizations only.
-- **Branch protection:** zero rulesets and no classic `main` protection currently; must be added during ratification.
-- **Actions CI:** runs on current SHA fail at `pnpm lint`; typecheck, tests and build are skipped; 720 type-aware/type-resolution errors reported on clean runner.
+- **Branch protection snapshot (2026-11-01):** default branch is `dev`; classic protection exists on `main` with required `validate` and `enforce_admins`, while `dev` requires `validate` with `strict: false` and `enforce_admins: false`. No repository rulesets were observed. This is an uneven baseline, not a claim that protection is complete.
+- **Actions CI historical finding:** an earlier clean-runner audit reported `pnpm lint` failing with 720 type-aware/type-resolution errors, so typecheck/tests/build were skipped. Revalidate before treating this as current. The latest inspected `dev` head (`c235696ec7d8167ba35587bf07e090582c6cb7ea`) had no combined commit-status records at inspection time.
 
 ### 1.1 Requirement-to-issue linking
 
@@ -142,7 +142,7 @@ Owner directive and plan approval on 2026-11-01; MW-ADR-013 and MW-ADR-014 recor
 ### Production-ready gates (per `masterprompt.md` §3040):
 
 1. **Planning baseline ratified.** All D01–D31 deliverables reviewed and approved by owner.
-2. **Branch protection added.** Rulesets enforced on `main`; no direct pushes without PR.
+2. **Branch protection complete and consistent.** Required protection is enforced on the active development branch and release branch; verify branch rules, required checks and review policy against the actual repository before marking this gate complete. The 2026-11-01 snapshot is uneven (see §1).
 3. **CI pipeline green.** `pnpm lint` passes with 0 type-aware/type-resolution errors. `pnpm typecheck` passes. `pnpm build` passes.
 4. **Health checks pass.** Application startup and readiness endpoints respond.
 5. **Structured logs present.** No secrets in log output.
