@@ -239,6 +239,9 @@ def check_baseline_tracking():
     try:
         tracked = set(subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True,
                                      text=True, encoding="utf-8").stdout.split())
+        head_files = set(subprocess.run(["git", "ls-tree", "-r", "--name-only", "HEAD"],
+                                         cwd=ROOT, capture_output=True, text=True,
+                                         encoding="utf-8").stdout.split())
         head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True,
                               text=True).stdout.strip()
     except Exception as exc:  # no git available
@@ -250,6 +253,7 @@ def check_baseline_tracking():
         c = cells(line)
         if c and len(c) == 3 and re.fullmatch(r"D\d\d", c[0]):
             docs |= {p for p in re.findall(r"`([^`]+\.md)`", c[1])}
+    outside_head = sorted(d for d in docs if d not in head_files)
     untracked = sorted(d for d in docs if d not in tracked)
     ahead = behind = "?"
     tags = ""
@@ -281,17 +285,22 @@ def check_baseline_tracking():
         modified = str(len([l for l in status if l[:2].strip() and l[0] != "?" and l[1] != "?"]))
     except Exception:
         remote = ""
-    print("BASELINE_TRACKING", len(docs), "canonical documents |", len(untracked),
-          "not in git (R-49, open owner decision) | branch", branch, "HEAD", head[:12],
+    # "in the index" is not "in git". Staging a document makes it committable, not
+    # committed, and ratification names a commit — so the headline count is measured
+    # against HEAD, with the index reported only as the step in between (R-49/R-53).
+    r49 = ("R-49 closed: the baseline is committed, ratification is still owed"
+           if not outside_head else "R-49, open owner decision")
+    print("BASELINE_TRACKING", len(docs), "canonical documents |", len(outside_head),
+          "not in HEAD,", len(untracked), "not in index (%s)" % r49,
+          "| branch", branch, "HEAD", head[:12],
           "| upstream", upstream, "unpushed", unpushed, "| tracked-modified", modified,
           "| origin/main", remote[:12] if remote else "unknown",
           "| ahead", ahead, "behind", behind,
           "| tags on origin/main:", tags or "none",
           "(R-42/R-52: every count and the tag list move while documents are written, and ahead-of-main "
           "is not the same claim as unpushed — read them here, not from prose)")
-    if untracked:
-        for d in untracked:
-            print("   UNTRACKED:", d)
+    for d in outside_head:
+        print("   NOT IN HEAD:", d)
 
 
 def check_phases(failures):
