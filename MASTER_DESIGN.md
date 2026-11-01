@@ -1,5 +1,7 @@
 # MoonWitness Master Design System
 
+**Ecosystem context:** Moon UI is the shared design-system identity implemented by `@moonwitness/ui`; it is not a separate application. A-L-L-A-H.COM / EMPIRE OF THE LIGHT public identity is governed by [`docs/vision/ALLAH_COM_OFFICIAL_CANON.md`](docs/vision/ALLAH_COM_OFFICIAL_CANON.md).
+
 **Status: PROPOSED · Design authority pending owner ratification**
 **Edition:** MASTER FINAL v2.0 · Derived from `masterprompt.md` PILLAR 08 and repository evidence
 
