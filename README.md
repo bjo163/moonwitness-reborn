@@ -4,6 +4,10 @@ MoonWitness adalah fondasi workspace AI yang dibangun bertahap: runtime TypeScri
 
 Nama dan arah visual mengambil inspirasi umum dari narasi sci-fi kosmik dan arsitektur model-first di [repo MoonWitness](https://github.com/bjo163/moonwitness). Implementasi ini tetap berfokus pada asisten AI; domain dan fitur khusus dari repo referensi tidak diasumsikan sebagai kebutuhan produk.
 
+## Project identity & governance
+
+A-L-L-A-H.COM / EMPIRE OF THE LIGHT identity, public narrative, ecosystem boundaries and editorial principles are defined in the [Official Canon & Ecosystem Constitution](./docs/vision/ALLAH_COM_OFFICIAL_CANON.md). This canon governs identity and narrative; product scope, architecture, delivery status and production claims remain governed by their respective canonical documents and evidence.
+
 ## Mulai
 
 Prasyarat: Node.js 22+ dan pnpm 10.
