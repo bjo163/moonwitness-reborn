@@ -294,6 +294,7 @@ The canonical owner for each goal/task in these tables is `bjo163`; an agent may
 | ID | Goal | Master-prompt mapping | Depends on | Status | Acceptance criterion |
 |---|---|---|---|---|---|
 <!-- TASK:MW-1209 -->
+<!-- TASK:MW-1210 -->
 | **Prompt PHASE 8** | Partial foundation exists in-workspace; all 14 foundation outcomes are separate blocked tasks pending ratification and implementation audit |
 | **Prompt PHASE 9** | First source-to-publication slice is not verified; five lifecycle goals are defined and blocked on rights, product decisions, and foundation gates |
 | **Prompt PHASE 10** | Domain expansion is not verified; approved domains must receive separate tasks and pass addon-specific DoD |
