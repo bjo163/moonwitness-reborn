@@ -1,5 +1,7 @@
 # MoonWitness Application Blueprint
 
+**Ecosystem context:** A-L-L-A-H.COM is the public identity/gateway; MoonWitness is the integrated platform. Dock, Cockpit and Headquarter are experience roles within the unified product if approved; Moon UI is the shared design system, not a separate application. See [`docs/vision/ALLAH_COM_OFFICIAL_CANON.md`](docs/vision/ALLAH_COM_OFFICIAL_CANON.md).
+
 **Status: PROPOSED · Architecture & single-application design authority**
 **Edition:** MASTER FINAL v2.0 · Derived from `masterprompt.md` PILLAR 03–04 and repository evidence
 
