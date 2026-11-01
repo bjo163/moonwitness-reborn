@@ -1,0 +1,104 @@
+# Coolify deployment stack: db + api + web.
+#
+# Bedanya dengan docker-compose.yml (dev lokal):
+# - Tidak ada published port di host. Traefik milik Coolify sudah memegang 80/443
+#   dan menjangkau container lewat network aplikasi, jadi routing diarahkan lewat
+#   label di bawah. Compose ini tidak mendeklarasikan `networks:` supaya Coolify
+#   yang menghubungkannya ke Traefik.
+# - Nama domain memakai wildcard *.apps.mycocolink.com yang sudah mengarah ke server.
+# - PROVIDER_ENCRYPTION_KEY diisi lewat environment Coolify, bukan dari repo. Kosong
+#   berarti penyimpanan credential provider /providers dinonaktifkan (api tetap jalan).
+#
+# Usage: set in Coolify -> Application -> Configuration -> Docker Compose
+# Location: /docker-compose.coolify.yml
+name: moonwitness-reborn
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: moonwitness
+      POSTGRES_PASSWORD: moonwitness
+      POSTGRES_DB: moonwitness
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moonwitness -d moonwitness"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TZ: Asia/Jakarta
+      PORT: 3000
+      DATABASE_URL: file:/app/data/moonwitness.db
+      PROVIDER_ENCRYPTION_KEY: ${PROVIDER_ENCRYPTION_KEY:-}
+    expose:
+      - "3000"
+    volumes:
+      - api_data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.moonwitness-reborn-api-http.rule=Host(`moonwitness-reborn-api.apps.mycocolink.com`)
+      - traefik.http.routers.moonwitness-reborn-api-http.entrypoints=http
+      - traefik.http.routers.moonwitness-reborn-api-http.middlewares=moonwitness-reborn-api-redirect
+      - traefik.http.middlewares.moonwitness-reborn-api-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.moonwitness-reborn-api-https.rule=Host(`moonwitness-reborn-api.apps.mycocolink.com`)
+      - traefik.http.routers.moonwitness-reborn-api-https.entrypoints=https
+      - traefik.http.routers.moonwitness-reborn-api-https.tls=true
+      - traefik.http.routers.moonwitness-reborn-api-https.tls.certresolver=letsencrypt
+      - traefik.http.services.moonwitness-reborn-api.loadbalancer.server.port=3000
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        API_URL: http://api:3000
+    restart: unless-stopped
+    init: true
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      TZ: Asia/Jakarta
+    expose:
+      - "3001"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.moonwitness-reborn-web-http.rule=Host(`moonwitness-reborn.apps.mycocolink.com`)
+      - traefik.http.routers.moonwitness-reborn-web-http.entrypoints=http
+      - traefik.http.routers.moonwitness-reborn-web-http.middlewares=moonwitness-reborn-web-redirect
+      - traefik.http.middlewares.moonwitness-reborn-web-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.moonwitness-reborn-web-https.rule=Host(`moonwitness-reborn.apps.mycocolink.com`)
+      - traefik.http.routers.moonwitness-reborn-web-https.entrypoints=https
+      - traefik.http.routers.moonwitness-reborn-web-https.tls=true
+      - traefik.http.routers.moonwitness-reborn-web-https.tls.certresolver=letsencrypt
+      - traefik.http.services.moonwitness-reborn-web.loadbalancer.server.port=3001
+
+volumes:
+  postgres_data:
+  api_data:
