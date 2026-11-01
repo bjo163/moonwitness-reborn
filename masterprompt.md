@@ -2966,7 +2966,7 @@ Inspect all repositories accessible to `bjo163`.
 
 Find the correct source of truth for new MoonWitness development.
 
-Do not assume `moonwitnessxv` is automatically correct solely because it was previously selected. Verify its current state, permissions, branch, and owner direction.
+The canonical implementation repository is `bjo163/moonwitness-reborn` (MW-ADR-001, accepted 2026-11-01). Repositories such as `moonwitnessxv` are historical/reference sources unless a later owner-approved ADR changes this decision. Verify repository state, permissions, branch and evidence before migration or reuse.
 
 ## STEP 2 — COMPLETE SOURCE AUDIT
 
