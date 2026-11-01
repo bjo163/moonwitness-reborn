@@ -10,7 +10,8 @@
       "persistent": true
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "env": ["QL_ORM_PG_URL"]
     },
     "typecheck": {
       "dependsOn": ["^build"]

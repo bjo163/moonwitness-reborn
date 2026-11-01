@@ -10,6 +10,15 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -25,4 +34,7 @@ jobs:
       - run: pnpm exec turbo run build
       - run: pnpm lint
       - run: pnpm typecheck
+      # Suite ql_orm punya jalur dialect Postgres yang hanya aktif jika QL_ORM_PG_URL terisi.
       - run: pnpm test
+        env:
+          QL_ORM_PG_URL: postgres://ci:ci@127.0.0.1:5432/ci
