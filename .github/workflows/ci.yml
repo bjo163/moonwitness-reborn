@@ -2,7 +2,11 @@ name: CI
 
 on:
   pull_request:
+  # Hanya branch: workflow rilis mendorong tag, dan tag tidak boleh memicu suite penuh.
   push:
+    branches:
+      - main
+      - dev
 
 permissions:
   contents: read
