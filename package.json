@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
+    "@moonwitness/eslint-config": "workspace:*",
     "@next/eslint-plugin-next": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
