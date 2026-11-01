@@ -22,6 +22,18 @@ pnpm dev
 
 Landing page publik berjalan di `http://localhost:3001`; dashboard terlindungi login berada di `/command-center`, dan API di `http://localhost:3000`. Data lokal disimpan di `data/moonwitness.db`; schema dibuat otomatis dari manifest addon saat API mulai—tidak perlu generate atau menjalankan migration.
 
+Instruksi agent workspace ada di [`AGENTS.md`](./AGENTS.md), agent implementasi khusus ada di [`.github/agents/`](./.github/agents/), dan workflow pengembangan ada di [`.github/skills/moonwitness-development/`](./.github/skills/moonwitness-development/). Skill [`task-tracker`](./.github/skills/task-tracker/SKILL.md) wajib dipakai sebelum dan sesudah pekerjaan coding.
+
+### Mini UI task tracker lokal
+
+Untuk melihat dan mengubah status task dari browser lokal:
+
+```powershell
+python -B docs/audit/tools/task_tracker_server.py
+```
+
+Buka URL `127.0.0.1` yang dicetak server. Server hanya mengikat loopback, tidak menerima koneksi jaringan publik, dan berhenti dengan `Ctrl+C`. Perubahan status memperbarui `docs/governance/task-tracker.json` dan menghasilkan ulang `TODO.md`.
+
 Web menggunakan rewrite Next.js ke API. Akun memiliki sesi cookie `HttpOnly`, password di-hash dengan scrypt, dan data percakapan dibatasi per akun. `POST /chat` menerima `{ "conversationId": "...", "input": "..." }`.
 
 ### Model Gateway MoonWitness

@@ -5,7 +5,7 @@ description: "Use when implementing, debugging, testing, or reviewing code in th
 
 # MoonWitness Development
 
-Use the repository's [AGENTS.md](../../../AGENTS.md) as the always-on source of architecture and safety rules. This skill provides the repeatable implementation workflow without duplicating the full policy.
+Use the repository's [AGENTS.md](../../../AGENTS.md) as the always-on source of architecture and safety rules. Before every coding task, load and follow the mandatory [task-tracker skill](../task-tracker/SKILL.md). This skill provides the repeatable implementation workflow without duplicating the full policy.
 
 ## Workflow
 

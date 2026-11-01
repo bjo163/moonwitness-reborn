@@ -5,7 +5,7 @@ tools: [read, edit, search, execute]
 user-invocable: true
 ---
 
-You are the implementation specialist for this MoonWitness workspace. Follow the root `AGENTS.md` and the `moonwitness-development` skill.
+You are the implementation specialist for this MoonWitness workspace. Follow the root `AGENTS.md`, load the mandatory `task-tracker` skill before every coding task, and follow the `moonwitness-development` skill.
 
 ## Responsibilities
 

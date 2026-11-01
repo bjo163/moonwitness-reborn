@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <meta name="csrf-token" content="__TRACKER_TOKEN__">
+    <title>Task tracker · MoonWitness</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="page-header">
+        <div>
+          <h1>Project task tracker</h1>
+          <p>Kelola status dari sumber kanonis tanpa memisahkan TODO dari JSON.</p>
+        </div>
+        <span class="local-badge"><span aria-hidden="true"></span>LOCAL · LOOPBACK</span>
+      </header>
+
+      <section class="summary" aria-label="Ringkasan status task">
+        <p><span id="count-total">—</span><span>total</span></p>
+        <p><span id="count-in_progress">—</span><span>sedang dikerjakan</span></p>
+        <p><span id="count-proposed">—</span><span>diusulkan</span></p>
+        <p><span id="count-pending">—</span><span>menunggu</span></p>
+        <p><span id="count-blocked">—</span><span>terhambat</span></p>
+        <p><span id="count-done">—</span><span>selesai</span></p>
+        <p><span id="count-ready">—</span><span>siap dikerjakan</span></p>
+      </section>
+
+      <section class="task-browser" aria-labelledby="task-list-title">
+        <div class="browser-heading">
+          <div>
+            <h2 id="task-list-title">Task proyek</h2>
+            <p id="result-count">Memuat task...</p>
+          </div>
+          <button id="refresh-button" class="button button-secondary" type="button">Muat ulang</button>
+        </div>
+
+        <div class="filters">
+          <label class="filter-field" for="task-search">
+            Cari task
+            <input id="task-search" type="search" placeholder="ID, judul, kriteria, pemilik..." autocomplete="off">
+          </label>
+          <label class="filter-field filter-state" for="state-filter">
+            Filter status
+            <select id="state-filter">
+              <option value="all">Semua status</option>
+              <option value="in_progress">Sedang dikerjakan</option>
+              <option value="proposed">Diusulkan</option>
+              <option value="pending">Menunggu</option>
+              <option value="blocked">Terhambat</option>
+              <option value="done">Selesai</option>
+            </select>
+          </label>
+        </div>
+
+        <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+        <div class="table-scroll" tabindex="0" aria-label="Daftar task; geser horizontal jika diperlukan">
+          <table class="task-table">
+            <thead>
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Task dan kriteria</th>
+                <th scope="col">Status</th>
+                <th scope="col">Dependensi</th>
+                <th scope="col">Pemilik</th>
+              </tr>
+            </thead>
+            <tbody id="task-rows">
+              <tr><td class="table-message" colspan="5">Memuat daftar task...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="footnote">Perubahan langsung tersimpan ke <code>task-tracker.json</code> dan menghasilkan ulang <code>TODO.md</code>. Label status khusus dipertahankan.</p>
+      </section>
+    </main>
+  </body>
+</html>

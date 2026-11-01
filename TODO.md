@@ -1,29 +1,32 @@
 # MoonWitness TODO.md
 
-**Status: PROPOSED gated microtask plan · Sole task and milestone status register**
-**Edition:** MASTER FINAL v2.0 · `masterprompt.md` PILLAR 12 §2422: `TODO.md` is the sole canonical task and milestone status register
+**Status: Generated Markdown view · Canonical task data lives in `docs/governance/task-tracker.json`**
+**Edition:** D30 requirement catalog · Edit the JSON tracker, then run `pnpm tracker:render`; do not edit generated task rows directly.
 **Created:** 2026-11-01 · Owner ratification required before any feature implementation
 
 ---
 
 ## 1. Governance foundation
 
-Per `masterprompt.md` PILLAR 12 §2492–2516:
+Per the D30 requirement catalog and `docs/governance/GITHUB_GOVERNANCE.md`:
 
-- **TODO.md** remains the sole canonical task and milestone status register.
+- **`docs/governance/task-tracker.json`** is the sole canonical task and milestone status register.
+- **TODO.md** is a generated Markdown view; CI checks that it matches the JSON source and template.
 - **GitHub Issues** are execution records for task IDs only.
 - **Every Issue** must contain canonical Task ID, description, scope, acceptance criteria, dependencies, tests, priority, complexity, evidence.
 - **No duplicate task IDs.**
 - **No multiple issues** implementing the same result.
 - **No task** is complete because a PR is merged without required verification.
 - **GitHub Projects** are operational visualizations only.
+- A task marked **Done** is not evidence that the work was released; only `CHANGELOG.md` records released work.
+- Completion timestamps are recorded only when known. Existing Done tasks without a timestamp remain undated.
 - **Branch protection snapshot (2026-11-01):** default branch is `dev`; classic protection exists on `main` with required `validate` and `enforce_admins`, while `dev` requires `validate` with `strict: false` and `enforce_admins: false`. No repository rulesets were observed. This is an uneven baseline, not a claim that protection is complete.
 - **Actions CI:** no current CI result has been established for the latest observed `dev` commit (`8fe4713e58c7099b3e52c76d3c64cbeb5d16b50c`). An earlier clean-runner audit reported `pnpm lint` failing with 720 type-aware/type-resolution errors, so typecheck/tests/build were skipped then; do not treat that historical finding as current or claim the latest commit passed.
 
 ### 1.1 Requirement-to-issue linking
 
 Every requirement must link to:
-- Master document.
+- D30 requirement ID and canonical specification.
 - Domain.
 - ADR if applicable.
 - TODO task.
@@ -141,6 +144,21 @@ Owner directive and plan approval on 2026-11-01; MW-ADR-013 and MW-ADR-014 recor
 | MW-0506 | moonclient contract + 12 API connector routes | Implemented; tests green | Owner | Routes stay under `/settings/connectors`; no contract field can carry a token; group gates fire before body reads |
 | MW-0507 | Web `/connectors` and `/connectors/[id]/dns` workspaces | Implemented; not yet exercised in a browser | Owner | No token input anywhere; "Sumber token" displayed; typed confirmations for destructive actions; nav entry gated on `connector`/`operator` |
 
+### Workstream MW-0550 — CAB / Project Management via `ql_workflow`
+
+Owner directive and plan approval on 2026-11-01; MW-ADR-017 records the MVP slice boundaries (one addon, reviewer reuse of `admin`/`operator`, `ql_ops` and `ql_publication` deferred). The state machine is implemented **verbatim** from `docs/workflows/WORKFLOW_AND_PUBLISHING_SPECIFICATION.md:8-12` — no invented states.
+
+| ID | Subject | Status | Owner | Acceptance Criterion |
+|---|---|---|---|---|
+| MW-0551 | `ql_workflow` addon skeleton + registration in `apps/api` bootstrap | Implemented; `turbo run build --filter=@moonwitness/api...` green | Owner | `loadAddons` accepts the manifest with `depends: ["ql_base","ql_auth"]`; `ql_workflow` is a `dependency` (not devDep) of `apps/api` so the Docker `--filter=@moonwitness/api...` closure includes it |
+| MW-0552 | PM tracker models `workflow.project` + `workflow.task` (view-driven, zero new UI) | Implemented; tests green | Owner | Both models appear in `/models` metadata via the existing generic handler; ACL allows user CRUD; `owner_id` is `private:true`; test asserts no view lists a private field |
+| MW-0553 | CAB state machine service (`canTransition` table transcribed 1:1 from spec) | Implemented; tests green | Owner | Table-driven test verifies every legal edge from `docs/workflows/WORKFLOW_AND_PUBLISHING_SPECIFICATION.md:8-12`; every other pair rejects; `submit` requires the change owner; `approve`/`reject`/`publish`/`supersede` require the `admin`/`operator` reviewer group AND forbid self-approval (`QlConflictError`) |
+| MW-0554 | `workflow.change` + `workflow.transition` models with bypass-lockdown ACL | Implemented; tests green | Owner | ACL declares `write:false, create:false, unlink:false` for every group on `workflow.change` (only `user` group's `create:true` stays, and the ORM auto-stamps `owner_id`); the bypass-lock regression test asserts `orm.update("workflow.change", ownerA, id, {state:"approved"})` throws `QlAccessError`; `workflow.transition` has zero write/unlink ACL in every group (append-only audit) |
+| MW-0555 | moonclient contract: `workflow.*` DTOs, `/workflow/*` routes, transition/queue SDK | Implemented; `pnpm --filter @moonwitness/moonclient test` green | Owner | `apiRoutes.workflow` is a sibling appended after `connectors`; existing routes untouched; new `workflow routes stay under the /workflow prefix` test passes alongside the credential scanner (8/8 moonclient tests) |
+| MW-0556 | API boundary: `handleWorkflowRequest` + one dispatch `if` block | Implemented; apps/api suite green (7 workflow tests + 38 existing) | Owner | Handler returns `Promise<boolean>` and follows the `handleConnectorRequest` shape; `requireGroup(user, "admin", "operator")` gates the queue and reviewer transitions; error path uses existing `handleRequestError` (unchanged) which already maps `QlAccessError→403`, `QlConflictError→409`, `QlValidationError→400`, `QlNotFoundError→404` |
+| MW-0557 | Web `/workflow` review-queue screen + gated sidebar entry | Implemented; `pnpm exec turbo run build --filter=@moonwitness/web` green | Owner | Screen imports only `@moonwitness/moonclient` + `@moonwitness/ui` (root browser-boundary lint rule from MW-ADR-016 stays clean); nav link and dashboard card are gated on a `moonClient.listModels()` probe finding a `workflow.*` model — remove the bootstrap line in `apps/api/src/index.ts` and every surface disappears at once |
+| MW-0558 | Manual browser click-through evidence (member submit → admin approve → PATCH bypass refused) | Pending owner browser verification | Owner | MW-0507 precedent applies — must not be reported as "done" until verified in a real browser. Automated tests already cover the bypass refusal and self-approval refusal (MW-0553/0554/0556); only the end-to-end UI flow needs manual capture |
+
 ### Master-prompt gap goals and execution microtasks
 
 The prompt coverage gate currently maps all 87 planning-list items, all 31 deliverables, 23 domains, 20 domain-contract attributes, nine acceptance criteria, and the twelve STEP 8 report items. A mapped item is not necessarily specified or implemented: the 13 planning-list holes remain explicit below. The official A-L-L-A-H.COM identity is ratified in `docs/vision/ALLAH_COM_OFFICIAL_CANON.md`; product, visual-brand, and implementation decisions remain governed separately.
@@ -152,7 +170,7 @@ The canonical owner for each goal/task in these tables is `bjo163`; an agent may
 
 | ID | Goal | Master-prompt mapping | Depends on | Status | Acceptance criterion |
 |---|---|---|---|---|---|
-| MW-0601 | Audit implementation against the canon and all 12 pillars | PILLAR 01–12; acceptance A–I; D01–D31 | — | Proposed | Record exact HEAD; inspect `apps/web`, `apps/api`, `packages/`, addon manifests/models/views/ACL, shared contracts, tests, and CI; map each requirement to source and test evidence or `UNKNOWN`/`GAP`; do not infer implementation from documentation. |
+| MW-0601 | Audit implementation against the canon and all 12 pillars | PILLAR 01–12; acceptance A–I; D01–D31 | — | Done | The audit report records the dirty-worktree scope and committed baseline `40c04f172ff91d8002c8d51c4922c8abc6b59a37`. All 1,891 catalog rows now have an explicit status and review basis: 369 `GAP`, 267 `PARTIAL`, 1,255 `UNKNOWN`, zero `UNVERIFIED`; TODO links are retained and gates validate the inventory. Current lint/typecheck/test/build and traceability checks pass. This closes audit triage only—not implementation, owner ratification, production certification, or release approval. |
 | MW-0602 | Reconcile product identity references to the official canon | PILLAR 01; STEP 6 | — | Proposed | Audit references to A-L-L-A-H.COM and MoonWitness; canonical wording links to `docs/vision/ALLAH_COM_OFFICIAL_CANON.md`; no companion document redefines identity or confers religious authority. |
 | MW-0603 | Complete repository and GitHub permission inventory | PHASE 0: GitHub permissions; PILLAR 02 | — | Proposed | Record account, organization, repository, team, role, and inaccessible/unknown scopes with evidence and exact observation time; distinguish verified access from unavailable data. |
 | MW-0604 | Specify search and indexing boundaries | PHASE 3: Search; PILLAR 10 §10.4 | — | Proposed | Define `ql_search` inputs, source-of-truth boundary, indexing/update/delete lifecycle, rights/private-field exclusions, query API, ownership, failure behavior, and tests; no canonical content is owned by indexes. |
@@ -166,9 +184,10 @@ The canonical owner for each goal/task in these tables is `bjo163`; an agent may
 | MW-0612 | Define task dependency and domain DoD rules | PHASE 7: Dependencies and Microtask breakdown; PILLAR 12 §12.4 | MW-0601 | Proposed | Every proposed task has explicit prerequisite task IDs or `—`; every approved domain has a bounded DoD covering manifest, models/views, ACL, contract, and tests; the task graph is acyclic. |
 | MW-0613 | Define the GitHub label taxonomy | PHASE 7: Labels; PILLAR 12 §12.4 | MW-0612 | Proposed | Document a small label set for task ID, domain, type, priority, and status with definitions and usage rules; no label is created until owner approval. |
 | MW-0614 | Map GitHub Issues, Projects, and Milestones to TODO goals | PHASE 7: Issues, Project, Milestones; PILLAR 12 §12.4 | MW-0612, MW-0613 | Proposed | Define one-to-one issue/task linking, required issue fields, project fields, and milestone mapping; prepare the mapping without creating platform objects. |
-| MW-0615 | Reconcile TODO phase numbering with the prompt | PHASE 0–12; R-45 | MW-0612 | Proposed | Owner-approved mapping uses the prompt's phase IDs; Cloudflare MW-0500 workstream is explicitly cross-referenced without mislabeling it as prompt PHASE 12. |
+| MW-0615 | Reconcile TODO phase numbering with the legacy phase catalog | PHASE 0–12; R-45 | MW-0612 | Proposed | Owner-approved mapping uses the D30 catalog's phase IDs; Cloudflare MW-0500 workstream is explicitly cross-referenced without mislabeling it as catalog PHASE 12. |
 | MW-0616 | Ratify a stable planning baseline and disposition prior work | PILLAR 12; acceptance I; R-42/R-49/R-52 | MW-0601, MW-0602, MW-0603, MW-0604, MW-0605, MW-0606, MW-0607, MW-0608, MW-0609, MW-0610, MW-0611, MW-0612, MW-0613, MW-0614, MW-0615 | Proposed; owner action | Owner records accept/amend decisions against an exact commit SHA, including already-landed work and its evidence; the release/implementation gate is explicit and reproducible. |
 | MW-0617 | Create approved GitHub governance records | PHASE 7; PILLAR 12 §12.4 | MW-0613, MW-0614, MW-0616 | Blocked by ratification | Only after owner approval, create agreed labels, task-linked Issues, Project fields, and milestone records; verify each external record maps to exactly one TODO task and no duplicate scope exists. |
+| MW-0618 | Retire the legacy master prompt after requirement migration | PILLAR 12 §12.1–12.2; D30 | MW-0601, MW-0612, MW-0616 | Done | All 1,891 source statements are preserved in D30 with one canonical document and task link; implementation status is triaged separately (369 GAP, 267 PARTIAL, 1,255 UNKNOWN; none UNVERIFIED), not certified; both catalog-backed gates and their prompt-free regression tests pass; no live authority or tooling reads the retired file. |
 
 #### PHASE 8 — Single Application Foundation
 
@@ -235,7 +254,7 @@ The canonical owner for each goal/task in these tables is `bjo163`; an agent may
 
 ## 3. Acceptance criteria summary
 
-### Production-ready gates (per `masterprompt.md` §3040):
+### Production-ready gates (tracked by D30 and the release specifications):
 
 1. **Planning baseline ratified.** All D01–D31 deliverables reviewed and approved by owner.
 2. **Branch protection complete and consistent.** Required protection is enforced on the active development branch and release branch; verify branch rules, required checks and review policy against the actual repository before marking this gate complete. The 2026-11-01 snapshot is uneven (see §1).
@@ -258,7 +277,7 @@ The canonical owner for each goal/task in these tables is `bjo163`; an agent may
 
 | Category | Status |
 |---|---|
-| **Phase 1** | Reconciliation **register** complete, reconciliation **decided** not: all 53 discrepancy entries (R-01–R-53, count printed as `RECON_ENTRIES` by `prompt_coverage_gate.py`) carry file/line/bridge/evidence rows with exact SHAs, and 18 of them still block ratification |
+| **Phase 1** | Reconciliation **register** complete, reconciliation **decided** not: all 53 discrepancy entries (R-01–R-53) carry file/line/bridge/evidence rows with exact SHAs, and 18 of them still block ratification |
 | **Phase 1 — repository census (D02)** | **CENSUS COMPLETE**: 92 individually SHA-pinned rows = 90 filter-matched candidates (84 with a commit, 6 verified empty) + 2 carried rows; produced by the three-source union census (search + user listing + org listing) after the fork-exclusion and org-vs-user defects were found; coverage and SHA freshness enforced by `docs/audit/tools/repository_census_gate.py`, currently green (`GATE: PASS`) with one documented moving-tip exemption |
 | **Phase 1 — capability mapping (D02/D08)** | **MAPPING COMPLETE**: every one of the 102 matrix rows (92 repositories + 10 XV component slices) has a target canonical owner in the estate-wide roll-up, enforced by the same gate (`ROLLUP_COVERAGE 102 of 102`); 38 rows resolve to `NONE` (empty, independent, excluded or illegal to depend on), 3 to `MULTIPLE`, 2 stay `TBD` for want of an inventory, and the roll-up surfaced two new owner decisions (R-43 single-owner capacity, R-44 material with no ratified domain) |
 | **Prompt PHASE 0** | Repository census and capability map are documented; complete GitHub/org/team permissions inventory and code-level implementation audit remain pending |
@@ -269,6 +288,12 @@ The canonical owner for each goal/task in these tables is `bjo163`; an agent may
 | **Prompt PHASE 5** | Master design and I18N specs exist; visual identity system, design-token inventory, UI conformance, and owner ratification remain open |
 | **Prompt PHASE 6** | Security, infrastructure, quality, migration, and release specs exist; tenant model, performance targets, current CI, and recovery evidence remain open |
 | **Prompt PHASE 7** | TODO is the sole task register; task dependency, label, issue/project/milestone mapping, and phase-number reconciliation are now explicit goals |
+
+### Developer tooling — canonical project task tracker
+
+| ID | Goal | Master-prompt mapping | Depends on | Status | Acceptance criterion |
+|---|---|---|---|---|---|
+| MW-1209 | Add mandatory task-tracker workflow and a local status editor | D26 — Master TODO with Microtasks | — | Implemented; focused tests and browser verification pass | A mandatory repository skill maps every coding task to the canonical register; a Python stdlib localhost-only UI safely edits task state, preserves custom status labels, records known completion times, and regenerates TODO.md; focused tests and tracker gates pass. |
 | **Prompt PHASE 8** | Partial foundation exists in-workspace; all 14 foundation outcomes are separate blocked tasks pending ratification and implementation audit |
 | **Prompt PHASE 9** | First source-to-publication slice is not verified; five lifecycle goals are defined and blocked on rights, product decisions, and foundation gates |
 | **Prompt PHASE 10** | Domain expansion is not verified; approved domains must receive separate tasks and pass addon-specific DoD |
@@ -294,10 +319,10 @@ The canonical owner for each goal/task in these tables is `bjo163`; an agent may
 6. **Rule on the broken supersession pointer** — `ecosystem-foundation` declares LEGACY and mandates `universe-foundation`, which now redirects to `universal-ontology-engine` (R-38).
 7. **State whether `bjo163/ArsyBelovedLabs` (the account-local repository, not the organization) is a plan of record** — it carries competing `FINAL-ADR-RATIFICATION-V1` / `FINAL-MIGRATION-MATRIX` / `ARCHITECTURE-TRUTH-MATRIX` documents (R-39).
 8. **Confirm disposition of the third-party code inside the account** — `surealdb-rebrand-mwdb` is a SurrealDB fork under BSL 1.1 whose grant forbids use "as a Database Service", and `mooncripsy` is an unlinked copy of an external CDP assistant agent that is **still being developed in this account** (tip `bf580cb…`; its second commit (07:45:06Z) added a `PRODUCT.md` that protects its "no API key / no MCP / no tunnel" positioning as a product commitment and its third (08:09:06Z) rewrote the desktop UI under an automated design agent); both are currently excluded from migration, `rocksoul-mind` stays an upstream MiniMind reference (R-40, R-41).
-9. **Accept that ratification is SHA-bound** — `bjo163/moonwitness-reborn` `main` kept advancing through the whole audit (twelve tips by 08:29Z, `7d801c3…`, `validate` **green**), then the commits this workspace held locally were merged through PR #1 and PR #2 and cut as tag and release `v0.1.0` at `4fdb7c7…`, with classic `main` protection (required `validate`, `enforce_admins`) switched on — all of it by another session, while this audit's planning documents were, at that reading, still sitting outside git (they are committed now; blocker 11 names the SHAs). Whether this workspace sits ahead of or behind `origin/main` changes within minutes, so `prompt_coverage_gate.py` prints the branch, its upstream, the unpushed count, tracked-modified files, HEAD, `origin/main` and both counts every run and no sentence carries them — reading "ahead of `origin/main`" as "unpushed" was itself an error this audit made and corrected, because a checkout on `dev` is ahead of `main` by every `dev` commit. The open decision is stabilization: ratification must name a commit, and that commit must then be held, or every ratified plan expires on the next merge (R-42).
+9. **Accept that ratification is SHA-bound** — `bjo163/moonwitness-reborn` `main` kept advancing through the whole audit (twelve tips by 08:29Z, `7d801c3…`, `validate` **green**), then the commits this workspace held locally were merged through PR #1 and PR #2 and cut as tag and release `v0.1.0` at `4fdb7c7…`, with classic `main` protection (required `validate`, `enforce_admins`) switched on — all of it by another session, while this audit's planning documents were, at that reading, still sitting outside git (they are committed now; blocker 11 names the SHAs). Whether this workspace sits ahead of or behind `origin/main` changes within minutes; the governance gates report branch/upstream and commit evidence. Reading "ahead of `origin/main`" as "unpushed" was itself an error this audit made and corrected, because a checkout on `dev` is ahead of `main` by every `dev` commit. The open decision is stabilization: ratification must name a commit, and that commit must then be held, or every ratified plan expires on the next merge (R-42).
 10. **Ratify the single-owner capacity rule** — the estate-wide roll-up maps 7 design-system sources, 2 contract sources, 10 separate web surfaces and 4 worker/API designs onto slots that `AGENTS.md` allows exactly once each; adopting from any of them means absorbing into `@moonwitness/ui` / `@moonwitness/moonclient` / one `apps/web`, never adding a second package or shell (R-43).
-11. **Ratify the baseline at a named commit** — the documents are now in git: `8016edc…` on `dev` carries `BLUEPRINT.md`, `MASTER_DESIGN.md`, every register document path except the three under `docs/data/`, and the two gate scripts (29 files, +3454/−114), and its child `85feec0…` unblocked those three, which `.gitignore` line 9 (`data/`, unanchored) had made un-committable (R-53). `prompt_coverage_gate.py` measures against HEAD, so the child commit is what makes it read `0 not in HEAD` — staging alone used to print zero, which is why the earlier claim "26 of 29 untracked — an owner decision" was partly a tooling defect and partly a flattering instrument, not a refusal. What is left is the owner's accept/amend decision against a named commit and the stabilization that decision requires (R-49/R-42).
-12. **Reconcile phase meanings** — TODO now has headings for all prompt PHASE 0–12, and Cloudflare is a separate MW-0500 workstream. However, the older task-lane meanings for PHASE 3–11 still do not align with the prompt's architecture/data/design/governance/build sequence. Approve a single mapping before GitHub milestones are created (R-45; MW-0615).
+11. **Ratify the baseline at a named commit** — the documents are now in git: `8016edc…` on `dev` carries `BLUEPRINT.md`, `MASTER_DESIGN.md`, every register document path except the three under `docs/data/`, and the two gate scripts (29 files, +3454/−114), and its child `85feec0…` unblocked those three, which `.gitignore` line 9 (`data/`, unanchored) had made un-committable (R-53). The coverage gate measures against HEAD, so the child commit is what makes it read `0 not in HEAD` — staging alone used to print zero, which is why the earlier claim "26 of 29 untracked — an owner decision" was partly a tooling defect and partly a flattering instrument, not a refusal. What is left is the owner's accept/amend decision against a named commit and the stabilization that decision requires (R-49/R-42).
+12. **Reconcile phase meanings** — TODO now has headings for all catalog PHASE 0–12, and Cloudflare is a separate MW-0500 workstream. However, the older task-lane meanings for PHASE 3–11 still do not align with the catalog's architecture/data/design/governance/build sequence. Approve a single mapping before GitHub milestones are created (R-45; MW-0615).
 13. **Decide what "per domain" means for §4.4** — the twenty contract attributes are currently covered by estate-wide rules plus this registry, not by a written contract per domain; attribute 13 (events and notifications) is defined nowhere. Choose between defaults-plus-addon-manifests and one contract block per domain (R-46).
 14. **Ratify the six §4.3 domains added by the coverage pass** — `ql_evidence`, `ql_law`, `ql_creative`, `ql_publication`, `ql_search` and `ql_ops`, plus the three owner narrowings that came with them (evidence records out of `ql_research`, publication records out of `ql_workflow`, creative production out of `ql_story`). Then rule on whether `rocksoul-aws`'s LAW corpus enters scope as an import candidate and whether the two `TBD` private repositories (`moonwitness-xiv`, `bjo163/mw-core`) justify a commissioned inventory (R-44).
 15. **Rule on the five §4.3 domains with no estate material** — `ql_creative`, `ql_journey`, `ql_org`, `ql_person` and `ql_search` receive zero mapped rows from the 102-row roll-up, so they are required by the prompt but nothing in the estate feeds them; decide whether each is in-scope-by-design or a placeholder owner (R-48).
@@ -309,4 +334,4 @@ The canonical owner for each goal/task in these tables is `bjo163`; an agent may
 
 **Gate:** No production feature coding, external issue creation, push, branch policy change, or migration begins until the owner reviews and ratifies the planning baseline. `PENDING` means no evidence has been established; it must not be presented as complete.
 
-**Owner:** `bjo163` — per workspace `AGENTS.md` and `masterprompt.md` §1.4 Product North Star.
+**Owner:** `bjo163` — per workspace `AGENTS.md` and the A-L-L-A-H.COM Official Canon.
