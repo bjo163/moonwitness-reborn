@@ -1,0 +1,79 @@
+# Roundcube webmail untuk Stalwart (Coolify generic service).
+#
+# Dipaste ke Coolify -> New Service -> Generic (docker_compose_raw), bukan dipakai
+# dengan `docker compose up` di mesin ini. Terpisah dari service mail
+# (docker-compose.stalwart.yml) supaya webmail bisa di-restart tanpa memutus SMTP/IMAP.
+#
+# Kenapa Roundcube, bukan webmail bawaan Stalwart: Stalwart v1 tidak mengirim webmail;
+# UI adminnya (mail-admin.apps.mycocolink.com) untuk mengelola server, bukan untuk baca
+# surat. Roundcube bicara IMAP/SMTP biasa ke 993/465 yang sudah dibuka Stalwart, jadi
+# tidak ada integrasi khusus yang perlu dirawat.
+#
+# Routing: container tidak mem-publish port ke host. Traefik milik Coolify memegang
+# 80/443 dan menjangkau container lewat network aplikasi, jadi akses diarahkan lewat
+# label di bawah. Compose ini sengaja tidak mendeklarasikan `networks:`.
+#
+# Semua setting ditulis lewat environment ROUNDCUBEMAIL_* bawaan image, bukan lewat
+# berkas config.php yang disuntik: content inline di blok `configs:` rusak saat Coolify
+# menulis compose hasil parse (PHP read error di baris 4), sedangkan image ini sudah
+# membaca host/port IMAP dan SMTP dari environment.
+#
+# des_key Roundcube dibaca image dari environment ROUNDCUBEMAIL_DES_KEY, jadi sesi login
+# dan opsi "keep me signed in" bertahan lewat redeploy. Tanpa env itu image men-generate
+# des_key baru tiap container, akibatnya semua sesi gugur setiap deploy.
+#
+# Kredensial mailbox tidak disimpan di file ini maupun di Coolify: smtp_user/smtp_pass
+# = %u/%p diteruskan apa adanya ke Stalwart saat login, jadi password surat hanya ada di
+# RocksDB Stalwart.
+name: webmail
+
+services:
+  webmail:
+    image: roundcube/roundcubemail:1.7.5-apache
+    restart: unless-stopped
+    init: true
+    environment:
+      TZ: Asia/Jakarta
+      # SQLite di dalam volume: satu webmail tidak butuh service database tambahan.
+      ROUNDCUBEMAIL_DB_TYPE: sqlite
+      ROUNDCUBEMAIL_DEFAULT_HOST: ssl://mail.moonwitness.biz.id
+      ROUNDCUBEMAIL_DEFAULT_PORT: "993"
+      ROUNDCUBEMAIL_SMTP_SERVER: ssl://mail.moonwitness.biz.id
+      ROUNDCUBEMAIL_SMTP_PORT: "465"
+      # USERNAME_DOMAIN sengaja tidak diisi: login memakai alamat email lengkap supaya
+      # mailbox moonwitness.biz.id dan a-l-l-a-h.com bisa lewat satu webmail.
+      # PLUGINS sengaja tidak diisi. Image 1.7 tidak membundel plugin `zip`; begitu
+      # ROUNDCUBEMAIL_PLUGINS=zip dipasang, tiap request mati di
+      # "Failed to load plugin file /var/www/html/plugins/zip/zip.php" dan halaman login
+      # hanya menampilkan ulang formnya tanpa pesan error.
+      ROUNDCUBEMAIL_SKIN: elastic
+      # Image menuliskan des_key dari environment ini kalau terisi; kalau kosong ia
+      # meng-generate sendiri tiap container baru (semua sesi logout). Nilainya ada di
+      # environment Coolify, bukan di repo.
+      ROUNDCUBEMAIL_DES_KEY: ${ROUNDCUBEMAIL_DES_KEY:-}
+    volumes:
+      - webmail_db:/var/roundcube/db
+      - webmail_temp:/tmp/roundcube-temp
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/') === false ? 1 : 0);"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.webmail-http.rule=Host(`webmail.moonwitness.biz.id`)
+      - traefik.http.routers.webmail-http.entrypoints=http
+      - traefik.http.routers.webmail-http.middlewares=webmail-redirect
+      - traefik.http.middlewares.webmail-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.webmail-https.rule=Host(`webmail.moonwitness.biz.id`)
+      - traefik.http.routers.webmail-https.entrypoints=https
+      - traefik.http.routers.webmail-https.tls=true
+      - traefik.http.routers.webmail-https.tls.certresolver=letsencrypt
+      - traefik.http.services.webmail.loadbalancer.server.port=80
+
+volumes:
+  webmail_db:
+  webmail_temp:

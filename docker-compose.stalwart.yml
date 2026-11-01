@@ -1,0 +1,68 @@
+# Stalwart mail server (Coolify generic service).
+#
+# Dipaste ke Coolify -> New Service -> Generic (docker_compose_raw), bukan dipakai
+# dengan `docker compose up` di mesin ini. Compose ini bukan bagian dari stack api+web
+# (docker-compose.coolify.yml) supaya restart aplikasi tidak ikut merestart mail server.
+#
+# Batas jaringan di host 163.61.134.104:
+# - Traefik milik Coolify sudah memegang 80/443/8080, jadi Stalwart tidak boleh bind 443.
+#   Akibatnya ACME TLS-ALPN-01 / HTTP-01 tidak bisa dipakai; sertifikat untuk SMTP/IMAP
+#   diambil lewat DNS-01 di zone Cloudflare yang kita kendalikan.
+# - Port 25/465/587/993/995/4190 dipublish langsung ke host. Traefik tidak menangani
+#   protokol SMTP/IMAP, jadi jalur ini memang harus di luar proxy.
+# - Admin/UI (8080) TIDAK dipublish ke host: port 8080 di blok firewall VPS dan sudah
+#   dipakai dashboard Traefik. UI dijangkau lewat domain Coolify (*.apps.mycocolink.com)
+#   yang sudah punya sertifikat Let's Encrypt, jadi login admin tidak lewat HTTP polos.
+#
+# Dua secret diisi lewat environment Coolify, bukan dari file ini:
+# - STALWART_ADMIN_PASSWORD: kredensial management API (Basic auth admin) dan satu-satunya
+#   password yang ada sebelum ada akun. Setup sekarang dilakukan lewat stalwart-cli dengan
+#   kredensial ini, jadi password-nya harus dianggap rahasia jangka panjang.
+# - CLOUDFLARE_API_TOKEN: dibaca langsung oleh Stalwart lewat objek DnsServer/Cloudflare
+#   (SecretKey = EnvironmentVariable), dipakai untuk DNS-01 ACME dan untuk menerbitkan
+#   record DKIM/SPF/MX otomatis. Token ini hanya punya akses Zone->DNS->Edit pada
+#   moonwitness.biz.id; zone lain (a-l-l-a-h.com) tidak bisa dikelola dari sini.
+#
+# Kenapa config.json harus ada: Stalwart masuk bootstrap mode setiap kali file yang
+# ditunjuk CONFIG_PATH tidak ditemukan, dan bootstrap mode hanya membuka listener
+# http-recovery (tanpa SMTP/IMAP sama sekali). Setup wizard bootstrap juga tidak bisa
+# dipakai lewat reverse proxy karena Stalwart menolak OAuth client metadata documents.
+# config.json di bawah hanya berisi lokasi datastore; seluruh setting lainnya ditulis
+# ke dalam RocksDB lewat management API, jadi file ini tidak perlu sering berubah.
+name: stalwart
+
+services:
+  stalwart:
+    image: stalwartlabs/stalwart:v1
+    restart: unless-stopped
+    init: true
+    environment:
+      TZ: Asia/Jakarta
+      CONFIG_PATH: /etc/stalwart/config.json
+      STALWART_RECOVERY_ADMIN: admin:${STALWART_ADMIN_PASSWORD}
+      # OAuth webui menolak client metadata dokumen kalau UI diakses lewat domain proxy
+      # (Traefik) yang bukan hostname Stalwart sendiri: "Client metadata documents are
+      # disabled". URL publik ini yang dipakai dokumen discovery, jadi harus sama persis
+      # dengan domain Coolify yang menunjuk ke container port 8080.
+      STALWART_PUBLIC_URL: https://mail-admin.apps.mycocolink.com
+    configs:
+      - source: stalwart_config
+        target: /etc/stalwart/config.json
+    ports:
+      - "25:25"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "995:995"
+      - "4190:4190"
+    volumes:
+      - stalwart_etc:/etc/stalwart
+      - stalwart_data:/var/lib/stalwart
+
+configs:
+  stalwart_config:
+    content: '{"@type":"RocksDb","path":"/var/lib/stalwart/"}'
+
+volumes:
+  stalwart_etc:
+  stalwart_data:
