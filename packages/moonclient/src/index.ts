@@ -393,7 +393,9 @@ export class MoonClient {
 
   constructor(options: MoonClientOptions = {}) {
     this.baseUrl = (options.baseUrl ?? "/api").replace(/\/+$/, "");
-    this.fetcher = options.fetcher ?? fetch;
+    // Menyimpan global fetch sebagai properti membuat panggilan this.fetcher()
+    // berjalan dengan this = klien, dan browser menolaknya dengan "Illegal invocation".
+    this.fetcher = options.fetcher ?? ((input, init) => globalThis.fetch(input, init));
   }
 
   currentUser(): Promise<AuthResponseDto> {
