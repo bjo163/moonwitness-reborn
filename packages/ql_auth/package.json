@@ -1,0 +1,22 @@
+{
+  "name": "ql_auth",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./__manifest__": {
+      "types": "./dist/__manifest__.d.ts",
+      "import": "./dist/__manifest__.js"
+    },
+    "./models": {
+      "types": "./dist/models/index.d.ts",
+      "import": "./dist/models/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "ql_orm": "workspace:*"
+  }
+}

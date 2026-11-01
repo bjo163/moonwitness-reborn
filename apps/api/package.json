@@ -1,0 +1,22 @@
+{
+  "name": "@moonwitness/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "test": "tsx --test src/http/server.test.ts src/ai/model-config.test.ts src/ai/model-router.test.ts src/ai/provider-secrets.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@moonwitness/agent-runtime": "workspace:*",
+    "@moonwitness/moonclient": "workspace:*",
+    "@moonwitness/database": "workspace:*",
+    "dotenv": "catalog:",
+    "ql_ai": "workspace:*",
+    "ql_auth": "workspace:*",
+    "ql_base": "workspace:*",
+    "ql_chat": "workspace:*",
+    "ql_orm": "workspace:*"
+  }
+}
