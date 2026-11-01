@@ -37,6 +37,9 @@ services:
       DATABASE_URL: ${DATABASE_URL:-file:/app/data/moonwitness.db}
       # Kunci enkripsi credential provider untuk development lokal. Ganti di produksi.
       PROVIDER_ENCRYPTION_KEY: ${PROVIDER_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
+      # Opsional: keduanya wajib terisi agar klaim super_admin saat registrasi berlaku. Cabut setelah dipakai.
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_TOKEN: ${BOOTSTRAP_ADMIN_TOKEN:-}
     ports:
       - "127.0.0.1:3000:3000"
     volumes:

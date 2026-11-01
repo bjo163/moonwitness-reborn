@@ -1,0 +1,32 @@
+import type { QlAddonManifest } from "ql_orm";
+import { models } from "./models/index.js";
+import { views } from "./views/index.js";
+
+const manifest: QlAddonManifest = {
+  name: "ql_cloudflare",
+  version: "1.0.0",
+  description: "Transport Cloudflare Zones dan DNS records beserta mirror-nya.",
+  depends: ["ql_base", "ql_auth", "ql_integration"],
+  models,
+  access: [
+    {
+      model: "cloudflare.zone",
+      group: "user",
+      read: true,
+      write: false,
+      create: false,
+      unlink: false,
+    },
+    {
+      model: "cloudflare.record",
+      group: "user",
+      read: true,
+      write: false,
+      create: false,
+      unlink: false,
+    },
+  ],
+  views,
+};
+
+export default manifest;

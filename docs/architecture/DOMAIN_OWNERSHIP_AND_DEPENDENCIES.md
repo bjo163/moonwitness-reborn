@@ -22,6 +22,8 @@
 | `ql_journey` | user/organization journey plan and accountable action records | References research/content; does not certify external outcomes |
 | `ql_ai` | provider config, model capabilities, prompt/tool policy and execution audit | Agent execution is not character canon; no silent canonical writes |
 | `ql_chat` | conversation/message records and retention policy | Not a research claim or canonical source record |
+| `ql_integration` | external-service connector registry (`integration.connector`) and the action audit trail (`integration.audit`); the kind catalog and its read-only flag | Never stores a service credential — no secret column, no token in any DTO; it does not know transport details of any provider |
+| `ql_cloudflare` | mirrored Cloudflare zones/records (`cloudflare.zone`, `cloudflare.record`), the API client, sync and DNS mutation rules | The mirror is a cache, not the authority (Cloudflare owns the real zone); it does not own the connector row, the credential, or the audit store |
 | `ql_media` (candidate) | media metadata and approved asset links | Binary storage may be external adapter; rights remain linked to `ql_source` |
 
 ## Dependency graph (proposed; arrows mean “depends on/reference contract”)
@@ -38,6 +40,8 @@ ql_event ──► ql_witness, ql_story, ql_research
 ql_mizan ──► ql_research (method/version reference)
 ql_research ──► ql_workflow, ql_journey, publication UX
 ql_workflow ──► publisher-facing experiences across domains
+ql_integration ──► ql_auth (owner scope + role groups); connector registry and audit only, no credential storage
+ql_cloudflare ──► ql_integration (connector scope), then the operator UI through moonclient routes
 ```
 
 The graph is a planning hypothesis. Avoid cyclic addon dependencies; cross-links should use IDs and stable contracts. Keep package dependencies explicit in manifests and API bootstrap as required by `AGENTS.md`.
@@ -95,6 +99,8 @@ ql_event ──► ql_witness, ql_story, ql_research
 ql_mizan ──► ql_research (method/version reference)
 ql_research ──► ql_workflow, ql_journey, publication UX
 ql_workflow ──► publisher-facing experiences across domains
+ql_integration ──► ql_auth (owner scope + role groups); connector registry and audit only, no credential storage
+ql_cloudflare ──► ql_integration (connector scope), then the operator UI through moonclient routes
 ```
 
 The graph is a planning hypothesis. Avoid cyclic addon dependencies; cross-links should use IDs and stable contracts. Keep package dependencies explicit in manifests and API bootstrap as required by `AGENTS.md`.

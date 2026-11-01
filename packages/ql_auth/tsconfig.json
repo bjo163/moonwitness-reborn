@@ -5,5 +5,5 @@
     "outDir": "dist",
     "types": ["node"]
   },
-  "include": ["__manifest__.ts", "models/**/*.ts"]
+  "include": ["__manifest__.ts", "models/**/*.ts", "services/**/*.ts"]
 }

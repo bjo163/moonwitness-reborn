@@ -10,6 +10,10 @@
     "./models": {
       "types": "./dist/models/index.d.ts",
       "import": "./dist/models/index.js"
+    },
+    "./services/rbac": {
+      "types": "./dist/services/rbac.d.ts",
+      "import": "./dist/services/rbac.js"
     }
   },
   "scripts": {

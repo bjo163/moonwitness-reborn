@@ -2,6 +2,7 @@ export { Badge, type BadgeProps } from "./atoms/badge.js";
 export { Button, type ButtonProps } from "./atoms/button.js";
 export { Checkbox } from "./atoms/checkbox.js";
 export { Input } from "./atoms/input.js";
+export { Select } from "./atoms/select.js";
 export { Textarea } from "./atoms/textarea.js";
 export { FormField, type FormFieldProps } from "./blocks/form-field.js";
 export { Alert, type AlertProps } from "./components/alert.js";

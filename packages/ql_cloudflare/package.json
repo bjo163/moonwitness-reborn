@@ -1,0 +1,48 @@
+{
+  "name": "ql_cloudflare",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./__manifest__": {
+      "types": "./dist/__manifest__.d.ts",
+      "import": "./dist/__manifest__.js"
+    },
+    "./models": {
+      "types": "./dist/models/index.d.ts",
+      "import": "./dist/models/index.js"
+    },
+    "./views": {
+      "types": "./dist/views/index.d.ts",
+      "import": "./dist/views/index.js"
+    },
+    "./services/cloudflare-client": {
+      "types": "./dist/services/cloudflare-client.d.ts",
+      "import": "./dist/services/cloudflare-client.js"
+    },
+    "./services/errors": {
+      "types": "./dist/services/errors.d.ts",
+      "import": "./dist/services/errors.js"
+    },
+    "./services/mutation-service": {
+      "types": "./dist/services/mutation-service.d.ts",
+      "import": "./dist/services/mutation-service.js"
+    },
+    "./services/record-types": {
+      "types": "./dist/services/record-types.d.ts",
+      "import": "./dist/services/record-types.js"
+    },
+    "./services/sync-service": {
+      "types": "./dist/services/sync-service.d.ts",
+      "import": "./dist/services/sync-service.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsx --test models/index.test.ts services/cloudflare-client.test.ts services/record-types.test.ts services/sync-service.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "ql_integration": "workspace:*",
+    "ql_orm": "workspace:*"
+  }
+}

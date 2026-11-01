@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
-    "test": "tsx --test src/http/server.test.ts src/ai/model-config.test.ts src/ai/model-router.test.ts src/ai/provider-secrets.test.ts src/mail/mail-config.test.ts src/mail/mail-templates.test.ts src/mail/mailer.test.ts",
+    "test": "tsx --test src/connectors/os-credential-store.test.ts src/http/server.test.ts src/http/connectors.test.ts src/ai/model-config.test.ts src/ai/model-router.test.ts src/ai/provider-secrets.test.ts src/mail/mail-config.test.ts src/mail/mail-templates.test.ts src/mail/mailer.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
@@ -18,6 +18,8 @@
     "ql_auth": "workspace:*",
     "ql_base": "workspace:*",
     "ql_chat": "workspace:*",
+    "ql_cloudflare": "workspace:*",
+    "ql_integration": "workspace:*",
     "ql_orm": "workspace:*"
   }
 }

@@ -24,6 +24,22 @@ const manifest: QlAddonManifest = {
       create: true,
       unlink: true,
     },
+    {
+      model: "res.role",
+      group: "admin",
+      read: true,
+      write: false,
+      create: false,
+      unlink: false,
+    },
+    {
+      model: "res.role",
+      group: "root",
+      read: true,
+      write: true,
+      create: true,
+      unlink: false,
+    },
   ],
   views: [
     {
@@ -31,6 +47,18 @@ const manifest: QlAddonManifest = {
       model: "res.users",
       type: "list",
       fields: ["name", "email", "active"],
+    },
+    {
+      name: "res.role.list",
+      model: "res.role",
+      type: "list",
+      fields: ["code", "name", "description", "assignable"],
+    },
+    {
+      name: "res.role.form",
+      model: "res.role",
+      type: "form",
+      fields: ["code", "name", "description", "groups", "assignable"],
     },
   ],
 };

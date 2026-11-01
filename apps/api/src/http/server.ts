@@ -39,6 +39,18 @@ import {
   ProviderConfigurationError,
 } from "ql_ai/services/provider-config";
 import {
+  CloudflareApiError,
+  CloudflareNetworkError,
+  CloudflareRateLimitError,
+} from "ql_cloudflare/services/errors";
+import {
+  RecordValidationError,
+} from "ql_cloudflare/services/mutation-service";
+import {
+  ConnectorUnavailableError,
+  SyncCooldownError,
+} from "ql_cloudflare/services/sync-service";
+import {
   ROLE_CATALOG,
   countUsersWithRole,
   findRoleDefinition,
@@ -49,6 +61,27 @@ import {
   shouldGrantSuperAdmin,
   type BootstrapAdminSettings,
 } from "../auth/bootstrap.js";
+import { ConnectorAccessError } from "../connectors/connector-boundary.js";
+import {
+  ConnectorCredentialError,
+  resolveCloudflareToken,
+  type ResolvedCredential,
+} from "../connectors/os-credential-store.js";
+import {
+  createConnector,
+  createConnectorRecord,
+  deleteConnector,
+  deleteConnectorRecord,
+  listConnectorAudit,
+  listConnectorRecords,
+  listConnectorZones,
+  listConnectors,
+  syncConnectorNow,
+  updateConnector,
+  updateConnectorRecord,
+  verifyConnector,
+  type ConnectorContext,
+} from "../connectors/connector-operations.js";
 import {
   AuthenticationError,
   clearSession,
@@ -173,9 +206,14 @@ function sendJson(
   response: ServerResponse,
   statusCode: number,
   body: object,
+  headers: Record<string, string> = {},
 ) {
-  response.writeHead(statusCode, { "content-type": "application/json" });
+  response.writeHead(statusCode, { "content-type": "application/json", ...headers });
   response.end(JSON.stringify(body));
+}
+
+function retryAfterHeaders(retryAfterMs: number): Record<string, string> {
+  return { "retry-after": String(Math.max(1, Math.ceil(retryAfterMs / 1000))) };
 }
 
 function handleRequestError(
@@ -190,6 +228,10 @@ function handleRequestError(
     sendJson(response, 403, { error: "Access denied." });
     return;
   }
+  if (error instanceof ConnectorAccessError) {
+    sendJson(response, 403, { error: error.message });
+    return;
+  }
   if (error instanceof QlConflictError) {
     sendJson(response, 409, { error: error.message });
     return;
@@ -200,6 +242,30 @@ function handleRequestError(
   }
   if (error instanceof QlValidationError) {
     sendJson(response, 400, { error: error.message });
+    return;
+  }
+  if (error instanceof ConnectorUnavailableError || error instanceof RecordValidationError) {
+    sendJson(response, 400, { error: error.message });
+    return;
+  }
+  if (error instanceof CloudflareRateLimitError || error instanceof SyncCooldownError) {
+    sendJson(
+      response,
+      429,
+      { error: error.message },
+      retryAfterHeaders(error.retryAfterMs),
+    );
+    return;
+  }
+  if (error instanceof CloudflareApiError) {
+    sendJson(response, 502, { error: error.message });
+    return;
+  }
+  if (
+    error instanceof CloudflareNetworkError ||
+    error instanceof ConnectorCredentialError
+  ) {
+    sendJson(response, 503, { error: error.message });
     return;
   }
   console.error("API request failed.", error);
@@ -388,6 +454,191 @@ function providerInput(
   };
 }
 
+interface ConnectorCredentials {
+  resolveToken: () => Promise<ResolvedCredential>;
+  fetcher: typeof fetch;
+}
+
+const connectorRoute = {
+  item: new RegExp(`^${apiRoutes.connectors.prefix}([^/]+)$`),
+  verify: new RegExp(`^${apiRoutes.connectors.prefix}([^/]+)/verify$`),
+  sync: new RegExp(`^${apiRoutes.connectors.prefix}([^/]+)/sync$`),
+  zones: new RegExp(`^${apiRoutes.connectors.prefix}([^/]+)/zones$`),
+  audit: new RegExp(`^${apiRoutes.connectors.prefix}([^/]+)/audit$`),
+  records: new RegExp(
+    `^${apiRoutes.connectors.prefix}([^/]+)/zones/([^/]+)/records$`,
+  ),
+  record: new RegExp(
+    `^${apiRoutes.connectors.prefix}([^/]+)/zones/([^/]+)/records/([^/]+)$`,
+  ),
+};
+
+function pathSegment(match: RegExpMatchArray, index: number): string {
+  return decodeURIComponent(match[index] ?? "");
+}
+
+async function jsonRequestBody(
+  request: IncomingMessage,
+): Promise<Record<string, unknown>> {
+  return parseObject(await readJsonBody(request));
+}
+
+/**
+ * Every connector route is owner-scoped: the id in the path is only honoured
+ * when the row belongs to the caller, so cross-user probes get a 404.
+ */
+async function handleConnectorRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+  user: User,
+  orm: QlOrm,
+  pathname: string,
+  credentials: ConnectorCredentials,
+): Promise<boolean> {
+  const ctx: ConnectorContext = { orm, ownerId: user.id, ...credentials };
+  const method = request.method ?? "GET";
+
+  if (pathname === apiRoutes.connectors.collection) {
+    if (method === "GET") {
+      sendJson(response, 200, await listConnectors(ctx));
+      return true;
+    }
+    if (method === "POST") {
+      requireGroup(user, "connector");
+      sendJson(response, 201, await createConnector(ctx, await jsonRequestBody(request)));
+      return true;
+    }
+    return false;
+  }
+
+  const verifyMatch = pathname.match(connectorRoute.verify);
+  if (verifyMatch && method === "POST") {
+    requireGroup(user, "connector");
+    sendJson(
+      response,
+      200,
+      await verifyConnector(ctx, pathSegment(verifyMatch, 1)),
+    );
+    return true;
+  }
+
+  const syncMatch = pathname.match(connectorRoute.sync);
+  if (syncMatch && method === "POST") {
+    requireGroup(user, "operator");
+    sendJson(response, 200, await syncConnectorNow(ctx, pathSegment(syncMatch, 1)));
+    return true;
+  }
+
+  const auditMatch = pathname.match(connectorRoute.audit);
+  if (auditMatch && method === "GET") {
+    sendJson(response, 200, await listConnectorAudit(ctx, pathSegment(auditMatch, 1)));
+    return true;
+  }
+
+  const zonesMatch = pathname.match(connectorRoute.zones);
+  if (zonesMatch && method === "GET") {
+    sendJson(response, 200, await listConnectorZones(ctx, pathSegment(zonesMatch, 1)));
+    return true;
+  }
+
+  const recordsMatch = pathname.match(connectorRoute.records);
+  if (recordsMatch) {
+    const connectorId = pathSegment(recordsMatch, 1);
+    const zoneId = pathSegment(recordsMatch, 2);
+    if (method === "GET") {
+      const query = new URL(request.url ?? "/", "http://localhost").searchParams;
+      sendJson(
+        response,
+        200,
+        await listConnectorRecords(ctx, connectorId, zoneId, {
+          name: query.get("name"),
+          type: query.get("type"),
+        }),
+      );
+      return true;
+    }
+    if (method === "POST") {
+      requireGroup(user, "operator");
+      sendJson(
+        response,
+        201,
+        await createConnectorRecord(
+          ctx,
+          connectorId,
+          zoneId,
+          await jsonRequestBody(request),
+        ),
+      );
+      return true;
+    }
+    return false;
+  }
+
+  const recordMatch = pathname.match(connectorRoute.record);
+  if (recordMatch) {
+    const connectorId = pathSegment(recordMatch, 1);
+    const zoneId = pathSegment(recordMatch, 2);
+    const recordId = pathSegment(recordMatch, 3);
+    if (method === "PATCH") {
+      requireGroup(user, "operator");
+      sendJson(
+        response,
+        200,
+        await updateConnectorRecord(
+          ctx,
+          connectorId,
+          zoneId,
+          recordId,
+          await jsonRequestBody(request),
+        ),
+      );
+      return true;
+    }
+    if (method === "DELETE") {
+      requireGroup(user, "operator");
+      sendJson(
+        response,
+        200,
+        await deleteConnectorRecord(
+          ctx,
+          connectorId,
+          zoneId,
+          recordId,
+          await jsonRequestBody(request),
+        ),
+      );
+      return true;
+    }
+    return false;
+  }
+
+  const itemMatch = pathname.match(connectorRoute.item);
+  if (itemMatch) {
+    const connectorId = pathSegment(itemMatch, 1);
+    if (method === "PUT") {
+      requireGroup(user, "connector");
+      sendJson(
+        response,
+        200,
+        await updateConnector(ctx, connectorId, await jsonRequestBody(request)),
+      );
+      return true;
+    }
+    if (method === "DELETE") {
+      requireGroup(user, "connector");
+      sendJson(
+        response,
+        200,
+        await deleteConnector(ctx, connectorId, await jsonRequestBody(request)),
+      );
+      return true;
+    }
+    return false;
+  }
+
+  return false;
+}
+
 export function createApiServer(
   provider: ModelProvider | undefined,
   store: ConversationStore,
@@ -398,8 +649,15 @@ export function createApiServer(
     bootstrapAdmin?: BootstrapAdminSettings;
     mail?: MailSender;
     appBaseUrl?: string;
+    resolveConnectorToken?: () => Promise<ResolvedCredential>;
+    cloudflareFetcher?: typeof fetch;
   } = {},
 ) {
+  const connectorCredentials: ConnectorCredentials = {
+    resolveToken: options.resolveConnectorToken ?? (() => resolveCloudflareToken()),
+    fetcher: options.cloudflareFetcher ?? globalThis.fetch,
+  };
+
   async function handleApiRequest(
     request: IncomingMessage,
     response: ServerResponse,
@@ -738,6 +996,30 @@ export function createApiServer(
         return;
       }
       sendJson(response, 405, { error: "Method not allowed." });
+      return;
+    }
+
+    if (
+      pathname === apiRoutes.connectors.collection ||
+      pathname.startsWith(apiRoutes.connectors.prefix)
+    ) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        const handled = await handleConnectorRequest(
+          request,
+          response,
+          user,
+          orm,
+          pathname,
+          connectorCredentials,
+        );
+        if (!handled) {
+          sendJson(response, 405, { error: "Method not allowed." });
+        }
+      } catch (error) {
+        handleRequestError(response, error);
+      }
       return;
     }
 

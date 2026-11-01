@@ -87,6 +87,7 @@
 
 .ql-button:focus-visible,
 .ql-input:focus-visible,
+.ql-select:focus-visible,
 .ql-textarea:focus-visible {
   outline: 2px solid var(--ql-ui-acid);
   outline-offset: 3px;
@@ -98,6 +99,7 @@
 }
 
 .ql-input,
+.ql-select,
 .ql-textarea {
   width: 100%;
   border: 1px solid var(--ql-ui-border);
@@ -110,9 +112,22 @@
     box-shadow 150ms ease;
 }
 
-.ql-input {
+.ql-input,
+.ql-select {
   min-height: 2.85rem;
   padding: 0 0.85rem;
+}
+
+.ql-select {
+  appearance: none;
+  padding-right: 2.4rem;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ql-ui-muted) 50%),
+    linear-gradient(135deg, var(--ql-ui-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.15rem) calc(50% + 1px),
+    calc(100% - 0.72rem) calc(50% + 1px);
+  background-size: 0.44rem 0.44rem;
+  background-repeat: no-repeat;
 }
 
 .ql-textarea {
@@ -140,6 +155,7 @@
 }
 
 .ql-input:focus,
+.ql-select:focus,
 .ql-textarea:focus {
   border-color: var(--ql-ui-acid-dark);
   box-shadow: inset 3px 0 0 var(--ql-ui-acid);

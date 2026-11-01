@@ -170,6 +170,150 @@ export interface UpdateUserRoleRequestDto {
   role: string;
 }
 
+export type ConnectorTokenSource = "unresolved" | "env" | "keychain" | "config_file";
+export type ConnectorVerifyStatus = "unverified" | "ok" | "invalid" | "network" | "missing";
+
+export interface ConnectorKindDto {
+  kind: string;
+  label: string;
+  /** Where the app looks for this service's credential; displayed, never submitted. */
+  credentialHelp: string;
+  helpUrl: string;
+  capabilities: string[];
+  readonly: boolean;
+  recordTypes?: string[];
+  /** Record types the service can proxy; drives the UI before a write is refused. */
+  proxiableTypes?: string[];
+}
+
+/**
+ * There is deliberately no token field anywhere in this contract: credentials
+ * stay in the OS store and are resolved server-side per request.
+ */
+export interface ConnectorDto {
+  id: string;
+  kind: string;
+  label: string;
+  tokenSource: ConnectorTokenSource;
+  tokenRef: string;
+  enabled: boolean;
+  verifyStatus: ConnectorVerifyStatus;
+  lastVerifyAt: string | null;
+  lastSyncAt: string | null;
+  lastSyncStatus: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConnectorListResponseDto {
+  connectors: ConnectorDto[];
+  kinds: ConnectorKindDto[];
+  maxPerOwner: number;
+}
+
+export interface ConnectorResponseDto {
+  connector: ConnectorDto;
+}
+
+export interface CreateConnectorRequestDto {
+  kind: string;
+  label: string;
+}
+
+export interface UpdateConnectorRequestDto {
+  label?: string;
+  enabled?: boolean;
+}
+
+export interface DeleteConnectorRequestDto {
+  confirmLabel: string;
+}
+
+export interface VerifyConnectorResponseDto {
+  connector: ConnectorDto;
+  message: string;
+}
+
+export interface SyncConnectorResponseDto {
+  connector: ConnectorDto;
+  zones: number;
+  records: number;
+  partial: boolean;
+  incompleteZones: string[];
+  message: string;
+}
+
+export interface CloudflareZoneDto {
+  id: string;
+  externalId: string;
+  name: string;
+  accountId: string;
+  status: string;
+  paused: boolean;
+  stale: boolean;
+  lastSyncAt: string | null;
+}
+
+export interface ZoneListResponseDto {
+  zones: CloudflareZoneDto[];
+}
+
+export interface CloudflareRecordDto {
+  id: string;
+  externalId: string;
+  zoneId: string;
+  name: string;
+  type: string;
+  content: string;
+  ttl: number;
+  proxied: boolean;
+  managed: boolean;
+  stale: boolean;
+  comment: string;
+  createdAt: string;
+  lastSyncAt: string | null;
+}
+
+export interface RecordListResponseDto {
+  records: CloudflareRecordDto[];
+  zone: CloudflareZoneDto | null;
+  truncated: boolean;
+}
+
+export interface RecordResponseDto {
+  record: CloudflareRecordDto;
+}
+
+export interface CloudflareRecordInputDto {
+  name: string;
+  type: string;
+  content: string;
+  ttl: number;
+  proxied: boolean;
+  comment?: string;
+}
+
+export interface DeleteRecordRequestDto {
+  confirmName: string;
+}
+
+export interface IntegrationAuditDto {
+  id: string;
+  createdAt: string;
+  connectorId: string;
+  action: string;
+  outcome: string;
+  target: string;
+  zoneId: string;
+  recordId: string;
+  errorCode: string;
+  errorMessage: string;
+}
+
+export interface AuditListResponseDto {
+  entries: IntegrationAuditDto[];
+}
+
 export interface MoonClientOptions {
   baseUrl?: string;
   fetcher?: typeof fetch;
@@ -205,6 +349,19 @@ export const apiRoutes = {
     collection: "/settings/providers",
     prefix: "/settings/providers/",
     item: (id: string) => `/settings/providers/${segment(id)}`,
+  },
+  connectors: {
+    collection: "/settings/connectors",
+    prefix: "/settings/connectors/",
+    item: (id: string) => `/settings/connectors/${segment(id)}`,
+    verify: (id: string) => `/settings/connectors/${segment(id)}/verify`,
+    sync: (id: string) => `/settings/connectors/${segment(id)}/sync`,
+    zones: (id: string) => `/settings/connectors/${segment(id)}/zones`,
+    records: (id: string, zoneId: string) =>
+      `/settings/connectors/${segment(id)}/zones/${segment(zoneId)}/records`,
+    record: (id: string, zoneId: string, recordId: string) =>
+      `/settings/connectors/${segment(id)}/zones/${segment(zoneId)}/records/${segment(recordId)}`,
+    audit: (id: string) => `/settings/connectors/${segment(id)}/audit`,
   },
   admin: {
     users: {
@@ -333,6 +490,92 @@ export class MoonClient {
 
   deleteProvider(id: string): Promise<{ deleted: boolean }> {
     return this.request(apiRoutes.providers.item(id), "DELETE");
+  }
+
+  listConnectors(): Promise<ConnectorListResponseDto> {
+    return this.request(apiRoutes.connectors.collection);
+  }
+
+  createConnector(input: CreateConnectorRequestDto): Promise<ConnectorResponseDto> {
+    return this.request(apiRoutes.connectors.collection, "POST", input);
+  }
+
+  updateConnector(
+    id: string,
+    input: UpdateConnectorRequestDto,
+  ): Promise<ConnectorResponseDto> {
+    return this.request(apiRoutes.connectors.item(id), "PUT", input);
+  }
+
+  deleteConnector(
+    id: string,
+    input: DeleteConnectorRequestDto,
+  ): Promise<{ deleted: boolean }> {
+    return this.request(apiRoutes.connectors.item(id), "DELETE", input);
+  }
+
+  verifyConnector(id: string): Promise<VerifyConnectorResponseDto> {
+    return this.request(apiRoutes.connectors.verify(id), "POST");
+  }
+
+  syncConnector(id: string): Promise<SyncConnectorResponseDto> {
+    return this.request(apiRoutes.connectors.sync(id), "POST");
+  }
+
+  listConnectorZones(id: string): Promise<ZoneListResponseDto> {
+    return this.request(apiRoutes.connectors.zones(id));
+  }
+
+  listConnectorRecords(
+    id: string,
+    zoneId: string,
+    filter: { name?: string; type?: string } = {},
+  ): Promise<RecordListResponseDto> {
+    const query = new URLSearchParams();
+    if (filter.name) query.set("name", filter.name);
+    if (filter.type) query.set("type", filter.type);
+    const suffix = query.toString();
+    return this.request(
+      `${apiRoutes.connectors.records(id, zoneId)}${suffix ? `?${suffix}` : ""}`,
+    );
+  }
+
+  createConnectorRecord(
+    id: string,
+    zoneId: string,
+    input: CloudflareRecordInputDto,
+  ): Promise<RecordResponseDto> {
+    return this.request(apiRoutes.connectors.records(id, zoneId), "POST", input);
+  }
+
+  updateConnectorRecord(
+    id: string,
+    zoneId: string,
+    recordId: string,
+    input: CloudflareRecordInputDto,
+  ): Promise<RecordResponseDto> {
+    return this.request(
+      apiRoutes.connectors.record(id, zoneId, recordId),
+      "PATCH",
+      input,
+    );
+  }
+
+  deleteConnectorRecord(
+    id: string,
+    zoneId: string,
+    recordId: string,
+    input: DeleteRecordRequestDto,
+  ): Promise<{ deleted: boolean; name: string }> {
+    return this.request(
+      apiRoutes.connectors.record(id, zoneId, recordId),
+      "DELETE",
+      input,
+    );
+  }
+
+  listConnectorAudit(id: string): Promise<AuditListResponseDto> {
+    return this.request(apiRoutes.connectors.audit(id));
   }
 
   listAdminUsers(): Promise<AdminUserListResponseDto> {

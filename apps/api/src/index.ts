@@ -9,6 +9,8 @@ import aiManifest from "ql_ai/__manifest__";
 import authManifest from "ql_auth/__manifest__";
 import baseManifest from "ql_base/__manifest__";
 import chatManifest from "ql_chat/__manifest__";
+import cloudflareManifest from "ql_cloudflare/__manifest__";
+import integrationManifest from "ql_integration/__manifest__";
 import { resolveModelProviderConfig } from "./ai/model-config.js";
 import { parseProviderEncryptionKey } from "./ai/provider-secrets.js";
 import { readBootstrapAdmin } from "./auth/bootstrap.js";
@@ -32,6 +34,8 @@ const { orm, close: closeOrm } = await createQlOrm(databaseUrl, [
   baseManifest,
   aiManifest,
   chatManifest,
+  integrationManifest,
+  cloudflareManifest,
 ]);
 await seedRoles(orm);
 if ((await countUsersWithRole(orm, "super_admin")) === 0) {

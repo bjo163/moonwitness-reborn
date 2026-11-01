@@ -1,0 +1,35 @@
+{
+  "name": "ql_integration",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./__manifest__": {
+      "types": "./dist/__manifest__.d.ts",
+      "import": "./dist/__manifest__.js"
+    },
+    "./models": {
+      "types": "./dist/models/index.d.ts",
+      "import": "./dist/models/index.js"
+    },
+    "./views": {
+      "types": "./dist/views/index.d.ts",
+      "import": "./dist/views/index.js"
+    },
+    "./services/connector-registry": {
+      "types": "./dist/services/connector-registry.d.ts",
+      "import": "./dist/services/connector-registry.js"
+    },
+    "./services/field-validators": {
+      "types": "./dist/services/field-validators.d.ts",
+      "import": "./dist/services/field-validators.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsx --test models/index.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "ql_orm": "workspace:*"
+  }
+}

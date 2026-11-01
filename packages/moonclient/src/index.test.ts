@@ -1,6 +1,28 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MoonClient, MoonClientError } from "./index.js";
+import { MoonClient, MoonClientError, apiRoutes, moonClient } from "./index.js";
+
+function recorder(response: unknown = {}) {
+  const requests: Array<{ url: string; method?: string; body: string }> = [];
+  const client = new MoonClient({
+    baseUrl: "/api",
+    fetcher: (input, init = {}) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
+      requests.push({
+        url,
+        method: init.method,
+        body: typeof init.body === "string" ? init.body : "",
+      });
+      return Promise.resolve(new Response(JSON.stringify(response), { status: 200 }));
+    },
+  });
+  return { client, requests };
+}
 
 void test("MoonClient centralizes URL, request method, and JSON body", async () => {
   const requests: Array<{ url: string; init: RequestInit }> = [];
@@ -66,26 +88,7 @@ void test("MoonClient encodes route segments and exposes API error status", asyn
 });
 
 void test("password reset calls use the shared route table", async () => {
-  const requests: Array<{ url: string; method?: string; body: string }> = [];
-  const client = new MoonClient({
-    baseUrl: "/api",
-    fetcher: (input, init = {}) => {
-      const url =
-        typeof input === "string"
-          ? input
-          : input instanceof URL
-            ? input.href
-            : input.url;
-      requests.push({
-        url,
-        method: init.method,
-        body: typeof init.body === "string" ? init.body : "",
-      });
-      return Promise.resolve(
-        new Response(JSON.stringify({ sent: true, reset: true }), { status: 200 }),
-      );
-    },
-  });
+  const { client, requests } = recorder({ sent: true, reset: true });
 
   await client.requestPasswordReset({ email: "bjo@a-l-l-a-h.com" });
   await client.resetPassword({ token: "abc", password: "a brand new long password" });
@@ -102,4 +105,97 @@ void test("password reset calls use the shared route table", async () => {
     token: "abc",
     password: "a brand new long password",
   });
+});
+
+void test("connector routes stay under one prefix and encode every id", async () => {
+  const { client, requests } = recorder();
+
+  await client.listConnectors();
+  await client.createConnector({ kind: "cloudflare", label: "Produksi" });
+  await client.updateConnector("c/1", { enabled: false });
+  await client.deleteConnector("c/1", { confirmLabel: "Produksi" });
+  await client.verifyConnector("c/1");
+  await client.syncConnector("c/1");
+  await client.listConnectorZones("c/1");
+  await client.listConnectorRecords("c/1", "z/2", { name: "api.example.com", type: "A" });
+  await client.createConnectorRecord("c/1", "z/2", {
+    name: "api",
+    type: "A",
+    content: "203.0.113.7",
+    ttl: 120,
+    proxied: false,
+  });
+  await client.updateConnectorRecord("c/1", "z/2", "r/3", {
+    name: "api",
+    type: "A",
+    content: "203.0.113.8",
+    ttl: 120,
+    proxied: false,
+  });
+  await client.deleteConnectorRecord("c/1", "z/2", "r/3", {
+    confirmName: "api.example.com",
+  });
+  await client.listConnectorAudit("c/1");
+
+  assert.deepEqual(
+    requests.map(({ url, method }) => `${method ?? "GET"} ${url}`),
+    [
+      "GET /api/settings/connectors",
+      "POST /api/settings/connectors",
+      "PUT /api/settings/connectors/c%2F1",
+      "DELETE /api/settings/connectors/c%2F1",
+      "POST /api/settings/connectors/c%2F1/verify",
+      "POST /api/settings/connectors/c%2F1/sync",
+      "GET /api/settings/connectors/c%2F1/zones",
+      "GET /api/settings/connectors/c%2F1/zones/z%2F2/records?name=api.example.com&type=A",
+      "POST /api/settings/connectors/c%2F1/zones/z%2F2/records",
+      "PATCH /api/settings/connectors/c%2F1/zones/z%2F2/records/r%2F3",
+      "DELETE /api/settings/connectors/c%2F1/zones/z%2F2/records/r%2F3",
+      "GET /api/settings/connectors/c%2F1/audit",
+    ],
+  );
+
+  for (const path of [
+    apiRoutes.connectors.collection,
+    apiRoutes.connectors.prefix,
+    apiRoutes.connectors.item("x"),
+    apiRoutes.connectors.verify("x"),
+    apiRoutes.connectors.sync("x"),
+    apiRoutes.connectors.zones("x"),
+    apiRoutes.connectors.records("x", "y"),
+    apiRoutes.connectors.record("x", "y", "z"),
+    apiRoutes.connectors.audit("x"),
+  ]) {
+    assert.ok(
+      path.startsWith("/settings/connectors"),
+      `Route '${path}' escaped the connector prefix.`,
+    );
+  }
+});
+
+void test("no connector contract surface accepts a credential", () => {
+  const clientMembers = [
+    ...Object.getOwnPropertyNames(MoonClient.prototype),
+    ...Object.keys(moonClient),
+  ];
+  for (const name of clientMembers) {
+    assert.equal(
+      /(set|upload|rotate|update)(Token|Secret|Credential)/i.test(name),
+      false,
+      `MoonClient.${name} would put a credential back into the app.`,
+    );
+  }
+
+  for (const [group, routes] of Object.entries(apiRoutes)) {
+    const paths = typeof routes === "string"
+      ? [routes]
+      : Object.values(routes).filter((value): value is string => typeof value === "string");
+    for (const path of paths) {
+      assert.equal(
+        /secret|credential/i.test(path),
+        false,
+        `Route '${group}${path}' implies stored credentials.`,
+      );
+    }
+  }
 });

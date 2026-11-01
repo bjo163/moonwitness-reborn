@@ -53,6 +53,29 @@ export default tseslint.config(
     },
   },
   {
+    files: ["apps/api/src/connectors/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@moonwitness/contracts",
+              message: "Use @moonwitness/moonclient for shared API contracts.",
+            },
+          ],
+          patterns: [
+            {
+              group: ["child_process", "node:child_process"],
+              message:
+                "OS credential stores are parsed directly; never spawn processes from the API.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["apps/web/**/*.{js,mjs,ts,tsx}"],
     plugins: { "@next/next": nextPlugin },
     rules: {

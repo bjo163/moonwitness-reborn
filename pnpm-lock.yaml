@@ -149,6 +149,12 @@ importers:
       ql_chat:
         specifier: workspace:*
         version: link:../../packages/ql_chat
+      ql_cloudflare:
+        specifier: workspace:*
+        version: link:../../packages/ql_cloudflare
+      ql_integration:
+        specifier: workspace:*
+        version: link:../../packages/ql_integration
       ql_orm:
         specifier: workspace:*
         version: link:../../packages/ql-orm

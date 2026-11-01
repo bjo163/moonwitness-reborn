@@ -24,7 +24,9 @@ import {
   MessageSquare,
   Menu,
   PanelLeftClose,
+  Plug,
   Plus,
+  ShieldCheck,
   Sparkles,
   Trash2,
   X,
@@ -291,6 +293,20 @@ export default function Home() {
           <KeyRound size={16} />
           Model providers
         </a>
+        {(user?.groups ?? []).some((group) =>
+          group === "connector" || group === "operator",
+        ) && (
+          <a href="/connectors" className="ql-nav-link mt-2">
+            <Plug size={16} />
+            Integrasi eksternal
+          </a>
+        )}
+        {(user?.groups ?? []).includes("admin") && (
+          <a href="/admin/users" className="ql-nav-link mt-2">
+            <ShieldCheck size={16} />
+            Manajemen pengguna
+          </a>
+        )}
 
         <div className="mb-2 mt-7 px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">
           Riwayat
