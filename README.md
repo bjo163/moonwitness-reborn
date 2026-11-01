@@ -38,6 +38,27 @@ Untuk instalasi sederhana atau kompatibilitas sebelumnya, konfigurasi opsional `
 
 Gateway ini adalah fondasi internal untuk routing chat MoonWitness, bukan clone fitur penuh FreeLLMAPI: katalog/model discovery otomatis, pengelolaan kuota dan biaya, rate limiting, serta endpoint publik OpenAI-compatible belum termasuk. Provider dan model ditambahkan manual memakai kredensial yang memang kamu miliki.
 
+### Email transaksional (atur ulang kata sandi)
+
+`/auth/forgot-password` mengirim email reset lewat adapter SMTP di `apps/api/src/mail` (nodemailer pool, 1 koneksi, timeout 5 s kirim/greeting dan 10 s socket, 1 percobaan, batas 10 s). Tidak ada `ql_mail` dan tidak ada message store: server SMTP (Stalwart) yang mengelola antrian dan retry. Kegagalan kirim mengembalikan `200 {sent:false}` yang sama dengan email yang tidak terdaftar, jadi endpoint ini tidak bisa mengonfirmasi keberadaan akun. Tanpa `SMTP_HOST`/`SMTP_USERNAME`/`SMTP_PASSWORD`/`SMTP_FROM`, API tetap boot dan email dinonaktifkan.
+
+```dotenv
+# Transactional email (password reset). Leave SMTP_HOST empty to keep mail disabled;
+# /auth/forgot-password then answers 200 {sent:false} instead of failing.
+SMTP_HOST=
+SMTP_PORT=465
+# true = implicit TLS (port 465). Leave unset to infer from the port; STARTTLS is forced on 587/2525.
+SMTP_SECURE=
+SMTP_USERNAME=
+SMTP_PASSWORD=
+# Display name is allowed: "MoonWitness <app@a-l-l-a-h.com>". DKIM must sign for that domain.
+SMTP_FROM=
+# Public web origin used inside reset links. Keep it pointed at the web app, not the API.
+APP_BASE_URL=http://localhost:3001
+```
+
+Link reset dibuat `/?mode=reset&token=<43-char-token>`, berlaku 30 menit dan sekali pakai (row di-delete, jadi dua request bersamaan tidak bisa mengklaim token yang sama). Setelah reset, semua sesi pemilik diinvalidasi dan login dengan kata sandi lama ditolak.
+
 ## Struktur
 
 ```text
@@ -103,6 +124,6 @@ docker compose up -d --build
 
 Tidak butuh `.env`: semua nilai bawaan development sudah ada di [`docker-compose.yml`](./docker-compose.yml) dan setiap port diikat ke loopback. Web melayani `http://localhost:3030`, API `http://localhost:3000` (`/health` untuk liveness). Data awet berada di volume `api_data` (file LibSQL api) dan `postgres_data`; `docker compose down -v` menghapusnya.
 
-`QlOrm` (`packages/ql-orm`) masih memakai driver `@libsql/client`, jadi api berjalan di atas file LibSQL dan service `postgres` (16-alpine, `moonwitness:moonwitness@127.0.0.1:5434`) belum menjadi primary store. Service itu siap dipakai setelah `packages/ql-orm` pindah ke driver `pg`; sesudah itu `DATABASE_URL` api diganti `postgres://moonwitness:moonwitness@postgres:5432/moonwitness` dan `PROVIDER_ENCRYPTION_KEY` di production wajib diisi dengan kunci 32-byte acak, bukan bawaan lokal.
+`QlOrm` (`packages/ql-orm`) mengenal dua dialect: skema URL `file:` / `libsql:` memakai `@libsql/client`, sedangkan `postgres://` / `postgresql://` memakai `pg`. Driver dipilih dari `DATABASE_URL` dan schema tetap disinkronkan otomatis saat start; di Postgres setiap tabel mendapat kolom `ql_seq BIGSERIAL` sebagai pengganti `rowid` untuk ordering, `boolean` disimpan sebagai `SMALLINT` 0/1, dan `integer` / `datetime` menjadi `BIGINT`. Service `postgres` di [`docker-compose.yml`](./docker-compose.yml) (16-alpine, `moonwitness:moonwitness@127.0.0.1:5434`) karena itu sudah terpakai: isi `DATABASE_URL` api dengan `postgres://moonwitness:moonwitness@postgres:5432/moonwitness` (di host: `127.0.0.1:5434`). Bawaannya tetap file LibSQL di volume `api_data`, begitu juga stack Coolify, jadi memindahkan produksi ke Postgres butuh migrasi isi file LibSQL lebih dulu. Suite `packages/ql-orm` juga berjalan di Postgres kalau `QL_ORM_PG_URL` diisi; tanpa variabel itu hanya dialect LibSQL yang tertutup tes. `PROVIDER_ENCRYPTION_KEY` di production wajib diisi dengan kunci 32-byte acak, bukan bawaan lokal.
 
 Untuk deploy ke Coolify dipakai [`docker-compose.coolify.yml`](./docker-compose.coolify.yml): varian tanpa published port (Traefik Coolify yang merouting lewat label), tanpa `networks:` agar Coolify bisa menghubungkan container ke proxy, tanpa service Postgres karena api tetap menulis ke file LibSQL di volume `api_data`, dan `PROVIDER_ENCRYPTION_KEY` diambil dari environment Coolify. Domain yang dilayani: `a-l-l-a-h.com` dan `moonwitness.biz.id` untuk web, `api.moonwitness.biz.id` untuk api; subdomain `moonwitness-reborn.apps.mycocolink.com` / `moonwitness-reborn-api.apps.mycocolink.com` tetap aktif sebagai alamat internal. Domain custom butuh label Traefik manual di compose (Coolify hanya men-generate otomatis untuk subdomain `*.apps.mycocolink.com`). Set "Docker Compose Location" resource ke `/docker-compose.coolify.yml`.

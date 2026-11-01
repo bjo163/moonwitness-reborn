@@ -6,12 +6,22 @@ export interface User {
   email: string;
   passwordHash: string;
   active: boolean;
+  role: string;
   createdAt: Date;
 }
 
 export interface Session {
   id: string;
   userId: string;
+  tokenHash: string;
+  expiresAt: Date;
+  createdAt: Date;
+}
+
+export interface Verification {
+  id: string;
+  userId: string;
+  purpose: string;
   tokenHash: string;
   expiresAt: Date;
   createdAt: Date;
@@ -33,13 +43,14 @@ export interface Message {
   createdAt: Date;
 }
 
-export type PublicUser = Pick<User, "id" | "name" | "email">;
+export type PublicUser = Pick<User, "id" | "name" | "email" | "role">;
 
 export interface ConversationStore {
   createUser(input: {
     name: string;
     email: string;
     passwordHash: string;
+    role?: string;
   }): Promise<User>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserById(id: string): Promise<User | undefined>;
@@ -50,6 +61,25 @@ export interface ConversationStore {
   ): Promise<void>;
   getSessionUser(tokenHash: string, now?: Date): Promise<User | undefined>;
   deleteSession(tokenHash: string): Promise<void>;
+  deleteSessionsForUser(userId: string): Promise<void>;
+  createVerification(input: {
+    userId: string;
+    purpose: string;
+    tokenHash: string;
+    expiresAt: Date;
+  }): Promise<Verification>;
+  findLatestVerification(
+    userId: string,
+    purpose: string,
+  ): Promise<Verification | undefined>;
+  findVerification(purpose: string, tokenHash: string): Promise<Verification | undefined>;
+  /**
+   * Single-use claim: the row is removed by its unique token hash, so exactly
+   * one concurrent caller can observe `true`.
+   */
+  claimVerification(tokenHash: string): Promise<boolean>;
+  deleteVerifications(userId: string, purpose: string): Promise<void>;
+  setPasswordHash(userId: string, passwordHash: string): Promise<boolean>;
   createConversation(userId: string, title?: string): Promise<Conversation>;
   listConversations(userId: string): Promise<Conversation[]>;
   getConversation(
@@ -101,6 +131,14 @@ function requiredDate(record: QlRecord, key: string): Date {
   return date;
 }
 
+const LEAST_PRIVILEGE_ROLE = "member";
+
+function optionalRole(record: QlRecord): string {
+  const value = record.role;
+  // A missing role must never widen access, so fall back to the lowest privilege.
+  return typeof value === "string" && value.trim() ? value : LEAST_PRIVILEGE_ROLE;
+}
+
 function userFromRecord(record: QlRecord): User {
   return {
     id: requiredString(record, "id"),
@@ -108,6 +146,18 @@ function userFromRecord(record: QlRecord): User {
     email: requiredString(record, "email"),
     passwordHash: requiredString(record, "password_hash"),
     active: requiredBoolean(record, "active"),
+    role: optionalRole(record),
+    createdAt: requiredDate(record, "created_at"),
+  };
+}
+
+function verificationFromRecord(record: QlRecord): Verification {
+  return {
+    id: requiredString(record, "id"),
+    userId: requiredString(record, "user_id"),
+    purpose: requiredString(record, "purpose"),
+    tokenHash: requiredString(record, "token_hash"),
+    expiresAt: requiredDate(record, "expires_at"),
     createdAt: requiredDate(record, "created_at"),
   };
 }
@@ -145,6 +195,7 @@ export function createConversationStore(orm: QlOrm): ConversationStore {
           email: input.email,
           password_hash: input.passwordHash,
           active: true,
+          ...(input.role ? { role: input.role } : {}),
         }),
       );
     },
@@ -187,6 +238,62 @@ export function createConversationStore(orm: QlOrm): ConversationStore {
       await orm.deleteRecordsForService("res.sessions", {
         token_hash: tokenHash,
       });
+    },
+
+    async deleteSessionsForUser(userId) {
+      await orm.deleteRecordsForService("res.sessions", { user_id: userId });
+    },
+
+    async createVerification(input) {
+      return verificationFromRecord(
+        await orm.createRecordForService("res.verification", {
+          user_id: input.userId,
+          purpose: input.purpose,
+          token_hash: input.tokenHash,
+          expires_at: input.expiresAt,
+        }),
+      );
+    },
+
+    async findLatestVerification(userId, purpose) {
+      const record = await orm.findOneByService("res.verification", {
+        user_id: userId,
+        purpose,
+      });
+      return record ? verificationFromRecord(record) : undefined;
+    },
+
+    async findVerification(purpose, tokenHash) {
+      const record = await orm.findOneByService("res.verification", {
+        purpose,
+        token_hash: tokenHash,
+      });
+      return record ? verificationFromRecord(record) : undefined;
+    },
+
+    async claimVerification(tokenHash) {
+      return (
+        (await orm.deleteRecordsForService("res.verification", {
+          token_hash: tokenHash,
+        })) === 1
+      );
+    },
+
+    async deleteVerifications(userId, purpose) {
+      await orm.deleteRecordsForService("res.verification", {
+        user_id: userId,
+        purpose,
+      });
+    },
+
+    async setPasswordHash(userId, passwordHash) {
+      return (
+        (await orm.updateRecordsForService(
+          "res.users",
+          { id: userId, active: true },
+          { password_hash: passwordHash },
+        )) === 1
+      );
     },
 
     async createConversation(userId, title = "Percakapan baru") {

@@ -14,6 +14,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "test": "tsx --test services/rbac.test.ts models/index.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

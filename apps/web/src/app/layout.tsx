@@ -7,6 +7,8 @@ export const metadata: Metadata = {
     template: "%s | MoonWitness",
   },
   description: "Ruang kerja AI MoonWitness.",
+  // A reset link opened from email must not leak its token to a third-party referrer.
+  referrer: "same-origin",
 };
 
 export default function RootLayout({

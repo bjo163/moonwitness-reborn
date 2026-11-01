@@ -5,14 +5,15 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
-    "test": "tsx --test src/http/server.test.ts src/ai/model-config.test.ts src/ai/model-router.test.ts src/ai/provider-secrets.test.ts",
+    "test": "tsx --test src/http/server.test.ts src/ai/model-config.test.ts src/ai/model-router.test.ts src/ai/provider-secrets.test.ts src/mail/mail-config.test.ts src/mail/mail-templates.test.ts src/mail/mailer.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@moonwitness/agent-runtime": "workspace:*",
-    "@moonwitness/moonclient": "workspace:*",
     "@moonwitness/database": "workspace:*",
+    "@moonwitness/moonclient": "workspace:*",
     "dotenv": "catalog:",
+    "nodemailer": "catalog:",
     "ql_ai": "workspace:*",
     "ql_auth": "workspace:*",
     "ql_base": "workspace:*",

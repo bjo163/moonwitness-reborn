@@ -12,13 +12,19 @@ import {
 import type { ConversationStore, User } from "@moonwitness/database";
 import {
   apiRoutes,
+  type AdminUserDto,
+  type AdminUserListResponseDto,
   type AuthResponseDto,
   type ChatMessageDto,
   type ChatRequestDto,
   type ChatResponseDto,
   type ConversationDto,
   type ConversationListResponseDto,
+  type ForgotPasswordResponseDto,
   type ModelProviderDto,
+  type ResetPasswordResponseDto,
+  type RoleDto,
+  type RoleListResponseDto,
 } from "@moonwitness/moonclient";
 import {
   QlAccessError,
@@ -33,16 +39,34 @@ import {
   ProviderConfigurationError,
 } from "ql_ai/services/provider-config";
 import {
+  ROLE_CATALOG,
+  countUsersWithRole,
+  findRoleDefinition,
+  groupsForRole,
+  isKnownRole,
+} from "ql_auth/services/rbac";
+import {
+  shouldGrantSuperAdmin,
+  type BootstrapAdminSettings,
+} from "../auth/bootstrap.js";
+import {
   AuthenticationError,
   clearSession,
+  generateVerificationToken,
   getAuthenticatedUser,
   hashPassword,
+  hashVerificationToken,
   issueSession,
   normalizeEmail,
+  normalizeVerificationToken,
   publicUser,
   validateCredentials,
+  validatePassword,
   verifyPassword,
+  VERIFICATION_RESEND_COOLDOWN_SECONDS,
+  VERIFICATION_TTL_SECONDS,
 } from "../auth/auth.js";
+import type { MailSender } from "../mail/mailer.js";
 import {
   createFallbackProvider,
   type ModelProviderFactory,
@@ -202,7 +226,56 @@ function requireAuthenticatedUser(
 }
 
 function userContext(user: User) {
-  return { id: user.id, groups: ["user"] };
+  return { id: user.id, groups: groupsForRole(user.role) };
+}
+
+/** The browser only ever sees the caller's own groups; the real gate stays in the API. */
+function sessionUser(user: User) {
+  return { ...publicUser(user), groups: userContext(user).groups };
+}
+
+function requireGroup(user: User, ...allowed: string[]): void {
+  const groups = userContext(user).groups;
+  if (!allowed.some((group) => groups.includes(group))) {
+    throw new RequestError(
+      "Peran akun Anda tidak mengizinkan aksi ini.",
+      403,
+    );
+  }
+}
+
+function splitGroups(value: string): string[] {
+  return value
+    .split(",")
+    .map((group) => group.trim())
+    .filter(Boolean);
+}
+
+function toIsoDateTime(value: unknown): string {
+  const timestamp = typeof value === "number" ? value : Number(value ?? NaN);
+  const date = new Date(timestamp);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+}
+
+function toAdminUser(record: QlRecord): AdminUserDto {
+  return {
+    id: String(record.id ?? ""),
+    name: typeof record.name === "string" ? record.name : "",
+    email: typeof record.email === "string" ? record.email : "",
+    active: record.active === true,
+    role: typeof record.role === "string" ? record.role : "member",
+    createdAt: toIsoDateTime(record.created_at),
+  };
+}
+
+async function assertSuperAdminRemains(orm: QlOrm): Promise<void> {
+  const remaining = await countUsersWithRole(orm, "super_admin");
+  if (remaining <= 1) {
+    throw new RequestError(
+      "Minimal satu super_admin harus tetap aktif. Serahkan peran ke akun lain terlebih dahulu.",
+      400,
+    );
+  }
 }
 
 function validateProviderBaseUrl(value: unknown): string {
@@ -322,6 +395,9 @@ export function createApiServer(
   options: {
     encryptionKey?: Buffer<ArrayBufferLike>;
     providerFactory?: ModelProviderFactory;
+    bootstrapAdmin?: BootstrapAdminSettings;
+    mail?: MailSender;
+    appBaseUrl?: string;
   } = {},
 ) {
   async function handleApiRequest(
@@ -349,11 +425,22 @@ export function createApiServer(
         }
         let user;
         try {
+          const grantRoot = await shouldGrantSuperAdmin(
+            orm,
+            credentials.email,
+            options.bootstrapAdmin ?? {},
+          );
           user = await store.createUser({
             name: credentials.name,
             email: credentials.email,
             passwordHash: await hashPassword(credentials.password),
+            ...(grantRoot ? { role: "super_admin" } : {}),
           });
+          if (grantRoot) {
+            console.log(
+              "Peran super_admin di-bootstrap dari BOOTSTRAP_ADMIN_EMAIL; cabut env tersebut setelah akun owner jadi.",
+            );
+          }
         } catch (error) {
           if (await store.getUserByEmail(credentials.email)) {
             sendJson(response, 409, { error: "Email sudah terdaftar." });
@@ -363,7 +450,7 @@ export function createApiServer(
         }
         await issueSession(response, store, user.id);
         sendJson(response, 201, {
-          user: publicUser(user),
+          user: sessionUser(user),
         } satisfies AuthResponseDto);
       } catch (error) {
         handleRequestError(response, error);
@@ -394,8 +481,94 @@ export function createApiServer(
         }
         await issueSession(response, store, user.id);
         sendJson(response, 200, {
-          user: publicUser(user),
+          user: sessionUser(user),
         } satisfies AuthResponseDto);
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    if (request.method === "POST" && pathname === apiRoutes.auth.forgotPassword) {
+      try {
+        const body = parseObject(await readJsonBody(request));
+        if (typeof body.email !== "string" || body.email.length > 254) {
+          throw new AuthenticationError("Alamat email tidak valid.", 400);
+        }
+        const email = normalizeEmail(body.email);
+        // One shape and one status for every outcome, so this endpoint cannot
+        // confirm whether an address has an account.
+        const user = await store.getUserByEmail(email);
+        if (!user || !options.mail) {
+          sendJson(response, 200, { sent: false } satisfies ForgotPasswordResponseDto);
+          return;
+        }
+        const lastSentAt = await store.findLatestVerification(
+          user.id,
+          "password_reset",
+        );
+        if (
+          lastSentAt &&
+          lastSentAt.createdAt.getTime() >
+            Date.now() - VERIFICATION_RESEND_COOLDOWN_SECONDS * 1000
+        ) {
+          sendJson(response, 200, { sent: false } satisfies ForgotPasswordResponseDto);
+          return;
+        }
+        // A fresh request replaces any earlier link for this purpose.
+        await store.deleteVerifications(user.id, "password_reset");
+        const { token, tokenHash } = generateVerificationToken();
+        await store.createVerification({
+          userId: user.id,
+          purpose: "password_reset",
+          tokenHash,
+          expiresAt: new Date(Date.now() + VERIFICATION_TTL_SECONDS * 1000),
+        });
+        try {
+          await options.mail.sendPasswordReset({
+            to: email,
+            name: user.name,
+            resetUrl: `${options.appBaseUrl ?? ""}/?mode=reset&token=${encodeURIComponent(token)}`,
+            ttlMinutes: Math.round(VERIFICATION_TTL_SECONDS / 60),
+          });
+          sendJson(response, 200, { sent: true } satisfies ForgotPasswordResponseDto);
+        } catch (error) {
+          console.error("Pengiriman email reset kata sandi gagal.", error);
+          await store.deleteVerifications(user.id, "password_reset");
+          sendJson(response, 200, { sent: false } satisfies ForgotPasswordResponseDto);
+        }
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    if (request.method === "POST" && pathname === apiRoutes.auth.resetPassword) {
+      try {
+        const body = parseObject(await readJsonBody(request));
+        const token = normalizeVerificationToken(body.token);
+        if (!token) {
+          throw new AuthenticationError("Tautan reset tidak valid.", 400);
+        }
+        const password = validatePassword(body.password);
+        const tokenHash = hashVerificationToken(token);
+        const verification = await store.findVerification(
+          "password_reset",
+          tokenHash,
+        );
+        if (!verification || verification.expiresAt.getTime() <= Date.now()) {
+          throw new AuthenticationError("Tautan reset sudah tidak berlaku.", 400);
+        }
+        // Deleting the row is the claim: only one concurrent caller can win it.
+        if (!(await store.claimVerification(tokenHash))) {
+          throw new AuthenticationError("Tautan reset sudah dipakai.", 400);
+        }
+        const user = await store.getUserById(verification.userId);
+        if (!user || !(await store.setPasswordHash(user.id, await hashPassword(password)))) {
+          throw new AuthenticationError("Tautan reset sudah tidak berlaku.", 400);
+        }
+        await store.deleteSessionsForUser(user.id);
+        sendJson(response, 200, { reset: true } satisfies ResetPasswordResponseDto);
       } catch (error) {
         handleRequestError(response, error);
       }
@@ -414,7 +587,7 @@ export function createApiServer(
         sendJson(response, 401, { error: "Authentication required." });
         return;
       }
-      sendJson(response, 200, { user: publicUser(user) });
+      sendJson(response, 200, { user: sessionUser(user) });
       return;
     }
 
@@ -565,6 +738,145 @@ export function createApiServer(
         return;
       }
       sendJson(response, 405, { error: "Method not allowed." });
+      return;
+    }
+
+    if (request.method === "GET" && pathname === apiRoutes.admin.users.collection) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        requireGroup(user, "admin");
+        const rows = await orm.findManyByService(
+          "res.users",
+          {},
+          { limit: 500, orderBy: { field: "created_at", direction: "asc" } },
+        );
+        sendJson(response, 200, {
+          users: rows.map(toAdminUser),
+        } satisfies AdminUserListResponseDto);
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    if (request.method === "GET" && pathname === apiRoutes.admin.roles.collection) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        requireGroup(user, "admin");
+        const rows = await orm.findManyByService("res.role", {}, { limit: 100 });
+        const roles: RoleDto[] =
+          rows.length > 0
+            ? rows.map((row) => ({
+                code: String(row.code),
+                name: String(row.name ?? ""),
+                description: String(row.description ?? ""),
+                groups: splitGroups(String(row.groups ?? "user")),
+                assignable: row.assignable === true,
+              }))
+            : ROLE_CATALOG.map((role) => ({
+                code: role.code,
+                name: role.name,
+                description: role.description,
+                groups: [...role.groups],
+                assignable: role.assignable,
+              }));
+        sendJson(response, 200, { roles } satisfies RoleListResponseDto);
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    const adminRoleMatch = pathname.match(
+      new RegExp(`^${apiRoutes.admin.users.prefix}([^/]+)/role$`),
+    );
+    if (adminRoleMatch && request.method === "PATCH") {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        requireGroup(user, "admin");
+        const targetId = decodeURIComponent(adminRoleMatch[1]);
+        if (targetId === user.id) {
+          throw new RequestError(
+            "Peran akun Anda sendiri tidak dapat diubah dari layar ini.",
+            400,
+          );
+        }
+        const body = parseObject(await readJsonBody(request));
+        const role = body.role;
+        if (
+          typeof role !== "string" ||
+          !role.trim() ||
+          role.length > 40 ||
+          !isKnownRole(role)
+        ) {
+          throw new RequestError("Field 'role' must be a known role code.", 400);
+        }
+        const target = await orm.findOneByService("res.users", { id: targetId });
+        if (!target || target.active !== true) {
+          sendJson(response, 404, { error: "Pengguna tidak ditemukan." });
+          return;
+        }
+        const definition = findRoleDefinition(role);
+        const grantsRoot = definition?.groups.includes("root") === true;
+        if (grantsRoot || definition?.assignable === false) {
+          requireGroup(user, "root");
+        }
+        if (target.role === "super_admin" && role !== "super_admin") {
+          await assertSuperAdminRemains(orm);
+        }
+        await orm.updateRecordsForService(
+          "res.users",
+          { id: targetId },
+          { role },
+        );
+        await orm.deleteRecordsForService("res.sessions", { user_id: targetId });
+        const updated = await orm.findOneByService("res.users", { id: targetId });
+        if (!updated) {
+          throw new RequestError("Peran gagal dibaca kembali setelah disimpan.", 500);
+        }
+        sendJson(response, 200, { user: toAdminUser(updated) });
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    const adminDeactivateMatch = pathname.match(
+      new RegExp(`^${apiRoutes.admin.users.prefix}([^/]+)/deactivate$`),
+    );
+    if (adminDeactivateMatch && request.method === "POST") {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        requireGroup(user, "admin");
+        const targetId = decodeURIComponent(adminDeactivateMatch[1]);
+        if (targetId === user.id) {
+          throw new RequestError(
+            "Akun Anda sendiri tidak dapat dinonaktifkan dari layar ini.",
+            400,
+          );
+        }
+        const target = await orm.findOneByService("res.users", { id: targetId });
+        if (!target || target.active !== true) {
+          sendJson(response, 404, { error: "Pengguna tidak ditemukan." });
+          return;
+        }
+        if (target.role === "super_admin") {
+          await assertSuperAdminRemains(orm);
+        }
+        await orm.updateRecordsForService(
+          "res.users",
+          { id: targetId },
+          { active: false },
+        );
+        await orm.deleteRecordsForService("res.sessions", { user_id: targetId });
+        sendJson(response, 200, { deactivated: true });
+      } catch (error) {
+        handleRequestError(response, error);
+      }
       return;
     }
 

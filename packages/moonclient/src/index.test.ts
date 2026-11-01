@@ -64,3 +64,42 @@ void test("MoonClient encodes route segments and exposes API error status", asyn
   });
   assert.equal(requestedUrls[0], "/api/conversations/thread%2Fone/messages");
 });
+
+void test("password reset calls use the shared route table", async () => {
+  const requests: Array<{ url: string; method?: string; body: string }> = [];
+  const client = new MoonClient({
+    baseUrl: "/api",
+    fetcher: (input, init = {}) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
+      requests.push({
+        url,
+        method: init.method,
+        body: typeof init.body === "string" ? init.body : "",
+      });
+      return Promise.resolve(
+        new Response(JSON.stringify({ sent: true, reset: true }), { status: 200 }),
+      );
+    },
+  });
+
+  await client.requestPasswordReset({ email: "bjo@a-l-l-a-h.com" });
+  await client.resetPassword({ token: "abc", password: "a brand new long password" });
+
+  assert.deepEqual(
+    requests.map(({ url, method }) => ({ url, method })),
+    [
+      { url: "/api/auth/forgot-password", method: "POST" },
+      { url: "/api/auth/reset-password", method: "POST" },
+    ],
+  );
+  assert.deepEqual(JSON.parse(requests[0].body), { email: "bjo@a-l-l-a-h.com" });
+  assert.deepEqual(JSON.parse(requests[1].body), {
+    token: "abc",
+    password: "a brand new long password",
+  });
+});

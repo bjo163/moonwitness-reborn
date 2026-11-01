@@ -6,6 +6,8 @@ export interface AuthUserDto {
   id: string;
   name: string;
   email: string;
+  role: string;
+  groups: string[];
 }
 
 export interface RegisterRequestDto {
@@ -21,6 +23,24 @@ export interface LoginRequestDto {
 
 export interface AuthResponseDto {
   user: AuthUserDto;
+}
+
+export interface ForgotPasswordRequestDto {
+  email: string;
+}
+
+/** Always the same shape, so a caller cannot learn whether an address exists. */
+export interface ForgotPasswordResponseDto {
+  sent: boolean;
+}
+
+export interface ResetPasswordRequestDto {
+  token: string;
+  password: string;
+}
+
+export interface ResetPasswordResponseDto {
+  reset: boolean;
 }
 
 export interface ConversationDto {
@@ -121,6 +141,35 @@ export interface ProviderResponseDto {
   provider: ModelProviderDto;
 }
 
+export interface AdminUserDto {
+  id: string;
+  name: string;
+  email: string;
+  active: boolean;
+  role: string;
+  createdAt: string;
+}
+
+export interface AdminUserListResponseDto {
+  users: AdminUserDto[];
+}
+
+export interface RoleDto {
+  code: string;
+  name: string;
+  description: string;
+  groups: string[];
+  assignable: boolean;
+}
+
+export interface RoleListResponseDto {
+  roles: RoleDto[];
+}
+
+export interface UpdateUserRoleRequestDto {
+  role: string;
+}
+
 export interface MoonClientOptions {
   baseUrl?: string;
   fetcher?: typeof fetch;
@@ -135,6 +184,8 @@ export const apiRoutes = {
     register: "/auth/register",
     login: "/auth/login",
     logout: "/auth/logout",
+    forgotPassword: "/auth/forgot-password",
+    resetPassword: "/auth/reset-password",
   },
   chat: "/chat",
   conversations: {
@@ -154,6 +205,18 @@ export const apiRoutes = {
     collection: "/settings/providers",
     prefix: "/settings/providers/",
     item: (id: string) => `/settings/providers/${segment(id)}`,
+  },
+  admin: {
+    users: {
+      collection: "/admin/users",
+      prefix: "/admin/users/",
+      item: (id: string) => `/admin/users/${segment(id)}`,
+      role: (id: string) => `/admin/users/${segment(id)}/role`,
+      deactivate: (id: string) => `/admin/users/${segment(id)}/deactivate`,
+    },
+    roles: {
+      collection: "/admin/roles",
+    },
   },
 } as const;
 
@@ -190,6 +253,18 @@ export class MoonClient {
 
   logout(): Promise<{ loggedOut: boolean }> {
     return this.request(apiRoutes.auth.logout, "POST");
+  }
+
+  requestPasswordReset(
+    input: ForgotPasswordRequestDto,
+  ): Promise<ForgotPasswordResponseDto> {
+    return this.request(apiRoutes.auth.forgotPassword, "POST", input);
+  }
+
+  resetPassword(
+    input: ResetPasswordRequestDto,
+  ): Promise<ResetPasswordResponseDto> {
+    return this.request(apiRoutes.auth.resetPassword, "POST", input);
   }
 
   sendChat(input: ChatRequestDto): Promise<ChatResponseDto> {
@@ -258,6 +333,26 @@ export class MoonClient {
 
   deleteProvider(id: string): Promise<{ deleted: boolean }> {
     return this.request(apiRoutes.providers.item(id), "DELETE");
+  }
+
+  listAdminUsers(): Promise<AdminUserListResponseDto> {
+    return this.request(apiRoutes.admin.users.collection);
+  }
+
+  listRoles(): Promise<RoleListResponseDto> {
+    return this.request(apiRoutes.admin.roles.collection);
+  }
+
+  updateUserRole(
+    id: string,
+    role: string,
+  ): Promise<{ user: AdminUserDto }> {
+    const body: UpdateUserRoleRequestDto = { role };
+    return this.request(apiRoutes.admin.users.role(id), "PATCH", body);
+  }
+
+  deactivateUser(id: string): Promise<{ deactivated: boolean }> {
+    return this.request(apiRoutes.admin.users.deactivate(id), "POST");
   }
 
   private async request<T>(
