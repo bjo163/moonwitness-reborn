@@ -1,10 +1,7 @@
 name: Release
 
-# Rilis dijalankan manual dari branch dev (Actions → Run workflow). Alur kerjanya:
-# dev → branch release/vX.Y.Z → PR ke main → auto-merge begitu `validate` hijau →
-# tag vX.Y.Z + GitHub Release → CHANGELOG dibawa kembali ke dev.
-# Deploy Coolify terpicu oleh push ke main, jadi rilis yang gagal di CI tidak akan
-# pernah menyentuh produksi.
+# Rilis otomatis mengikuti CI hijau terbaru di dev; workflow_dispatch tetap tersedia
+# untuk dry-run atau rilis manual. Semua perubahan tetap melewati PR dan validate.
 
 on:
   workflow_dispatch:
@@ -25,22 +22,34 @@ on:
         description: "Hitung versi dan changelog, tapi jangan menyentuh main"
         type: boolean
         default: false
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [dev]
 
-run-name: Rilis ${{ github.event.inputs.version || format('({0})', github.event.inputs.bump) }}
+run-name: ${{ github.event_name == 'workflow_run' && format('Auto-release {0}', github.event.workflow_run.head_sha) || format('Rilis {0}', inputs.version || inputs.bump) }}
+
+concurrency:
+  group: moonwitness-main-release
+  cancel-in-progress: false
 
 permissions:
   contents: write
   pull-requests: write
-  # PR rilis dibuat oleh bot, jadi GitHub menahan run CI-nya menunggu persetujuan.
-  # Tanpa hak ini, auto-merge menggantung selamanya dan rilis harus diklik manual.
+  # Digunakan untuk menjalankan validasi kandidat PR secara eksplisit.
   actions: write
 
 jobs:
   release:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'dev')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      marker: "<!-- bagian rilis -->"
+      RELEASE_MARKER: "<!-- bagian rilis -->"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -54,19 +63,47 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      - name: Pilih SHA dev yang masih terbaru
+        id: gate
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_run" ]; then
+            candidate="${{ github.event.workflow_run.head_sha }}"
+            current="$(git rev-parse origin/dev)"
+            if [ "${candidate}" != "${current}" ]; then
+              echo "proceed=false" >>"${GITHUB_OUTPUT}"
+              echo "Run dilewati: ${candidate} sudah bukan HEAD dev (${current})." >>"${GITHUB_STEP_SUMMARY}"
+              exit 0
+            fi
+          else
+            candidate="$(git rev-parse origin/dev)"
+          fi
+          echo "proceed=true" >>"${GITHUB_OUTPUT}"
+          echo "candidate=${candidate}" >>"${GITHUB_OUTPUT}"
+          echo "SHA kandidat: ${candidate}" >>"${GITHUB_STEP_SUMMARY}"
+
       - name: Hitung versi berikutnya
         id: versi
+        if: ${{ steps.gate.outputs.proceed == 'true' }}
+        env:
+          VERSION_INPUT: ${{ inputs.version || '' }}
+          BUMP_INPUT: ${{ inputs.bump || 'patch' }}
         run: |
           set -euo pipefail
           last="$(git describe --tags --abbrev=0 origin/main 2>/dev/null || true)"
-          explicit="${{ github.event.inputs.version }}"
+          explicit="${VERSION_INPUT}"
           if [ -n "${explicit}" ]; then
             next="${explicit#v}"
           elif [ -z "${last}" ]; then
             next="0.1.0"
           else
-            IFS='.' read -r major minor patch <<<"${last#v}"
-            case "${{ github.event.inputs.bump }}" in
+            last_version="${last#v}"
+            if [[ ! "${last_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Tag terakhir bukan semver vX.Y.Z: ${last}" >&2
+              exit 1
+            fi
+            IFS='.' read -r major minor patch <<<"${last_version}"
+            case "${BUMP_INPUT}" in
               major)
                 major=$((major + 1))
                 minor=0
@@ -82,52 +119,68 @@ jobs:
             esac
             next="${major}.${minor}.${patch}"
           fi
+          if [[ ! "${next}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Versi harus mengikuti format semver X.Y.Z: ${next}" >&2
+            exit 1
+          fi
           printf 'next=%s\nlast=%s\n' "${next}" "${last}" >>"${GITHUB_OUTPUT}"
           echo "Tag terakhir: ${last:-(belum ada)} → rilis berikutnya: v${next}"
 
       - name: Kumpulkan commit rilis ini
         id: notes
+        if: ${{ steps.gate.outputs.proceed == 'true' }}
+        env:
+          NEXT_VERSION: ${{ steps.versi.outputs.next }}
+          LAST_TAG: ${{ steps.versi.outputs.last }}
+          CANDIDATE_SHA: ${{ steps.gate.outputs.candidate }}
         run: |
           set -euo pipefail
-          next="${{ steps.versi.outputs.next }}"
-          last="${{ steps.versi.outputs.last }}"
-          range="${last:+${last}..}origin/dev"
+          range="${LAST_TAG:+${LAST_TAG}..}${CANDIDATE_SHA}"
           date="$(date -u +%Y-%m-%d)"
           commits="$(git log --no-merges --pretty=format:'- %s (%h)' "${range}")"
           if [ -z "${commits}" ]; then
-            echo "Tidak ada commit di dev sejak ${last:-awal}; tidak ada yang bisa dirilis." >&2
-            exit 1
+            echo "has_changes=false" >>"${GITHUB_OUTPUT}"
+            echo "Tidak ada perubahan non-merge sejak ${LAST_TAG:-awal}; tidak ada rilis baru." >>"${GITHUB_STEP_SUMMARY}"
+            exit 0
           fi
-          printf '## v%s — %s\n\n%s\n\n' "${next}" "${date}" "${commits}" >"${RUNNER_TEMP}/section.md"
+          echo "has_changes=true" >>"${GITHUB_OUTPUT}"
+          printf '## v%s — %s\n\n%s\n\n' "${NEXT_VERSION}" "${date}" "${commits}" >"${RUNNER_TEMP}/section.md"
           cp "${RUNNER_TEMP}/section.md" "${RUNNER_TEMP}/notes.md"
           {
-            printf 'Rilis v%s: dev masuk ke main.\n\n' "${next}"
+            printf 'Rilis v%s: dev masuk ke main.\n\n' "${NEXT_VERSION}"
             cat "${RUNNER_TEMP}/section.md"
-            printf 'Setelah digabung, Coolify mulai deploy `main`, lalu workflow ini memasang tag `v%s` dan GitHub Release.\n' "${next}"
+            printf 'Setelah digabung, Coolify mulai deploy `main`, lalu workflow ini memasang tag `v%s` dan GitHub Release.\n' "${NEXT_VERSION}"
           } >"${RUNNER_TEMP}/pr.md"
           cat "${RUNNER_TEMP}/section.md"
 
       - name: Tampilkan hasil dry-run
-        if: ${{ github.event.inputs.dry_run == 'true' }}
+        if: ${{ steps.gate.outputs.proceed == 'true' && steps.notes.outputs.has_changes == 'true' && inputs.dry_run == true }}
+        env:
+          NEXT_VERSION: ${{ steps.versi.outputs.next }}
         run: |
           {
-            echo "## Dry-run v${{ steps.versi.outputs.next }}"
+            echo "## Dry-run v${NEXT_VERSION}"
             echo
             cat "${RUNNER_TEMP}/section.md"
           } >>"${GITHUB_STEP_SUMMARY}"
 
       - name: Buat branch rilis dari main lalu gabung dev
-        if: ${{ github.event.inputs.dry_run != 'true' }}
+        if: ${{ steps.gate.outputs.proceed == 'true' && steps.notes.outputs.has_changes == 'true' && inputs.dry_run != true }}
+        env:
+          NEXT_VERSION: ${{ steps.versi.outputs.next }}
+          CANDIDATE_SHA: ${{ steps.gate.outputs.candidate }}
         run: |
           set -euo pipefail
-          git checkout -B "release/v${{ steps.versi.outputs.next }}" origin/main
-          git merge --no-edit origin/dev
+          git checkout -B "release/v${NEXT_VERSION}" origin/main
+          git merge --no-edit "${CANDIDATE_SHA}"
 
       - name: Tulis CHANGELOG.md
-        if: ${{ github.event.inputs.dry_run != 'true' }}
+        if: ${{ steps.gate.outputs.proceed == 'true' && steps.notes.outputs.has_changes == 'true' && inputs.dry_run != true }}
+        env:
+          NEXT_VERSION: ${{ steps.versi.outputs.next }}
         run: |
           set -euo pipefail
-          marker="${{ env.marker }}"
+          marker="${RELEASE_MARKER}"
           if [ -f CHANGELOG.md ] && grep -qF "${marker}" CHANGELOG.md; then
             line="$(grep -n -m1 -F "${marker}" CHANGELOG.md | cut -d: -f1)"
             head -n "${line}" CHANGELOG.md >"${RUNNER_TEMP}/top.md"
@@ -142,78 +195,84 @@ jobs:
           fi
           cat "${RUNNER_TEMP}/top.md" "${RUNNER_TEMP}/section.md" "${RUNNER_TEMP}/body.md" >CHANGELOG.md
           git add CHANGELOG.md
-          git commit -m "chore(release): v${{ steps.versi.outputs.next }}"
+          git commit -m "chore(release): v${NEXT_VERSION}"
 
       - name: Push branch rilis dan minta auto-merge
-        if: ${{ github.event.inputs.dry_run != 'true' }}
+        if: ${{ steps.gate.outputs.proceed == 'true' && steps.notes.outputs.has_changes == 'true' && inputs.dry_run != true }}
         id: pr
         env:
+          NEXT_VERSION: ${{ steps.versi.outputs.next }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          head="release/v${{ steps.versi.outputs.next }}"
-          git push --force-with-lease -u origin "${head}"
+          head="release/v${NEXT_VERSION}"
+          remote_sha="$(git ls-remote origin "refs/heads/${head}" | cut -f1)"
+          if [ -n "${remote_sha}" ]; then
+            git push --force-with-lease="refs/heads/${head}:${remote_sha}" -u origin "${head}"
+          else
+            git push --force-with-lease="refs/heads/${head}:" -u origin "${head}"
+          fi
           url="$(gh pr list --head "${head}" --state open --json url --jq '.[0].url // ""')"
           if [ -z "${url}" ]; then
-            url="$(gh pr create --base main --head "${head}" --title "Rilis v${{ steps.versi.outputs.next }}" --body-file "${RUNNER_TEMP}/pr.md")"
+            url="$(gh pr create --base main --head "${head}" --title "Rilis v${NEXT_VERSION}" --body-file "${RUNNER_TEMP}/pr.md")"
           fi
           printf 'url=%s\n' "${url}" >>"${GITHUB_OUTPUT}"
           echo "${url}" >>"${GITHUB_STEP_SUMMARY}"
-          gh pr merge --auto --merge "${url}"
 
-      - name: Setujui run CI milik PR rilis
-        if: ${{ github.event.inputs.dry_run != 'true' }}
+      - name: Validasi kandidat PR secara eksplisit
+        if: ${{ steps.gate.outputs.proceed == 'true' && steps.notes.outputs.has_changes == 'true' && inputs.dry_run != true }}
         env:
           GH_TOKEN: ${{ github.token }}
+          NEXT_VERSION: ${{ steps.versi.outputs.next }}
+          PR_URL: ${{ steps.pr.outputs.url }}
         run: |
           set -euo pipefail
-          head_sha="$(gh pr view "${{ steps.pr.outputs.url }}" --json headRefOid --jq .headRefOid)"
-          runs_api="repos/${GITHUB_REPOSITORY}/actions/runs"
-          for _ in $(seq 1 30); do
-            rows="$(gh api "${runs_api}" -X GET -f head_sha="${head_sha}" -f event=pull_request \
-              --jq '.workflow_runs[] | "\(.id):\(.status)"')" || rows=""
-            if [ -z "${rows}" ]; then
-              sleep 4
+          branch="release/v${NEXT_VERSION}"
+          head_sha="$(gh pr view "${PR_URL}" --json headRefOid --jq .headRefOid)"
+          gh workflow run ci.yml --ref "${branch}"
+          for _ in $(seq 1 180); do
+            run="$(gh run list --workflow ci.yml --branch "${branch}" --event workflow_dispatch \
+              --limit 20 --json databaseId,headSha,status,conclusion,createdAt \
+              --jq "[.[] | select(.headSha == \"${head_sha}\")] | sort_by(.createdAt) | last // {}")"
+            run_id="$(printf '%s' "${run}" | jq -r '.databaseId // empty')"
+            status="$(printf '%s' "${run}" | jq -r '.status // empty')"
+            conclusion="$(printf '%s' "${run}" | jq -r '.conclusion // empty')"
+            if [ -z "${run_id}" ]; then
+              sleep 10
               continue
             fi
-            perlu_persetujuan=""
-            sudah_jalan=0
-            for baris in ${rows}; do
-              id="${baris%%:*}"
-              status="${baris##*:}"
-              case "${status}" in
-                action_required | requested | waiting)
-                  perlu_persetujuan="${perlu_persetujuan} ${id}"
-                  ;;
-                *)
-                  sudah_jalan=1
-                  ;;
-              esac
-            done
-            if [ -n "${perlu_persetujuan}" ]; then
-              for id in ${perlu_persetujuan}; do
-                gh api -X POST "${runs_api}/${id}/approve" >/dev/null
-                echo "- Run CI \`${id}\` disetujui supaya \`validate\` bisa jalan tanpa klik manual." >>"${GITHUB_STEP_SUMMARY}"
-              done
+            if [ "${status}" = "completed" ]; then
+              if [ "${conclusion}" != "success" ]; then
+                echo "Validasi kandidat ${head_sha} berakhir dengan ${conclusion}." >&2
+                exit 1
+              fi
+              echo "Validasi \`${head_sha}\` lulus pada run ${run_id}." >>"${GITHUB_STEP_SUMMARY}"
+              gh pr merge --auto --merge "${PR_URL}"
               exit 0
             fi
-            if [ "${sudah_jalan}" = 1 ]; then
-              echo "- Run CI PR rilis berjalan sendiri; tidak ada yang perlu disetujui." >>"${GITHUB_STEP_SUMMARY}"
-              exit 0
-            fi
-            sleep 4
+            sleep 10
           done
-          echo "- Tidak ada run CI untuk \`${head_sha}\`; auto-merge tetap menunggu." >>"${GITHUB_STEP_SUMMARY}"
+          echo "Run CI untuk kandidat ${head_sha} belum selesai dalam 30 menit." >&2
+          exit 1
 
       - name: Tunggu PR rilis tergabung
-        if: ${{ github.event.inputs.dry_run != 'true' }}
+        if: ${{ steps.gate.outputs.proceed == 'true' && steps.notes.outputs.has_changes == 'true' && inputs.dry_run != true }}
+        id: merged
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ steps.pr.outputs.url }}
         run: |
           set -euo pipefail
-          url="${{ steps.pr.outputs.url }}"
+          url="${PR_URL}"
           for _ in $(seq 1 90); do
             if [ "$(gh pr view "${url}" --json state --jq .state)" = "MERGED" ]; then
+              merge_sha="$(gh pr view "${url}" --json mergeCommit --jq .mergeCommit.oid)"
+              if [ -z "${merge_sha}" ] || [ "${merge_sha}" = "null" ]; then
+                echo "PR merged but GitHub did not report its merge SHA." >&2
+                exit 1
+              fi
+              echo "sha=${merge_sha}" >>"${GITHUB_OUTPUT}"
+              echo "Merged SHA: ${merge_sha}" >>"${GITHUB_STEP_SUMMARY}"
               exit 0
             fi
             sleep 20
@@ -225,24 +284,80 @@ jobs:
           exit 1
 
       - name: Pasang tag dan GitHub Release
-        if: ${{ github.event.inputs.dry_run != 'true' }}
+        if: ${{ steps.gate.outputs.proceed == 'true' && steps.notes.outputs.has_changes == 'true' && inputs.dry_run != true }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXT_VERSION: ${{ steps.versi.outputs.next }}
+          MERGE_SHA: ${{ steps.merged.outputs.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin --tags --force
+          git tag -a "v${NEXT_VERSION}" -m "MoonWitness v${NEXT_VERSION}" "${MERGE_SHA}"
+          git push origin "v${NEXT_VERSION}"
+          if ! gh release view "v${NEXT_VERSION}" >/dev/null 2>&1; then
+            gh release create "v${NEXT_VERSION}" --target "${MERGE_SHA}" --title "MoonWitness v${NEXT_VERSION}" --notes-file "${RUNNER_TEMP}/notes.md"
+          fi
+
+      - name: Buat PR sinkronisasi main ke dev
+        if: ${{ steps.gate.outputs.proceed == 'true' && inputs.dry_run != true }}
+        id: sync
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXT_VERSION: ${{ steps.versi.outputs.next }}
+        run: |
+          set -euo pipefail
+          git fetch origin main dev
+          if git merge-base --is-ancestor origin/main origin/dev; then
+            echo "needed=false" >>"${GITHUB_OUTPUT}"
+            echo "dev sudah mencakup main; PR sinkronisasi tidak diperlukan." >>"${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+          echo "needed=true" >>"${GITHUB_OUTPUT}"
+          head_sha="$(git rev-parse origin/main)"
+          url="$(gh pr list --base dev --head main --state open --json url --jq '.[0].url // ""')"
+          if [ -z "${url}" ]; then
+            url="$(gh pr create --base dev --head main --title "chore(release): sync main after v${NEXT_VERSION}" \
+              --body "Sync the protected main release commit back to dev after v${NEXT_VERSION}.")
+          fi
+          printf 'url=%s\nhead_sha=%s\n' "${url}" "${head_sha}" >>"${GITHUB_OUTPUT}"
+          gh workflow run ci.yml --ref main
+          for _ in $(seq 1 180); do
+            run="$(gh run list --workflow ci.yml --branch main --event workflow_dispatch \
+              --limit 20 --json databaseId,headSha,status,conclusion,createdAt \
+              --jq "[.[] | select(.headSha == \"${head_sha}\")] | sort_by(.createdAt) | last // {}")"
+            run_id="$(printf '%s' "${run}" | jq -r '.databaseId // empty')"
+            status="$(printf '%s' "${run}" | jq -r '.status // empty')"
+            conclusion="$(printf '%s' "${run}" | jq -r '.conclusion // empty')"
+            if [ -z "${run_id}" ]; then
+              sleep 10
+              continue
+            fi
+            if [ "${status}" = "completed" ]; then
+              if [ "${conclusion}" != "success" ]; then
+                echo "Validation of main SHA ${head_sha} failed: ${conclusion}." >&2
+                exit 1
+              fi
+              gh pr merge --auto --merge "${url}"
+              echo "Validation \`${head_sha}\` passed; waiting for dev sync PR merge." >>"${GITHUB_STEP_SUMMARY}"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Validation of main SHA ${head_sha} did not finish in 30 minutes." >&2
+          exit 1
+
+      - name: Tunggu sinkronisasi main ke dev
+        if: ${{ steps.gate.outputs.proceed == 'true' && steps.sync.outputs.needed == 'true' && inputs.dry_run != true }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          next="${{ steps.versi.outputs.next }}"
-          git fetch origin main --tags --force
-          git tag -a "v${next}" -m "MoonWitness v${next}" origin/main
-          git push origin "v${next}"
-          if ! gh release view "v${next}" >/dev/null 2>&1; then
-            gh release create "v${next}" --target main --title "MoonWitness v${next}" --notes-file "${RUNNER_TEMP}/notes.md"
-          fi
-
-      - name: Bawa CHANGELOG kembali ke dev
-        if: ${{ github.event.inputs.dry_run != 'true' }}
-        run: |
-          set -euo pipefail
-          git fetch origin dev main --tags --force
-          git checkout -B dev origin/dev
-          git merge --no-edit origin/main
-          git push origin dev
+          url="${{ steps.sync.outputs.url }}"
+          for _ in $(seq 1 90); do
+            if [ "$(gh pr view "${url}" --json state --jq .state)" = "MERGED" ]; then
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "Main-to-dev sync PR did not merge in 30 minutes: ${url}" >&2
+          exit 1
