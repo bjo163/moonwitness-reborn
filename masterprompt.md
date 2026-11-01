@@ -5,7 +5,8 @@
 **Project:** MOONWITNESS REBORN  
 **Ecosystem:** EMPIRE OF THE LIGHT · A-L-L-A-H · ROCKSOUL  
 **Development Direction:** Complete Rebuild · Unified Web/API · Modular Monolith  
-**Primary Repository:** `bjo163/moonwitnessxv` — candidate for verification and ratification  
+**Primary Repository:** `bjo163/moonwitness-reborn` — canonical implementation repository (MW-ADR-001 accepted 2026-11-01)
+**Ecosystem identity authority:** [`docs/vision/ALLAH_COM_OFFICIAL_CANON.md`](docs/vision/ALLAH_COM_OFFICIAL_CANON.md)  
 **Development Language:** Indonesian for strategic communication and documentation where appropriate; English for technical identifiers and API contracts  
 **Initial UI Languages:** Indonesian (`id`) and English (`en`)  
 **Execution Mode:** Repository Intelligence Audit → Architecture & Design → Governance → Microtask Planning → Implementation → Verification → Release
@@ -41,6 +42,8 @@ Preserve the knowledge. Rebuild the foundation. Unify the experience. Verify eve
 ---
 
 # PILLAR 01 — PROJECT CONSTITUTION, IDENTITY & MASTER VISION
+
+**Authority note:** A-L-L-A-H.COM / EMPIRE OF THE LIGHT identity, acronym expansion, public promise, ecosystem boundaries and spiritual/editorial limits are governed by [`docs/vision/ALLAH_COM_OFFICIAL_CANON.md`](docs/vision/ALLAH_COM_OFFICIAL_CANON.md). This master prompt governs MoonWitness product and engineering execution; it must not redefine that ecosystem identity.
 
 ## 1.1 Product Identity
 
