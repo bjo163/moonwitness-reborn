@@ -1,8 +1,12 @@
 # MoonWitness Master Vision Narrative
 
+**Ecosystem identity authority:** [`ALLAH_COM_OFFICIAL_CANON.md`](./ALLAH_COM_OFFICIAL_CANON.md). This document defines the MoonWitness product vision, not the A-L-L-A-H.COM identity.
+
 **Status: PROPOSED · Owner ratification required**
 
 ## Identity
+
+A-L-L-A-H.COM is the public ecosystem identity and gateway; EMPIRE OF THE LIGHT is the ecosystem identity. MoonWitness is the integrated software platform and implementation foundation within that ecosystem. The official acronym expansion, public promise and ecosystem boundaries are defined only by the A-L-L-A-H.COM Official Canon.
 
 MoonWitness is proposed as one integrated platform for preserving, discovering, tracing, connecting, understanding, researching, creating, reviewing, publishing, and acting on knowledge. It brings sources, corpus, witness, history, people, events, stories, research, evidence, ontology, creative work, journeys, and accountable action into one coherent experience while keeping their identities and ownership distinct.
 
