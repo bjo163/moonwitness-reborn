@@ -3187,3 +3187,131 @@ msgstr "Privasi & Hak Asasi"
 msgctxt "web:landing.m8Terms"
 msgid "Etika & Ketentuan"
 msgstr "Etika & Ketentuan"
+
+msgctxt "web:dashboard.hqTitle"
+msgid "Headquarter Spasial"
+msgstr "Headquarter Spasial"
+
+msgctxt "web:dashboard.hqSubtitle"
+msgid "Pusat Komando & Observatorium Ekosistem"
+msgstr "Pusat Komando & Observatorium Ekosistem"
+
+msgctxt "web:dashboard.hqArrivalGreeting"
+msgid "Gerbang Otoritas Terbuka"
+msgstr "Gerbang Otoritas Terbuka"
+
+msgctxt "web:dashboard.hqArrivalDesc"
+msgid "Selamat datang di ruang kendali A-L-L-A-H.COM. Enam region operasional siap untuk koordinasi, riset, dan pengawasan."
+msgstr "Selamat datang di ruang kendali A-L-L-A-H.COM. Enam region operasional siap untuk koordinasi, riset, dan pengawasan."
+
+msgctxt "web:dashboard.hqRegion1Title"
+msgid "01 · Command Deck"
+msgstr "01 · Command Deck"
+
+msgctxt "web:dashboard.hqRegion1Desc"
+msgid "Orientasi aktivitas ekosistem, prioritas terkini, dan akses cepat ke seluruh instrumen."
+msgstr "Orientasi aktivitas ekosistem, prioritas terkini, dan akses cepat ke seluruh instrumen."
+
+msgctxt "web:dashboard.hqRegion2Title"
+msgid "02 · Identitas & Akses"
+msgstr "02 · Identitas & Akses"
+
+msgctxt "web:dashboard.hqRegion2Desc"
+msgid "Pengelolaan akun, audit peran hak akses, dan kepatuhan privasi pengguna."
+msgstr "Pengelolaan akun, audit peran hak akses, dan kepatuhan privasi pengguna."
+
+msgctxt "web:dashboard.hqRegion3Title"
+msgid "03 · Kendali Misi (Mission Control)"
+msgstr "03 · Kendali Misi (Mission Control)"
+
+msgctxt "web:dashboard.hqRegion3Desc"
+msgid "Papan status tugas MW, milestone ekosistem, dan pelacakan kemajuan terverifikasi."
+msgstr "Papan status tugas MW, milestone ekosistem, dan pelacakan kemajuan terverifikasi."
+
+msgctxt "web:dashboard.hqRegion4Title"
+msgid "04 · Khazanah & Intelijensi (Knowledge)"
+msgstr "04 · Khazanah & Intelijensi (Knowledge)"
+
+msgctxt "web:dashboard.hqRegion4Desc"
+msgid "Pusat penelitian leksikografi, provider model AI, dan korelasi grafis entitas."
+msgstr "Pusat penelitian leksikografi, provider model AI, dan korelasi grafis entitas."
+
+msgctxt "web:dashboard.hqRegion5Title"
+msgid "05 · Semesta & Transmisi"
+msgstr "05 · Semesta & Transmisi"
+
+msgctxt "web:dashboard.hqRegion5Desc"
+msgid "Kurasi narasi MoonWitness, antrean tinjauan naskah, dan verifikasi publikasi."
+msgstr "Kurasi narasi MoonWitness, antrean tinjauan naskah, dan verifikasi publikasi."
+
+msgctxt "web:dashboard.hqRegion6Title"
+msgid "06 · Observatorium Sistem"
+msgstr "06 · Observatorium Sistem"
+
+msgctxt "web:dashboard.hqRegion6Desc"
+msgid "Pemantauan status konektor eksternal, konfigurasi DNS, dan kesehatan layanan loopback."
+msgstr "Pemantauan status konektor eksternal, konfigurasi DNS, dan kesehatan layanan loopback."
+
+msgctxt "web:community.commTitle"
+msgid "Dock · Pelabuhan Komunitas"
+msgstr "Dock · Pelabuhan Komunitas"
+
+msgctxt "web:community.commSubtitle"
+msgid "Ruang Kolaborasi & Kontribusi Ekosistem A-L-L-A-H.COM"
+msgstr "Ruang Kolaborasi & Kontribusi Ekosistem A-L-L-A-H.COM"
+
+msgctxt "web:community.commHero"
+msgid "Kebenaran di Atas Opini. Amal Nyata di Atas Klaim."
+msgstr "Kebenaran di Atas Opini. Amal Nyata di Atas Klaim."
+
+msgctxt "web:community.commDesc"
+msgid "Dock adalah pelabuhan partisipasi tempat para peneliti, penggiat ilmu, dan pencari kebenaran berhimpun untuk mengkaji sumber dan berkontribusi secara bertanggung jawab."
+msgstr "Dock adalah pelabuhan partisipasi tempat para peneliti, penggiat ilmu, dan pencari kebenaran berhimpun untuk mengkaji sumber dan berkontribusi secara bertanggung jawab."
+
+msgctxt "web:community.commGuidelinesTitle"
+msgid "Etika & Pedoman Partisipasi"
+msgstr "Etika & Pedoman Partisipasi"
+
+msgctxt "web:community.commGuideline1"
+msgid "Integritas Rujukan"
+msgstr "Integritas Rujukan"
+
+msgctxt "web:community.commGuideline1Desc"
+msgid "Setiap gagasan atau klaim wajib menyertakan rujukan primer yang dapat diperiksa bersama."
+msgstr "Setiap gagasan atau klaim wajib menyertakan rujukan primer yang dapat diperiksa bersama."
+
+msgctxt "web:community.commGuideline2"
+msgid "Adab Diskusi & Kerendahan Hati"
+msgstr "Adab Diskusi & Kerendahan Hati"
+
+msgctxt "web:community.commGuideline2Desc"
+msgid "Menghormati martabat sesama manusia, menghindari debat kusir tanpa dalil, dan senantiasa mencari kebenaran."
+msgstr "Menghormati martabat sesama manusia, menghindari debat kusir tanpa dalil, dan senantiasa mencari kebenaran."
+
+msgctxt "web:community.commGuideline3"
+msgid "Akuntabilitas Amal"
+msgstr "Akuntabilitas Amal"
+
+msgctxt "web:community.commGuideline3Desc"
+msgid "Kontribusi diarahkan pada kemanfaatan nyata bagi umat dan kemanusiaan, bukan popularitas semu."
+msgstr "Kontribusi diarahkan pada kemanfaatan nyata bagi umat dan kemanusiaan, bukan popularitas semu."
+
+msgctxt "web:community.commCirclesTitle"
+msgid "Lingkaran Kajian & Minat"
+msgstr "Lingkaran Kajian & Minat"
+
+msgctxt "web:community.commCircle1"
+msgid "Kajian Naskah & Tarikh"
+msgstr "Kajian Naskah & Tarikh"
+
+msgctxt "web:community.commCircle2"
+msgid "Etika Teknologi & AI"
+msgstr "Etika Teknologi & AI"
+
+msgctxt "web:community.commCircle3"
+msgid "Karya Kreatif & Narasi"
+msgstr "Karya Kreatif & Narasi"
+
+msgctxt "web:community.commActionRegister"
+msgid "Daftar Kontributor Dock"
+msgstr "Daftar Kontributor Dock"
