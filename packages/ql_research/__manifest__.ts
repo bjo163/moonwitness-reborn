@@ -6,7 +6,7 @@ const manifest: QlAddonManifest = {
   name: "ql_research",
   version: "1.0.0",
   description:
-    "Versioned research assessments, witness statements, story narratives, event records, person profiles, and law instruments.",
+    "Versioned research assessments, witness statements, story narratives, event records, person profiles, law instruments, and mizan assessments.",
   depends: ["ql_base", "ql_auth", "ql_source", "ql_corpus"],
   models,
   access: [
@@ -145,6 +145,31 @@ const manifest: QlAddonManifest = {
     },
     {
       model: "law.instrument",
+      group: "admin",
+      read: true,
+      write: true,
+      create: true,
+      unlink: true,
+    },
+    // mizan.assessment — MW-1231
+    {
+      model: "mizan.assessment",
+      group: "user",
+      read: true,
+      write: false,
+      create: false,
+      unlink: false,
+    },
+    {
+      model: "mizan.assessment",
+      group: "operator",
+      read: true,
+      write: true,
+      create: true,
+      unlink: false,
+    },
+    {
+      model: "mizan.assessment",
       group: "admin",
       read: true,
       write: true,
