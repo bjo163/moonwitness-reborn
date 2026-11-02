@@ -25,6 +25,7 @@ export type AddonCategory =
   | "intelligence"
   | "workflow"
   | "integration"
+  | "search"
   | "system";
 
 /** Public landing page section where a declarative landing view is surfaced. */

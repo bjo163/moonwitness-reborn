@@ -24,6 +24,7 @@
     "ql_geo": "workspace:*",
     "ql_orm": "workspace:*",
     "ql_research": "workspace:*",
+    "ql_search": "workspace:*",
     "ql_source": "workspace:*",
     "ql_workflow": "workspace:*"
   }

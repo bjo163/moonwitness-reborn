@@ -417,6 +417,33 @@ void test("no connector contract surface accepts a credential", () => {
   }
 });
 
+
+void test("MoonClient search sends query parameters to apiRoutes.search.query", async () => {
+  const { client, requests } = recorder({
+    query: "musa",
+    total: 1,
+    results: [
+      {
+        id: "entry-1",
+        targetModel: "story.narrative",
+        targetId: "story-musa",
+        token: "musa",
+        weight: 3,
+        snippet: "Kisah Nabi Musa",
+      },
+    ],
+  });
+
+  const res = await client.search({ q: "musa", targetModel: "story.narrative", limit: 10 });
+  assert.equal(requests.length, 1);
+  assert.ok(requests[0].url.includes("/api/search"));
+  assert.ok(requests[0].url.includes("q=musa"));
+  assert.ok(requests[0].url.includes("targetModel=story.narrative"));
+  assert.ok(requests[0].url.includes("limit=10"));
+  assert.equal(res.total, 1);
+  assert.equal(res.results[0].targetId, "story-musa");
+});
+
 // Browser melempar "Failed to execute 'fetch' on 'Window': Illegal invocation"
 // kalau fetch menerima this selain global, dan klien menyimpannya sebagai field.
 void test("default fetcher calls fetch with the global as receiver", async () => {

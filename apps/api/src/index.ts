@@ -16,6 +16,7 @@ import geoManifest from "ql_geo/__manifest__";
 import sourceManifest from "ql_source/__manifest__";
 import researchManifest from "ql_research/__manifest__";
 import workflowManifest from "ql_workflow/__manifest__";
+import searchManifest from "ql_search/__manifest__";
 import { resolveModelProviderConfig } from "./ai/model-config.js";
 import { parseProviderEncryptionKey } from "./ai/provider-secrets.js";
 import { createApiServer } from "./http/server.js";
@@ -44,6 +45,7 @@ const { orm, close: closeOrm } = await createQlOrm(databaseUrl, [
   sourceManifest,
   corpusManifest,
   researchManifest,
+  searchManifest,
 ]);
 const store = createConversationStore(orm);
 const server = createApiServer(provider, store, orm, {

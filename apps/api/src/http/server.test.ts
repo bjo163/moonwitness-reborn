@@ -13,6 +13,7 @@ import baseManifest from "ql_base/__manifest__";
 import chatManifest from "ql_chat/__manifest__";
 import corpusManifest from "ql_corpus/__manifest__";
 import sourceManifest from "ql_source/__manifest__";
+import searchManifest from "ql_search/__manifest__";
 import { createApiServer } from "./server.js";
 import { listProjectTasks } from "../project-progress/github-issues.js";
 
@@ -913,3 +914,35 @@ void test("GET /models exposes addon and category metadata and GET /public/landi
   assert.ok(items.some((item) => item.name === "ai.provider.landing"));
   assert.ok(items.every((item) => item.href.startsWith("/")));
 });
+
+test("GET /api/search queries search.index_entry securely", async () => {
+  const cookie = await registerAndLogin(address, "Searcher", "searcher@example.com", "password-1234");
+
+  // Create an index entry in orm
+  const adminId = "admin-user";
+  await orm.create("search.index_entry", adminId, {
+    id: "entry_musa_01",
+    target_model: "story.narrative",
+    target_id: "story_musa",
+    token: "musa",
+    weight: 3,
+    snippet: "Kisah Nabi Musa dan perjalanan di padang pasir",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+
+  const searchRes = await fetch(`${address}/api/search?q=musa`, {
+    headers: { cookie },
+  });
+  assert.equal(searchRes.status, 200);
+  const data = (await searchRes.json()) as {
+    query: string;
+    total: number;
+    results: Array<{ id: string; targetModel: string; targetId: string }>;
+  };
+  assert.equal(data.query, "musa");
+  assert.ok(data.total >= 1);
+  assert.equal(data.results[0].targetId, "story_musa");
+  assert.equal(data.results[0].targetModel, "story.narrative");
+});
+

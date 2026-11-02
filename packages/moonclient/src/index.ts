@@ -45,6 +45,28 @@ export interface InitialSetupStatusDto {
   required: boolean;
 }
 
+
+export interface SearchQueryRequestDto {
+  q: string;
+  targetModel?: string;
+  limit?: number;
+}
+
+export interface SearchResultItemDto {
+  id: string;
+  targetModel: string;
+  targetId: string;
+  token: string;
+  weight: number;
+  snippet?: string;
+}
+
+export interface SearchQueryResponseDto {
+  query: string;
+  total: number;
+  results: SearchResultItemDto[];
+}
+
 export interface LoginRequestDto {
   email: string;
   password: string;
@@ -160,6 +182,7 @@ export interface ModelFieldDto {
   labelKey: string;
   helpKey?: string;
   selectionKeys?: Record<string, string>;
+  options?: readonly string[];
   required?: boolean;
   maxLength?: number;
   computed?: boolean;
@@ -209,6 +232,12 @@ export interface LandingViewItemDto {
 
 export interface LandingCatalogResponseDto {
   items: LandingViewItemDto[];
+}
+
+export interface PublicModelExplorerResponseDto {
+  model: ModelMetadataDto | null;
+  models: ModelMetadataDto[];
+  records: ModelRecordDto[];
 }
 
 export type ModelRecordDto = RecordValues;
@@ -872,8 +901,14 @@ export const apiRoutes = {
     summary: "/project/progress/summary",
     tasks: "/project/progress/tasks",
   },
+  search: {
+    query: "/api/search",
+  },
   landing: {
     catalog: "/public/landing",
+    models: "/public/models",
+    modelPrefix: "/public/models/",
+    model: (modelName: string) => `/public/models/${segment(modelName)}`,
   },
   admin: {
     users: {
@@ -1246,6 +1281,16 @@ export class MoonClient {
 
   landingCatalog(): Promise<LandingCatalogResponseDto> {
     return this.request(apiRoutes.landing.catalog);
+  }
+
+  publicModelExplorer(
+    modelName?: string,
+  ): Promise<PublicModelExplorerResponseDto> {
+    return this.request(
+      modelName
+        ? apiRoutes.landing.model(modelName)
+        : apiRoutes.landing.models,
+    );
   }
 
   listProjectTasks(): Promise<ProjectTaskListResponseDto> {
