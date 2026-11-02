@@ -431,7 +431,7 @@ The research synthesis, repository audit, paper/repository references, evaluatio
 - [ ] UI states and metrics are backed by authoritative data.
 - [ ] Documentation, GitHub Issues and Wiki remain aligned; no task status is duplicated in design docs.
 
-## 17. Source and status
+## 18. Source and status
 
 Prepared against the `dev` branch on 2026-11-02. This document records architecture direction for planning. ARSY (AGI Reality System Yard) is a long-term target and must be evaluated through measurable generalization, reliability, safety and task-performance benchmarks; it is not a present capability claim. It is not evidence that any proposed addon, runtime, UI, connector, API, or monitoring capability exists.
 
