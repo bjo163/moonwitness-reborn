@@ -27,14 +27,14 @@ const manifests = [
   searchManifest,
 ];
 
-type TestEditionOptions = {
+interface TestEditionOptions {
   editionKey: string;
   locale: "ar" | "en" | "id";
   authority: "revelation_verbatim" | "translation";
   displayRights?: "cleared" | "under_review";
   indexRights?: "cleared" | "under_review";
   stage?: "staged" | "published";
-};
+}
 
 function sha256(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
