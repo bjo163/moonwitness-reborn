@@ -85,6 +85,19 @@ await writeFile(
   `export const uiCatalogs = Object.freeze(${JSON.stringify(catalogues)});\n`,
   "utf8",
 );
+for (const locale of locales) {
+  await writeFile(
+    join(dist, `catalogs-${locale}.js`),
+    `export const uiCatalog = Object.freeze(${JSON.stringify(catalogues[locale])});\n`,
+    "utf8",
+  );
+  await writeFile(
+    join(dist, `catalogs-${locale}.d.ts`),
+    'import type { UiCatalogMessage, UiMessageKey } from "./catalogs.js";\n' +
+      "export declare const uiCatalog: Readonly<Record<UiMessageKey, UiCatalogMessage>>;\n",
+    "utf8",
+  );
+}
 const keyUnion = [...allKeys].sort().map((key) => JSON.stringify(key)).join(" | ");
 await writeFile(
   join(dist, "catalogs.d.ts"),

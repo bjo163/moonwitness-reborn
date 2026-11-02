@@ -185,7 +185,7 @@ const uiPurePaletteBan = {
  * @param {string} [options.webAppDir] Workspace-relative directory of the Next.js app.
  * @param {string} [options.apiConnectorsDir] Workspace-relative directory of the
  *   API's credential-touching connectors module.
- * @returns {import("eslint").Linter.Config[]}
+ * @returns {import("typescript-eslint").ConfigArray}
  */
 export function moonwitnessConfig({
   tsconfigRootDir,
@@ -198,6 +198,7 @@ export function moonwitnessConfig({
     );
   }
 
+  /** @type {import("eslint").Linter.RulesRecord} */
   const cleanCodeRules = {
     "@typescript-eslint/consistent-type-imports": [
       "error",
@@ -247,6 +248,11 @@ export function moonwitnessConfig({
     "prefer-arrow-callback": "warn",
     "prefer-template": "error",
   };
+  // Next's declarations widen each valid rule severity to `string`, which is
+  // then rejected by ESLint's `RulesRecord`; re-narrow it at this boundary.
+  /** @type {import("eslint").Linter.RulesRecord} */
+  const nextRecommendedRules =
+    /** @type {never} */ (nextPlugin.configs.recommended.rules);
 
   return tseslint.config(
     js.configs.recommended,
@@ -281,7 +287,7 @@ export function moonwitnessConfig({
       files: [`${webAppDir}/**/*.{js,mjs,ts,tsx}`],
       plugins: { "@next/next": nextPlugin },
       rules: {
-        ...nextPlugin.configs.recommended.rules,
+        ...nextRecommendedRules,
         "@next/next/no-html-link-for-pages": ["error", `${webAppDir}/src/app`],
       },
     },

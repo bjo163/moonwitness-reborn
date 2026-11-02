@@ -13,17 +13,19 @@ import {
   LoadingScreen,
   MetricList,
   MetricRow,
-  PageHeader,
   SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
+  HolographicOrbitDeck,
+  AmbientAtmosphere,
   type SidebarNavItem,
+  type CommandRegionId,
 } from "@moonwitness/ui";
 import {
+  ArrowRight,
   Boxes,
-  Database,
+  ExternalLink,
   KeyRound,
-  LayoutDashboard,
   Languages,
   MessageSquare,
   Microscope,
@@ -32,6 +34,8 @@ import {
   Sparkles,
   Workflow as WorkflowIcon,
   BookOpen,
+  Activity,
+  Compass,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -53,8 +57,7 @@ export default function DashboardPage() {
   const [hasResearch, setHasResearch] = useState(false);
   const [projectTracker, setProjectTracker] =
     useState<ProjectTaskListResponseDto | null>(null);
-  const [projectTrackerLoading, setProjectTrackerLoading] = useState(false);
-  const [projectTrackerError, setProjectTrackerError] = useState(false);
+  const [activeRegion, setActiveRegion] = useState<string>("all");
   const { locale, changeLocale, saving, error: localeError } =
     useLocalePreference(user);
   const { t } = useTranslationCatalog();
@@ -72,24 +75,15 @@ export default function DashboardPage() {
             (group) => group === "admin" || group === "operator",
           )
         ) {
-          setProjectTrackerLoading(true);
           void moonClient
             .listProjectTasks()
             .then((tracker) => {
               if (!cancelled) setProjectTracker(tracker);
             })
             .catch(() => {
-              if (!cancelled) setProjectTrackerError(true);
-            })
-            .finally(() => {
-              if (!cancelled) setProjectTrackerLoading(false);
+              if (!cancelled) setProjectTracker(null);
             });
         }
-        // A single listModels probe is the de-facto feature flag: bootstrap
-        // registration of `ql_workflow` / `ql_corpus` in
-        // `apps/api/src/index.ts` is the switch that toggles the entire queue
-        // and shelf surfaces (route + nav + card) without introducing a
-        // separate flag subsystem.
         try {
           const metadata = await moonClient.listModels();
           if (!cancelled) {
@@ -144,12 +138,7 @@ export default function DashboardPage() {
   }
 
   if (loading || !user) {
-    return (
-      <LoadingScreen
-        error={error}
-        label={copy.common.loading}
-      />
-    );
+    return <LoadingScreen error={error} label={copy.common.loading} />;
   }
 
   const hasConnectors = user.groups.some(
@@ -159,9 +148,10 @@ export default function DashboardPage() {
   const canViewProjectTracker = user.groups.some(
     (group) => group === "admin" || group === "operator",
   );
-  const readyTasks = projectTracker?.tasks.filter((task) =>
-    projectTracker.readyTaskIds.includes(task.id),
-  ) ?? [];
+  const readyTasks =
+    projectTracker?.tasks.filter((task) =>
+      projectTracker.readyTaskIds.includes(task.id),
+    ) ?? [];
   const doneCount =
     projectTracker?.tasks.filter((task) => task.state === "done").length ?? 0;
   const blockedCount =
@@ -171,8 +161,8 @@ export default function DashboardPage() {
   const navItems: readonly SidebarNavItem[] = [
     {
       href: "/command-center",
-      label: copy.common.dashboard,
-      icon: <LayoutDashboard aria-hidden="true" size={16} />,
+      label: copy.dashboard.hqTitle,
+      icon: <Sparkles aria-hidden="true" size={16} />,
       active: true,
       onSelect: closeSidebar,
     },
@@ -252,6 +242,15 @@ export default function DashboardPage() {
       : []),
   ];
 
+  const regionsMeta = [
+    { id: "01", title: copy.dashboard.hqRegion1Title, desc: copy.dashboard.hqRegion1Desc, icon: <MessageSquare size={16} /> },
+    { id: "02", title: copy.dashboard.hqRegion2Title, desc: copy.dashboard.hqRegion2Desc, icon: <ShieldCheck size={16} /> },
+    { id: "03", title: copy.dashboard.hqRegion3Title, desc: copy.dashboard.hqRegion3Desc, icon: <Activity size={16} /> },
+    { id: "04", title: copy.dashboard.hqRegion4Title, desc: copy.dashboard.hqRegion4Desc, icon: <Microscope size={16} /> },
+    { id: "05", title: copy.dashboard.hqRegion5Title, desc: copy.dashboard.hqRegion5Desc, icon: <BookOpen size={16} /> },
+    { id: "06", title: copy.dashboard.hqRegion6Title, desc: copy.dashboard.hqRegion6Desc, icon: <Plug size={16} /> },
+  ];
+
   return (
     <WorkspaceTemplate
       sidebarOpen={sidebarOpen}
@@ -264,7 +263,7 @@ export default function DashboardPage() {
           identity={{ name: user.name, subtitle: user.email }}
           items={navItems}
           logout={{ label: copy.common.logout, onLogout: () => void logout() }}
-          navLabel={copy.common.dashboard}
+          navLabel={copy.dashboard.hqTitle}
           onCloseSidebar={() => setSidebarOpen(false)}
         />
       }
@@ -276,9 +275,10 @@ export default function DashboardPage() {
               onOpenSidebar={() => setSidebarOpen(true)}
               sidebarOpen={sidebarOpen}
             />
-            <span className="text-sm font-medium text-ink-soft">
-              {copy.common.dashboard}
+            <span className="ql-display text-base font-semibold tracking-wide text-acid">
+              {copy.dashboard.hqTitle}
             </span>
+            <span className="text-xs text-muted">/ {copy.dashboard.hqSubtitle}</span>
           </div>
           <LocaleSwitcher
             locale={locale}
@@ -290,254 +290,238 @@ export default function DashboardPage() {
       }
     >
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-12">
-          <PageHeader
-            actions={
+        {/* =========================================================================
+            1. IDENTITY FRAME & SPATIAL ARRIVAL (Threshold)
+           ========================================================================= */}
+        <section className="relative border-b border-hairline bg-panel-edge px-5 py-8 md:px-10 md:py-12">
+          <div className="mx-auto flex w-full max-w-6xl flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="inline-flex size-2 rounded-full bg-acid shadow-[0_0_8px_var(--color-acid)]" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-acid">
+                  {copy.dashboard.hqArrivalGreeting}
+                </span>
+                <Badge variant="outline">
+                  {user.groups.join(" · ")}
+                </Badge>
+              </div>
+              <h1 className="ql-display mt-3 text-3xl font-semibold tracking-wide text-ink md:text-5xl">
+                {copy.dashboard.greeting} {user.name}
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft md:text-base">
+                {copy.dashboard.hqArrivalDesc}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
               <Button onClick={() => router.push("/command-center/chat")}>
                 <MessageSquare aria-hidden="true" size={16} />
                 {copy.dashboard.continueChat}
               </Button>
-            }
-            className="border-b-0 pb-0"
-            description={copy.dashboard.description}
-            title={`${copy.dashboard.greeting} ${user.name}`}
-          />
+              <Link
+                href="/"
+                className="inline-flex min-h-11 items-center gap-1.5 border border-hairline px-4 text-xs font-semibold uppercase tracking-wider text-ink-soft transition-colors hover:border-acid hover:text-acid"
+              >
+                <span>Portal A-L-L-A-H.COM</span>
+                <ExternalLink aria-hidden="true" size={14} />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            2. WORLD CORE & SPATIAL AXIS SELECTOR (Landmark Navigation)
+           ========================================================================= */}
+        <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-12 relative">
+          {/* Subtle Ambient Canvas in background */}
+          <AmbientAtmosphere density="subtle" />
 
           {(error || localeError) && (
-            <Alert variant="error" className="mt-6">
+            <Alert variant="error" className="mb-8">
               {error ?? localeError}
             </Alert>
           )}
 
-          <section className="grid gap-7 py-10 md:grid-cols-[0.8fr_1.2fr]">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-ink">
-                {copy.dashboard.availableTitle}
-              </h2>
-              <p className="mt-3 max-w-sm text-sm leading-6 text-muted">
-                {copy.dashboard.availableDescription}
-              </p>
-            </div>
-            <ul className="divide-y divide-hairline border-y border-hairline">
-              <li>
-                <Link
-                  href="/command-center/chat"
-                  className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
-                >
-                  <MessageSquare
-                    aria-hidden="true"
-                    size={18}
-                    className="shrink-0 text-acid"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-ink group-hover:text-acid">
-                      {copy.common.chat}
-                    </span>
-                    <span className="mt-1 block text-sm leading-6 text-muted">
-                      {copy.dashboard.chatDescription}
-                    </span>
-                  </span>
-                  <Badge variant="live">{copy.common.statusAvailable}</Badge>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/models"
-                  className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
-                >
-                  <Database
-                    aria-hidden="true"
-                    size={18}
-                    className="shrink-0 text-acid"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-ink group-hover:text-acid">
-                      {copy.common.models}
-                    </span>
-                    <span className="mt-1 block text-sm leading-6 text-muted">
-                      {copy.dashboard.modelsDescription}
-                    </span>
-                  </span>
-                  <Badge variant="outline">{copy.common.statusAvailable}</Badge>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/providers"
-                  className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
-                >
-                  <KeyRound
-                    aria-hidden="true"
-                    size={18}
-                    className="shrink-0 text-acid"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-ink group-hover:text-acid">
-                      {copy.common.providers}
-                    </span>
-                    <span className="mt-1 block text-sm leading-6 text-muted">
-                      {copy.dashboard.providersDescription}
-                    </span>
-                  </span>
-                  <Badge variant="outline">{copy.common.statusAvailable}</Badge>
-                </Link>
-              </li>
-              {hasConnectors && (
-                <li>
-                  <Link
-                    href="/connectors"
-                    className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
-                  >
-                    <Plug
-                      aria-hidden="true"
-                      size={18}
-                      className="shrink-0 text-acid"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium text-ink group-hover:text-acid">
-                        {copy.common.integrations}
-                      </span>
-                      <span className="mt-1 block text-sm leading-6 text-muted">
-                        {copy.dashboard.integrationsDescription}
-                      </span>
-                    </span>
-                    <Badge variant="outline">{copy.common.statusAvailable}</Badge>
-                  </Link>
-                </li>
-              )}
-              {hasWorkflow && (
-                <li>
-                  <Link
-                    href="/workflow"
-                    className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
-                  >
-                    <WorkflowIcon
-                      aria-hidden="true"
-                      size={18}
-                      className="shrink-0 text-acid"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium text-ink group-hover:text-acid">
-                        {copy.workflow.navLabel}
-                      </span>
-                      <span className="mt-1 block text-sm leading-6 text-muted">
-                        {copy.workflow.queueSubtitle}
-                      </span>
-                    </span>
-                    <Badge variant="outline">{copy.common.statusAvailable}</Badge>
-                  </Link>
-                </li>
-              )}
-              {hasCorpus && (
-                <li>
-                  <Link
-                    href="/corpus"
-                    className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
-                  >
-                    <BookOpen
-                      aria-hidden="true"
-                      size={18}
-                      className="shrink-0 text-acid"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium text-ink group-hover:text-acid">
-                        {t("web.dashboard.corpusTitle")}
-                      </span>
-                      <span className="mt-1 block text-sm leading-6 text-muted">
-                        {t("web.dashboard.corpusDescription")}
-                      </span>
-                    </span>
-                    <Badge variant="outline">{copy.common.statusAvailable}</Badge>
-                  </Link>
-                </li>
-              )}
-              {hasResearch && (
-                <li>
-                  <Link
-                    href="/research"
-                    className="group flex items-center gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
-                  >
-                    <Microscope
-                      aria-hidden="true"
-                      size={18}
-                      className="shrink-0 text-acid"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium text-ink group-hover:text-acid">
-                        {copy.research.navLabel}
-                      </span>
-                      <span className="mt-1 block text-sm leading-6 text-muted">
-                        {copy.research.description}
-                      </span>
-                    </span>
-                    <Badge variant="outline">{copy.common.statusAvailable}</Badge>
-                  </Link>
-                </li>
-              )}
-            </ul>
-          </section>
+          {/* 5-Region 3D Holographic Spatial Orbit Visualizer (Track 12) */}
+          <div className="mb-10">
+            <HolographicOrbitDeck
+              regions={[
+                {
+                  id: "revelation",
+                  label: "Revelation Archive",
+                  tagline: "Holy Quranic text and classical readings",
+                  href: "/corpus",
+                  thetaRad: 0,
+                  status: hasCorpus ? "nominal" : "active",
+                  metricLabel: "Status",
+                  metricValue: hasCorpus ? "Online" : "Standby",
+                },
+                {
+                  id: "hermeneutics",
+                  label: "Hermeneutic Core",
+                  tagline: "Cross-surah thematic discourse",
+                  href: "/research",
+                  thetaRad: (2 * Math.PI) / 5,
+                  status: hasResearch ? "nominal" : "active",
+                  metricLabel: "Research Lab",
+                  metricValue: hasResearch ? "Online" : "Standby",
+                },
+                {
+                  id: "sanad",
+                  label: "Epistemic Sanad",
+                  tagline: "Cryptographic attribution chain",
+                  href: "/workflow",
+                  thetaRad: (4 * Math.PI) / 5,
+                  status: hasWorkflow ? "nominal" : "active",
+                  metricLabel: "Review Queue",
+                  metricValue: hasWorkflow ? "Operational" : "Standby",
+                },
+                {
+                  id: "harbor",
+                  label: "Harbor Concourse",
+                  tagline: "Collaborative inquiry and reflections",
+                  href: "/command-center/chat",
+                  thetaRad: (6 * Math.PI) / 5,
+                  status: "nominal",
+                  metricLabel: "AI Dialog",
+                  metricValue: "Active",
+                },
+                {
+                  id: "telemetry",
+                  label: "Fleet Operability",
+                  tagline: "System health and telemetry monitors",
+                  href: "/connectors",
+                  thetaRad: (8 * Math.PI) / 5,
+                  status: hasConnectors ? "nominal" : "active",
+                  metricLabel: "Edge Gateway",
+                  metricValue: hasConnectors ? "Online" : "Local",
+                },
+              ]}
+              activeRegionId={
+                activeRegion === "05"
+                  ? "revelation"
+                  : activeRegion === "04"
+                    ? "hermeneutics"
+                    : activeRegion === "03"
+                      ? "sanad"
+                      : activeRegion === "01"
+                        ? "harbor"
+                        : "telemetry"
+              }
+              onSelectRegion={(regionId: CommandRegionId) => {
+                if (regionId === "revelation") setActiveRegion("05");
+                else if (regionId === "hermeneutics") setActiveRegion("04");
+                else if (regionId === "sanad") setActiveRegion("03");
+                else if (regionId === "harbor") setActiveRegion("01");
+                else setActiveRegion("06");
+              }}
+            />
+          </div>
 
-          <section className="border-t border-hairline py-10">
-            <div className="grid gap-6 md:grid-cols-[0.8fr_1.2fr]">
+          <div className="mb-8 border-b border-hairline pb-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold tracking-tight text-ink">
-                  {copy.dashboard.directionTitle}
-                </h2>
-                <p className="mt-3 max-w-sm text-sm leading-6 text-ink-soft">
-                  {copy.dashboard.directionDescription}
+                <p className="text-xs font-semibold uppercase tracking-wider text-acid">
+                  {copy.dashboard.hqWorldCoreTitle}
                 </p>
-                <p className="mt-3 max-w-sm text-xs leading-5 text-muted">
-                  {copy.dashboard.directionNote}
-                </p>
-              </div>
-              <div>
-                <Badge variant="outline">{copy.common.statusProposed}</Badge>
-                <ol className="mt-5 flex flex-wrap gap-2">
-                  {copy.landing.journey.map((step, index) => (
-                    <li
-                      key={step}
-                      className="inline-flex items-center gap-2 rounded-full border border-hairline px-3 py-2 text-xs text-ink-soft"
-                    >
-                      <span className="tabular-nums text-acid-muted">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                      {step}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </div>
-          </section>
-
-          {canViewProjectTracker && (
-            <section
-              className="border-t border-hairline py-10"
-              aria-labelledby="project-tracker-title"
-            >
-              <div className="grid gap-6 md:grid-cols-[0.8fr_1.2fr]">
-                <div>
-                  <h2
-                    id="project-tracker-title"
-                    className="text-2xl font-semibold tracking-tight text-ink"
-                  >
-                    {copy.dashboard.trackerTitle}
-                  </h2>
-                  <p className="mt-3 max-w-sm text-sm leading-6 text-ink-soft">
-                    {copy.dashboard.trackerDescription}
-                  </p>
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px]">
+                  <span className="flex items-center gap-1.5 text-ink-soft">
+                    <span className="size-2 rounded-full bg-live animate-pulse" />
+                    <span>Corpus: {hasCorpus ? "Online" : "Standby"}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5 text-ink-soft">
+                    <span className="size-2 rounded-full bg-acid animate-pulse" />
+                    <span>Research Hub: {hasResearch ? "Online" : "Standby"}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5 text-ink-soft">
+                    <span className="size-2 rounded-full bg-live animate-pulse" />
+                    <span>Workflow Engine: {hasWorkflow ? "Operational" : "Standby"}</span>
+                  </span>
                 </div>
-                <div>
-                  {projectTrackerLoading && (
-                    <p role="status" className="text-sm text-ink-soft">
-                      {copy.dashboard.trackerLoading}
-                    </p>
-                  )}
-                  {projectTrackerError && (
-                    <Alert variant="error">{copy.dashboard.trackerError}</Alert>
-                  )}
-                  {projectTracker && (
-                    <>
-                      <MetricList className="grid gap-x-6 border-y border-hairline sm:grid-cols-3">
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={activeRegion === "all" ? "default" : "secondary"}
+                  onClick={() => setActiveRegion("all")}
+                >
+                  {copy.dashboard.hqRegionAll}
+                </Button>
+                {regionsMeta.map((r) => (
+                  <Button
+                    key={r.id}
+                    type="button"
+                    size="sm"
+                    variant={activeRegion === r.id ? "default" : "secondary"}
+                    onClick={() => setActiveRegion(r.id)}
+                  >
+                    {copy.dashboard.hqRegionLabel} {r.id}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* =========================================================================
+              3. FOCUSED CHAMBER & PERIPHERAL REGIONS (Non-card-grid architecture)
+             ========================================================================= */}
+          <div className="grid gap-8 lg:grid-cols-[1.4fr_0.6fr]">
+            {/* PRIMARY CHAMBER VIEW */}
+            <div className="space-y-6">
+              {/* Active Region 01: Command Deck */}
+              {(activeRegion === "all" || activeRegion === "01") && (
+                <div className="border border-hairline bg-panel p-6 md:p-8">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs text-acid">REGION 01 · COMMAND DECK</span>
+                    <Badge variant="live">Aktif</Badge>
+                  </div>
+                  <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">
+                    {copy.dashboard.hqRegion1Title}
+                  </h2>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">
+                    {copy.dashboard.hqRegion1Desc}
+                  </p>
+                  <div className="mt-6 flex flex-wrap gap-4 border-t border-hairline-soft pt-4 text-xs">
+                    <Link
+                      href="/command-center/chat"
+                      className="inline-flex items-center gap-1.5 font-semibold text-acid hover:underline"
+                    >
+                      <MessageSquare size={14} />
+                      <span>Asisten & Dialog AI</span>
+                      <ArrowRight size={14} />
+                    </Link>
+                    <Link
+                      href="/command-center/search"
+                      className="inline-flex items-center gap-1.5 font-semibold text-ink-soft hover:text-acid"
+                    >
+                      <Compass size={14} />
+                      <span>Pencarian Cepat</span>
+                      <ArrowRight size={14} />
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {/* Active Region 03: Mission Control */}
+              {(activeRegion === "all" || activeRegion === "03") && (
+                <div className="border border-hairline bg-panel p-6 md:p-8">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs text-acid">REGION 03 · MISSION CONTROL</span>
+                    <Badge variant="outline">
+                      {projectTracker ? `${doneCount} Selesai` : "Tersinkron"}
+                    </Badge>
+                  </div>
+                  <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">
+                    {copy.dashboard.hqRegion3Title}
+                  </h2>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">
+                    {copy.dashboard.hqRegion3Desc}
+                  </p>
+
+                  {canViewProjectTracker && projectTracker && (
+                    <div className="mt-6 border-t border-hairline-soft pt-4">
+                      <MetricList className="grid gap-x-4 border-y border-hairline-soft sm:grid-cols-3">
                         <MetricRow
                           label={copy.dashboard.trackerStateLabels.done}
                           value={`${doneCount} / ${projectTracker.tasks.length}`}
@@ -553,96 +537,145 @@ export default function DashboardPage() {
                         />
                       </MetricList>
 
-                      <h3 className="mt-7 text-lg font-semibold text-ink">
-                        {copy.dashboard.trackerReadyTitle}
-                      </h3>
-                      {readyTasks.length === 0 ? (
-                        <p className="mt-3 text-sm leading-6 text-muted">
-                          {copy.dashboard.trackerEmptyReady}
-                        </p>
-                      ) : (
-                        <ol className="mt-3 divide-y divide-hairline">
-                          {readyTasks.slice(0, 6).map((task) => (
-                            <li key={task.id} className="py-4">
-                              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                                <span className="font-mono text-xs text-acid-muted">
-                                  {task.id}
-                                </span>
-                                <Badge variant="outline">
-                                  {copy.dashboard.trackerStateLabels[task.state]}
-                                </Badge>
-                              </div>
-                              <p className="mt-2 text-sm font-medium leading-6 text-ink">
-                                {task.title}
-                              </p>
-                              <p className="mt-1 text-xs leading-5 text-muted">
-                                {task.section}
-                              </p>
-                            </li>
-                          ))}
-                        </ol>
-                      )}
-
-                      <details className="mt-7 border-t border-hairline pt-5">
-                        <summary className="cursor-pointer text-sm font-medium text-ink-soft underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid">
-                          {copy.dashboard.trackerAllTitle} (
-                          {projectTracker.tasks.length})
-                        </summary>
-                        <ul className="mt-4 divide-y divide-hairline">
-                          {projectTracker.tasks.map((task) => (
-                            <li key={task.id} className="py-4">
-                              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                                <span className="font-mono text-xs text-acid-muted">
-                                  {task.id}
-                                </span>
-                                <Badge variant="outline">
-                                  {copy.dashboard.trackerStateLabels[task.state]}
-                                </Badge>
-                              </div>
-                              <p className="mt-2 text-sm font-medium leading-6 text-ink">
-                                {task.title}
-                              </p>
-                              <p className="mt-1 text-xs leading-5 text-muted">
-                                {task.section}
-                              </p>
-                              <p className="mt-3 text-xs font-medium text-ink-soft">
-                                {copy.dashboard.trackerAcceptance}
-                              </p>
-                              <p className="mt-1 text-sm leading-6 text-muted">
-                                {task.acceptanceCriteria}
-                              </p>
-                              {task.dependsOn.length > 0 && (
-                                <p className="mt-2 text-xs leading-5 text-muted">
-                                  {copy.dashboard.trackerDependencies}:{" "}
-                                  {task.dependsOn.join(", ")}
-                                </p>
-                              )}
-                              <p className="mt-2 text-xs leading-5 text-muted">
-                                {copy.dashboard.trackerOwner}: {task.owner}
-                              </p>
-                              {task.completedAt && (
-                                <p className="mt-2 text-xs leading-5 text-muted">
-                                  {copy.dashboard.trackerCompletedAt}:{" "}
-                                  <time dateTime={task.completedAt}>
-                                    {new Intl.DateTimeFormat(locale).format(
-                                      new Date(task.completedAt),
-                                    )}
-                                  </time>
-                                </p>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </details>
-                      <p className="mt-4 text-xs leading-5 text-muted">
-                        {copy.dashboard.trackerHistoryNote}
-                      </p>
-                    </>
+                      <ol className="mt-4 divide-y divide-hairline-soft">
+                        {readyTasks.slice(0, 3).map((task) => (
+                          <li key={task.id} className="flex items-center justify-between py-2 text-xs">
+                            <span className="font-mono text-acid-muted">{task.id}</span>
+                            <span className="min-w-0 flex-1 px-3 text-ink truncate">{task.title}</span>
+                            <Badge variant="outline">{task.section}</Badge>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
                   )}
                 </div>
+              )}
+
+              {/* Active Region 04: Knowledge & Intelligence */}
+              {(activeRegion === "all" || activeRegion === "04") && (
+                <div className="border border-hairline bg-panel p-6 md:p-8">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs text-acid">REGION 04 · KNOWLEDGE & INTELLIGENCE</span>
+                    <Badge variant="live">Khazanah</Badge>
+                  </div>
+                  <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">
+                    {copy.dashboard.hqRegion4Title}
+                  </h2>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">
+                    {copy.dashboard.hqRegion4Desc}
+                  </p>
+                  <div className="mt-6 flex flex-wrap gap-4 border-t border-hairline-soft pt-4 text-xs font-semibold">
+                    <Link href="/models" className="text-acid hover:underline">
+                      Eksplorasi Model Domain &rarr;
+                    </Link>
+                    <Link href="/providers" className="text-ink-soft hover:text-acid">
+                      Konfigurasi Provider AI &rarr;
+                    </Link>
+                    <Link href="/research" className="text-ink-soft hover:text-acid">
+                      Laboratorium Riset &rarr;
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {/* Region 02 & 05 & 06 (when singled out) */}
+              {activeRegion === "02" && (
+                <div className="border border-hairline bg-panel p-6 md:p-8">
+                  <span className="font-mono text-xs text-acid">REGION 02 · IDENTITY & ACCESS</span>
+                  <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">{copy.dashboard.hqRegion2Title}</h2>
+                  <p className="mt-2 text-sm text-muted">{copy.dashboard.hqRegion2Desc}</p>
+                  <div className="mt-6 flex gap-4 text-xs font-semibold">
+                    {isAdmin && <Link href="/admin/users" className="text-acid hover:underline">Kelola Pengguna &rarr;</Link>}
+                    <Link href="/admin/translations" className="text-ink-soft hover:text-acid">Audit Terjemahan &rarr;</Link>
+                  </div>
+                </div>
+              )}
+              {activeRegion === "05" && (
+                <div className="border border-hairline bg-panel p-6 md:p-8">
+                  <span className="font-mono text-xs text-acid">REGION 05 · UNIVERSE & TRANSMISSIONS</span>
+                  <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">{copy.dashboard.hqRegion5Title}</h2>
+                  <p className="mt-2 text-sm text-muted">{copy.dashboard.hqRegion5Desc}</p>
+                  <div className="mt-6 flex gap-4 text-xs font-semibold">
+                    <Link href="/corpus" className="text-acid hover:underline">Arsip Korpus &rarr;</Link>
+                    <Link href="/workflow" className="text-ink-soft hover:text-acid">Antrean Publikasi &rarr;</Link>
+                  </div>
+                </div>
+              )}
+              {activeRegion === "06" && (
+                <div className="border border-hairline bg-panel p-6 md:p-8">
+                  <span className="font-mono text-xs text-acid">REGION 06 · SYSTEM OBSERVATORY</span>
+                  <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">{copy.dashboard.hqRegion6Title}</h2>
+                  <p className="mt-2 text-sm text-muted">{copy.dashboard.hqRegion6Desc}</p>
+                  <div className="mt-6 flex gap-4 text-xs font-semibold">
+                    {hasConnectors && <Link href="/connectors" className="text-acid hover:underline">Konektor DNS &rarr;</Link>}
+                    <Link href="/command-center/export" className="text-ink-soft hover:text-acid">Studio Data &rarr;</Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 4. PERIPHERAL LEDGER & INTELLIGENCE FEED */}
+            <div className="space-y-6">
+              {/* Intelligence Feed */}
+              <div className="border border-hairline bg-panel-edge p-6">
+                <p className="text-xs font-semibold uppercase tracking-wider text-acid">
+                  {copy.dashboard.hqIntelFeedTitle}
+                </p>
+                <ul className="mt-4 space-y-3 text-xs">
+                  <li className="flex items-center justify-between">
+                    <span className="text-ink-soft">Al-Qur'an Corpus Archive</span>
+                    <Badge variant={hasCorpus ? "live" : "outline"}>
+                      {hasCorpus ? "Tersedia" : "Siap Impor"}
+                    </Badge>
+                  </li>
+                  <li className="flex items-center justify-between">
+                    <span className="text-ink-soft">CAB Workflow Review Queue</span>
+                    <Badge variant={hasWorkflow ? "live" : "outline"}>
+                      {hasWorkflow ? "Aktif" : "Menunggu"}
+                    </Badge>
+                  </li>
+                  <li className="flex items-center justify-between">
+                    <span className="text-ink-soft">Lexical Research Lab</span>
+                    <Badge variant={hasResearch ? "live" : "outline"}>
+                      {hasResearch ? "Aktif" : "Offline"}
+                    </Badge>
+                  </li>
+                  <li className="flex items-center justify-between">
+                    <span className="text-ink-soft">Integration Edge Connector</span>
+                    <Badge variant={hasConnectors ? "live" : "outline"}>
+                      {hasConnectors ? "Terkoneksi" : "Lokal"}
+                    </Badge>
+                  </li>
+                </ul>
               </div>
-            </section>
-          )}
+
+              {/* Ecosystem Ledger (Region Directory) */}
+              <div className="border border-hairline bg-panel-edge p-6">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+                  Direktori Region Ekosistem
+                </p>
+                <ol className="mt-4 divide-y divide-hairline-soft text-xs">
+                  {regionsMeta.map((r) => (
+                    <li key={r.id} className="py-2.5">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setActiveRegion(r.id)}
+                        className="group flex w-full items-center justify-between text-left text-ink-soft hover:text-acid"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="font-mono text-acid-muted">{r.id}</span>
+                          <span className="font-medium group-hover:text-acid">{r.title}</span>
+                        </span>
+                        <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Button>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </WorkspaceTemplate>

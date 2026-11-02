@@ -67,6 +67,16 @@ export interface SearchQueryResponseDto {
   results: SearchResultItemDto[];
 }
 
+export interface ReindexCorpusSearchIndexRequestDto {
+  editionKey: string;
+}
+
+export interface ReindexCorpusSearchIndexResponseDto {
+  editionKey: string;
+  passageCount: number;
+  indexEntryCount: number;
+}
+
 export interface LoginRequestDto {
   email: string;
   password: string;
@@ -165,17 +175,64 @@ export interface ChatMessageDto {
   role: ChatRole;
   content: string;
   createdAt: string;
+  groundingStatus?: ChatGroundingStatusDto;
+  citations?: ChatCitationDto[];
 }
 
 export interface ChatRequestDto {
   conversationId: string;
   input: string;
   instructions?: string;
+  grounding?: "grounded";
 }
 
-export interface ChatResponseDto {
-  reply: string;
+export type ChatGroundingStatus =
+  | "grounded"
+  | "insufficient_evidence"
+  | "legacy";
+
+export type ChatGroundingStatusDto = ChatGroundingStatus;
+
+export interface ChatCitationDto {
+  evidenceId: string;
+  editionId: string;
+  editionKey: string;
+  authority: PassageKindDto;
+  editionAuthority: PassageKindDto;
+  locale: string;
+  publisher: string;
+  attribution: string;
+  locator: string;
+  surah: number;
+  ayah: number;
 }
+
+export type GroundedChatResponseDto = Extract<
+  ChatResponseDto,
+  { groundingStatus: "grounded" | "insufficient_evidence" }
+>;
+
+export type ChatResponseDto =
+  | {
+      reply: string;
+      groundingStatus: "grounded";
+      citations: ChatCitationDto[];
+    }
+  | {
+      reply: string;
+      groundingStatus: "insufficient_evidence";
+      citations: [];
+    }
+  | {
+      reply: string;
+      groundingStatus: "legacy";
+      citations?: never;
+    }
+  | {
+      reply: string;
+      groundingStatus?: never;
+      citations?: never;
+    };
 
 export interface ModelFieldDto {
   type: FieldType;
@@ -903,6 +960,7 @@ export const apiRoutes = {
   },
   search: {
     query: "/search",
+    reindexCorpus: "/search/corpus-index",
   },
   landing: {
     catalog: "/public/landing",
@@ -1055,6 +1113,12 @@ export class MoonClient {
     if (params.targetModel) queryParams.set("targetModel", params.targetModel);
     if (params.limit) queryParams.set("limit", String(params.limit));
     return this.request(`${apiRoutes.search.query}?${queryParams.toString()}`);
+  }
+
+  reindexCorpusSearchIndex(
+    input: ReindexCorpusSearchIndexRequestDto,
+  ): Promise<ReindexCorpusSearchIndexResponseDto> {
+    return this.request(apiRoutes.search.reindexCorpus, "POST", input);
   }
 
   logout(): Promise<{ loggedOut: boolean }> {

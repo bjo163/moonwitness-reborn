@@ -22,11 +22,17 @@ import {
   WorkspaceTemplate,
   cn,
 } from "@moonwitness/ui";
+import Link from "next/link";
 import { LocaleSwitcher } from "../locale/locale-switcher";
 import { useMessages } from "../locale/messages";
 import { useTranslationCatalog } from "../locale/translation-catalog";
 import { useLocalePreference } from "../locale/use-locale-preference";
 import { apiErrorMessage } from "../locale/api-error-message";
+import { authorityLabel } from "../corpus/corpus-labels";
+import {
+  assistantEvidenceFor,
+  citationReaderHref,
+} from "./assistant-evidence";
 import {
   ArrowUp,
   Bot,
@@ -167,6 +173,7 @@ export default function Home() {
       const result = await moonClient.sendChat({
         conversationId: activeId,
         input: content,
+        grounding: "grounded",
       });
       const timestamp = new Date().toISOString();
       setMessages((current) => [
@@ -177,6 +184,11 @@ export default function Home() {
           role: "assistant",
           content: result.reply,
           createdAt: timestamp,
+          groundingStatus: result.groundingStatus ?? "legacy",
+          citations:
+            result.groundingStatus === "grounded"
+              ? result.citations
+              : undefined,
         },
       ]);
       await loadConversations();
@@ -399,31 +411,158 @@ export default function Home() {
             )}
 
             <div className="space-y-7">
-              {messages.map((message) => (
-                <article
-                  key={message.id}
-                  className={cn(
-                    "flex gap-3",
-                    message.role === "user" && "justify-end",
-                  )}
-                >
-                  {message.role === "assistant" && (
-                    <div className="ql-hud-assistant-mark mt-0.5 flex size-8 shrink-0 items-center justify-center">
-                      <Sparkles size={15} />
-                    </div>
-                  )}
-                  <div
+              {messages.map((message) => {
+                const evidence =
+                  message.role === "assistant"
+                    ? assistantEvidenceFor(message)
+                    : null;
+
+                return (
+                  <article
+                    key={message.id}
                     className={cn(
-                      "max-w-[85%] whitespace-pre-wrap text-[15px] leading-7",
-                      message.role === "user"
-                        ? "ql-hud-user-message px-4 py-2.5"
-                        : "pt-0.5 text-ink",
+                      "flex min-w-0 gap-3",
+                      message.role === "user" && "justify-end",
                     )}
                   >
-                    {message.content}
-                  </div>
-                </article>
-              ))}
+                    {message.role === "assistant" && (
+                      <div className="ql-hud-assistant-mark mt-0.5 flex size-8 shrink-0 items-center justify-center">
+                        <Sparkles size={15} />
+                      </div>
+                    )}
+                    <div
+                      className={cn(
+                        "min-w-0 break-words whitespace-pre-wrap text-[15px] leading-7",
+                        message.role === "user"
+                          ? "ql-hud-user-message max-w-[85%] px-4 py-2.5"
+                          : "w-full max-w-[85%] pt-0.5 text-ink",
+                      )}
+                    >
+                      {message.content}
+                      {evidence && (
+                        <div className="mt-3 min-w-0 space-y-3">
+                          <Badge
+                            variant={
+                              evidence.status === "grounded"
+                                ? "live"
+                                : "outline"
+                            }
+                          >
+                            {evidence.status === "grounded"
+                              ? copy.assistant.groundedEvidence
+                              : evidence.status === "insufficient_evidence"
+                                ? copy.assistant.insufficientEvidence
+                                : copy.assistant.legacyEvidence}
+                          </Badge>
+                          {evidence.status === "grounded" &&
+                            (evidence.citations.length === 0 ? (
+                              <p className="text-xs leading-5 text-muted">
+                                {copy.assistant.noCitationMetadata}
+                              </p>
+                            ) : (
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium text-ink-soft">
+                                  {copy.assistant.citationsTitle}
+                                </p>
+                                <ul className="space-y-2">
+                                  {evidence.citations.map((citation) => (
+                                    <li
+                                      key={citation.evidenceId}
+                                      className="min-w-0 rounded-lg border border-hairline bg-panel-deep"
+                                    >
+                                      <dl className="grid grid-cols-1 gap-x-4 gap-y-2 p-3 text-xs sm:grid-cols-2">
+                                        <div className="min-w-0">
+                                          <dt className="text-muted">
+                                            {copy.assistant.sourceEdition}
+                                          </dt>
+                                          <dd className="break-all text-ink-soft">
+                                            {citation.editionKey ||
+                                              copy.assistant.metadataUnavailable}
+                                          </dd>
+                                        </div>
+                                        <div className="min-w-0">
+                                          <dt className="text-muted">
+                                            {copy.assistant.locale}
+                                          </dt>
+                                          <dd className="break-words text-ink-soft">
+                                            {citation.locale ||
+                                              copy.assistant.metadataUnavailable}
+                                          </dd>
+                                        </div>
+                                        <div className="min-w-0">
+                                          <dt className="text-muted">
+                                            {copy.assistant.passageAuthority}
+                                          </dt>
+                                          <dd className="break-words text-ink-soft">
+                                            {authorityLabel(
+                                              citation.authority,
+                                              citation.locale,
+                                              t,
+                                            )}
+                                          </dd>
+                                        </div>
+                                        <div className="min-w-0">
+                                          <dt className="text-muted">
+                                            {copy.assistant.editionAuthority}
+                                          </dt>
+                                          <dd className="break-words text-ink-soft">
+                                            {authorityLabel(
+                                              citation.editionAuthority,
+                                              citation.locale,
+                                              t,
+                                            )}
+                                          </dd>
+                                        </div>
+                                        <div className="min-w-0">
+                                          <dt className="text-muted">
+                                            {copy.assistant.attribution}
+                                          </dt>
+                                          <dd className="break-words text-ink-soft">
+                                            {citation.attribution ||
+                                              copy.assistant.metadataUnavailable}
+                                          </dd>
+                                        </div>
+                                        <div className="min-w-0">
+                                          <dt className="text-muted">
+                                            {copy.assistant.publisher}
+                                          </dt>
+                                          <dd className="break-words text-ink-soft">
+                                            {citation.publisher ||
+                                              copy.assistant.metadataUnavailable}
+                                          </dd>
+                                        </div>
+                                        <div className="min-w-0">
+                                          <dt className="text-muted">
+                                            {copy.assistant.verseLocator}
+                                          </dt>
+                                          <dd className="break-words text-ink-soft">
+                                            {citation.locator ||
+                                              copy.assistant.metadataUnavailable}
+                                          </dd>
+                                        </div>
+                                      </dl>
+                                      <Link
+                                        href={citationReaderHref(citation)}
+                                        className="inline-flex min-h-11 w-full items-center gap-2 rounded-b-lg border-t border-hairline px-3 py-2 text-sm font-medium text-acid underline-offset-4 hover:bg-panel-edge hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acid"
+                                      >
+                                        {copy.assistant.openSource}
+                                        <span className="text-muted">
+                                          ·{" "}
+                                          {citation.locator ||
+                                            copy.assistant.metadataUnavailable}
+                                        </span>
+                                      </Link>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
               {sending && (
                 <div className="flex items-center gap-3 text-sm text-muted">
                   <div className="ql-hud-assistant-mark flex size-8 items-center justify-center">

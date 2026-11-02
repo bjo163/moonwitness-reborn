@@ -113,17 +113,21 @@ Responsibilities:
 - relationships between stories, research, and archives.
 
 ### 06 — System Observatory
-The technical operations environment, restricted by role.
+The technical operations and operational-intelligence environment, restricted by role.
 
 Responsibilities:
-- service health and availability;
-- integration status;
-- health checks;
-- audit events;
-- system administration;
-- operational errors and monitoring.
+- service health, availability, monitored targets, check results, and incidents;
+- integration and executor-provider status;
+- automation definitions, triggers, schedules, and policy visibility;
+- execution runs, step results, retries, approvals, and evidence references;
+- browser operations and isolated automation execution visibility;
+- operational audit, errors, and system administration.
 
-Never expose secrets, tokens, credentials, or private operational data to unauthorized users.
+System Observatory is the operational control and evidence surface for the wider ecosystem. It does not own mission/task records, research content, stories, media publications, or personal workspace data. It coordinates and observes work owned by those domains through authorized contracts.
+
+Monitoring and durable scheduling must continue independently of AI availability. ARSY cognition, planning, memory, policy and agent orchestration are MoonWitness-owned capabilities. Playwright is only an isolated, replaceable browser-control library; no external agent framework or gateway is part of the target architecture.
+
+Never expose secrets, tokens, credentials, browser cookies, or private operational data to unauthorized users.
 
 ---
 
@@ -180,16 +184,16 @@ A monumental, cinematic, celestial architectural environment with a distinctive 
 | Form | Monumental, geometric, architectural |
 | Materials | Obsidian, dark stone, brushed metal, selective glass |
 | Light | Moonlight, restrained ambient illumination, warm accents |
-| Accent | Existing MoonWitness acid-green used sparingly; brass/gold as a material accent |
+| Accent | Antique Gold via the existing Moon UI semantic accent tokens; never use it as success/warning/danger status |
 | Depth | Clear foreground, midground, and background |
 | Typography | Characterful sans-serif for navigation; monospace only for technical data |
 | Motion | Deliberate camera movement and spatial transitions |
 | Icons | A coherent symbolic vocabulary, not a random generic icon collection |
 
 ### Existing design-system continuity
-The current Moon UI tokens include a dark green/near-black foundation, ink and muted text colors, acid-green accents, semantic status colors, and sans/mono typography. Preserve and evolve these shared tokens rather than introducing an unrelated palette or a second design system.
+The current Moon UI direction is Cosmic Ivory & Antique Gold: deep indigo / obsidian foundations, warm ivory text, Antique Gold interaction emphasis, and a parchment / bronze light-theme counterpart. The existing token family retains historical names such as `acid`; those names must not be mistaken for the current rendered hue. Preserve the shared tokens rather than introducing an unrelated palette or a second design system.
 
-Acid green is an interaction/status accent, not a color to flood every surface. Brass/gold is an environmental/material accent and must not become a competing status color.
+Antique Gold is the brand/interaction accent, not a success, warning, or danger status color. Use it sparingly and only through the existing semantic token contract.
 
 ### HUD principles
 - HUD elements are contextual parts of the environment, not labels announcing themselves as HUD.
@@ -272,6 +276,7 @@ SERVER / DOMAIN ADDONS
   Knowledge & Research
   Universe & Transmissions
   System Operations
+    Observability / Automation / Execution
        |
 QLORM / DATA AUTHORITY
   Domain models
@@ -420,5 +425,6 @@ This blueprint is part of the shared design foundation. Read it together with:
 - [Design token contract](./DESIGN-TOKENS.md)
 - [A-L-L-A-H.COM Home blueprint](./HOME-BLUEPRINT.md)
 - [Mockup specification and review gates](./MOCKUP-SPEC.md)
+- [System Observatory — Automation & Operational Intelligence Architecture](./SYSTEM-OBSERVATORY-AUTOMATION-ARCHITECTURE.md)
 
 The Headquarter experience must preserve the product boundaries and shared visual, accessibility, data-provenance, and implementation constraints defined by those documents.

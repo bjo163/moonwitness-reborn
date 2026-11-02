@@ -1,6 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MoonClient, MoonClientError, apiRoutes, moonClient } from "./index.js";
+import {
+  MoonClient,
+  MoonClientError,
+  apiRoutes,
+  moonClient,
+  type ChatCitationDto,
+  type ChatGroundingStatusDto,
+  type ChatRequestDto,
+  type ChatResponseDto,
+  type GroundedChatResponseDto,
+} from "./index.js";
 
 function recorder(response: unknown = {}) {
   const requests: Array<{ url: string; method?: string; body: string }> = [];
@@ -444,6 +454,29 @@ void test("MoonClient search sends query parameters to apiRoutes.search.query", 
   assert.equal(res.results[0].targetId, "story-musa");
 });
 
+void test("MoonClient reindexes a corpus edition through the shared admin route", async () => {
+  const { client, requests } = recorder({
+    editionKey: "edition-en",
+    passageCount: 2,
+    indexEntryCount: 4,
+  });
+
+  const result = await client.reindexCorpusSearchIndex({
+    editionKey: "edition-en",
+  });
+  assert.equal(apiRoutes.search.reindexCorpus, "/search/corpus-index");
+  assert.equal(requests[0].url, "/api/search/corpus-index");
+  assert.equal(requests[0].method, "POST");
+  assert.deepEqual(JSON.parse(requests[0].body), {
+    editionKey: "edition-en",
+  });
+  assert.deepEqual(result, {
+    editionKey: "edition-en",
+    passageCount: 2,
+    indexEntryCount: 4,
+  });
+});
+
 // Browser melempar "Failed to execute 'fetch' on 'Window': Illegal invocation"
 // kalau fetch menerima this selain global, dan klien menyimpannya sebagai field.
 void test("default fetcher calls fetch with the global as receiver", async () => {
@@ -461,4 +494,68 @@ void test("default fetcher calls fetch with the global as receiver", async () =>
 
   assert.equal(receivers.length, 1);
   assert.equal(receivers[0], globalThis);
+});
+
+void test("MoonClient preserves legacy and supports grounded chat contracts", async () => {
+  const legacyResponse: ChatResponseDto = { reply: "Legacy answer." };
+  const legacy = recorder(legacyResponse);
+  const legacyRequest: ChatRequestDto = {
+    conversationId: "conversation-1",
+    input: "Question?",
+  };
+
+  assert.deepEqual(await legacy.client.sendChat(legacyRequest), legacyResponse);
+  assert.deepEqual(JSON.parse(legacy.requests[0].body), legacyRequest);
+
+  const citation: ChatCitationDto = {
+    evidenceId: "passage-1",
+    editionId: "edition-1",
+    editionKey: "translation-en",
+    authority: "translation",
+    editionAuthority: "translation",
+    locale: "en",
+    publisher: "Publisher",
+    attribution: "Attribution",
+    locator: "2:255",
+    surah: 2,
+    ayah: 255,
+  };
+  const groundedStatus: ChatGroundingStatusDto = "grounded";
+  const groundedResponse: GroundedChatResponseDto = {
+    reply: "Grounded answer.",
+    groundingStatus: groundedStatus,
+    citations: [citation],
+  };
+  const grounded = recorder(groundedResponse);
+  const groundedRequest: ChatRequestDto = {
+    ...legacyRequest,
+    grounding: "grounded",
+  };
+
+  assert.deepEqual(
+    await grounded.client.sendChat(groundedRequest),
+    groundedResponse,
+  );
+  assert.deepEqual(JSON.parse(grounded.requests[0].body), groundedRequest);
+
+  const insufficientResponse: ChatResponseDto = {
+    reply: "The available evidence is insufficient.",
+    groundingStatus: "insufficient_evidence",
+    citations: [],
+  };
+  const insufficient = recorder(insufficientResponse);
+  assert.deepEqual(
+    await insufficient.client.sendChat(groundedRequest),
+    insufficientResponse,
+  );
+
+  const explicitLegacyResponse: ChatResponseDto = {
+    reply: "Legacy answer.",
+    groundingStatus: "legacy",
+  };
+  const explicitLegacy = recorder(explicitLegacyResponse);
+  assert.deepEqual(
+    await explicitLegacy.client.sendChat(legacyRequest),
+    explicitLegacyResponse,
+  );
 });

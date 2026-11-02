@@ -14,11 +14,16 @@ import {
   PageHeader,
   PortalCard,
   SectionGrid,
+  SpatialRegion,
+  TransmissionCard,
   SidePanel,
   SidebarBrand,
   SidebarFooter,
   SidebarNav,
   SidebarTrigger,
+  ThemeToggle,
+  SearchDialog,
+  SanctuaryHeader,
   WorkspaceSidebar,
   type SidebarNavItem,
 } from "../src/index.js";
@@ -374,4 +379,104 @@ void test("PortalCard is one link named by its title and carries description and
   const plain = render(<PortalCard description="d" href="/x" title="T" />);
   assert.doesNotMatch(plain, /ql-portal-card__icon/);
   assert.doesNotMatch(plain, /\(/);
+});
+void test("TransmissionCard renders title, excerpt and provenance", () => {
+  const markup = render(
+    <TransmissionCard
+      excerpt="When the moon rises, messages are shared."
+      href="/corpus/quran-en/1"
+      provenanceLabel="Verified Revelation"
+      readActionLabel="Read Chapter"
+      source="Surah Al-Fatihah"
+      title="The Opening"
+    />,
+  );
+  assert.match(markup, /The Opening/);
+  assert.match(markup, /Surah Al-Fatihah/);
+  assert.match(markup, /Verified Revelation/);
+  assert.match(markup, /Read Chapter/);
+  assertNoOwnColours(markup, "TransmissionCard");
+});
+
+void test("SpatialRegion renders heading, eyebrow and children", () => {
+  const markup = render(
+    <SpatialRegion
+      eyebrow="Movement 03"
+      id="explore-region"
+      title="Explore the Knowledge"
+    >
+      <p>Inner content</p>
+    </SpatialRegion>,
+  );
+  assert.match(markup, /id="explore-region"/);
+  assert.match(markup, /Movement 03/);
+  assert.match(markup, /Explore the Knowledge/);
+  assert.match(markup, /Inner content/);
+  assertNoOwnColours(markup, "SpatialRegion");
+});
+
+void test("HeroStage renders background media and children", () => {
+  const markup = render(
+    <HeroStage imageSrc="/hero.jpg">
+      <h1>Title</h1>
+    </HeroStage>,
+  );
+  assert.match(markup, /src="\/hero\.jpg"/);
+  assert.match(markup, /width="1920"/);
+  assert.match(markup, /height="1080"/);
+  assert.match(markup, /fetchPriority="high"/);
+  assert.match(markup, /decoding="async"/);
+  assert.match(markup, /Title/);
+  assertNoOwnColours(markup, "HeroStage");
+});
+
+void test("ThemeToggle renders aria-pressed and label", () => {
+  const markup = render(
+    <ThemeToggle
+      theme="light"
+      label="Beralih ke tema gelap"
+      onToggle={() => undefined}
+    />,
+  );
+  assert.match(markup, /aria-pressed="true"/);
+  assert.match(markup, /aria-label="Beralih ke tema gelap"/);
+  assert.match(markup, /ql-nav-link/);
+  assertNoOwnColours(markup, "ThemeToggle");
+});
+
+void test("SanctuaryHeader renders eyebrow, title, and description", () => {
+  const markup = render(
+    <SanctuaryHeader
+      eyebrow="Corpus"
+      title="Kitab Suci"
+      description="Kumpulan wahyu dan sumber terverifikasi"
+    />,
+  );
+  assert.match(markup, /Corpus/);
+  assert.match(markup, /Kitab Suci/);
+  assert.match(markup, /Kumpulan wahyu/);
+  assertNoOwnColours(markup, "SanctuaryHeader");
+});
+
+void test("SearchDialog renders modal with accessible title and placeholder", () => {
+  const markup = render(
+    <SearchDialog
+      isOpen
+      title="Pencarian Global"
+      placeholder="Cari surah atau bab..."
+      closeLabel="Tutup"
+      query="Fatihah"
+      onQueryChange={() => undefined}
+      onSubmit={() => undefined}
+      onClose={() => undefined}
+    >
+      <p>Hasil pencarian</p>
+    </SearchDialog>,
+  );
+  assert.match(markup, /role="dialog"/);
+  assert.match(markup, /aria-label="Pencarian Global"/);
+  assert.match(markup, /placeholder="Cari surah atau bab\.\.\."/);
+  assert.match(markup, /value="Fatihah"/);
+  assert.match(markup, /Hasil pencarian/);
+  assertNoOwnColours(markup, "SearchDialog");
 });

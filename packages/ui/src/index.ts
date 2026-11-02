@@ -79,4 +79,64 @@ export {
 } from "./composites/workspace-sidebar.js";
 export { cn } from "./lib/utils.js";
 export { HeroStage, type HeroStageProps } from "./composites/hero-stage.js";
+export { ThemeToggle, type ThemeToggleProps } from "./composites/theme-toggle.js";
+export { SearchDialog, type SearchDialogProps } from "./composites/search-dialog.js";
+export { SanctuaryHeader, type SanctuaryHeaderProps } from "./composites/sanctuary-header.js";
 export { PortalCard, type PortalCardProps } from "./composites/portal-card.js";
+export { TransmissionCard, type TransmissionCardProps } from "./composites/transmission-card.js";
+export { SpatialRegion, type SpatialRegionProps } from "./composites/spatial-region.js";
+export {
+  QuranText,
+  AyahEndMarker,
+  WaqafSign,
+  type QuranTextProps,
+  type AyahEndMarkerProps,
+  type WaqafSignProps,
+  type MushafScriptStyle,
+  type MushafScaleLevel,
+  type WaqafPositionToken,
+} from "./atoms/quran-text.js";
+export {
+  DualStreamReader,
+  type DualStreamReaderProps,
+  type DualStreamVersePair,
+} from "./composites/hermeneutic-reader.js";
+export {
+  CommandPalette,
+  type CommandPaletteProps,
+  type CommandAction,
+  type CommandCategory,
+} from "./composites/command-palette.js";
+export {
+  AmbientAtmosphere,
+  type AmbientAtmosphereProps,
+  type AtmosphereDensity,
+  type AtmosphereParticle,
+} from "./composites/ambient-atmosphere.js";
+export {
+  HolographicOrbitDeck,
+  type HolographicOrbitDeckProps,
+  type OrbitRegionNode,
+  type CommandRegionId,
+} from "./composites/holographic-orbit.js";
+export {
+  ChimeToggle,
+  type ChimeToggleProps,
+} from "./composites/chime-toggle.js";
+export {
+  SanctuaryZenStage,
+  type SanctuaryZenStageProps,
+} from "./composites/sanctuary-zen-stage.js";
+export {
+  AdaptiveHudShell,
+  type AdaptiveHudShellProps,
+  type HudPaneDefinition,
+  type SpatialDensityTier,
+} from "./composites/adaptive-hud-shell.js";
+export {
+  microChimeEngine,
+  type MicroChimeTone,
+  type MicroChimeConfig,
+} from "./lib/micro-chime-engine.js";
+
+
