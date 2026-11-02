@@ -913,22 +913,46 @@ void test("GET /models exposes addon and category metadata and GET /public/landi
   assert.ok(items.some((item) => item.name === "chat.conversation.landing"));
   assert.ok(items.some((item) => item.name === "ai.provider.landing"));
   assert.ok(items.every((item) => item.href.startsWith("/")));
+
+  const publicTermRes = await fetch(
+    `${address}/public/models/corpus.term`,
+  );
+  assert.equal(publicTermRes.status, 200);
+  const publicTermBody = (await publicTermRes.json()) as {
+    model: {
+      name: string;
+      permissions: { create: boolean; write: boolean; unlink: boolean };
+    } | null;
+    models: { name: string }[];
+    records: Record<string, unknown>[];
+  };
+  assert.equal(publicTermBody.model?.name, "corpus.term");
+  assert.deepEqual(publicTermBody.model?.permissions, {
+    create: false,
+    write: false,
+    unlink: false,
+  });
+  assert.ok(publicTermBody.models.some((m) => m.name === "corpus.term"));
+
+  const publicExplorerDenied = await fetch(
+    `${address}/public/models/ai.provider`,
+  );
+  assert.equal(publicExplorerDenied.status, 404);
 });
 
 test("GET /api/search queries search.index_entry securely", async () => {
-  const cookie = await registerAndLogin(address, "Searcher", "searcher@example.com", "password-1234");
+  const cookie = await register("searcher@example.com");
 
-  // Create an index entry in orm
-  const adminId = "admin-user";
-  await orm.create("search.index_entry", adminId, {
+  // Create an index entry in orm via createRecordForService
+  await orm.createRecordForService("search.index_entry", {
     id: "entry_musa_01",
     target_model: "story.narrative",
     target_id: "story_musa",
     token: "musa",
     weight: 3,
     snippet: "Kisah Nabi Musa dan perjalanan di padang pasir",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: Date.now(),
+    updated_at: Date.now(),
   });
 
   const searchRes = await fetch(`${address}/api/search?q=musa`, {
