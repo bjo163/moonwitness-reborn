@@ -2923,3 +2923,27 @@ msgstr "Konektor & Integrasi Eksternal"
 msgctxt "web:landing.views.integration_connector.description"
 msgid "Hubungkan layanan infrastruktur dan DNS melalui kredensial OS tanpa menyimpan token mentah."
 msgstr "Hubungkan layanan infrastruktur dan DNS melalui kredensial OS tanpa menyimpan token mentah."
+
+msgctxt "web.models:searchModels"
+msgid "Cari model..."
+msgstr "Cari model..."
+
+msgctxt "web.models:searchRecords"
+msgid "Saring rekaman..."
+msgstr "Saring rekaman..."
+
+msgctxt "web.models:noMatchingModels"
+msgid "Tidak ada model yang cocok."
+msgstr "Tidak ada model yang cocok."
+
+msgctxt "web.models:viewRecord"
+msgid "DETAIL REKAMAN"
+msgstr "DETAIL REKAMAN"
+
+msgctxt "web.models:publicExplorerNotice"
+msgid "Mode baca publik. Masuk untuk mengelola data sesuai hak akses akun."
+msgstr "Mode baca publik. Masuk untuk mengelola data sesuai hak akses akun."
+
+msgctxt "web.models:signInToManage"
+msgid "Masuk"
+msgstr "Masuk"

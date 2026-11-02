@@ -53,6 +53,7 @@ export const researchCorrelation: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: CORRELATION_TYPES,
       validator(value) {
         return CORRELATION_TYPES.some((t) => t === value)
           ? undefined
@@ -63,6 +64,7 @@ export const researchCorrelation: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: CORRELATION_CERTAINTIES,
       validator(value) {
         return CORRELATION_CERTAINTIES.some((c) => c === value)
           ? undefined

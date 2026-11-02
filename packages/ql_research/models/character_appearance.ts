@@ -34,6 +34,7 @@ export const characterAppearance: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: APPEARANCE_PROMINENCES,
       validator(value) {
         return APPEARANCE_PROMINENCES.some((p) => p === value)
           ? undefined

@@ -47,6 +47,7 @@ export const studioArtifact: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: STUDIO_ARTIFACT_KINDS,
       validator(value) {
         return STUDIO_ARTIFACT_KINDS.some((k) => k === value)
           ? undefined
@@ -57,6 +58,7 @@ export const studioArtifact: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: STUDIO_LIFECYCLE_STAGES,
       validator(value) {
         return STUDIO_LIFECYCLE_STAGES.some((s) => s === value)
           ? undefined

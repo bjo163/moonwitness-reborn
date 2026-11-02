@@ -33,6 +33,7 @@ export const sourceProvenance: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 64,
+      options: ENTITY_REF_TYPES,
       validator: enumValidator("subject_type", ENTITY_REF_TYPES),
     },
     subject_id: { type: "char", required: true, maxLength: 64 },

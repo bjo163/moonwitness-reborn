@@ -912,4 +912,29 @@ void test("GET /models exposes addon and category metadata and GET /public/landi
   assert.ok(items.some((item) => item.name === "chat.conversation.landing"));
   assert.ok(items.some((item) => item.name === "ai.provider.landing"));
   assert.ok(items.every((item) => item.href.startsWith("/")));
+
+  const publicTermRes = await fetch(
+    `${address}/public/models/corpus.term`,
+  );
+  assert.equal(publicTermRes.status, 200);
+  const publicTermBody = (await publicTermRes.json()) as {
+    model: {
+      name: string;
+      permissions: { create: boolean; write: boolean; unlink: boolean };
+    } | null;
+    models: { name: string }[];
+    records: Record<string, unknown>[];
+  };
+  assert.equal(publicTermBody.model?.name, "corpus.term");
+  assert.deepEqual(publicTermBody.model?.permissions, {
+    create: false,
+    write: false,
+    unlink: false,
+  });
+  assert.ok(publicTermBody.models.some((m) => m.name === "corpus.term"));
+
+  const publicExplorerDenied = await fetch(
+    `${address}/public/models/ai.provider`,
+  );
+  assert.equal(publicExplorerDenied.status, 404);
 });
