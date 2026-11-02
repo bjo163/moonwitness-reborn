@@ -481,3 +481,38 @@ void test("law.instrument is registered in ql_research and validates jurisdictio
     },
   );
 });
+
+void test("mizan.assessment is registered in ql_research and validates rubric balance dimensions", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+      researchManifest,
+    ],
+    async (orm) => {
+      const assessment = await orm.createRecordForService("mizan.assessment", {
+        canonical_id: "mw:mizan:badr-hadith-authenticity",
+        target_entity_type: "witness.statement",
+        target_entity_id: "mw:witness:hadith-badr-01",
+        rubric_version: "mizan_v1.2",
+        primary_dimension: "isnad_authenticity",
+        balance_tier: "sahih_rigorous",
+        weight_score: 94,
+        evaluator_context: "Critical evaluation of transmitter chain unbrokenness and dabt",
+        rationalization: "All narrators in this chain are documented as thiqah (trustworthy) and muttasil (unbroken) in classical rijāl compendia.",
+        contestation_notes: "Minor stylistic variant notes reported in secondary transmission branches.",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      assert.ok(assessment.id);
+
+      const found = await orm.findOneByService("mizan.assessment", { id: assessment.id });
+      assert.equal(found?.["target_entity_type"], "witness.statement");
+      assert.equal(found?.["primary_dimension"], "isnad_authenticity");
+      assert.equal(found?.["balance_tier"], "sahih_rigorous");
+      assert.equal(found?.["weight_score"], 94);
+    },
+  );
+});
