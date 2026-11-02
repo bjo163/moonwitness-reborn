@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "../lib/utils.js";
 
 export interface WorkspaceTemplateProps {
@@ -55,11 +54,13 @@ export function WorkspaceTemplate({
       {sidebarOpen && (
         <button
           aria-label={closeLabel}
-          className="ql-workspace__backdrop"
+          className="ql-hud-backdrop"
           onClick={onCloseSidebar}
+          type="button"
         />
       )}
       <aside
+        aria-hidden={!sidebarOpen}
         className={cn(
           "ql-hud-sidebar ql-workspace__sidebar",
           sidebarOpen && "is-open",
@@ -72,7 +73,7 @@ export function WorkspaceTemplate({
         <header className="ql-hud-topbar ql-workspace__header">
           {header}
         </header>
-        {children}
+        <div className="ql-workspace__content">{children}</div>
         {footer && <footer className="ql-workspace__footer">{footer}</footer>}
       </section>
     </main>

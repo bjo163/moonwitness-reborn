@@ -1,37 +1,41 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import test from "node:test";
+import type { ModelProvider } from "./index.js";
 import {
   calculateMetrics,
   judgeResponse,
-  type ClassificationCounts,
   type JudgmentCriteria,
 } from "./evaluator.js";
-import type { AgentMessage, ModelProvider } from "./index.js";
 
-void test("calculateMetrics computes precision, recall, and f1 accurately", () => {
-  const counts: ClassificationCounts = {
-    truePositives: 8,
-    falsePositives: 2,
-    falseNegatives: 2,
-    trueNegatives: 8,
+void test("calculateMetrics produces correct precision, recall, f1 and accuracy", () => {
+  const counts = {
+    truePositives: 80,
+    falsePositives: 20,
+    falseNegatives: 10,
+    trueNegatives: 90,
   };
 
   const metrics = calculateMetrics(counts);
+
+  // Precision = 80 / (80 + 20) = 0.8
   assert.equal(metrics.precision, 0.8);
-  assert.equal(metrics.recall, 0.8);
-  assert.equal(metrics.f1, 0.8);
-  assert.equal(metrics.accuracy, 0.8);
+  // Recall = 80 / (80 + 10) = 80/90 ≈ 0.8889
+  assert.equal(Number(metrics.recall.toFixed(4)), 0.8889);
+  // F1 = (2 * 0.8 * (80/90)) / (0.8 + 80/90) ≈ 0.8421
+  assert.equal(Number(metrics.f1.toFixed(4)), 0.8421);
+  // Accuracy = (80 + 90) / 200 = 0.85
+  assert.equal(metrics.accuracy, 0.85);
 });
 
-void test("calculateMetrics handles zero division defensively", () => {
-  const zeroCounts: ClassificationCounts = {
+void test("calculateMetrics handles zero denominator division without NaN", () => {
+  const counts = {
     truePositives: 0,
     falsePositives: 0,
     falseNegatives: 0,
     trueNegatives: 0,
   };
 
-  const metrics = calculateMetrics(zeroCounts);
+  const metrics = calculateMetrics(counts);
   assert.equal(metrics.precision, 0);
   assert.equal(metrics.recall, 0);
   assert.equal(metrics.f1, 0);
@@ -40,12 +44,15 @@ void test("calculateMetrics handles zero division defensively", () => {
 
 void test("judgeResponse parses model evaluation JSON correctly", async () => {
   const mockJudge: ModelProvider = {
-    async generate(_messages: readonly AgentMessage[]): Promise<string> {
-      return JSON.stringify({
-        passed: true,
-        score: 9.5,
-        reasoning: "The answer faithfully follows the Quranic passage without hallucinations.",
-      });
+    generate(messages) {
+      assert.ok(messages.length > 0);
+      return Promise.resolve(
+        JSON.stringify({
+          passed: true,
+          score: 9.5,
+          reasoning: "The answer faithfully follows the Quranic passage without hallucinations.",
+        }),
+      );
     },
   };
 
