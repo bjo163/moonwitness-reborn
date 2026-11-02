@@ -64,7 +64,7 @@ A sacred text must not be given a vague editorial verification badge. The source
 **Correction**
 The current approved direction is Cosmic Ivory & Antique Gold. The token names are a compatibility contract, not a description of their current hue. Gold is a brand/interaction accent and must not be used as success, warning, or danger feedback. Both dark and light theme mappings remain part of the shared system.
 
-**Status:** The Master Design Constitution, Design DNA, and Design Token Contract have been aligned with the current token implementation in this audit sequence.
+**Status:** The Master Design Constitution, Design DNA, Design Token Contract, and Headquarter Spatial Blueprint have been aligned with the current token implementation in this audit sequence.
 
 ### P1 — Repeated composition and anti-slop drift
 
