@@ -24,6 +24,7 @@ import { views } from "./views/index.js";
 const manifest: QlAddonManifest = {
   name: "ql_workflow",
   version: "1.0.0",
+  category: "workflow",
   description:
     "Antrean review CAB (change request + transisi tak dapat diubah) dan pelacak proyek/PM.",
   depends: ["ql_base", "ql_auth"],

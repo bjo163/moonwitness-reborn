@@ -28,6 +28,8 @@ import {
   type CorpusSurahDto,
   type CorpusSurahResponseDto,
   type CorpusVerseResponseDto,
+  type LandingCatalogResponseDto,
+  type LandingViewItemDto,
   type ModelProviderDto,
   type ModelRecordsResponseDto,
   type LexicalResearchCandidateDto,
@@ -1745,6 +1747,56 @@ export function createApiServer(
 
     if (
       request.method === "GET" &&
+      pathname === apiRoutes.landing.catalog
+    ) {
+      try {
+        const landingViews = orm.registry.getLandingViews();
+        const items: LandingViewItemDto[] = await Promise.all(
+          landingViews.map(async (view) => {
+            const config = view.landing;
+            if (!config) {
+              throw new Error(`Landing view '${view.name}' is missing config.`);
+            }
+            const modelKey = view.model.replaceAll(".", "_");
+            let recordCount: number | null = null;
+            if (config.publicCountFilter) {
+              const rows = await orm.findManyByService(
+                view.model,
+                config.publicCountFilter,
+                { limit: 500 },
+              );
+              recordCount = rows.length;
+            }
+            return {
+              name: view.name,
+              model: view.model,
+              addon: orm.registry.getModelAddon(view.model),
+              category: orm.registry.getModelCategory(view.model),
+              section: config.section,
+              sequence: config.sequence ?? 100,
+              href: config.href,
+              status: config.status ?? "available",
+              titleKey:
+                config.titleKey ??
+                view.labelKey ??
+                `web.models.entities.${modelKey}`,
+              descriptionKey:
+                config.descriptionKey ??
+                view.helpKey ??
+                `web.models.descriptions.${modelKey}`,
+              recordCount,
+            };
+          }),
+        );
+        sendJson(response, 200, { items } satisfies LandingCatalogResponseDto);
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    if (
+      request.method === "GET" &&
       pathname === apiRoutes.projectProgress.tasks
     ) {
       const user = await requireAuthenticatedUser(request, response, store);
@@ -1958,6 +2010,8 @@ export function createApiServer(
             return {
               kind,
               name: model.name,
+              addon: orm.registry.getModelAddon(model.name),
+              category: orm.registry.getModelCategory(model.name),
               labelKey:
                 model.labelKey ?? `web.models.entities.${modelKey}`,
               description: model.description,
@@ -1995,6 +2049,7 @@ export function createApiServer(
               ),
               views: orm.registry
                 .getViews(model.name)
+                .filter((view) => view.type === "list" || view.type === "form")
                 .map((view) => ({
                   ...view,
                   labelKey:

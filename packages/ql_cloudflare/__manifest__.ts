@@ -5,6 +5,7 @@ import { views } from "./views/index.js";
 const manifest: QlAddonManifest = {
   name: "ql_cloudflare",
   version: "1.0.0",
+  category: "integration",
   description: "Transport Cloudflare Zones dan DNS records beserta mirror-nya.",
   depends: ["ql_base", "ql_auth", "ql_integration"],
   models,

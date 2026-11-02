@@ -921,3 +921,87 @@ if (postgresUrl) {
     }
   });
 }
+
+
+void test("registry resolves model addon, category, and validates landing views", () => {
+  const registry = new QlModelRegistry([
+    {
+      name: "ql_corpus",
+      version: "0.1.0",
+      description: "Corpus",
+      category: "knowledge",
+      depends: [],
+      models: [
+        {
+          name: "corpus.document",
+          description: "Document",
+          tableName: "corpus_document_landing_test",
+          fields: {
+            code: { type: "char", required: true },
+            title: { type: "char", required: true },
+            secret_token: { type: "char", private: true },
+          },
+        },
+      ],
+      access: [],
+      views: [
+        {
+          name: "corpus.document.landing",
+          model: "corpus.document",
+          type: "landing",
+          fields: ["code", "title"],
+          landing: {
+            section: "knowledge",
+            sequence: 10,
+            href: "/corpus",
+            status: "available",
+          },
+        },
+      ],
+      data: [],
+    },
+  ]);
+
+  assert.equal(registry.getModelAddon("corpus.document"), "ql_corpus");
+  assert.equal(registry.getModelCategory("corpus.document"), "knowledge");
+  const landingViews = registry.getLandingViews();
+  assert.equal(landingViews.length, 1);
+  assert.equal(landingViews[0]?.name, "corpus.document.landing");
+
+  assert.throws(
+    () =>
+      new QlModelRegistry([
+        {
+          name: "ql_corpus",
+          version: "0.1.0",
+          description: "Corpus",
+          depends: [],
+          models: [
+            {
+              name: "corpus.document",
+              description: "Document",
+              tableName: "corpus_document_landing_bad_test",
+              fields: {
+                secret_token: { type: "char", private: true },
+              },
+            },
+          ],
+          access: [],
+          views: [
+            {
+              name: "corpus.document.bad_landing",
+              model: "corpus.document",
+              type: "landing",
+              fields: ["secret_token"],
+              landing: {
+                section: "knowledge",
+                href: "/corpus",
+              },
+            },
+          ],
+          data: [],
+        },
+      ]),
+    /cannot reference private field/,
+  );
+});
