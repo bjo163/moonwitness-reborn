@@ -20,7 +20,10 @@ import {
   Textarea,
   WorkspaceSidebar,
   WorkspaceTemplate,
+  StudioExportDialog,
   type SidebarNavItem,
+  type ExportFormat,
+  type ExportMetadataOption,
 } from "@moonwitness/ui";
 import {
   Boxes,
@@ -58,6 +61,8 @@ export default function StudioExportPage() {
   const [artifacts, setArtifacts] = useState<ModelRecordDto[]>([]);
   const [selectedArtifactId, setSelectedArtifactId] = useState("");
   const [compiledMarkdown, setCompiledMarkdown] = useState("");
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const { locale, changeLocale, saving: localeSaving } =
     useLocalePreference(user ?? null);
@@ -326,14 +331,25 @@ export default function StudioExportPage() {
                     </Select>
                   </FormField>
                 )}
-                <Button
-                  onClick={handleDownload}
-                  disabled={!compiledMarkdown || artifacts.length === 0}
-                  className="w-full"
-                >
-                  <Download className="mr-2 size-4" />
-                  {locale === "id" ? "Unduh Markdown" : "Download Markdown"}
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    onClick={handleDownload}
+                    disabled={!compiledMarkdown || artifacts.length === 0}
+                    className="w-full"
+                  >
+                    <Download className="mr-2 size-4" />
+                    {locale === "id" ? "Unduh Markdown" : "Download Markdown"}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setExportDialogOpen(true)}
+                    disabled={artifacts.length === 0}
+                    className="w-full"
+                  >
+                    <FileText className="mr-2 size-4" />
+                    {locale === "id" ? "Opsi Ekspor Mutakhir (Sanad & PDF)" : "Advanced Export (Sanad & PDF)"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -357,6 +373,43 @@ export default function StudioExportPage() {
             </Card>
           </div>
         </div>
+
+        <StudioExportDialog
+          isOpen={exportDialogOpen}
+          onClose={() => setExportDialogOpen(false)}
+          documentTitle={
+            artifacts.find((a) => String(a.id) === selectedArtifactId)?.title as string ?? "Studio Artifact"
+          }
+          isExporting={isExporting}
+          onExport={async (format: ExportFormat, options: ExportMetadataOption) => {
+            setIsExporting(true);
+            try {
+              const apiFormat = format === "mushaf_pdf" ? "pdf" : format;
+              const blob = await moonClient.exportResearchArtifact({
+                artifactId: selectedArtifactId,
+                format: apiFormat,
+                options: {
+                  includeAttributionStamps: options.includeSanadChain,
+                  includeArabicScript: options.includeMorphologyAnalysis,
+                  paperSize: "a4",
+                },
+              });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `artifact-${selectedArtifactId}.${apiFormat === "pdf" ? "pdf" : apiFormat === "json" ? "json" : "md"}`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+              setExportDialogOpen(false);
+            } catch (exportErr) {
+              setError(apiErrorMessage(exportErr, t));
+            } finally {
+              setIsExporting(false);
+            }
+          }}
+        />
       </div>
     </WorkspaceTemplate>
   );

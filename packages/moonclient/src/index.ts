@@ -746,6 +746,192 @@ export interface SurahAudioManifestResponseDto {
   }>;
 }
 
+// Batch 5: Harbor Community, Governance & Command Operability (Tracks 16, 17, 18, 19, 20, 21, 24, 25)
+// ---------------------------------------------------------------------------
+
+// Track 16: Architectural Covenant Signature Ledger
+export interface CovenantTermItemDto {
+  id: string;
+  number: number;
+  title: string;
+  description: string;
+}
+
+export interface CovenantSignatureItemDto {
+  id: string;
+  contributorCallsign: string;
+  covenantVersion: string;
+  signatureHash: string;
+  signedAt: string;
+}
+
+export interface CovenantLedgerResponseDto {
+  signatures: CovenantSignatureItemDto[];
+  totalCount: number;
+}
+
+export interface SignCovenantRequestDto {
+  covenantVersion: string;
+  termsDigest: string;
+  statementAccepted: boolean;
+  contributorCallsign: string;
+}
+
+export interface SignCovenantResponseDto {
+  signatureId: string;
+  signatureHash: string;
+  signedAt: string;
+  covenantVersion: string;
+}
+
+// Track 17: Sanad-Verified Review Pipeline
+export type PeerReviewDecisionDto = "approved" | "changes_requested";
+
+export interface PeerReviewItemDto {
+  id: string;
+  reviewerId: string;
+  reviewerName: string;
+  decision: PeerReviewDecisionDto;
+  notes: string;
+  sanadChainRef: string;
+  createdAt: string;
+}
+
+export interface SanadPipelineStatusDto {
+  changeId: string;
+  currentState: string;
+  requiredReviews: number;
+  approvedCount: number;
+  canPublish: boolean;
+  reviews: PeerReviewItemDto[];
+}
+
+export interface SubmitPeerReviewRequestDto {
+  decision: PeerReviewDecisionDto;
+  notes: string;
+  sanadChainRef: string;
+}
+
+// Track 18: Collaborative Harbor Study Circles
+export interface StudyCircleDto {
+  id: string;
+  title: string;
+  surahNumber: number;
+  facilitatorName: string;
+  memberCount: number;
+  status: "active" | "concluded";
+}
+
+export interface CircleReflectionDto {
+  id: string;
+  circleId: string;
+  authorCallsign: string;
+  passageLocator: string;
+  content: string;
+  moderationStatus: "quarantined" | "approved" | "rejected";
+  createdAt: string;
+}
+
+export interface SubmitReflectionRequestDto {
+  passageLocator: string;
+  content: string;
+}
+
+// Track 19: Proof-of-Beneficial-Deeds Activity Ledger
+export type BeneficialDeedKindDto =
+  | "typo_correction"
+  | "translation_review"
+  | "reference_verification"
+  | "annotation_audit";
+
+export interface BeneficialDeedItemDto {
+  id: string;
+  contributorCallsign: string;
+  isAnonymous: boolean;
+  deedKind: BeneficialDeedKindDto;
+  summary: string;
+  proofHash: string;
+  createdAt: string;
+}
+
+export interface DeedsLedgerResponseDto {
+  deeds: BeneficialDeedItemDto[];
+  totalCount: number;
+}
+
+// Track 20: Editorial Reflection & Ethics Checklist
+export interface EthicsAffirmationPayloadDto {
+  isNotFatwaAffirmed: boolean;
+  citationsVerifiedAffirmed: boolean;
+  decorumAffirmed: boolean;
+  affirmedAt: string;
+  ethicsDigest: string;
+}
+
+export interface PublishChangeRequestDto {
+  ethicsAffirmation: EthicsAffirmationPayloadDto;
+}
+
+export interface PublishChangeResponseDto {
+  changeId: string;
+  newState: string;
+  ethicsAffirmedAt: string;
+}
+
+// Track 21: Realtime Telemetry Orbit Monitor
+export interface SystemMetricDto {
+  metricName: string;
+  metricKey: "db_ping_ms" | "api_p95_ms" | "edge_dns_sync" | "search_throughput_qpm";
+  currentValue: number;
+  unit: "ms" | "count" | "pct" | "qpm";
+  status: "healthy" | "degraded" | "critical";
+  updatedAt: string;
+}
+
+export interface TelemetryMetricsResponseDto {
+  uptimeSeconds: number;
+  apiLatencyP95Ms: number;
+  dbPingMs: number;
+  dnsConnectorsOnline: number;
+  overallStatus: "healthy" | "degraded" | "critical";
+  metrics: readonly SystemMetricDto[];
+}
+
+// Track 24: Studio Multi-Format Exporter
+export type ExportFormatDto = "pdf" | "markdown" | "json";
+
+export interface ExportArtifactRequestDto {
+  artifactId: string;
+  format: ExportFormatDto;
+  options: {
+    includeAttributionStamps: boolean;
+    includeArabicScript: boolean;
+    paperSize?: "a4" | "letter";
+  };
+}
+
+export interface ExportArtifactResponseDto {
+  downloadUrl?: string;
+  directBlobSupported: boolean;
+  byteSize: number;
+  sha256Checksum: string;
+  expiresAt: string;
+}
+
+// Track 25: Resilient Offline PWA & Service Worker
+export interface OfflineManifestEntryDto {
+  editionKey: string;
+  editionName: string;
+  versionTag: string;
+  totalSurahs: number;
+  totalBytes: number;
+  sha256Checksum: string;
+}
+
+export interface OfflineManifestResponseDto {
+  manifests: readonly OfflineManifestEntryDto[];
+}
+
 export type ProjectTaskStateDto =
   | "done"
   | "in_progress"
@@ -1011,6 +1197,23 @@ export const apiRoutes = {
     item: (id: string) => `/workflow/changes/${segment(id)}`,
     transition: (id: string) => `/workflow/changes/${segment(id)}/transition`,
     transitions: (id: string) => `/workflow/changes/${segment(id)}/transitions`,
+    sanadVerification: (changeId: string) =>
+      `/workflow/changes/${segment(changeId)}/sanad`,
+    publishChange: (id: string) => `/workflow/changes/${segment(id)}/publish`,
+  },
+  community: {
+    covenants: "/community/covenants",
+    signCovenant: "/community/covenants/sign",
+    studyCircles: "/community/study-circles",
+    circleDetail: (id: string) => `/community/study-circles/${segment(id)}`,
+    reflections: (circleId: string) =>
+      `/community/study-circles/${segment(circleId)}/reflections`,
+    deedsLedger: "/community/deeds-ledger",
+  },
+  telemetry: {
+    orbit: "/telemetry/orbit-metrics",
+    history: (metricKey: string) =>
+      `/telemetry/orbit-metrics/${segment(metricKey)}/history`,
   },
   research: {
     lexicalCandidates: "/research/lexical-candidates",
@@ -1019,6 +1222,8 @@ export const apiRoutes = {
       `/research/lexical-candidates?edition_key=${encodeURIComponent(editionKey)}`,
     lexicalCandidateReview: (id: string) =>
       `/research/lexical-candidates/${segment(id)}/reviews`,
+    export: (format: "pdf" | "markdown" | "json") =>
+      `/research/export/${segment(format)}`,
   },
   corpus: {
     editions: "/corpus/editions",
@@ -1028,6 +1233,9 @@ export const apiRoutes = {
       `/corpus/editions/${segment(key)}/surahs/${segment(String(surah))}`,
     verse: (key: string, surah: number, ayah: number) =>
       `/corpus/editions/${segment(key)}/surahs/${segment(String(surah))}/verses/${segment(String(ayah))}`,
+    offlineManifest: "/corpus/offline-manifest",
+    offlinePack: (editionKey: string) =>
+      `/corpus/offline-pack/${segment(editionKey)}`,
   },
   source: {
     artifacts: "/source/artifacts",
@@ -1508,6 +1716,109 @@ export class MoonClient {
 
   deactivateUser(id: string): Promise<{ deactivated: boolean }> {
     return this.request(apiRoutes.admin.users.deactivate(id), "POST");
+  }
+
+  // Batch 5 SDK Methods
+  // ---------------------------------------------------------------------------
+
+  // Track 16: Covenant Ledger
+  getCovenantLedger(version?: string): Promise<CovenantLedgerResponseDto> {
+    const query = version ? `?version=${encodeURIComponent(version)}` : "";
+    return this.request(`${apiRoutes.community.covenants}${query}`);
+  }
+
+  signCovenant(payload: SignCovenantRequestDto): Promise<SignCovenantResponseDto> {
+    return this.request(apiRoutes.community.signCovenant, "POST", payload);
+  }
+
+  // Track 17: Sanad Verification Pipeline
+  getSanadPipelineStatus(changeId: string): Promise<SanadPipelineStatusDto> {
+    return this.request(apiRoutes.workflow.sanadVerification(changeId));
+  }
+
+  submitPeerReview(
+    changeId: string,
+    payload: SubmitPeerReviewRequestDto,
+  ): Promise<SanadPipelineStatusDto> {
+    return this.request(
+      apiRoutes.workflow.sanadVerification(changeId),
+      "POST",
+      payload,
+    );
+  }
+
+  // Track 18: Collaborative Harbor Study Circles
+  listStudyCircles(): Promise<{ circles: StudyCircleDto[] }> {
+    return this.request(apiRoutes.community.studyCircles);
+  }
+
+  getCircleReflections(
+    circleId: string,
+  ): Promise<{ reflections: CircleReflectionDto[] }> {
+    return this.request(apiRoutes.community.reflections(circleId));
+  }
+
+  submitCircleReflection(
+    circleId: string,
+    payload: SubmitReflectionRequestDto,
+  ): Promise<CircleReflectionDto> {
+    return this.request(
+      apiRoutes.community.reflections(circleId),
+      "POST",
+      payload,
+    );
+  }
+
+  // Track 19: Proof-of-Beneficial-Deeds Activity Ledger
+  getDeedsLedger(kind?: string): Promise<DeedsLedgerResponseDto> {
+    const query = kind ? `?kind=${encodeURIComponent(kind)}` : "";
+    return this.request(`${apiRoutes.community.deedsLedger}${query}`);
+  }
+
+  // Track 20: Editorial Reflection & Ethics Checklist
+  publishWorkflowChange(
+    changeId: string,
+    payload: PublishChangeRequestDto,
+  ): Promise<PublishChangeResponseDto> {
+    return this.request(
+      apiRoutes.workflow.publishChange(changeId),
+      "POST",
+      payload,
+    );
+  }
+
+  // Track 21: Realtime Telemetry Orbit Monitor
+  getSystemTelemetry(): Promise<TelemetryMetricsResponseDto> {
+    return this.request(apiRoutes.telemetry.orbit, "GET");
+  }
+
+  // Track 24: Studio Multi-Format Exporter
+  async downloadBlob(path: string, options?: RequestInit): Promise<Blob> {
+    const url = `${this.baseUrl}${path.startsWith("/") ? "" : "/"}${path}`;
+    const response = await this.fetcher(url, {
+      credentials: "same-origin",
+      ...options,
+    });
+    if (!response.ok) {
+      throw new MoonClientError(
+        `Download failed with HTTP ${response.status}`,
+        response.status,
+      );
+    }
+    return response.blob();
+  }
+
+  exportResearchArtifact(input: ExportArtifactRequestDto): Promise<Blob> {
+    return this.downloadBlob(apiRoutes.research.export(input.format), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  }
+
+  // Track 25: Resilient Offline PWA & Service Worker
+  getOfflineCorpusManifest(): Promise<OfflineManifestResponseDto> {
+    return this.request(apiRoutes.corpus.offlineManifest, "GET");
   }
 
   private async request<T>(

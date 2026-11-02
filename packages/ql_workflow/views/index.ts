@@ -60,4 +60,16 @@ export const views: QlViewDefinition[] = [
     type: "list",
     fields: ["created_at", "action", "from_state", "to_state", "reason"],
   },
+  {
+    name: "workflow.covenant_signature.list",
+    model: "workflow.covenant_signature",
+    type: "list",
+    fields: ["covenant_version", "contributor_callsign", "signature_hash", "created_at"],
+  },
+  {
+    name: "workflow.peer_review.list",
+    model: "workflow.peer_review",
+    type: "list",
+    fields: ["change_id", "decision", "sanad_chain_ref", "created_at"],
+  },
 ];

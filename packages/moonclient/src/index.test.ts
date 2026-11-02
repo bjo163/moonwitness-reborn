@@ -610,3 +610,101 @@ void test("MoonClient supports Batch 3 contracts: searchGraph, corpusProofs, and
   assert.equal(manifestRecorder.requests[0].method, "GET");
 });
 
+void test("MoonClient supports Batch 5 contracts: covenant, sanad, study circles, deeds, telemetry, export, offline", async () => {
+  // Track 16: Covenant
+  const covenantRec = recorder({ signatures: [], totalCount: 0 });
+  await covenantRec.client.getCovenantLedger("1.0.0");
+  assert.equal(covenantRec.requests[0].url, "/api/community/covenants?version=1.0.0");
+
+  const signRec = recorder({
+    signatureId: "sig-1",
+    signatureHash: "sha256hash",
+    signedAt: "2026-11-02T00:00:00Z",
+    covenantVersion: "1.0.0",
+  });
+  await signRec.client.signCovenant({
+    covenantVersion: "1.0.0",
+    termsDigest: "digest",
+    statementAccepted: true,
+    contributorCallsign: "Scholar1",
+  });
+  assert.equal(signRec.requests[0].url, "/api/community/covenants/sign");
+  assert.equal(signRec.requests[0].method, "POST");
+
+  // Track 17: Sanad
+  const sanadRec = recorder({
+    changeId: "ch-1",
+    currentState: "in_review",
+    requiredReviews: 2,
+    approvedCount: 1,
+    canPublish: false,
+    reviews: [],
+  });
+  await sanadRec.client.getSanadPipelineStatus("ch-1");
+  assert.equal(sanadRec.requests[0].url, "/api/workflow/changes/ch-1/sanad");
+
+  await sanadRec.client.submitPeerReview("ch-1", {
+    decision: "approved",
+    notes: "Verified classical chain",
+    sanadChainRef: "Ibn Kathir",
+  });
+  assert.equal(sanadRec.requests[1].url, "/api/workflow/changes/ch-1/sanad");
+  assert.equal(sanadRec.requests[1].method, "POST");
+
+  // Track 18: Study Circles
+  const circlesRec = recorder({ circles: [] });
+  await circlesRec.client.listStudyCircles();
+  assert.equal(circlesRec.requests[0].url, "/api/community/study-circles");
+
+  const reflRec = recorder({ reflections: [] });
+  await reflRec.client.getCircleReflections("circle-1");
+  assert.equal(reflRec.requests[0].url, "/api/community/study-circles/circle-1/reflections");
+
+  await reflRec.client.submitCircleReflection("circle-1", {
+    passageLocator: "18:10",
+    content: "Deep reflection on the cave seekers.",
+  });
+  assert.equal(reflRec.requests[1].url, "/api/community/study-circles/circle-1/reflections");
+  assert.equal(reflRec.requests[1].method, "POST");
+
+  // Track 19: Deeds
+  const deedsRec = recorder({ deeds: [], totalCount: 0 });
+  await deedsRec.client.getDeedsLedger("typo_correction");
+  assert.equal(deedsRec.requests[0].url, "/api/community/deeds-ledger?kind=typo_correction");
+
+  // Track 20: Ethics publish
+  const ethicsRec = recorder({
+    changeId: "ch-1",
+    newState: "under_review",
+    ethicsAffirmedAt: "2026-11-02T00:00:00Z",
+  });
+  await ethicsRec.client.publishWorkflowChange("ch-1", {
+    ethicsAffirmation: {
+      isNotFatwaAffirmed: true,
+      citationsVerifiedAffirmed: true,
+      decorumAffirmed: true,
+      affirmedAt: "2026-11-02T00:00:00Z",
+      ethicsDigest: "hash",
+    },
+  });
+  assert.equal(ethicsRec.requests[0].url, "/api/workflow/changes/ch-1/publish");
+  assert.equal(ethicsRec.requests[0].method, "POST");
+
+  // Track 21: Telemetry
+  const telemetryRec = recorder({
+    uptimeSeconds: 12000,
+    apiLatencyP95Ms: 42,
+    dbPingMs: 2,
+    dnsConnectorsOnline: 1,
+    overallStatus: "healthy",
+    metrics: [],
+  });
+  await telemetryRec.client.getSystemTelemetry();
+  assert.equal(telemetryRec.requests[0].url, "/api/telemetry/orbit-metrics");
+
+  // Track 25: Offline manifest
+  const offlineRec = recorder({ manifests: [] });
+  await offlineRec.client.getOfflineCorpusManifest();
+  assert.equal(offlineRec.requests[0].url, "/api/corpus/offline-manifest");
+});
+

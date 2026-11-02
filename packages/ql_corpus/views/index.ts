@@ -201,4 +201,17 @@ export const views: QlViewDefinition[] = [
       "algorithm_version",
     ],
   },
+  {
+    name: "corpus.offline_manifest.list",
+    model: "corpus.offline_manifest",
+    type: "list",
+    fields: [
+      "edition_key",
+      "version_tag",
+      "total_surahs",
+      "total_bytes",
+      "sha256_checksum",
+      "is_active",
+    ],
+  },
 ];

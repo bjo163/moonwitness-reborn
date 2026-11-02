@@ -32,8 +32,20 @@ import {
   LexicalRootSearch,
   QuranicMorphologyVisualizer,
   LocalInferenceToggle,
+  CovenantSignaturePanel,
+  CovenantLedgerTable,
+  SanadVerificationStepper,
+  StudyCircleDirectory,
+  StudyCircleRoom,
+  DeedsActivityLedger,
+  EthicsChecklistDialog,
+  MetricSparkline,
+  TelemetryOrbitWidget,
+  StudioExportDialog,
+  OfflineStatusPill,
   type SidebarNavItem,
 } from "../src/index.js";
+
 import { assertNoOwnColours, render } from "./render-helpers.js";
 
 /**
@@ -167,7 +179,89 @@ const classNameContract: readonly [string, RegExp, (className: string) => ReactN
   ["LocalInferenceToggle", /ql-local-inference-toggle/, (c) => (
     <LocalInferenceToggle className={c} isEnabled={false} onToggle={() => undefined} />
   )],
+  ["CovenantSignaturePanel", /ql-covenant-signature-panel/, (c) => (
+    <CovenantSignaturePanel
+      className={c}
+      version="1.0.0"
+      terms={[]}
+      hasSigned={false}
+      onSignSuccess={() => undefined}
+    />
+  )],
+  ["CovenantLedgerTable", /ql-covenant-ledger-table/, (c) => (
+    <CovenantLedgerTable className={c} signatures={[]} totalSignatures={0} />
+  )],
+  ["SanadVerificationStepper", /ql-sanad-stepper/, (c) => (
+    <SanadVerificationStepper
+      className={c}
+      changeId="chg-1"
+      currentState="draft"
+      authorId="u-author"
+      currentUserId="u-reviewer"
+      reviews={[]}
+      onSubmitReview={() => Promise.resolve()}
+    />
+  )],
+  ["StudyCircleDirectory", /ql-study-circle-directory/, (c) => (
+    <StudyCircleDirectory
+      className={c}
+      circles={[]}
+      onSelectCircle={() => undefined}
+    />
+  )],
+  ["StudyCircleRoom", /ql-study-circle-room/, (c) => (
+    <StudyCircleRoom
+      className={c}
+      circle={{
+        id: "c-1",
+        title: "Test Circle",
+        surahNumber: 1,
+        facilitatorName: "Scholar",
+        memberCount: 2,
+        status: "active",
+      }}
+      reflections={[]}
+      onSubmitReflection={() => Promise.resolve()}
+      onBack={() => undefined}
+    />
+  )],
+  ["DeedsActivityLedger", /ql-deeds-activity-ledger/, (c) => (
+    <DeedsActivityLedger
+      className={c}
+      deeds={[]}
+      totalCount={0}
+      onFilterChange={() => undefined}
+    />
+  )],
+  ["EthicsChecklistDialog", /ql-ethics-checklist-dialog/, (c) => (
+    <EthicsChecklistDialog
+      className={c}
+      open={true}
+      articleTitle="Study Article"
+      changeId="chg-1"
+      onCancel={() => undefined}
+      onConfirm={() => Promise.resolve()}
+    />
+  )],
+  ["MetricSparkline", /ql-metric-sparkline/, (c) => (
+    <MetricSparkline className={c} dataPoints={[1, 3, 2, 5]} />
+  )],
+  ["TelemetryOrbitWidget", /ql-telemetry-orbit-widget/, (c) => (
+    <TelemetryOrbitWidget className={c} />
+  )],
+  ["StudioExportDialog", /ql-studio-export-dialog/, (c) => (
+    <StudioExportDialog
+      className={c}
+      isOpen={true}
+      onClose={() => undefined}
+      onExport={() => undefined}
+    />
+  )],
+  ["OfflineStatusPill", /ql-offline-status-pill/, (c) => (
+    <OfflineStatusPill className={c} isOnline={true} />
+  )],
 ];
+
 
 for (const [label, baseClass, build] of classNameContract) {
   void test(`${label} keeps ${baseClass.source} when the caller passes a className`, () => {

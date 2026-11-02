@@ -1,0 +1,17 @@
+{
+  "name": "MoonWitness - A-L-L-A-H.COM Ecosystem",
+  "short_name": "MoonWitness",
+  "description": "Preserve knowledge, trace sources, and verify theological provenance offline and online.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070918",
+  "theme_color": "#0f1230",
+  "icons": [
+    {
+      "src": "/brand/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
