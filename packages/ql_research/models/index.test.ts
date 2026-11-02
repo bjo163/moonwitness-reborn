@@ -414,3 +414,35 @@ void test("event.record is registered in ql_research and preserves epistemic sta
     },
   );
 });
+
+
+void test("person.profile is registered in ql_research and validates role attribution", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+      researchManifest,
+    ],
+    async (orm) => {
+      const person = await orm.createRecordForService("person.profile", {
+        canonical_id: "mw:person:al-bukhari",
+        primary_name: "Muhammad ibn Ismail al-Bukhari",
+        aliases: "Imam Bukhari, Abu Abdillah",
+        primary_role: "scholar",
+        era_context: "194 - 256 AH (810 - 870 CE)",
+        biographical_summary: "Major 9th-century Islamic scholar and master muhaddith, compiler of Sahih al-Bukhari.",
+        attribution_notes: "Primary biographical entries verified in Siyar A'lam al-Nubala and Tahdhib al-Kamal",
+        source_artifact_id: "mw:source:tahdhib-al-kamal",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      assert.ok(person.id);
+
+      const found = await orm.findOneByService("person.profile", { id: person.id });
+      assert.equal(found?.["primary_name"], "Muhammad ibn Ismail al-Bukhari");
+      assert.equal(found?.["primary_role"], "scholar");
+    },
+  );
+});
