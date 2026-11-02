@@ -26,17 +26,14 @@ import {
   Compass,
   FileText,
   Globe,
-  Landmark,
-  Layers,
   Lock,
-  Microscope,
   Moon,
   Scroll,
   Sparkles,
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LocaleSwitcher } from "../features/locale/locale-switcher";
 import { apiErrorMessage } from "../features/locale/api-error-message";
 import { useMessages } from "../features/locale/messages";
@@ -133,40 +130,6 @@ export default function LandingPage() {
   const loadErrorMessage =
     loadError === null ? null : apiErrorMessage(loadError, t);
 
-  const portals: readonly {
-    title: string;
-    description: string;
-    href: string;
-    icon: ReactNode;
-    proposed?: boolean;
-  }[] = [
-    {
-      title: "MoonWitness",
-      description: copy.landing.portalMoonWitness,
-      href: "/corpus",
-      icon: <Moon aria-hidden="true" size={22} />,
-    },
-    {
-      title: "Dock",
-      description: copy.landing.portalDock,
-      href: "#community-dock",
-      icon: <Users aria-hidden="true" size={22} />,
-      proposed: true,
-    },
-    {
-      title: "Cockpit",
-      description: copy.landing.portalCockpit,
-      href: "/command-center",
-      icon: <Compass aria-hidden="true" size={22} />,
-    },
-    {
-      title: "Headquarter",
-      description: copy.landing.portalHeadquarter,
-      href: "/admin/users",
-      icon: <Landmark aria-hidden="true" size={22} />,
-    },
-  ];
-
   return (
     <main className="ql-hud-app min-h-dvh">
       {/* =========================================================================
@@ -187,10 +150,10 @@ export default function LandingPage() {
               {copy.landing.navHome}
             </NavLink>
             <NavLink href="#the-universe">{copy.landing.navPortals}</NavLink>
-            <NavLink href="#explore-knowledge">Explore</NavLink>
-            <NavLink href="#transmissions">Transmissions</NavLink>
-            <NavLink href="#community-dock">Dock</NavLink>
-            <NavLink href="#your-journey">Journey</NavLink>
+            <NavLink href="#explore-knowledge">{copy.landing.navExplore}</NavLink>
+            <NavLink href="#transmissions">{copy.landing.navTransmissions}</NavLink>
+            <NavLink href="#community-dock">{copy.landing.navDock}</NavLink>
+            <NavLink href="#your-journey">{copy.landing.navJourney}</NavLink>
           </nav>
           <div className="flex items-center gap-2">
             <LocaleSwitcher
@@ -249,20 +212,61 @@ export default function LandingPage() {
           id="the-universe"
           className="relative mx-auto w-full max-w-7xl px-5 pb-5 md:px-10"
         >
-          <ul className="ql-portal-grid" aria-label={copy.landing.portalsLabel}>
-            {portals.map((portal) => (
-              <li key={portal.title}>
-                <PortalCard
-                  href={portal.href}
-                  title={portal.title}
-                  description={portal.description}
-                  icon={portal.icon}
-                  arrow={<ChevronRight aria-hidden="true" size={16} />}
-                  status={portal.proposed ? copy.common.statusProposed : undefined}
-                />
-              </li>
-            ))}
+          {/* Asymmetric authored portal map: MoonWitness dominant (editorial role),
+              Dock + Cockpit as operational wings, Headquarter gated/restricted */}
+          <ul
+            className="grid gap-3 md:grid-cols-[2fr_1fr] md:grid-rows-[auto_auto]"
+            aria-label={copy.landing.portalsLabel}
+          >
+            {/* MoonWitness — dominant anchor, full left column */}
+            <li className="md:row-span-2">
+              <PortalCard
+                href="/corpus"
+                title="MoonWitness"
+                description={copy.landing.portalMoonWitness}
+                icon={<Moon aria-hidden="true" size={22} />}
+                arrow={<ChevronRight aria-hidden="true" size={16} />}
+              />
+            </li>
+            {/* Dock — proposed, operational wing top */}
+            <li>
+              <PortalCard
+                href="#community-dock"
+                title="Dock"
+                description={copy.landing.portalDock}
+                icon={<Users aria-hidden="true" size={22} />}
+                arrow={<ChevronRight aria-hidden="true" size={16} />}
+                status={copy.common.statusProposed}
+              />
+            </li>
+            {/* Cockpit — operational wing bottom */}
+            <li>
+              <PortalCard
+                href="/command-center"
+                title="Cockpit"
+                description={copy.landing.portalCockpit}
+                icon={<Compass aria-hidden="true" size={22} />}
+                arrow={<ChevronRight aria-hidden="true" size={16} />}
+              />
+            </li>
           </ul>
+          {/* Headquarter — gated separately below the asymmetric grid, restricted role */}
+          <div className="mt-3 flex items-center gap-3 border border-hairline bg-panel-edge/60 px-5 py-4">
+            <span className="flex size-8 shrink-0 items-center justify-center border border-hairline-strong text-muted">
+              <Lock aria-hidden="true" size={16} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-ink-soft">Headquarter</p>
+              <p className="text-xs text-muted">{copy.landing.portalHeadquarter}</p>
+            </div>
+            <Link
+              href="/admin/users"
+              className="shrink-0 text-xs font-medium text-muted underline-offset-4 hover:text-acid hover:underline"
+            >
+              <Lock aria-hidden="true" size={12} className="inline mr-1" />
+              <span>Admin</span>
+            </Link>
+          </div>
           <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-hairline pt-4">
             <p className="text-xs font-medium tracking-[0.22em] text-ink-soft">
               {copy.landing.footerValues}
@@ -287,70 +291,55 @@ export default function LandingPage() {
         title={copy.landing.m3Title}
         description={copy.landing.m3Description}
       >
-        <div className="grid gap-6 md:grid-cols-3">
-          <Link
-            href="/corpus"
-            className="group relative flex flex-col justify-between border border-hairline bg-panel p-6 transition-all hover:border-acid"
-          >
-            <div>
-              <div className="flex size-10 items-center justify-center border border-hairline-strong bg-panel-edge text-acid">
-                <Scroll aria-hidden="true" size={20} />
+        {/* Editorial directory index: numbered horizontal rows, not equal card grid.
+            Purpose: distinct visual language from other movements, content-driven composition. */}
+        <ol className="divide-y divide-hairline border-y border-hairline" aria-label="Direktori pengetahuan">
+          <li>
+            <Link
+              href="/corpus"
+              className="group flex items-center gap-6 py-6 px-2 transition-colors hover:bg-panel-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acid"
+            >
+              <span className="ql-display shrink-0 w-10 text-3xl font-bold text-hairline-strong group-hover:text-acid-muted transition-colors select-none" aria-hidden="true">01</span>
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <h3 className="ql-display text-xl text-ink group-hover:text-acid">{copy.landing.m3CorpusTitle}</h3>
+                <p className="text-sm text-muted">{copy.landing.m3CorpusDesc}</p>
               </div>
-              <h3 className="ql-display mt-5 text-2xl text-ink group-hover:text-acid">
-                {copy.landing.m3CorpusTitle}
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted">
-                {copy.landing.m3CorpusDesc}
-              </p>
-            </div>
-            <div className="mt-6 flex items-center gap-2 text-xs font-semibold tracking-wider text-acid uppercase">
-              <span>Buka Korpus</span>
-              <span aria-hidden="true">&rarr;</span>
-            </div>
-          </Link>
-
-          <Link
-            href="/research"
-            className="group relative flex flex-col justify-between border border-hairline bg-panel p-6 transition-all hover:border-acid"
-          >
-            <div>
-              <div className="flex size-10 items-center justify-center border border-hairline-strong bg-panel-edge text-acid">
-                <Microscope aria-hidden="true" size={20} />
+              <span className="shrink-0 text-acid opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true">
+                <ArrowRight size={20} />
+              </span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/research"
+              className="group flex items-center gap-6 py-6 px-2 transition-colors hover:bg-panel-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acid"
+            >
+              <span className="ql-display shrink-0 w-10 text-3xl font-bold text-hairline-strong group-hover:text-acid-muted transition-colors select-none" aria-hidden="true">02</span>
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <h3 className="ql-display text-xl text-ink group-hover:text-acid">{copy.landing.m3ResearchTitle}</h3>
+                <p className="text-sm text-muted">{copy.landing.m3ResearchDesc}</p>
               </div>
-              <h3 className="ql-display mt-5 text-2xl text-ink group-hover:text-acid">
-                {copy.landing.m3ResearchTitle}
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted">
-                {copy.landing.m3ResearchDesc}
-              </p>
-            </div>
-            <div className="mt-6 flex items-center gap-2 text-xs font-semibold tracking-wider text-acid uppercase">
-              <span>Buka Penelitian</span>
-              <span aria-hidden="true">&rarr;</span>
-            </div>
-          </Link>
-
-          <Link
-            href="/models"
-            className="group relative flex flex-col justify-between border border-hairline bg-panel p-6 transition-all hover:border-acid"
-          >
-            <div>
-              <div className="flex size-10 items-center justify-center border border-hairline-strong bg-panel-edge text-acid">
-                <Layers aria-hidden="true" size={20} />
+              <span className="shrink-0 text-acid opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true">
+                <ArrowRight size={20} />
+              </span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/models"
+              className="group flex items-center gap-6 py-6 px-2 transition-colors hover:bg-panel-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acid"
+            >
+              <span className="ql-display shrink-0 w-10 text-3xl font-bold text-hairline-strong group-hover:text-acid-muted transition-colors select-none" aria-hidden="true">03</span>
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <h3 className="ql-display text-xl text-ink group-hover:text-acid">{copy.landing.m3ModelsTitle}</h3>
+                <p className="text-sm text-muted">{copy.landing.m3ModelsDesc}</p>
               </div>
-              <h3 className="ql-display mt-5 text-2xl text-ink group-hover:text-acid">
-                {copy.landing.m3ModelsTitle}
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted">
-                {copy.landing.m3ModelsDesc}
-              </p>
-            </div>
-            <div className="mt-6 flex items-center gap-2 text-xs font-semibold tracking-wider text-acid uppercase">
-              <span>Buka Model</span>
-              <span aria-hidden="true">&rarr;</span>
-            </div>
-          </Link>
-        </div>
+              <span className="shrink-0 text-acid opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true">
+                <ArrowRight size={20} />
+              </span>
+            </Link>
+          </li>
+        </ol>
       </SpatialRegion>
 
       {/* =========================================================================
@@ -364,7 +353,7 @@ export default function LandingPage() {
       >
         <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr]">
           <TransmissionCard
-            badge="Transmisi 001"
+            badge="Al-Qur'an · 1:1-7"
             title={copy.landing.m4FeaturedTitle}
             source={copy.landing.m4FeaturedSource}
             excerpt={copy.landing.m4FeaturedExcerpt}
@@ -407,47 +396,48 @@ export default function LandingPage() {
         title={copy.landing.m5Title}
         description={copy.landing.m5Description}
       >
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <Link
-            href="/corpus"
-            className="flex flex-col items-center justify-center border border-hairline bg-panel p-6 text-center transition-all hover:border-acid hover:bg-panel-raised"
-          >
-            <Globe aria-hidden="true" size={24} className="text-acid" />
-            <span className="mt-3 text-sm font-semibold text-ink">
-              {copy.landing.m5TopicFaith}
-            </span>
-          </Link>
-
-          <Link
-            href="/research"
-            className="flex flex-col items-center justify-center border border-hairline bg-panel p-6 text-center transition-all hover:border-acid hover:bg-panel-raised"
-          >
-            <Scroll aria-hidden="true" size={24} className="text-acid" />
-            <span className="mt-3 text-sm font-semibold text-ink">
-              {copy.landing.m5TopicHistory}
-            </span>
-          </Link>
-
-          <Link
-            href="/workflow"
-            className="flex flex-col items-center justify-center border border-hairline bg-panel p-6 text-center transition-all hover:border-acid hover:bg-panel-raised"
-          >
-            <FileText aria-hidden="true" size={24} className="text-acid" />
-            <span className="mt-3 text-sm font-semibold text-ink">
-              {copy.landing.m5TopicWisdom}
-            </span>
-          </Link>
-
-          <Link
-            href="/models"
-            className="flex flex-col items-center justify-center border border-hairline bg-panel p-6 text-center transition-all hover:border-acid hover:bg-panel-raised"
-          >
-            <Sparkles aria-hidden="true" size={24} className="text-acid" />
-            <span className="mt-3 text-sm font-semibold text-ink">
-              {copy.landing.m5TopicCosmos}
-            </span>
-          </Link>
-        </div>
+        {/* Inline compass strip: flowing flex tags, not uniform square tiles.
+            Purpose: visually distinct from M02/M03/M06, encourages browsing not comparison. */}
+        <nav aria-label="Topik pengetahuan">
+          <ul className="flex flex-wrap gap-3">
+            <li>
+              <Link
+                href="/corpus"
+                className="inline-flex items-center gap-2 border border-hairline bg-panel px-4 py-2.5 text-sm font-medium text-ink transition-all hover:border-acid hover:text-acid focus-visible:outline focus-visible:outline-2 focus-visible:outline-acid"
+              >
+                <Globe aria-hidden="true" size={16} className="shrink-0 text-acid" />
+                {copy.landing.m5TopicFaith}
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/research"
+                className="inline-flex items-center gap-2 border border-hairline bg-panel px-4 py-2.5 text-sm font-medium text-ink transition-all hover:border-acid hover:text-acid focus-visible:outline focus-visible:outline-2 focus-visible:outline-acid"
+              >
+                <Scroll aria-hidden="true" size={16} className="shrink-0 text-acid" />
+                {copy.landing.m5TopicHistory}
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/corpus"
+                className="inline-flex items-center gap-2 border border-hairline bg-panel px-4 py-2.5 text-sm font-medium text-ink transition-all hover:border-acid hover:text-acid focus-visible:outline focus-visible:outline-2 focus-visible:outline-acid"
+              >
+                <FileText aria-hidden="true" size={16} className="shrink-0 text-acid" />
+                {copy.landing.m5TopicWisdom}
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/models"
+                className="inline-flex items-center gap-2 border border-hairline bg-panel px-4 py-2.5 text-sm font-medium text-ink transition-all hover:border-acid hover:text-acid focus-visible:outline focus-visible:outline-2 focus-visible:outline-acid"
+              >
+                <Sparkles aria-hidden="true" size={16} className="shrink-0 text-acid" />
+                {copy.landing.m5TopicCosmos}
+              </Link>
+            </li>
+          </ul>
+        </nav>
       </SpatialRegion>
 
       {/* =========================================================================
@@ -478,6 +468,9 @@ export default function LandingPage() {
             </h3>
             <p className="mt-3 text-sm leading-relaxed text-muted">
               {copy.landing.m6Pillar2Desc}
+            </p>
+            <p className="mt-3 text-xs font-medium text-muted">
+              [{copy.common.statusProposed}]
             </p>
           </div>
         </div>
@@ -627,7 +620,10 @@ export default function LandingPage() {
             {copy.landing.m8Title}
           </h2>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink-soft italic">
-            &ldquo;{copy.landing.m8ClosingQuote}&rdquo;
+            {copy.landing.m8ClosingQuote}
+          </p>
+          <p className="mt-2 text-xs text-muted">
+            {copy.landing.m8FooterReflectionSource}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-6 text-xs font-medium tracking-wider text-muted">
             <span>{copy.landing.m8EcosystemConstitution}</span>
@@ -640,7 +636,6 @@ export default function LandingPage() {
 
         <div className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-hairline-soft pt-8 text-xs text-muted">
           <p>{copy.landing.footer}</p>
-          <p className="font-mono text-acid-muted">A-L-L-A-H.COM · EST. 2026</p>
         </div>
       </footer>
     </main>

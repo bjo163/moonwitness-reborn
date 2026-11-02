@@ -1,4 +1,4 @@
-msgid ""
+﻿msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Language: en\n"
@@ -2977,6 +2977,22 @@ msgctxt "web:landing.navJourney"
 msgid "Perjalanan"
 msgstr "Journey"
 
+msgctxt "web:landing.navExplore"
+msgid "Jelajahi"
+msgstr "Explore"
+
+msgctxt "web:landing.navTransmissions"
+msgid "Transmisi"
+msgstr "Transmissions"
+
+msgctxt "web:landing.navDock"
+msgid "Dok"
+msgstr "Dock"
+
+msgctxt "web:landing.m8FooterReflectionSource"
+msgid "Refleksi Proyek A-L-L-A-H.COM"
+msgstr "A-L-L-A-H.COM Project Reflection"
+
 msgctxt "web:landing.navProgress"
 msgid "Kemajuan"
 msgstr "Progress"
@@ -3070,8 +3086,8 @@ msgid "Buka Naskah Lengkap"
 msgstr "Open Full Chapter"
 
 msgctxt "web:landing.m4ProvenanceLabel"
-msgid "Transmisi Wahyu Sahih"
-msgstr "Verified Canonical Revelation"
+msgid "Terjemahan Kemenag RI"
+msgstr "Kemenag RI Translation"
 
 msgctxt "web:landing.m5Eyebrow"
 msgid "Gerakan 05 · Penemuan"
@@ -3126,8 +3142,8 @@ msgid "Tanggung Jawab Pribadi"
 msgstr "Personal Accountability"
 
 msgctxt "web:landing.m6Pillar2Desc"
-msgid "Setiap kontribusi dicatat dan dipertanggungjawabkan dengan integritas."
-msgstr "Every contribution is recorded and accounted for with integrity."
+msgid "Dirancang agar setiap kontribusi dapat dicatat dan dipertanggungjawabkan secara transparan."
+msgstr "Designed so that every contribution can be recorded and held accountable with transparency."
 
 msgctxt "web:landing.m6DockAction"
 msgid "Masuk ke Dock Community"
@@ -3158,8 +3174,8 @@ msgid "Pribadi & Peneliti Terdaftar"
 msgstr "Registered Member & Researcher"
 
 msgctxt "web:landing.m7MemberDesc"
-msgid "Simpan telaah penelitian, hubungkan model AI pribadi di Cockpit, dan berikan kontribusi."
-msgstr "Save research studies, connect personal AI models in Cockpit, and contribute."
+msgid "Akses Korpus Al-Qur'an dan ruang asisten AI di Cockpit. Fitur simpan penelitian dan integrasi model sedang dalam pengembangan."
+msgstr "Access the Quran Corpus and the AI assistant space in Cockpit. Research-save and model-integration features are in development."
 
 msgctxt "web:landing.m8Eyebrow"
 msgid "Gerakan 08 · Muara & Kepulangan"

@@ -86,6 +86,9 @@ export interface AppMessages {
     navPortals: string;
     navJourney: string;
     navProgress: string;
+    navExplore: string;
+    navTransmissions: string;
+    navDock: string;
     portalsLabel: string;
     portalMoonWitness: string;
     portalDock: string;
@@ -137,6 +140,7 @@ export interface AppMessages {
     m8EcosystemConstitution: string;
     m8Privacy: string;
     m8Terms: string;
+    m8FooterReflectionSource: string;
   };
   community: {
     commTitle: string;
