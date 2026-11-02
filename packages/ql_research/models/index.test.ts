@@ -378,3 +378,39 @@ void test("story.narrative is registered in ql_research and preserves fictional 
     },
   );
 });
+
+
+void test("event.record is registered in ql_research and preserves epistemic status", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+      researchManifest,
+    ],
+    async (orm) => {
+      const event = await orm.createRecordForService("event.record", {
+        canonical_id: "mw:event:battle-of-badr",
+        title: "Battle of Badr",
+        summary: "The key military engagement between early Muslims and the Quraysh of Mecca.",
+        temporal_context: "17 Ramadan, 2 AH (March 624 CE)",
+        location: "Badr, Hejaz",
+        country_code: "SA",
+        participants: "Early Muslim community led by Prophet Muhammad; Quraysh confederacy",
+        epistemic_status: "established_fact",
+        competing_accounts: "Consensus across Islamic historiography and early Arabic chronicles",
+        uncertainty_notes: "Minor tactical discrepancies in secondary transmission lines",
+        source_artifact_id: "mw:source:seerah-ibn-hisham",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      assert.ok(event.id);
+
+      const found = await orm.findOneByService("event.record", { id: event.id });
+      assert.equal(found?.["title"], "Battle of Badr");
+      assert.equal(found?.["epistemic_status"], "established_fact");
+      assert.equal(found?.["country_code"], "SA");
+    },
+  );
+});

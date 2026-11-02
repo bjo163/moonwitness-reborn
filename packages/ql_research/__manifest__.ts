@@ -6,7 +6,7 @@ const manifest: QlAddonManifest = {
   name: "ql_research",
   version: "1.0.0",
   description:
-    "Versioned research assessments, witness statements, and story narratives, separate from corpus source text.",
+    "Versioned research assessments, witness statements, story narratives, and event records, separate from corpus source text.",
   depends: ["ql_base", "ql_auth", "ql_source", "ql_corpus"],
   models,
   access: [
@@ -70,6 +70,31 @@ const manifest: QlAddonManifest = {
     },
     {
       model: "story.narrative",
+      group: "admin",
+      read: true,
+      write: true,
+      create: true,
+      unlink: true,
+    },
+    // event.record — MW-1226
+    {
+      model: "event.record",
+      group: "user",
+      read: true,
+      write: false,
+      create: false,
+      unlink: false,
+    },
+    {
+      model: "event.record",
+      group: "operator",
+      read: true,
+      write: true,
+      create: true,
+      unlink: false,
+    },
+    {
+      model: "event.record",
       group: "admin",
       read: true,
       write: true,
