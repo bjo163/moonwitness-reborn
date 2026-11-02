@@ -9,12 +9,18 @@ import {
   type ModelProvider,
   type OpenAICompatibleProviderOptions,
 } from "@moonwitness/agent-runtime";
-import type { ConversationStore, User } from "@moonwitness/database";
+import type {
+  CitationReference,
+  ConversationStore,
+  Message,
+  User,
+} from "@moonwitness/database";
 import {
   apiRoutes,
   type AdminUserDto,
   type AdminUserListResponseDto,
   type AuthResponseDto,
+  type ChatCitationDto,
   type ChatMessageDto,
   type ChatRequestDto,
   type ChatResponseDto,
@@ -188,15 +194,79 @@ function conversationDto(
   };
 }
 
-function messageDto(
-  message: Awaited<ReturnType<ConversationStore["addMessage"]>>,
-): ChatMessageDto {
-  return {
+function isPassageKind(value: string): value is PassageKindDto {
+  return PASSAGE_KINDS.some((kind) => kind === value);
+}
+
+async function revalidateCitation(
+  orm: QlOrm,
+  citation: CitationReference,
+): Promise<ChatCitationDto | undefined> {
+  try {
+    const passage = await readVerse(
+      orm,
+      citation.editionKey,
+      citation.surah,
+      citation.ayah,
+    );
+    if (
+      passage.id !== citation.evidenceId ||
+      passage.edition_id !== citation.editionId
+    ) {
+      return undefined;
+    }
+    if (
+      !isPassageKind(passage.authority) ||
+      !isPassageKind(passage.edition_authority)
+    ) {
+      throw new Error("Stored corpus citation has an unsupported authority.");
+    }
+    return {
+      evidenceId: passage.id,
+      editionId: passage.edition_id,
+      editionKey: citation.editionKey,
+      authority: passage.authority,
+      editionAuthority: passage.edition_authority,
+      locale: passage.edition_locale,
+      publisher: passage.edition_publisher,
+      attribution: passage.edition_attribution_text,
+      locator: passage.locator,
+      surah: passage.surah,
+      ayah: passage.ayah,
+    };
+  } catch (error) {
+    if (error instanceof QlAccessError || error instanceof QlNotFoundError) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+async function messageDto(
+  orm: QlOrm,
+  message: Message,
+): Promise<ChatMessageDto> {
+  const dto: ChatMessageDto = {
     id: message.id,
     role: message.role,
     content: message.content,
     createdAt: message.createdAt.toISOString(),
   };
+  if (message.role !== "assistant") return dto;
+
+  const groundingStatus = message.groundingStatus ?? "legacy";
+  if (groundingStatus !== "grounded") {
+    return { ...dto, groundingStatus };
+  }
+  const citations = (
+    await Promise.all(
+      message.citations.map((citation) => revalidateCitation(orm, citation)),
+    )
+  ).filter((citation): citation is ChatCitationDto => citation !== undefined);
+  if (citations.length === 0) {
+    return { ...dto, groundingStatus: "legacy" };
+  }
+  return { ...dto, groundingStatus, citations };
 }
 
 class RequestError extends Error {
@@ -2719,9 +2789,10 @@ export function createApiServer(
           sendJson(response, 404, { error: "Conversation not found." });
           return;
         }
+        const messages = await store.getMessages(conversationId, user.id);
         sendJson(response, 200, {
-          messages: (await store.getMessages(conversationId, user.id)).map(
-            messageDto,
+          messages: await Promise.all(
+            messages.map((message) => messageDto(orm, message)),
           ),
         });
       } catch (error) {

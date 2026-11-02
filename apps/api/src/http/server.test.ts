@@ -531,10 +531,16 @@ void test("conversation and partner data are isolated to the authenticated user"
     { headers: { cookie: ownerCookie } },
   );
   const { messages } = (await messagesResponse.json()) as {
-    messages: Array<{ role: string; content: string }>;
+    messages: Array<{
+      role: string;
+      content: string;
+      groundingStatus?: string;
+    }>;
   };
   assert.equal(messages.length, 4);
   assert.equal(messages[0].content, "Hello.");
+  assert.equal(messages[1].groundingStatus, "legacy");
+  assert.equal(messages[3].groundingStatus, "legacy");
 
   const otherConversations = await fetch(`${address}/conversations`, {
     headers: { cookie: otherCookie },

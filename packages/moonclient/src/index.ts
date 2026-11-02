@@ -175,6 +175,8 @@ export interface ChatMessageDto {
   role: ChatRole;
   content: string;
   createdAt: string;
+  groundingStatus?: ChatGroundingStatusDto;
+  citations?: ChatCitationDto[];
 }
 
 export interface ChatRequestDto {

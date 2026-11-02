@@ -37,13 +37,35 @@ export interface Conversation {
   updatedAt: Date;
 }
 
+export type MessageGroundingStatus =
+  | "grounded"
+  | "insufficient_evidence"
+  | "legacy";
+
+export interface CitationReference {
+  evidenceId: string;
+  editionId: string;
+  editionKey: string;
+  surah: number;
+  ayah: number;
+}
+
 export interface Message {
   id: string;
   conversationId: string;
   role: "user" | "assistant";
   content: string;
   createdAt: Date;
+  groundingStatus?: MessageGroundingStatus;
+  citations: CitationReference[];
 }
+
+export interface MessageGroundingInput {
+  groundingStatus: MessageGroundingStatus;
+  citations?: readonly CitationReference[];
+}
+
+const MAX_CITATIONS_PER_MESSAGE = 100;
 
 export type PublicUser = Pick<
   User,
@@ -107,6 +129,7 @@ export interface ConversationStore {
     userId: string,
     role: "user" | "assistant",
     content: string,
+    grounding?: MessageGroundingInput,
   ): Promise<Message>;
   deleteConversation(id: string, userId: string): Promise<boolean>;
   close(): void;
@@ -199,12 +222,115 @@ function messageFromRecord(record: QlRecord): Message {
   if (role !== "user" && role !== "assistant") {
     throw new Error("Stored message role is invalid.");
   }
+  const storedGroundingStatus = record.grounding_status;
+  let groundingStatus: MessageGroundingStatus | undefined;
+  if (role === "assistant") {
+    if (storedGroundingStatus === undefined || storedGroundingStatus === null) {
+      groundingStatus = "legacy";
+    } else if (
+      storedGroundingStatus === "grounded" ||
+      storedGroundingStatus === "insufficient_evidence" ||
+      storedGroundingStatus === "legacy"
+    ) {
+      groundingStatus = storedGroundingStatus;
+    } else {
+      throw new Error("Stored message grounding status is invalid.");
+    }
+  } else if (storedGroundingStatus !== undefined && storedGroundingStatus !== null) {
+    throw new Error("User messages cannot have a grounding status.");
+  }
   return {
     id: requiredString(record, "id"),
     conversationId: requiredString(record, "conversation_id"),
     role,
     content: requiredString(record, "content"),
     createdAt: requiredDate(record, "created_at"),
+    ...(groundingStatus ? { groundingStatus } : {}),
+    citations: [],
+  };
+}
+
+function requiredInteger(record: QlRecord, key: string): number {
+  const value = record[key];
+  if (typeof value !== "number" || !Number.isInteger(value)) {
+    throw new Error(`Stored record field '${key}' must be an integer.`);
+  }
+  return value;
+}
+
+function citationReferenceFromRecord(record: QlRecord): CitationReference {
+  return {
+    evidenceId: requiredString(record, "evidence_id"),
+    editionId: requiredString(record, "edition_id"),
+    editionKey: requiredString(record, "edition_key"),
+    surah: requiredInteger(record, "surah"),
+    ayah: requiredInteger(record, "ayah"),
+  };
+}
+
+function validateGroundingInput(
+  role: "user" | "assistant",
+  grounding: MessageGroundingInput | undefined,
+): {
+  groundingStatus?: MessageGroundingStatus;
+  citations: readonly CitationReference[];
+} {
+  if (role === "user" && grounding) {
+    throw new Error("User messages cannot include grounding metadata.");
+  }
+  const groundingStatus =
+    role === "assistant" ? grounding?.groundingStatus ?? "legacy" : undefined;
+  const citations = grounding?.citations ?? [];
+  if (!Array.isArray(citations) || citations.length > MAX_CITATIONS_PER_MESSAGE) {
+    throw new Error(
+      `A message may include at most ${MAX_CITATIONS_PER_MESSAGE} citations.`,
+    );
+  }
+  if (groundingStatus === "grounded" && citations.length === 0) {
+    throw new Error("Grounded messages must include at least one citation.");
+  }
+  if (groundingStatus !== "grounded" && citations.length > 0) {
+    throw new Error("Only grounded messages may include citations.");
+  }
+  if (
+    groundingStatus !== undefined &&
+    groundingStatus !== "grounded" &&
+    groundingStatus !== "insufficient_evidence" &&
+    groundingStatus !== "legacy"
+  ) {
+    throw new Error("Message grounding status is invalid.");
+  }
+  const evidenceIds = new Set<string>();
+  for (const citation of citations) {
+    if (
+      typeof citation !== "object" ||
+      citation === null ||
+      typeof citation.evidenceId !== "string" ||
+      !citation.evidenceId.trim() ||
+      citation.evidenceId.length > 64 ||
+      typeof citation.editionId !== "string" ||
+      !citation.editionId.trim() ||
+      citation.editionId.length > 64 ||
+      typeof citation.editionKey !== "string" ||
+      !citation.editionKey.trim() ||
+      citation.editionKey.length > 160 ||
+      !Number.isInteger(citation.surah) ||
+      citation.surah < 1 ||
+      citation.surah > 114 ||
+      !Number.isInteger(citation.ayah) ||
+      citation.ayah < 1 ||
+      citation.ayah > 286
+    ) {
+      throw new Error("Citation reference is invalid.");
+    }
+    if (evidenceIds.has(citation.evidenceId)) {
+      throw new Error("Message citations must reference unique evidence IDs.");
+    }
+    evidenceIds.add(citation.evidenceId);
+  }
+  return {
+    ...(groundingStatus ? { groundingStatus } : {}),
+    citations,
   };
 }
 
@@ -374,12 +500,39 @@ export function createConversationStore(orm: QlOrm): ConversationStore {
         { conversation_id: conversationId },
         { limit, orderBy: "rowid-asc" },
       );
-      return records.map(messageFromRecord);
+      const messages = records.map(messageFromRecord);
+      return Promise.all(
+        messages.map(async (message) => {
+          if (
+            message.role !== "assistant" ||
+            message.groundingStatus !== "grounded"
+          ) {
+            return message;
+          }
+          const citations = await orm.findManyByService(
+            "chat.citation",
+            {
+              owner_id: userId,
+              conversation_id: conversationId,
+              message_id: message.id,
+            },
+            { limit: MAX_CITATIONS_PER_MESSAGE + 1, orderBy: "rowid-asc" },
+          );
+          if (citations.length > MAX_CITATIONS_PER_MESSAGE) {
+            throw new Error("Stored message citation count exceeds its limit.");
+          }
+          return {
+            ...message,
+            citations: citations.map(citationReferenceFromRecord),
+          };
+        }),
+      );
     },
 
-    async addMessage(conversationId, userId, role, content) {
+    async addMessage(conversationId, userId, role, content, grounding) {
       const conversation = await this.getConversation(conversationId, userId);
       if (!conversation) throw new Error("Conversation not found.");
+      const metadata = validateGroundingInput(role, grounding);
       const existing = await orm.findManyByService(
         "chat.message",
         { conversation_id: conversationId },
@@ -390,8 +543,24 @@ export function createConversationStore(orm: QlOrm): ConversationStore {
         conversation_id: conversationId,
         role,
         content,
+        ...(metadata.groundingStatus
+          ? { grounding_status: metadata.groundingStatus }
+          : {}),
         created_at: now,
       });
+      for (const citation of metadata.citations) {
+        await orm.createRecordForService("chat.citation", {
+          owner_id: userId,
+          conversation_id: conversationId,
+          message_id: String(record.id),
+          evidence_id: citation.evidenceId,
+          edition_id: citation.editionId,
+          edition_key: citation.editionKey,
+          surah: citation.surah,
+          ayah: citation.ayah,
+          created_at: now,
+        });
+      }
       await orm.updateRecordsForService(
         "chat.conversation",
         { id: conversationId, user_id: userId },
@@ -402,12 +571,19 @@ export function createConversationStore(orm: QlOrm): ConversationStore {
             : {}),
         },
       );
-      return messageFromRecord(record);
+      return {
+        ...messageFromRecord(record),
+        citations: [...metadata.citations],
+      };
     },
 
     async deleteConversation(id, userId) {
       const conversation = await this.getConversation(id, userId);
       if (!conversation) return false;
+      await orm.deleteRecordsForService("chat.citation", {
+        owner_id: userId,
+        conversation_id: id,
+      });
       await orm.deleteRecordsForService("chat.message", {
         conversation_id: id,
       });
