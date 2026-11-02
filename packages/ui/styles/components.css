@@ -1036,3 +1036,54 @@
     transform: none;
   }
 }
+
+/*
+ * Quran Typography & Reader (Track 01 & 02)
+ */
+.ql-quran-text {
+  font-family: var(--ql-ui-font-arabic);
+  direction: rtl;
+  text-align: justify;
+  text-justify: kashida;
+  line-height: 2.7;
+}
+
+.ql-quran-text--sm { font-size: 1.5rem; }
+.ql-quran-text--md { font-size: 2.0rem; }
+.ql-quran-text--lg { font-size: 2.5rem; }
+.ql-quran-text--xl { font-size: 3.0rem; }
+.ql-quran-text--2xl { font-size: 3.75rem; }
+.ql-quran-text--3xl { font-size: 4.5rem; }
+
+.ql-waqaf-sign {
+  color: var(--ql-ui-acid);
+  font-size: 0.65em;
+  vertical-align: super;
+  padding: 0 0.15em;
+}
+
+.ql-ayah-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8em;
+  height: 1.8em;
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: 9999px;
+  margin: 0 0.4em;
+  font-family: var(--ql-ui-font-mono);
+  font-size: 0.55em;
+  color: var(--ql-ui-acid);
+}
+
+.ql-hermeneutic-reader {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .ql-hermeneutic-reader {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

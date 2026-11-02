@@ -59,3 +59,8 @@ export type ChatRole = "user" | "assistant";
 
 /** Supported application interface locales. */
 export type UiLocale = "id" | "en";
+
+export type {
+  CallbackWithVoidThis,
+  Result,
+} from "./strict-signatures.js";
