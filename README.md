@@ -1,18 +1,24 @@
-# A-L-L-A-H.COM — EMPIRE OF THE LIGHT
+# MoonWitness
 
-A-L-L-A-H.COM adalah identitas publik dan gerbang ekosistem **EMPIRE OF THE LIGHT**. **MoonWitness** adalah platform perangkat lunak terintegrasi dan fondasi implementasinya di dalam ekosistem tersebut. Akronim, visi publik, janji, batas ekosistem, dan prinsip editorial ditetapkan dalam [Official Canon & Ecosystem Constitution](./docs/vision/ALLAH_COM_OFFICIAL_CANON.md).
+MoonWitness is a TypeScript workspace for an AI assistant platform built around
+model-driven addons.
 
-Repositori ini saat ini mengimplementasikan fondasi workspace AI MoonWitness secara bertahap: runtime TypeScript, provider model OpenAI-compatible, memori percakapan, dan sistem addon model-first. Itu adalah kondisi implementasi saat ini, bukan klaim bahwa seluruh visi A-L-L-A-H.COM/MoonWitness telah selesai atau AGI telah tercapai.
+## Canonical project records
 
-Nama dan arah visual mengambil inspirasi umum dari narasi sci-fi kosmik dan arsitektur model-first di [repo MoonWitness](https://github.com/bjo163/moonwitness). Implementasi ini tetap berfokus pada asisten AI; domain dan fitur khusus dari repo referensi tidak diasumsikan sebagai kebutuhan produk.
+- Task scope, dependencies, status, and evidence live in
+  [GitHub Issues](https://github.com/bjo163/moonwitness-reborn/issues).
+- Product, architecture, governance, and other project documentation live in
+  the [GitHub Wiki](https://github.com/bjo163/moonwitness-reborn/wiki).
+- The root `CHANGELOG.md` is retained only as a release-workflow-generated
+  artifact.
+- The root [AGENTS.md](./AGENTS.md) is the tool-neutral project guidance for
+  coding agents that support the `AGENTS.md` convention. Provider-specific
+  integrations, including GitHub Copilot configuration, live under
+  [.github/](./.github/) and should reference rather than duplicate that policy.
 
-## Project identity & governance
+## Development
 
-A-L-L-A-H.COM / EMPIRE OF THE LIGHT identity, public narrative, ecosystem boundaries and editorial principles are defined in the [Official Canon & Ecosystem Constitution](./docs/vision/ALLAH_COM_OFFICIAL_CANON.md). This canon governs identity and narrative; product scope, architecture, delivery status and production claims remain governed by their respective canonical documents and evidence.
-
-## Mulai
-
-Prasyarat: Node.js 22+ dan pnpm 10.
+Requirements: Node.js 22+ and pnpm 10.
 
 ```powershell
 pnpm install
@@ -20,107 +26,23 @@ Copy-Item .env.example .env
 pnpm dev
 ```
 
-Landing page publik berjalan di `http://localhost:3001`; dashboard terlindungi login berada di `/command-center`, dan API di `http://localhost:3000`. Data lokal disimpan di `data/moonwitness.db`; schema dibuat otomatis dari manifest addon saat API mulai—tidak perlu generate atau menjalankan migration.
+## Validation
 
-Instruksi agent workspace ada di [`AGENTS.md`](./AGENTS.md), agent implementasi khusus ada di [`.github/agents/`](./.github/agents/), dan workflow pengembangan ada di [`.github/skills/moonwitness-development/`](./.github/skills/moonwitness-development/). Skill [`task-tracker`](./.github/skills/task-tracker/SKILL.md) wajib dipakai sebelum dan sesudah pekerjaan coding.
+GitHub Actions is the only required executor for build, lint, typecheck, tests,
+and quality gates. The [CI workflow](./.github/workflows/ci.yml) runs them on
+branch pushes and pull requests to `main`, in this order:
 
-### Mini UI task tracker lokal
+- Workspace build
+- Type-aware workspace lint
+- Workspace typecheck
+- Workspace tests
+- Web bundle-size budget
 
-Untuk melihat dan mengubah status task dari browser lokal:
+Do not run these gates locally. Check the GitHub Actions run for the exact commit
+SHA being reviewed. If no matching successful run exists, validation is pending,
+not passed. Local development servers are for product development, not gate
+evidence.
 
-```powershell
-python -B docs/audit/tools/task_tracker_server.py
-```
-
-Buka URL `127.0.0.1` yang dicetak server. Server hanya mengikat loopback, tidak menerima koneksi jaringan publik, dan berhenti dengan `Ctrl+C`. Perubahan status memperbarui `docs/governance/task-tracker.json` dan menghasilkan ulang `TODO.md`.
-
-Web menggunakan rewrite Next.js ke API. Akun memiliki sesi cookie `HttpOnly`, password di-hash dengan scrypt, dan data percakapan dibatasi per akun. `POST /chat` menerima `{ "conversationId": "...", "input": "..." }`.
-
-### Model Gateway MoonWitness
-
-MoonWitness menyediakan agregasi provider OpenAI-compatible sendiri melalui addon `ql_ai` dan halaman `/providers`; FreeLLMAPI tidak perlu dijalankan terpisah.
-
-1. Buat key enkripsi lokal:
-
-   ```dotenv
-   PROVIDER_ENCRYPTION_KEY=<64-karakter-hex-dari-node-crypto>
-   ```
-
-2. Restart API, login, lalu buka **Model providers** dari sidebar.
-3. Tambahkan tiap endpoint OpenAI-compatible dengan nama, base URL, model ID, serta API key milikmu. MoonWitness mengenkripsi key menggunakan AES-256-GCM sebelum menyimpannya di field privat model addon `ai.provider`.
-4. Atur prioritas fallback dan status aktif di halaman yang sama. Saat chat berjalan, provider aktif dicoba sesuai urutan prioritas; kegagalan dilanjutkan ke provider berikutnya.
-
-Base URL wajib HTTPS; HTTP hanya diizinkan untuk localhost. Jangan commit `PROVIDER_ENCRYPTION_KEY` maupun API key provider. Jika key enkripsi hilang atau berubah, credential tersimpan tidak dapat didekripsi; cadangkan secara aman. Pengguna tetap harus memiliki izin/key sendiri pada tiap provider. Free tier, kuota, rate limit, dan syarat penggunaan mengikuti provider dan tidak dilewati MoonWitness.
-
-Untuk instalasi sederhana atau kompatibilitas sebelumnya, konfigurasi opsional `MODEL_BASE_URL`, `MODEL_API_KEY`, dan `MODEL_NAME` tetap tersedia sebagai provider fallback server-wide. Konfigurasi provider per akun lebih disarankan.
-
-Gateway ini adalah fondasi internal untuk routing chat MoonWitness, bukan clone fitur penuh FreeLLMAPI: katalog/model discovery otomatis, pengelolaan kuota dan biaya, rate limiting, serta endpoint publik OpenAI-compatible belum termasuk. Provider dan model ditambahkan manual memakai kredensial yang memang kamu miliki.
-
-## Struktur
-
-```text
-apps/
-  api/
-    src/
-      auth/               Autentikasi API
-      ai/                 Konfigurasi/routing provider dan secret
-      http/               Boundary HTTP dan tes API
-      index.ts            Bootstrap API
-  web/
-    src/app/              Route dan layout Next.js
-    src/features/         Fitur UI, mulai dari assistant workspace
-packages/
-  agent-runtime/          Kontrak agen dan provider OpenAI-compatible
-  moonclient/             SDK TypeScript tunggal untuk DTO, routes, dan komunikasi API
-  database/               Adapter layanan domain ke QlOrm (tanpa schema sendiri)
-  ql-orm/                 Registry model, ACL, CRUD, dan pemuat addon
-  ql_base/                Addon inti, termasuk res.partner dan deklarasi view
-  ql_auth/                Addon akun
-  ql_ai/                  Addon provider model, ACL, dan deklarasi view
-  ql_chat/                Addon percakapan dan pesan
-  ui/                     Design system React standalone MoonWitness
-```
-
-Addon berada sebagai package di `packages/`, memakai TypeScript murni, dan didaftarkan melalui `__manifest__.ts`. Manifest mendeklarasikan model, akses, dependensi, serta view tanpa XML/CSV. Seluruh schema domain dikelola QlOrm saat startup; Drizzle dan migration files tidak digunakan. Kontrak DTO, route, dan komunikasi HTTP terpusat di `@moonwitness/moonclient`. Web memakai operasi SDK bertipe untuk semua request; API memakai definisi route/DTO yang sama. Jangan menambah transport atau request HTTP langsung di web. Aturan lint workspace dipusatkan di root [`eslint.config.mjs`](./eslint.config.mjs), memakai aturan TypeScript type-aware dan React Hooks; jalankan dengan `pnpm lint`. Konvensi agent dan pengembangan ada di [AGENTS.md](./AGENTS.md).
-
-### UI terpusat
-
-`@moonwitness/ui` adalah sumber komponen dan template bersama untuk aplikasi React:
-
-- `raw/`: elemen semantik/headless untuk menyusun UI.
-- `atoms/`: kontrol dasar seperti Button, Input, Textarea, dan Badge.
-- `components/`: komponen tersusun seperti Card.
-- `blocks/`: pola siap pakai seperti field formulir.
-- `templates/`: kerangka halaman auth dan workspace.
-
-Web mengimpor komponen dari package tersebut dan stylesheet `@moonwitness/ui/styles.css`. Fitur khusus aplikasi tetap berada di `apps/web/src/features/`; token, kontrol, dan kerangka visual dibagi dari package UI.
-
-### Model dan view
-
-Addon adalah sumber definisi model dan metadata view. `ql_base` mendeklarasikan view `list` dan `form` berbasis TypeScript untuk `res.partner`. Halaman `/models` mengambil metadata dari API, menyaring model/field berdasarkan ACL, lalu merender list dan form CRUD menggunakan field serta layout yang didaftarkan addon. Backend tetap menjadi penegak izin dan pemilik record; metadata UI tidak menggantikan pemeriksaan akses.
-
-## Perintah
-
-| Perintah | Kegunaan |
-| --- | --- |
-| `pnpm dev` | Jalankan API dan web dalam mode pengembangan |
-| `pnpm build` | Build semua workspace |
-| `pnpm test` | Jalankan seluruh pengujian |
-| `pnpm typecheck` | Periksa tipe TypeScript |
-| `pnpm lint` | Jalankan aturan lint ketat bersama untuk seluruh apps dan packages |
-
-## Arah tahap awal
-
-Prioritas berikutnya adalah menegaskan kontrak model, memori, evaluasi kualitas jawaban, observabilitas, dan batas keselamatan. Kemampuan agentic dan akses alat eksternal ditambahkan setelah evaluasi serta kontrol izin tersedia.
-
-## Docker
-
-```powershell
-docker compose up -d --build
-```
-
-Tidak butuh `.env` untuk menjalankan seluruh stack: nilai bawaan development ada di [`docker-compose.yml`](./docker-compose.yml) dan semua port diikat ke loopback. Web melayani `http://localhost:3030`, API `http://localhost:3000` (`/health` untuk liveness). API di Compose memakai PostgreSQL pada volume `postgres_data`; `docker compose down -v` menghapus data tersebut.
-
-`QlOrm` (`packages/ql-orm`) memilih driver dari `DATABASE_URL`: skema URL `file:` / `libsql:` memakai `@libsql/client`, sedangkan `postgres://` / `postgresql://` memakai `pg`. Untuk development dengan `pnpm dev` di host, salin [`.env.example`](./.env.example) ke `.env`; `.env` lokal mengarahkan API ke PostgreSQL pada `127.0.0.1:5434`. Jalankan hanya databasenya dengan `docker compose up -d postgres`. API di dalam Compose memakai `DATABASE_URL_CONTAINER` ke hostname internal `postgres:5432`, sehingga alamat host dan container tidak tertukar. Skema disinkronkan otomatis saat API mulai; di Postgres setiap tabel mendapat kolom `ql_seq BIGSERIAL` untuk ordering, `boolean` disimpan sebagai `SMALLINT` 0/1, dan `integer` / `datetime` menjadi `BIGINT`. Volume database lokal adalah `postgres_data`. Stack Coolify tetap memakai file LibSQL; migrasi produksi ke Postgres membutuhkan pemindahan data lebih dulu. Suite `packages/ql-orm` menguji kedua dialect: CI mengisi `QL_ORM_PG_URL`, sementara tanpa variabel itu tes lokal menggunakan LibSQL. Tabel scratch tes Postgres dihapus setelah tes selesai. `PROVIDER_ENCRYPTION_KEY` di production wajib diisi dengan kunci 32-byte acak, bukan bawaan lokal.
-
-Untuk deploy ke Coolify dipakai [`docker-compose.coolify.yml`](./docker-compose.coolify.yml): varian tanpa published port (Traefik Coolify yang merouting lewat label), tanpa `networks:` agar Coolify bisa menghubungkan container ke proxy, tanpa service Postgres karena api tetap menulis ke file LibSQL di volume `api_data`, dan `PROVIDER_ENCRYPTION_KEY` diambil dari environment Coolify. Domain yang dilayani: `a-l-l-a-h.com` dan `moonwitness.biz.id` untuk web, `api.moonwitness.biz.id` untuk api; subdomain `moonwitness-reborn.apps.mycocolink.com` / `moonwitness-reborn-api.apps.mycocolink.com` tetap aktif sebagai alamat internal. Domain custom butuh label Traefik manual di compose (Coolify hanya men-generate otomatis untuk subdomain `*.apps.mycocolink.com`). Set "Docker Compose Location" resource ke `/docker-compose.coolify.yml`.
+For UI work, follow the shared UI policy in `AGENTS.md` and the installed
+antislop skills. Visual or interaction evidence is separate from automated CI
+and must not be claimed unless it was actually observed.

@@ -59,17 +59,25 @@ Do not infer readiness from title, priority, or a closed dependency alone when t
 Issue is marked blocked or requires owner ratification, rights/security evidence,
 manual verification, exact-SHA approval, or a release gate.
 
+## GitHub Actions evidence
+
+- CI is the only executor of build, lint, typecheck, tests, and quality gates. Do
+  not run them locally.
+- Check Actions for the exact commit SHA:
+
+  ```powershell
+  gh run list --repo bjo163/moonwitness-reborn --commit <sha> --json databaseId,headSha,status,conclusion,workflowName,url
+  ```
+
+- A matching successful run is PASS. No matching run or an in-progress run is
+  pending; a failed run is FAIL. Never infer a result from another SHA or from a
+  local test.
+- Do not push or create a commit just to start CI unless the user explicitly
+  authorizes it.
+
 ## Validation
 
-For changes to the task/documentation governance or requirement audit tooling,
-fetch the public Wiki and all task Issues to temporary files, then run:
-
-```powershell
-python -B docs/audit/tools/test_requirement_coverage_gate.py
-python -B docs/audit/tools/requirement_coverage_gate.py
-python -B docs/audit/tools/requirements_traceability_gate.py
-```
-
-Set `MW_WIKI_ROOT` to the Wiki clone and `MW_TASK_ISSUES_FILE` to the JSON output
-from `gh issue list --state all --limit 1000 --json number,title,body,state,labels,url`.
-Never commit either snapshot; they are validation inputs, not task sources.
+For changes to task or documentation governance, verify the relevant content
+directly against GitHub Issues and the GitHub Wiki. Local requirement audit
+scripts and CI gates have been retired; do not recreate local task or requirement
+snapshots as a second source of truth.
