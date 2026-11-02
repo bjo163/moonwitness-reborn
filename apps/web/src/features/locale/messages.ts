@@ -1,4 +1,5 @@
-import { uiCatalogs, type UiMessageKey } from "ql_i18n/catalogs";
+import type { UiMessageKey } from "ql_i18n/catalogs";
+import { uiCatalog as idCatalog } from "ql_i18n/catalogs/id";
 import { useMemo } from "react";
 import { useTranslationCatalog } from "./translation-catalog";
 
@@ -332,7 +333,7 @@ export interface AppMessages {
 }
 
 function isUiMessageKey(value: string): value is UiMessageKey {
-  return Object.hasOwn(uiCatalogs.id, value);
+  return Object.hasOwn(idCatalog, value);
 }
 
 export function useMessages(): AppMessages {
@@ -345,7 +346,7 @@ export function useMessages(): AppMessages {
           const nextPath = [...path, property];
           const relativeKey = nextPath.join(".");
           if (relativeKey === "landing.journey") {
-            return Object.keys(uiCatalogs.id)
+            return Object.keys(idCatalog)
               .filter(isUiMessageKey)
               .filter((key) => /^web\.landing\.journey\.step_\d+$/.test(key))
               .sort((left, right) => {

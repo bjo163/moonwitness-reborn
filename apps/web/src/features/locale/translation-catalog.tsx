@@ -5,11 +5,11 @@ import {
   type UiLocale,
 } from "@moonwitness/moonclient";
 import { Alert, Button } from "@moonwitness/ui";
-import {
-  uiCatalogs,
-  type UiCatalogMessage,
-  type UiMessageKey,
+import type {
+  UiCatalogMessage,
+  UiMessageKey,
 } from "ql_i18n/catalogs";
+import { uiCatalog as idCatalog } from "ql_i18n/catalogs/id";
 import {
   createContext,
   useCallback,
@@ -74,11 +74,16 @@ export function TranslationCatalogProvider({
   const [runtimeCatalogs, setRuntimeCatalogs] = useState<
     Partial<Record<UiLocale, Record<string, UiCatalogMessage>>>
   >({});
+  const [englishCatalog, setEnglishCatalog] = useState<
+    Readonly<Record<UiMessageKey, UiCatalogMessage>> | null
+  >(null);
   const [catalogError, setCatalogError] = useState(false);
   const localeRef = useRef(locale);
   const runtimeCatalogsRef = useRef(runtimeCatalogs);
+  const englishCatalogRef = useRef(englishCatalog);
   localeRef.current = locale;
   runtimeCatalogsRef.current = runtimeCatalogs;
+  englishCatalogRef.current = englishCatalog;
 
   useEffect(() => {
     try {
@@ -88,6 +93,27 @@ export function TranslationCatalogProvider({
       console.error("Could not read the saved interface language.", error);
     }
   }, []);
+
+  useEffect(() => {
+    if (locale !== "en" || englishCatalogRef.current) return;
+    let cancelled = false;
+    void import("ql_i18n/catalogs/en")
+      .then(({ uiCatalog }) => {
+        if (cancelled) return;
+        englishCatalogRef.current = uiCatalog;
+        setEnglishCatalog(uiCatalog);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        console.error(
+          "Could not load the bundled English interface catalog.",
+          error,
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,8 +147,8 @@ export function TranslationCatalogProvider({
       const activeLocale = localeRef.current;
       const message =
         runtimeCatalogsRef.current[activeLocale]?.[key] ??
-        uiCatalogs[activeLocale][key] ??
-        uiCatalogs.id[key];
+        (activeLocale === "en" ? englishCatalogRef.current?.[key] : undefined) ??
+        idCatalog[key];
       return formatMessage(message, activeLocale, values) ?? key;
     },
     [],
@@ -133,7 +159,7 @@ export function TranslationCatalogProvider({
       const runtimeMessage = runtimeCatalogsRef.current[activeLocale]?.[key];
       const runtimeText = formatMessage(runtimeMessage, activeLocale);
       if (runtimeText !== undefined) return runtimeText;
-      const bundledKey = Object.keys(uiCatalogs.id).find(
+      const bundledKey = Object.keys(idCatalog).find(
         (candidate): candidate is UiMessageKey => candidate === key,
       );
       return bundledKey ? t(bundledKey) : fallback;
@@ -161,7 +187,7 @@ export function TranslationCatalogProvider({
   }, []);
   const context = useMemo(
     () => ({ locale, setLocale, t, tm, refresh }),
-    [locale, refresh, runtimeCatalogs, t, tm],
+    [englishCatalog, locale, refresh, runtimeCatalogs, t, tm],
   );
 
   return (

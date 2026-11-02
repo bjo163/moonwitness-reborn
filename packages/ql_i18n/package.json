@@ -23,6 +23,14 @@
       "types": "./dist/catalogs.d.ts",
       "import": "./dist/catalogs.js"
     },
+    "./catalogs/id": {
+      "types": "./dist/catalogs-id.d.ts",
+      "import": "./dist/catalogs-id.js"
+    },
+    "./catalogs/en": {
+      "types": "./dist/catalogs-en.d.ts",
+      "import": "./dist/catalogs-en.js"
+    },
     "./views": {
       "types": "./dist/views/index.d.ts",
       "import": "./dist/views/index.js"
@@ -30,7 +38,7 @@
   },
   "scripts": {
     "build": "node scripts/copy-catalogs.mjs && tsc -p tsconfig.json",
-    "test": "tsx --test models/index.test.ts services/catalog-service.test.ts && node --test scripts/catalog-validation.test.mjs",
+    "test": "tsx --test models/index.test.ts services/catalog-service.test.ts && node --test scripts/catalog-validation.test.mjs scripts/catalogs.test.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
