@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 /**
  * Search Tokenizer and Indexing Service — MW-0604
  *
@@ -63,8 +65,12 @@ export function generateIndexEntries(doc: IndexableDocument): GeneratedIndexEntr
       }
       const tokens = tokenizeText(value);
       for (const token of tokens) {
+        const hash = createHash("sha256")
+          .update(`${doc.targetModel}:${doc.targetId}:${token}`)
+          .digest("hex")
+          .slice(0, 32);
         entries.push({
-          id: `${doc.targetModel}_${doc.targetId}_${token}`.slice(0, 64),
+          id: `idx_${hash}`,
           target_model: doc.targetModel,
           target_id: doc.targetId,
           token,

@@ -2768,26 +2768,36 @@ export function createApiServer(
         // Search tokens in search.index_entry using QlOrm findManyByService
         const filter: Record<string, string> = {};
         if (targetModel) filter.target_model = targetModel;
-        const entries = await orm.findManyByService("search.index_entry", filter, {
-          limit: 200,
-        });
-
-        // Filter by token matching
         const searchTerms = q.split(/\s+/).filter(Boolean);
+        const primaryTerm = searchTerms[0] ?? q;
+        const entries = (await orm.findMany("search.index_entry", userContext(user), {
+          limit: 200,
+          search: { fields: ["token", "snippet"], query: primaryTerm },
+        })).filter((e) => !targetModel || e.target_model === targetModel);
+
+        // Score and rank matched entries
         const matched: SearchResultItemDto[] = entries
           .filter((entry: Record<string, unknown>) => {
-            const tokenStr = String(entry.token ?? "").toLowerCase();
-            const snippetStr = String(entry.snippet ?? "").toLowerCase();
+            const tokenStr = typeof entry.token === "string" ? entry.token.toLowerCase() : "";
+            const snippetStr = typeof entry.snippet === "string" ? entry.snippet.toLowerCase() : "";
             return searchTerms.some((term) => tokenStr.includes(term) || snippetStr.includes(term));
           })
-          .map((entry: Record<string, unknown>) => ({
-            id: String(entry.id),
-            targetModel: String(entry.target_model),
-            targetId: String(entry.target_id),
-            token: String(entry.token),
-            weight: Number(entry.weight ?? 1),
-            snippet: entry.snippet ? String(entry.snippet) : undefined,
-          }))
+          .map((entry: Record<string, unknown>) => {
+            const tokenVal = typeof entry.token === "string" ? entry.token : "";
+            const snippetVal = typeof entry.snippet === "string" ? entry.snippet : undefined;
+            const idVal = typeof entry.id === "string" ? entry.id : "";
+            const targetModelVal = typeof entry.target_model === "string" ? entry.target_model : "";
+            const targetIdVal = typeof entry.target_id === "string" ? entry.target_id : "";
+            const weightVal = typeof entry.weight === "number" ? entry.weight : 1;
+            return {
+              id: idVal,
+              targetModel: targetModelVal,
+              targetId: targetIdVal,
+              token: tokenVal,
+              weight: weightVal,
+              snippet: snippetVal,
+            };
+          })
           .sort((a: SearchResultItemDto, b: SearchResultItemDto) => b.weight - a.weight)
           .slice(0, limit);
 

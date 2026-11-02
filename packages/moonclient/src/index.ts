@@ -902,7 +902,7 @@ export const apiRoutes = {
     tasks: "/project/progress/tasks",
   },
   search: {
-    query: "/api/search",
+    query: "/search",
   },
   landing: {
     catalog: "/public/landing",

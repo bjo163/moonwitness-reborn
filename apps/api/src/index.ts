@@ -26,6 +26,14 @@ dotenv.config({
 });
 
 const port = Number(process.env.PORT ?? 3000);
+const rawEncryptionKey = process.env.PROVIDER_ENCRYPTION_KEY?.trim();
+const isKnownZeroKey = rawEncryptionKey === "0".repeat(64);
+if (process.env.NODE_ENV === "production" && isKnownZeroKey) {
+  throw new Error(
+    "PROVIDER_ENCRYPTION_KEY cannot use the all-zero development fallback in production mode.",
+  );
+}
+
 const modelProvider = resolveModelProviderConfig(process.env);
 const provider = modelProvider.config
   ? new OpenAICompatibleProvider(modelProvider.config)

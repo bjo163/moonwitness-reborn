@@ -436,7 +436,7 @@ void test("MoonClient search sends query parameters to apiRoutes.search.query", 
 
   const res = await client.search({ q: "musa", targetModel: "story.narrative", limit: 10 });
   assert.equal(requests.length, 1);
-  assert.ok(requests[0].url.includes("/api/search"));
+  assert.ok(requests[0].url.includes("/search"));
   assert.ok(requests[0].url.includes("q=musa"));
   assert.ok(requests[0].url.includes("targetModel=story.narrative"));
   assert.ok(requests[0].url.includes("limit=10"));

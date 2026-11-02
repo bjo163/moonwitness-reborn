@@ -4,7 +4,7 @@ import manifest from "../__manifest__.js";
 import { searchIndexEntryModel } from "./search_index_entry.js";
 import { tokenizeText, generateIndexEntries } from "../services/search-indexing-service.js";
 
-test("ql_search manifest and model specifications", () => {
+void test("ql_search manifest and model specifications", () => {
   assert.equal(manifest.name, "ql_search");
   assert.equal(manifest.models.length, 1);
   assert.equal(searchIndexEntryModel.name, "search.index_entry");
@@ -13,7 +13,7 @@ test("ql_search manifest and model specifications", () => {
   assert.equal(searchIndexEntryModel.fields.weight.type, "integer");
 });
 
-test("tokenizeText extracts unique tokens without stopwords", () => {
+void test("tokenizeText extracts unique tokens without stopwords", () => {
   const tokens = tokenizeText("Kisah Nabi Musa dan Fir'aun di Laut Merah");
   assert.ok(tokens.includes("kisah"));
   assert.ok(tokens.includes("nabi"));
@@ -24,7 +24,7 @@ test("tokenizeText extracts unique tokens without stopwords", () => {
   assert.ok(!tokens.includes("di"));
 });
 
-test("generateIndexEntries excludes private fields", () => {
+void test("generateIndexEntries excludes private fields", () => {
   const doc = {
     targetModel: "witness.statement",
     targetId: "stmt-01",
@@ -44,4 +44,22 @@ test("generateIndexEntries excludes private fields", () => {
   // Private field token must not exist
   assert.ok(!entries.some((e) => e.token === "rahasia"));
   assert.ok(!entries.some((e) => e.token === "intelijen"));
+});
+
+void test("generateIndexEntries generates unique collision-free IDs for long model names and UUIDs", () => {
+  const doc = {
+    targetModel: "research.lexical_candidate",
+    targetId: "123e4567-e89b-12d3-a456-426614174000",
+    fields: {
+      candidate_term: "terminologi linguistik komparatif",
+    },
+  };
+  const entries = generateIndexEntries(doc);
+  assert.equal(entries.length, 3);
+  const ids = new Set(entries.map((e) => e.id));
+  assert.equal(ids.size, 3, "All token entry IDs must be distinct despite long targetModel and UUID");
+  for (const entry of entries) {
+    assert.ok(entry.id.length <= 64, `ID '${entry.id}' must not exceed 64 chars`);
+    assert.ok(entry.id.startsWith("idx_"));
+  }
 });

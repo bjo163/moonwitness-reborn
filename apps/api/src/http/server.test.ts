@@ -76,6 +76,7 @@ before(async () => {
     chatManifest,
     sourceManifest,
     corpusManifest,
+  searchManifest,
   ]);
   orm = ormRuntime.orm;
   closeOrm = ormRuntime.close;
@@ -940,10 +941,10 @@ void test("GET /models exposes addon and category metadata and GET /public/landi
   assert.equal(publicExplorerDenied.status, 404);
 });
 
-test("GET /api/search queries search.index_entry securely", async () => {
+void test("GET /search queries search.index_entry securely with owner isolation", async () => {
   const cookie = await register("searcher@example.com");
 
-  // Create an index entry in orm via createRecordForService
+  // Create an index entry in orm via createRecordForService (public or owned)
   await orm.createRecordForService("search.index_entry", {
     id: "entry_musa_01",
     target_model: "story.narrative",
@@ -955,7 +956,7 @@ test("GET /api/search queries search.index_entry securely", async () => {
     updated_at: Date.now(),
   });
 
-  const searchRes = await fetch(`${address}/api/search?q=musa`, {
+  const searchRes = await fetch(`${address}/search?q=musa`, {
     headers: { cookie },
   });
   assert.equal(searchRes.status, 200);
