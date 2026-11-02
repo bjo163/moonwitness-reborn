@@ -37,6 +37,7 @@ export const witnessStatement: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: WITNESS_RELIABILITY_LEVELS,
       validator(value) {
         return WITNESS_RELIABILITY_LEVELS.some((level) => level === value)
           ? undefined

@@ -27,6 +27,7 @@ export const workflowProject: QlModelDefinition = {
       required: true,
       default: "active",
       maxLength: 16,
+      options: PROJECT_STATES,
       validator: enumValidator("state", PROJECT_STATES),
     },
     owner_id: { type: "char", required: true, private: true },

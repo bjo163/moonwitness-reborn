@@ -33,6 +33,7 @@ export const storyNarrative: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: STORY_MODES,
       validator(value) {
         return STORY_MODES.some((mode) => mode === value)
           ? undefined

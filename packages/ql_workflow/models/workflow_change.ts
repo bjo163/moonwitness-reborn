@@ -37,6 +37,7 @@ export const workflowChange: QlModelDefinition = {
       required: true,
       default: DEFAULT_REVIEW_STATE,
       maxLength: 24,
+      options: REVIEW_STATES,
       validator: enumValidator("state", REVIEW_STATES),
     },
     urgency: {
@@ -44,6 +45,7 @@ export const workflowChange: QlModelDefinition = {
       required: true,
       default: "medium",
       maxLength: 12,
+      options: CHANGE_URGENCIES,
       validator: enumValidator("urgency", CHANGE_URGENCIES),
     },
     revision: {

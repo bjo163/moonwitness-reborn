@@ -55,6 +55,7 @@ export const corpusPassage: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 24,
+      options: TEXT_AUTHORITIES,
       // MW-ADR-019 §(a) — the religious-integrity storage invariant.
       validator: authorityValidator("authority", TEXT_AUTHORITIES),
     },
@@ -68,6 +69,7 @@ export const corpusPassage: QlModelDefinition = {
       required: true,
       maxLength: 16,
       default: "ayah",
+      options: ROW_KINDS,
       validator: enumValidator("row_kind", ROW_KINDS),
     },
     juz: { type: "integer", minValue: JUZ_MIN, maxValue: JUZ_MAX },
@@ -100,6 +102,7 @@ export const corpusPassage: QlModelDefinition = {
       required: true,
       maxLength: 16,
       default: DEFAULT_CORPUS_STAGE,
+      options: CORPUS_STAGES,
       validator: enumValidator("stage", CORPUS_STAGES),
     },
     created_at: { type: "datetime", required: true },

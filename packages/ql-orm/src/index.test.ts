@@ -850,8 +850,9 @@ async function runEvolutionSuite(
   }
 }
 
-// Handle file libsql baru dilepaskan beberapa ratus ms setelah close(),
-// sehingga rmSync di Windows bisa melaporkan EPERM pada percobaan pertama.
+// libsql may keep a file handle alive for a bit longer on Windows after the
+// client is closed. Best-effort cleanup is sufficient here; the process exit is
+// the reliable finalizer for a temporary database directory.
 async function removeTempDir(dir: string): Promise<void> {
   const deadline = Date.now() + 3000;
   for (;;) {
@@ -859,8 +860,15 @@ async function removeTempDir(dir: string): Promise<void> {
       rmSync(dir, { recursive: true, force: true });
       return;
     } catch (error) {
-      const retryable = (error as { code?: unknown }).code === "EPERM";
-      if (!retryable || Date.now() > deadline) throw error;
+      const code = (error as { code?: unknown }).code;
+      const retryable = code === "EPERM" || code === "EBUSY";
+      if (!retryable || Date.now() > deadline) {
+        if (code === "EPERM" || code === "EBUSY") return;
+        throw error;
+      }
+      if (typeof globalThis.gc === "function") {
+        globalThis.gc();
+      }
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
@@ -1003,5 +1011,31 @@ void test("registry resolves model addon, category, and validates landing views"
         },
       ]),
     /cannot reference private field/,
+  );
+
+  assert.throws(
+    () =>
+      new QlModelRegistry([
+        {
+          name: "ql_corpus",
+          version: "0.1.0",
+          description: "Corpus",
+          depends: [],
+          models: [
+            {
+              name: "corpus.document",
+              description: "Document",
+              tableName: "corpus_document_options_bad_test",
+              fields: {
+                status: { type: "char", options: [] },
+              },
+            },
+          ],
+          access: [],
+          views: [],
+          data: [],
+        },
+      ]),
+    /options must be a non-empty list of strings/,
   );
 });

@@ -25,6 +25,7 @@ export const corpusWork: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: WORK_KINDS,
       validator: enumValidator("work_kind", WORK_KINDS),
     },
     primary_locale: { type: "char", required: true, maxLength: 12, validator: bcp47Validator("primary_locale") },

@@ -50,6 +50,7 @@ export const mizanAssessment: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: MIZAN_DIMENSIONS,
       validator(value) {
         return MIZAN_DIMENSIONS.some((d) => d === value)
           ? undefined
@@ -60,6 +61,7 @@ export const mizanAssessment: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: MIZAN_BALANCE_TIERS,
       validator(value) {
         return MIZAN_BALANCE_TIERS.some((t) => t === value)
           ? undefined

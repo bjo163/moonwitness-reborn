@@ -49,6 +49,7 @@ export const characterClassification: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: CHARACTER_ARCHETYPES,
       validator(value) {
         return CHARACTER_ARCHETYPES.some((a) => a === value)
           ? undefined
@@ -59,6 +60,7 @@ export const characterClassification: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: CHARACTER_ALIGNMENTS,
       validator(value) {
         return CHARACTER_ALIGNMENTS.some((al) => al === value)
           ? undefined
