@@ -195,13 +195,15 @@ void test("runGroundedAgent handles markdown-fenced JSON responses", async () =>
   const provider: ModelProvider = {
     generate() {
       return Promise.resolve(
-        "```json\n" +
+        [
+          "```json",
           JSON.stringify({
             status: "grounded",
             reply: "Answer inside markdown fence.",
             citations: ["passage-1"],
-          }) +
-          "\n```",
+          }),
+          "```",
+        ].join("\n"),
       );
     },
   };
