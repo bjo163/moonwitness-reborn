@@ -1191,6 +1191,8 @@ export interface AttachmentChunkProgressDto {
   receivedBytes: number;
   totalChunks: number;
   expectedBytes: number;
+  /** Chunk indices the server has not stored yet; the resume work list. */
+  missingChunks: number[];
 }
 
 export interface DeleteAttachmentResponseDto {
@@ -1309,6 +1311,7 @@ export const apiRoutes = {
     content: (id: string) => `/attachments/${segment(id)}/content`,
     uploads: "/attachments/uploads",
     upload: (id: string) => `/attachments/uploads/${segment(id)}`,
+    progress: (id: string) => `/attachments/uploads/${segment(id)}/progress`,
     complete: (id: string) => `/attachments/uploads/${segment(id)}/complete`,
     chunk: (id: string, index: number) =>
       `/attachments/uploads/${segment(id)}/chunks/${segment(String(index))}`,
@@ -1922,6 +1925,12 @@ export class MoonClient {
     uploadId: string,
   ): Promise<{ attachment: AttachmentDto }> {
     return this.request(apiRoutes.attachments.complete(uploadId), "POST", {});
+  }
+
+  attachmentUploadProgress(
+    uploadId: string,
+  ): Promise<AttachmentChunkProgressDto> {
+    return this.request(apiRoutes.attachments.progress(uploadId));
   }
 
   deleteAttachment(id: string): Promise<DeleteAttachmentResponseDto> {
