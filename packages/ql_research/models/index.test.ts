@@ -344,3 +344,37 @@ void test("witness.statement is registered in ql_research and validates transmis
     },
   );
 });
+
+
+void test("story.narrative is registered in ql_research and preserves fictional vs historical distinction", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+      researchManifest,
+    ],
+    async (orm) => {
+      const story = await orm.createRecordForService("story.narrative", {
+        canonical_id: "mw:story:ashab-al-kahf",
+        title: "The Companions of the Cave",
+        story_mode: "religious_interpretation",
+        tradition: "Abrahamic / Quranic",
+        summary: "The narrative of the faithful youth who sought refuge in a cave from oppressive tyranny.",
+        motifs: "cave, miraculous sleep, divine protection, youth, monotheism",
+        source_artifact_id: "mw:source:quran",
+        passage_id: "mw:passage:18:9-26",
+        is_fictional: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      assert.ok(story.id);
+
+      const found = await orm.findOneByService("story.narrative", { id: story.id });
+      assert.equal(found?.["title"], "The Companions of the Cave");
+      assert.equal(found?.["story_mode"], "religious_interpretation");
+      assert.equal(found?.["is_fictional"], false);
+    },
+  );
+});
