@@ -100,7 +100,7 @@ export default function CorrelationGraphPage() {
         personRes.records.forEach((r: ModelRecordDto) => {
           loadedNodes.push({
             id: String(r.id),
-            label: String(r.values.name ?? r.id),
+            label: String(r.name ?? r.id),
             kind: "person",
           });
         });
@@ -108,7 +108,7 @@ export default function CorrelationGraphPage() {
         storyRes.records.forEach((r: ModelRecordDto) => {
           loadedNodes.push({
             id: String(r.id),
-            label: String(r.values.title ?? r.id),
+            label: String(r.title ?? r.name ?? r.id),
             kind: "story",
           });
         });
@@ -116,17 +116,17 @@ export default function CorrelationGraphPage() {
         eventRes.records.forEach((r: ModelRecordDto) => {
           loadedNodes.push({
             id: String(r.id),
-            label: String(r.values.name ?? r.id),
+            label: String(r.name ?? r.id),
             kind: "event",
           });
         });
 
         corrRes.records.forEach((r: ModelRecordDto) => {
-          if (r.values.source_id && r.values.target_id) {
+          if (r.source_id && r.target_id) {
             loadedEdges.push({
-              from: String(r.values.source_id),
-              to: String(r.values.target_id),
-              relation: String(r.values.correlation_type ?? "relates_to"),
+              from: String(r.source_id),
+              to: String(r.target_id),
+              relation: String(r.correlation_type ?? "relates_to"),
             });
           }
         });

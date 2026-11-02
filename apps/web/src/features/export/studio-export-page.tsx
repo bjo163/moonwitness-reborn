@@ -101,10 +101,10 @@ export default function StudioExportPage() {
   }, [router, t]);
 
   function compileArtifact(artifact: ModelRecordDto) {
-    const title = String(artifact.values.title ?? "Untitled Artifact");
-    const kind = String(artifact.values.artifact_kind ?? "document");
-    const content = String(artifact.values.content ?? "");
-    const stage = String(artifact.values.stage ?? "draft");
+    const title = String(artifact.title ?? artifact.name ?? "Untitled Artifact");
+    const kind = String(artifact.artifact_kind ?? "document");
+    const content = String(artifact.content ?? "");
+    const stage = String(artifact.stage ?? "draft");
 
     const doc = [
       `# ${title}`,
@@ -319,7 +319,7 @@ export default function StudioExportPage() {
                     >
                       {artifacts.map((a) => (
                         <option key={String(a.id)} value={String(a.id)}>
-                          {String(a.values.title ?? a.id)} ({String(a.values.stage ?? "draft")})
+                          {String(a.title ?? a.name ?? a.id)} ({String(a.stage ?? "draft")})
                         </option>
                       ))}
                     </Select>
