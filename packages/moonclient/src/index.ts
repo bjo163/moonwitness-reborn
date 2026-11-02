@@ -664,6 +664,76 @@ export interface CreateLexicalResearchReviewResponseDto {
   review: LexicalResearchReviewDto;
 }
 
+// ---------------------------------------------------------------------------
+// Batch 3: Sacred Integrity, Cryptographic Proofs & Audio Tilawah (Tracks 03, 04, 05)
+// ---------------------------------------------------------------------------
+
+// Track 03: Semantic Cross-Surah Knowledge Graph
+export interface SemanticGraphNodeDto {
+  id: string;
+  slug: string;
+  title: string;
+  category: "concept" | "surah" | "prophet_narrative" | "legal_ruling";
+  passageCount: number;
+}
+
+export interface SemanticGraphEdgeDto {
+  id: string;
+  sourceSlug: string;
+  targetSlug: string;
+  relationType: "chronological" | "thematic_echo" | "contrast" | "elaboration";
+  weight: number;
+  evidencePassages: Array<{ surah: number; ayah: number }>;
+}
+
+export interface SemanticGraphResponseDto {
+  conceptSlug: string;
+  nodes: SemanticGraphNodeDto[];
+  edges: SemanticGraphEdgeDto[];
+  totalEdges: number;
+}
+
+// Track 04: Verifiable Ayah Cryptographic Proofs & Attribution Stamp
+export interface VerifyAyahProofRequestDto {
+  surahNumber: number;
+  ayahNumber: number;
+  editionCode: string;
+  claimedHash: string;
+  claimedText?: string;
+}
+
+export interface VerifyAyahProofResponseDto {
+  status: "verified" | "tampered" | "edition_mismatch" | "not_found";
+  isValid: boolean;
+  surahNumber: number;
+  ayahNumber: number;
+  canonicalText: string;
+  authoritativeHash: string;
+  editionTitle: string;
+  diffExplanation?: string;
+}
+
+// Track 05: Audio Tilawah Spatial Resonance
+export interface ReciterListItemDto {
+  id: string;
+  slug: string;
+  nameTranslit: string;
+  nameArabic: string;
+  style: string;
+}
+
+export interface SurahAudioManifestResponseDto {
+  surahNumber: number;
+  reciterSlug: string;
+  audioStreamUrl: string;
+  durationMs: number;
+  segments: Array<{
+    ayahNumber: number;
+    startMs: number;
+    endMs: number;
+  }>;
+}
+
 export type ProjectTaskStateDto =
   | "done"
   | "in_progress"
@@ -961,6 +1031,20 @@ export const apiRoutes = {
   search: {
     query: "/search",
     reindexCorpus: "/search/corpus-index",
+  },
+  searchGraph: {
+    byConcept: (slug: string) => `/search/graph/concepts/${segment(slug)}`,
+    allConcepts: "/search/graph/concepts",
+  },
+  corpusProofs: {
+    verify: "/corpus/proofs/verify",
+    getProof: (edition: string, surah: number, ayah: number) =>
+      `/corpus/proofs/${segment(edition)}/${segment(String(surah))}/${segment(String(ayah))}`,
+  },
+  corpusAudio: {
+    reciters: "/corpus/audio/reciters",
+    surahManifest: (reciter: string, surah: number) =>
+      `/corpus/audio/manifest/${segment(reciter)}/surah/${segment(String(surah))}`,
   },
   landing: {
     catalog: "/public/landing",
@@ -1337,6 +1421,31 @@ export class MoonClient {
     ayah: number,
   ): Promise<CorpusVerseResponseDto> {
     return this.request(apiRoutes.corpus.verse(editionKey, surah, ayah));
+  }
+
+  // Batch 3 SDK methods
+  getSemanticGraph(conceptSlug: string): Promise<SemanticGraphResponseDto> {
+    return this.request(apiRoutes.searchGraph.byConcept(conceptSlug), "GET");
+  }
+
+  verifyAyahProof(
+    payload: VerifyAyahProofRequestDto,
+  ): Promise<VerifyAyahProofResponseDto> {
+    return this.request(apiRoutes.corpusProofs.verify, "POST", payload);
+  }
+
+  getReciters(): Promise<ReciterListItemDto[]> {
+    return this.request(apiRoutes.corpusAudio.reciters, "GET");
+  }
+
+  getSurahAudioManifest(
+    reciterSlug: string,
+    surahNumber: number,
+  ): Promise<SurahAudioManifestResponseDto> {
+    return this.request(
+      apiRoutes.corpusAudio.surahManifest(reciterSlug, surahNumber),
+      "GET",
+    );
   }
 
   listSourceArtifacts(): Promise<SourceArtifactListResponseDto> {

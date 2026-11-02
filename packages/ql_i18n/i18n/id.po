@@ -2256,6 +2256,30 @@ msgctxt "web.models:descriptions.corpus_lexical_candidate"
 msgid "Kandidat frekuensi Arab yang belum ditinjau dari edisi Al-Qur'an dengan hak transformasi yang disetujui; bukan kesimpulan agama."
 msgstr "Kandidat frekuensi Arab yang belum ditinjau dari edisi Al-Qur'an dengan hak transformasi yang disetujui; bukan kesimpulan agama."
 
+msgctxt "web.models:entities.corpus_ayah_proof"
+msgid "Bukti Kriptografis Ayat"
+msgstr "Bukti Kriptografis Ayat"
+
+msgctxt "web.models:descriptions.corpus_ayah_proof"
+msgid "Rekaman bukti kriptografis penjangkar hash konten ayat yang tidak dapat diubah."
+msgstr "Rekaman bukti kriptografis penjangkar hash konten ayat yang tidak dapat diubah."
+
+msgctxt "web.models:entities.corpus_reciter"
+msgid "Qari Tilawah"
+msgstr "Qari Tilawah"
+
+msgctxt "web.models:descriptions.corpus_reciter"
+msgid "Metadata qari Al-Qur'an terverifikasi dan sertifikasi hak cipta audio."
+msgstr "Metadata qari Al-Qur'an terverifikasi dan sertifikasi hak cipta audio."
+
+msgctxt "web.models:entities.corpus_audio_segment"
+msgid "Segmen Audio Ayat"
+msgstr "Segmen Audio Ayat"
+
+msgctxt "web.models:descriptions.corpus_audio_segment"
+msgid "Batas cap waktu milidetik untuk sinkronisasi audio ayat Al-Qur'an."
+msgstr "Batas cap waktu milidetik untuk sinkronisasi audio ayat Al-Qur'an."
+
 msgctxt "web.models:fieldCandidateText"
 msgid "Teks kandidat"
 msgstr "Teks kandidat"
@@ -3526,4 +3550,41 @@ msgstr "Suara Harmoni Aktif"
 msgctxt "web:common.chimeToggleMuted"
 msgid "Suara Harmoni Senyap"
 msgstr "Suara Harmoni Senyap"
+
+msgctxt "web:corpus.copyProofButton"
+msgid "Salin dengan Bukti Kriptografis"
+msgstr "Salin dengan Bukti Kriptografis"
+
+msgctxt "web:corpus.proofCopiedNotice"
+msgid "Kutipan dengan Bukti Telah Disalin!"
+msgstr "Kutipan dengan Bukti Telah Disalin!"
+
+msgctxt "web:corpus.sha256ProofBadge"
+msgid "Segel Kriptografis SHA-256"
+msgstr "Segel Kriptografis SHA-256"
+
+msgctxt "web:corpus.playTilawah"
+msgid "Putar Tilawah"
+msgstr "Putar Tilawah"
+
+msgctxt "web:corpus.pauseTilawah"
+msgid "Jeda Tilawah"
+msgstr "Jeda Tilawah"
+
+msgctxt "web:corpus.graphViewTab"
+msgid "Tampilan Graf"
+msgstr "Tampilan Graf"
+
+msgctxt "web:corpus.tableViewTab"
+msgid "Tabel Aksesibel"
+msgstr "Tabel Aksesibel"
+
+msgctxt "web:corpus.tamperedWarning"
+msgid "PERINGATAN: Teks kutipan telah diubah dari mushaf kanonis."
+msgstr "PERINGATAN: Teks kutipan telah diubah dari mushaf kanonis."
+
+msgctxt "web:corpus.verifiedAuthenticity"
+msgid "Bukti Keaslian Ayat Terverifikasi"
+msgstr "Bukti Keaslian Ayat Terverifikasi"
+
 

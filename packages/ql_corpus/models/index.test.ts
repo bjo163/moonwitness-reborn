@@ -861,6 +861,48 @@ void test("UNILEX ontology models corpus.term and corpus.concept are registered 
       const retrievedConcept = await orm.findOneByService("corpus.concept", { id: conceptRecord.id });
       assert.equal(retrievedConcept?.["name"], "Divine Mercy");
       assert.equal(retrievedConcept?.["is_deprecated"], false);
+
+      // Test corpus.ayah_proof creation and SHA-256 validation
+      const proofRecord = await orm.createRecordForService("corpus.ayah_proof", {
+        passage_id: "mw:passage:test:1:1",
+        surah_number: 1,
+        ayah_number: 1,
+        edition_code: "kemenag_id",
+        content_hash_sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        canonical_payload: "V1|edition:kemenag_id|surah:1|ayah:1|text:Dengan nama Allah Yang Maha Pengasih lagi Maha Penyayang",
+        verification_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      assert.ok(proofRecord.id);
+
+      // Test corpus.reciter creation
+      const reciterRecord = await orm.createRecordForService("corpus.reciter", {
+        slug: "al-husary",
+        name_translit: "Mahmoud Khalil Al-Husary",
+        name_arabic: "محمود خليل الحصري",
+        recitation_style: "murattal",
+        audio_base_url: "https://audio.moonwitness.com/husary",
+        license_type: "public_domain",
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      assert.ok(reciterRecord.id);
+
+      // Test corpus.audio_segment creation
+      const segmentRecord = await orm.createRecordForService("corpus.audio_segment", {
+        reciter_slug: "al-husary",
+        surah_number: 1,
+        ayah_number: 1,
+        start_ms: 0,
+        end_ms: 4500,
+        audio_file_url: "https://audio.moonwitness.com/husary/001001.mp3",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      assert.ok(segmentRecord.id);
     },
   );
 });
+

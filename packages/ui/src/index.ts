@@ -138,5 +138,26 @@ export {
   type MicroChimeTone,
   type MicroChimeConfig,
 } from "./lib/micro-chime-engine.js";
+export {
+  SemanticCrossSurahGraph,
+  type SemanticCrossSurahGraphProps,
+  type ThematicGraphNode,
+  type ThematicGraphEdge,
+} from "./composites/semantic-graph.js";
+export {
+  AyahProofCard,
+  ProofVerificationResult,
+  type AyahProofCardProps,
+  type ProofVerificationResultProps,
+  type AyahProofMetadata,
+} from "./composites/ayah-proof-card.js";
+export {
+  AudioTilawahPlayer,
+  WhisperingWaveform,
+  type AudioTilawahPlayerProps,
+  type WhisperingWaveformProps,
+  type AudioTimestampSegment,
+  type ReciterProfile,
+} from "./composites/audio-tilawah-player.js";
 
 

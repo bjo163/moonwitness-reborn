@@ -1134,3 +1134,96 @@
 .ql-density--panoramic .ql-hud-pane {
   padding: 2rem;
 }
+
+/*
+ * Batch 3: Sacred Integrity, Cryptographic Proofs & Audio Tilawah (Tracks 03, 04, 05)
+ */
+
+/* Track 03: Semantic Cross-Surah Knowledge Graph */
+.ql-semantic-graph {
+  width: 100%;
+  min-height: 480px;
+  background: var(--color-panel-deep);
+  border: 1px solid var(--color-hairline);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.ql-graph-node {
+  fill: var(--color-panel-raised);
+  stroke: var(--color-hairline-strong);
+  stroke-width: 1.5;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.ql-graph-node.is-active {
+  stroke: var(--color-acid);
+  fill: var(--color-panel);
+  filter: drop-shadow(0 0 8px var(--ql-glow-gold));
+}
+
+.ql-graph-edge {
+  stroke: var(--color-hairline);
+  stroke-width: 1.5;
+  fill: none;
+  opacity: 0.7;
+}
+
+/* Track 04: Verifiable Ayah Cryptographic Proofs & Attribution Stamp */
+.ql-proof-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  border: 1px solid var(--color-hairline);
+  border-radius: 0.375rem;
+  background: var(--color-panel-raised);
+  color: var(--color-ink-soft);
+}
+
+.ql-proof-badge.is-valid {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.ql-proof-badge.is-tampered {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.ql-ayah-proof-card {
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
+.ql-proof-verification-result {
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel-raised);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
+/* Track 05: Audio Tilawah Spatial Resonance */
+.ql-audio-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--color-panel-raised);
+  border: 1px solid var(--color-hairline);
+  border-radius: 0.75rem;
+}
+
+.ql-whispering-waveform {
+  width: 96px;
+  height: 28px;
+  display: inline-block;
+  vertical-align: middle;
+}
