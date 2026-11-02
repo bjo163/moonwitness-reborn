@@ -3,6 +3,9 @@
   "maxRouteDeltaKb": 2,
   "routes": {
     "/connectors/[connectorId]/dns/page": 146.6,
+    "/command-center/export/page": 146.4,
+    "/command-center/graph/page": 146.3,
+    "/command-center/search/page": 146.0,
     "/models/page": 145.9,
     "/connectors/page": 145.8,
     "/command-center/page": 145.6,
