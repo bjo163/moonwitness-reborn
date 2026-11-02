@@ -67,6 +67,16 @@ export interface SearchQueryResponseDto {
   results: SearchResultItemDto[];
 }
 
+export interface ReindexCorpusSearchIndexRequestDto {
+  editionKey: string;
+}
+
+export interface ReindexCorpusSearchIndexResponseDto {
+  editionKey: string;
+  passageCount: number;
+  indexEntryCount: number;
+}
+
 export interface LoginRequestDto {
   email: string;
   password: string;
@@ -948,6 +958,7 @@ export const apiRoutes = {
   },
   search: {
     query: "/search",
+    reindexCorpus: "/search/corpus-index",
   },
   landing: {
     catalog: "/public/landing",
@@ -1100,6 +1111,12 @@ export class MoonClient {
     if (params.targetModel) queryParams.set("targetModel", params.targetModel);
     if (params.limit) queryParams.set("limit", String(params.limit));
     return this.request(`${apiRoutes.search.query}?${queryParams.toString()}`);
+  }
+
+  reindexCorpusSearchIndex(
+    input: ReindexCorpusSearchIndexRequestDto,
+  ): Promise<ReindexCorpusSearchIndexResponseDto> {
+    return this.request(apiRoutes.search.reindexCorpus, "POST", input);
   }
 
   logout(): Promise<{ loggedOut: boolean }> {

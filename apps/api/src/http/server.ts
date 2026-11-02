@@ -60,6 +60,8 @@ import {
   type UiLanguageDto,
   type SearchQueryResponseDto,
   type SearchResultItemDto,
+  type ReindexCorpusSearchIndexRequestDto,
+  type ReindexCorpusSearchIndexResponseDto,
 } from "@moonwitness/moonclient";
 import {
   QlAccessError,
@@ -98,6 +100,7 @@ import {
   publishEdition,
   withdrawEdition,
 } from "ql_corpus/services/corpus-service";
+import { indexCorpusEdition } from "ql_search/services/search-indexing-service";
 import {
   readSurahWindow,
   readVerse,
@@ -2747,6 +2750,44 @@ export function createApiServer(
     }
 
 
+    if (
+      request.method === "POST" &&
+      pathname === apiRoutes.search.reindexCorpus
+    ) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        requireGroup(user, "admin");
+        const input = parseObject(await readJsonBody(request));
+        if (
+          Object.keys(input).some((key) => key !== "editionKey") ||
+          typeof input.editionKey !== "string" ||
+          !input.editionKey.trim() ||
+          input.editionKey !== input.editionKey.trim() ||
+          input.editionKey.length > 160
+        ) {
+          throw new RequestError(
+            "Field 'editionKey' must be a non-empty string of at most 160 characters.",
+            400,
+          );
+        }
+        const requestDto: ReindexCorpusSearchIndexRequestDto = {
+          editionKey: input.editionKey,
+        };
+        const result = await indexCorpusEdition(
+          orm,
+          userContext(user),
+          requestDto.editionKey,
+        );
+        sendJson(response, 200, {
+          ...result,
+        } satisfies ReindexCorpusSearchIndexResponseDto);
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
     if (request.method === "GET" && pathname === apiRoutes.search.query) {
       const user = await requireAuthenticatedUser(request, response, store);
       if (!user) return;
@@ -2795,7 +2836,9 @@ export function createApiServer(
               targetId: targetIdVal,
               token: tokenVal,
               weight: weightVal,
-              snippet: snippetVal,
+              ...(targetModelVal === "corpus.passage" || snippetVal === undefined
+                ? {}
+                : { snippet: snippetVal }),
             };
           })
           .sort((a: SearchResultItemDto, b: SearchResultItemDto) => b.weight - a.weight)

@@ -415,6 +415,9 @@ importers:
       ql_research:
         specifier: workspace:*
         version: link:../ql_research
+      ql_source:
+        specifier: workspace:*
+        version: link:../ql_source
 
   packages/ql_source:
     dependencies:

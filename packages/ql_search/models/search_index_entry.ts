@@ -1,4 +1,17 @@
 import type { QlModelDefinition } from "ql_orm";
+import {
+  AYAH_MAX_BOUND,
+  QURAN_LOCALES,
+  SURAH_MAX,
+  SURAH_MIN,
+} from "ql_corpus/services/corpus-vocabulary";
+
+function searchLocaleValidator(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  return QURAN_LOCALES.some((locale) => locale === value)
+    ? undefined
+    : `Field 'locale' must be one of: ${QURAN_LOCALES.join(", ")}.`;
+}
 
 /**
  * Search Index Entry Model — MW-0604 / MWREQ-01168..01184
@@ -40,6 +53,31 @@ export const searchIndexEntryModel: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 64,
+      private: true,
+    },
+    edition_key: {
+      type: "char",
+      maxLength: 160,
+      private: true,
+    },
+    locale: {
+      type: "char",
+      maxLength: 12,
+      options: QURAN_LOCALES,
+      validator: searchLocaleValidator,
+      private: true,
+    },
+    surah: {
+      type: "integer",
+      minValue: SURAH_MIN,
+      maxValue: SURAH_MAX,
+      private: true,
+    },
+    ayah: {
+      type: "integer",
+      minValue: 1,
+      maxValue: AYAH_MAX_BOUND,
+      private: true,
     },
     created_at: {
       type: "datetime",

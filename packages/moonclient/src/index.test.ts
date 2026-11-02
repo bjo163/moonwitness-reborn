@@ -454,6 +454,29 @@ void test("MoonClient search sends query parameters to apiRoutes.search.query", 
   assert.equal(res.results[0].targetId, "story-musa");
 });
 
+void test("MoonClient reindexes a corpus edition through the shared admin route", async () => {
+  const { client, requests } = recorder({
+    editionKey: "edition-en",
+    passageCount: 2,
+    indexEntryCount: 4,
+  });
+
+  const result = await client.reindexCorpusSearchIndex({
+    editionKey: "edition-en",
+  });
+  assert.equal(apiRoutes.search.reindexCorpus, "/search/corpus-index");
+  assert.equal(requests[0].url, "/api/search/corpus-index");
+  assert.equal(requests[0].method, "POST");
+  assert.deepEqual(JSON.parse(requests[0].body), {
+    editionKey: "edition-en",
+  });
+  assert.deepEqual(result, {
+    editionKey: "edition-en",
+    passageCount: 2,
+    indexEntryCount: 4,
+  });
+});
+
 // Browser melempar "Failed to execute 'fetch' on 'Window': Illegal invocation"
 // kalau fetch menerima this selain global, dan klien menyimpannya sebagai field.
 void test("default fetcher calls fetch with the global as receiver", async () => {
