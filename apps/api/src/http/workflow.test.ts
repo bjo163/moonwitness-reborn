@@ -229,3 +229,122 @@ void test("illegal transitions return 400 via the state machine", async () => {
   );
   assert.equal(reply.status, 400, reply.text);
 });
+
+void test("Track 17: Sanad review pipeline blocks self-approval and transitions upon 2 approvals", async () => {
+  const changeId = await createDraft(submitterCookie, "Sanad research submission");
+  await api(apiRoutes.workflow.transition(changeId), {
+    method: "POST",
+    cookie: submitterCookie,
+    body: { action: "submit" },
+  });
+  await api(apiRoutes.workflow.transition(changeId), {
+    method: "POST",
+    cookie: ownerCookie,
+    body: { action: "start_review" },
+  });
+
+  // Submitter (author) cannot review own change
+  const selfReview = await api<{ error: string }>(
+    apiRoutes.workflow.sanadVerification(changeId),
+    {
+      method: "POST",
+      cookie: submitterCookie,
+      body: {
+        decision: "approved",
+        notes: "I approve my own work",
+        sanadChainRef: "Self",
+      },
+    },
+  );
+  assert.equal(selfReview.status, 403, selfReview.text);
+
+  // Reviewer 1 (Owner) reviews
+  const review1 = await api<{ approvedCount: number; currentState: string }>(
+    apiRoutes.workflow.sanadVerification(changeId),
+    {
+      method: "POST",
+      cookie: ownerCookie,
+      body: {
+        decision: "approved",
+        notes: "First scholar approval",
+        sanadChainRef: "Imam Malik",
+      },
+    },
+  );
+  assert.equal(review1.status, 200, review1.text);
+  assert.equal(review1.body.approvedCount, 1);
+  assert.equal(review1.body.currentState, "in_review");
+
+  // Register second reviewer
+  const reviewer2Cookie = await register("scholar2@example.com");
+  const review2 = await api<{ approvedCount: number; currentState: string }>(
+    apiRoutes.workflow.sanadVerification(changeId),
+    {
+      method: "POST",
+      cookie: reviewer2Cookie,
+      body: {
+        decision: "approved",
+        notes: "Second scholar approval",
+        sanadChainRef: "Imam Shafi'i",
+      },
+    },
+  );
+  assert.equal(review2.status, 200, review2.text);
+  assert.equal(review2.body.approvedCount, 2);
+  assert.equal(review2.body.currentState, "approved");
+});
+
+void test("Track 20: Pre-publication ethics checklist requires all clauses", async () => {
+  const changeId = await createDraft(submitterCookie, "Ethics test article");
+  await api(apiRoutes.workflow.transition(changeId), {
+    method: "POST",
+    cookie: submitterCookie,
+    body: { action: "submit" },
+  });
+  await api(apiRoutes.workflow.transition(changeId), {
+    method: "POST",
+    cookie: ownerCookie,
+    body: { action: "start_review" },
+  });
+  await api(apiRoutes.workflow.transition(changeId), {
+    method: "POST",
+    cookie: ownerCookie,
+    body: { action: "approve", reason: "Ethics review approved" },
+  });
+
+  // Missing clauses
+  const badPublish = await api<{ error: string }>(
+    apiRoutes.workflow.publishChange(changeId),
+    {
+      method: "POST",
+      cookie: submitterCookie,
+      body: {
+        ethicsAffirmation: {
+          isNotFatwaAffirmed: false,
+          citationsVerifiedAffirmed: true,
+          decorumAffirmed: true,
+        },
+      },
+    },
+  );
+  assert.equal(badPublish.status, 422, badPublish.text);
+
+  // Valid clauses
+  const goodPublish = await api<{ newState: string }>(
+    apiRoutes.workflow.publishChange(changeId),
+    {
+      method: "POST",
+      cookie: submitterCookie,
+      body: {
+        ethicsAffirmation: {
+          isNotFatwaAffirmed: true,
+          citationsVerifiedAffirmed: true,
+          decorumAffirmed: true,
+          ethicsDigest: "valid-sha256",
+        },
+      },
+    },
+  );
+  assert.equal(goodPublish.status, 200, goodPublish.text);
+  assert.equal(goodPublish.body.newState, "published");
+});

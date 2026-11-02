@@ -23,6 +23,7 @@ import {
   SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
+  QuranicMorphologyVisualizer,
 } from "@moonwitness/ui";
 import {
   Boxes,
@@ -539,6 +540,26 @@ export default function ResearchReviewPage() {
                       </form>
                     </CardContent>
                   </Card>
+
+                  <div className="lg:col-span-2">
+                    <QuranicMorphologyVisualizer
+                      surahNumber={selected.candidate.source_references[0]?.surah ?? 1}
+                      ayahNumber={selected.candidate.source_references[0]?.ayah ?? 1}
+                      segments={[
+                        {
+                          id: selected.candidate.id,
+                          wordIndex: 1,
+                          segmentIndex: 1,
+                          arabicText: selected.candidate.candidate_text,
+                          transliteration: selected.candidate.normalized_form,
+                          pos: "noun",
+                          posTag: "N",
+                          grammaticalCase: "marfu",
+                          caseExplanation: "Nominated subject / default form in lexical candidate view.",
+                        },
+                      ]}
+                    />
+                  </div>
                 </section>
               )}
             </>

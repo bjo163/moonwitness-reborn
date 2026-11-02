@@ -206,3 +206,137 @@ export async function listTransitionsForChange(
     );
   });
 }
+
+/**
+ * Track 17: Sanad-Verified Review Pipeline service functions.
+ */
+export async function submitPeerReviewForService(
+  orm: QlOrm,
+  changeId: string,
+  reviewerId: string,
+  payload: {
+    decision: "approved" | "changes_requested";
+    notes: string;
+    sanadChainRef: string;
+  },
+): Promise<{ review: QlRecord; change: QlRecord; quorumReached: boolean }> {
+  const [change] = await orm.findManyByService(
+    "workflow.change",
+    { id: changeId },
+    { limit: 1 },
+  );
+  if (!change) {
+    throw new QlNotFoundError(`Change '${changeId}' not found.`);
+  }
+
+  const owner = typeof change.owner_id === "string" ? change.owner_id : "";
+  if (owner && owner === reviewerId) {
+    throw new QlAccessError(
+      "Self-approval is strictly prohibited: author cannot review own change.",
+    );
+  }
+
+  // Prevent duplicate review submissions by the same reviewer
+  const existingReviews = await orm.findManyByService(
+    "workflow.peer_review",
+    { change_id: changeId, reviewer_id: reviewerId },
+    { limit: 1 },
+  );
+  if (existingReviews.length > 0) {
+    throw new QlConflictError(
+      "Reviewer has already submitted a review for this change.",
+    );
+  }
+
+  const stamped = new Date();
+  const review = await orm.createRecordForService("workflow.peer_review", {
+    change_id: changeId,
+    decision: payload.decision,
+    notes: payload.notes,
+    sanad_chain_ref: payload.sanadChainRef,
+    reviewer_id: reviewerId,
+    created_at: stamped,
+    updated_at: stamped,
+  });
+
+  const approvedReviews = await orm.findManyByService(
+    "workflow.peer_review",
+    { change_id: changeId, decision: "approved" },
+  );
+
+  const distinctReviewerIds = new Set(
+    approvedReviews
+      .map((r) => (typeof r.reviewer_id === "string" ? r.reviewer_id : ""))
+      .filter((id) => id.length > 0),
+  );
+
+  let updatedChange = change;
+  const quorumReached = distinctReviewerIds.size >= 2;
+  if (quorumReached && (change.state === "in_review" || change.state === "submitted")) {
+    const nextRevision = (typeof change.revision === "number" ? change.revision : 1) + 1;
+    await orm.updateRecordsForService(
+      "workflow.change",
+      { id: changeId },
+      { state: "approved", revision: nextRevision, updated_at: stamped },
+    );
+    await orm.createRecordForService("workflow.transition", {
+      change_id: changeId,
+      from_state: String(change.state),
+      to_state: "approved",
+      action: "approve",
+      reason: `Quorum of ${distinctReviewerIds.size} distinct Sanad peer reviews reached.`,
+      revision: nextRevision,
+      actor_id: reviewerId,
+      owner_id: owner,
+      created_at: stamped,
+    });
+    const refreshed = await orm.findOneByService("workflow.change", { id: changeId });
+    if (refreshed) updatedChange = refreshed;
+  }
+
+  return { review, change: updatedChange, quorumReached };
+}
+
+export async function getSanadPipelineStatusForService(
+  orm: QlOrm,
+  changeId: string,
+): Promise<{
+  changeId: string;
+  currentState: string;
+  requiredReviews: number;
+  approvedCount: number;
+  canPublish: boolean;
+  reviews: QlRecord[];
+}> {
+  const [change] = await orm.findManyByService(
+    "workflow.change",
+    { id: changeId },
+    { limit: 1 },
+  );
+  if (!change) {
+    throw new QlNotFoundError(`Change '${changeId}' not found.`);
+  }
+
+  const reviews = await orm.findManyByService(
+    "workflow.peer_review",
+    { change_id: changeId },
+    { limit: 100, orderBy: { field: "created_at", direction: "desc" } },
+  );
+
+  const distinctApprovedReviewers = new Set(
+    reviews
+      .filter((r) => r.decision === "approved")
+      .map((r) => (typeof r.reviewer_id === "string" ? r.reviewer_id : ""))
+      .filter((id) => id.length > 0),
+  );
+  const approvedCount = distinctApprovedReviewers.size;
+
+  return {
+    changeId,
+    currentState: String(change.state ?? "draft"),
+    requiredReviews: 2,
+    approvedCount,
+    canPublish: approvedCount >= 2 && change.state === "approved",
+    reviews,
+  };
+}

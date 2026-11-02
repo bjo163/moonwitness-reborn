@@ -9,7 +9,11 @@ import {
 import { stubAddonManifest, withMemoryOrm } from "ql_orm/testing";
 import workflowManifest from "../__manifest__.js";
 import { canTransition } from "../services/state-machine.js";
-import { requestTransition } from "../services/workflow-service.js";
+import {
+  getSanadPipelineStatusForService,
+  requestTransition,
+  submitPeerReviewForService,
+} from "../services/workflow-service.js";
 import {
   REVIEW_STATES,
   TRANSITION_ACTIONS,
@@ -292,6 +296,64 @@ void test("submit may only be executed by the change owner", async () => {
         QlAccessError,
         "a non-owner cannot submit someone else's change",
       );
+    },
+  );
+});
+
+void test("Sanad pipeline: requires 2 distinct peer reviewers, rejects author self-review and duplicate reviewer", async () => {
+  await withMemoryOrm(
+    [stubAddonManifest("ql_base"), stubAddonManifest("ql_auth"), workflowManifest],
+    async (orm) => {
+      const changeId = await createDraft(orm, ownerA);
+      await requestTransition(orm, ownerA, changeId, "submit");
+
+      // 1. Author cannot review their own work
+      await assert.rejects(
+        () =>
+          submitPeerReviewForService(orm, changeId, ownerA.id, {
+            decision: "approved",
+            notes: "Self endorsement",
+            sanadChainRef: "ref-1",
+          }),
+        QlAccessError,
+        "Author self-review must be rejected",
+      );
+
+      // 2. Reviewer 1 submits approval -> quorum not yet reached
+      const res1 = await submitPeerReviewForService(orm, changeId, reviewer.id, {
+        decision: "approved",
+        notes: "Approved by reviewer 1",
+        sanadChainRef: "ref-rev1",
+      });
+      assert.equal(res1.quorumReached, false);
+      const statusAfter1 = await getSanadPipelineStatusForService(orm, changeId);
+      assert.equal(statusAfter1.approvedCount, 1);
+      assert.equal(statusAfter1.canPublish, false);
+
+      // 3. Duplicate review by reviewer 1 must be rejected
+      await assert.rejects(
+        () =>
+          submitPeerReviewForService(orm, changeId, reviewer.id, {
+            decision: "approved",
+            notes: "Duplicate approval attempt",
+            sanadChainRef: "ref-rev1-dup",
+          }),
+        QlConflictError,
+        "Duplicate review submission must be rejected with QlConflictError",
+      );
+
+      // 4. Reviewer 2 submits approval -> distinct quorum reached, auto transitions to 'approved'
+      const res2 = await submitPeerReviewForService(orm, changeId, otherReviewer.id, {
+        decision: "approved",
+        notes: "Approved by reviewer 2",
+        sanadChainRef: "ref-rev2",
+      });
+      assert.equal(res2.quorumReached, true);
+      assert.equal(res2.change.state, "approved");
+
+      const statusAfter2 = await getSanadPipelineStatusForService(orm, changeId);
+      assert.equal(statusAfter2.approvedCount, 2);
+      assert.equal(statusAfter2.canPublish, true);
     },
   );
 });

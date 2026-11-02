@@ -18,6 +18,7 @@ import {
   WorkspaceTemplate,
   HolographicOrbitDeck,
   AmbientAtmosphere,
+  TelemetryOrbitWidget,
   type SidebarNavItem,
   type CommandRegionId,
 } from "@moonwitness/ui";
@@ -602,14 +603,29 @@ export default function DashboardPage() {
                 </div>
               )}
               {activeRegion === "06" && (
-                <div className="border border-hairline bg-panel p-6 md:p-8">
-                  <span className="font-mono text-xs text-acid">REGION 06 · SYSTEM OBSERVATORY</span>
-                  <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">{copy.dashboard.hqRegion6Title}</h2>
-                  <p className="mt-2 text-sm text-muted">{copy.dashboard.hqRegion6Desc}</p>
-                  <div className="mt-6 flex gap-4 text-xs font-semibold">
-                    {hasConnectors && <Link href="/connectors" className="text-acid hover:underline">Konektor DNS &rarr;</Link>}
-                    <Link href="/command-center/export" className="text-ink-soft hover:text-acid">Studio Data &rarr;</Link>
+                <div className="space-y-6">
+                  <div className="border border-hairline bg-panel p-6 md:p-8">
+                    <span className="font-mono text-xs text-acid">REGION 06 · SYSTEM OBSERVATORY</span>
+                    <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">{copy.dashboard.hqRegion6Title}</h2>
+                    <p className="mt-2 text-sm text-muted">{copy.dashboard.hqRegion6Desc}</p>
+                    <div className="mt-6 flex gap-4 text-xs font-semibold">
+                      {hasConnectors && <Link href="/connectors" className="text-acid hover:underline">Konektor DNS &rarr;</Link>}
+                      <Link href="/command-center/export" className="text-ink-soft hover:text-acid">Studio Data &rarr;</Link>
+                    </div>
                   </div>
+                  <TelemetryOrbitWidget
+                    title="Realtime Edge Telemetry"
+                    subtitle="Cloudflare SIN Edge & QlOrm Synchronization Vitametrics"
+                    coloNodeRegion="SIN (Singapore)"
+                    edgeLatencyMs={18}
+                    cacheHitRatio={0.97}
+                    doWorkerState="active"
+                    metrics={[
+                      { id: "p95", label: "p95 Edge Response", value: "18", unit: "ms", history: [22, 19, 21, 18, 17, 18] },
+                      { id: "cpu", label: "DO CPU Utilization", value: "12", unit: "%", history: [14, 15, 12, 11, 13, 12] },
+                      { id: "mem", label: "Durable Memory", value: "38", unit: "MB", history: [36, 37, 38, 38, 38, 38] },
+                    ]}
+                  />
                 </div>
               )}
             </div>

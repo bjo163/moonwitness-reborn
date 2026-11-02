@@ -540,3 +540,27 @@ void test("grounded provider and index failures remain explicit", async () => {
   );
   assert.equal(providerCalls, providerCallsBeforeIndexFailure);
 });
+
+void test("grounded chat tags citations that cannot be verified in corpus as unverified", async () => {
+  providerOutput = JSON.stringify({
+    status: "grounded",
+    reply: "Allah states in [verse:115:1] and [QS. 2:999] that truth is clear.",
+    citations: [String(indonesianFixture.passage.id)],
+  });
+  const conversation = await createConversation("grounded-id@example.com");
+  const response = await sendGroundedChat(
+    indonesianCookie,
+    conversation.id,
+    "cahaya",
+  );
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as ChatResponseDto;
+  assert.equal(body.groundingStatus, "grounded");
+  assert.ok("unverifiedCitations" in body);
+  assert.equal(body.unverifiedCitations?.length, 2);
+  assert.equal(body.unverifiedCitations?.[0]?.surah, 115);
+  assert.equal(body.unverifiedCitations?.[0]?.reason, "non_existent_verse");
+  assert.equal(body.unverifiedCitations?.[1]?.surah, 2);
+  assert.equal(body.unverifiedCitations?.[1]?.ayah, 999);
+  assert.equal(body.unverifiedCitations?.[1]?.reason, "unverified_in_corpus");
+});

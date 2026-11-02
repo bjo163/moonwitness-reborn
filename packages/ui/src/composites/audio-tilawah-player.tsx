@@ -42,6 +42,13 @@ export function WhisperingWaveform({
       return;
     }
 
+    // Same guard `AmbientAtmosphere` uses: a reduced-motion reader gets a
+    // still waveform instead of a 10 Hz animation.
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) return;
+
     const interval = setInterval(() => {
       setLevels(
         Array.from({ length: barCount }, (_, i) => {
@@ -79,34 +86,40 @@ export function WhisperingWaveform({
 export interface AudioTilawahPlayerProps {
   surahNumber: number;
   activeAyahNumber: number;
-  reciterName?: string;
-  reciterStyle?: string;
+  /**
+   * Who is reciting, and how. There is no default: naming a reciter the
+   * caller never verified would put a false attribution on the scripture.
+   */
+  reciterName: string;
+  reciterStyle: string;
   audioStreamUrl?: string;
   segments?: readonly AudioTimestampSegment[];
   isPlaying?: boolean;
   onPlayStateChange?(this: void, playing: boolean): void;
   onAyahChange?(this: void, ayahNumber: number): void;
-  playLabel?: string;
-  pauseLabel?: string;
-  muteLabel?: string;
-  unmuteLabel?: string;
+  playerLabel: string;
+  playLabel: string;
+  pauseLabel: string;
+  muteLabel: string;
+  unmuteLabel: string;
   className?: string;
 }
 
 export function AudioTilawahPlayer({
   surahNumber,
   activeAyahNumber,
-  reciterName = "Sheikh Mahmoud Khalil Al-Husary",
-  reciterStyle = "Murattal",
+  reciterName,
+  reciterStyle,
   audioStreamUrl,
   segments = [],
   isPlaying: controlledIsPlaying,
   onPlayStateChange,
   onAyahChange,
-  playLabel = "Play Tilawah",
-  pauseLabel = "Pause Tilawah",
-  muteLabel = "Mute",
-  unmuteLabel = "Unmute",
+  playerLabel,
+  playLabel,
+  pauseLabel,
+  muteLabel,
+  unmuteLabel,
   className,
 }: AudioTilawahPlayerProps) {
   const [internalPlaying, setInternalPlaying] = useState(false);
@@ -156,7 +169,7 @@ export function AudioTilawahPlayer({
       className={cn("ql-audio-bar flex items-center justify-between gap-4", className)}
       data-testid="audio-tilawah-player"
       role="region"
-      aria-label="Audio Tilawah Player"
+      aria-label={playerLabel}
     >
       {audioStreamUrl && (
         <audio
@@ -198,18 +211,17 @@ export function AudioTilawahPlayer({
           size="sm"
           variant="secondary"
           onClick={handleTogglePlay}
-          aria-label={isPlaying ? pauseLabel : playLabel}
           className="gap-1.5 font-mono text-xs"
         >
           {isPlaying ? (
             <>
               <Pause size={14} aria-hidden="true" />
-              <span>Pause</span>
+              <span>{pauseLabel}</span>
             </>
           ) : (
             <>
               <Play size={14} aria-hidden="true" />
-              <span>Recite</span>
+              <span>{playLabel}</span>
             </>
           )}
         </Button>

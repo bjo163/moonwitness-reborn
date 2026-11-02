@@ -159,5 +159,89 @@ export {
   type AudioTimestampSegment,
   type ReciterProfile,
 } from "./composites/audio-tilawah-player.js";
+export {
+  LexicalRootSearch,
+  type LexicalRootSearchProps,
+  type QuranicRootItem,
+} from "./composites/lexical-root-search.js";
+export {
+  QuranicMorphologyVisualizer,
+  type QuranicMorphologyVisualizerProps,
+  type MorphologicalSegmentToken,
+  type ArabicGrammaticalCase,
+  type ArabicPartOfSpeech,
+} from "./composites/morphology-visualizer.js";
+export {
+  LocalInferenceToggle,
+  type LocalInferenceToggleProps,
+  type LocalInferenceModelStatus,
+} from "./composites/local-inference-toggle.js";
+export {
+  CovenantSignaturePanel,
+  CovenantLedgerTable,
+  type CovenantSignaturePanelProps,
+  type CovenantLedgerTableProps,
+  type CovenantSignatureRecord,
+  type CovenantTermItem,
+} from "./composites/covenant-ledger.js";
+export {
+  SanadVerificationStepper,
+  type SanadVerificationStepperProps,
+  type SanadReviewerItem,
+  type PeerReviewDecision,
+} from "./composites/sanad-stepper.js";
+export {
+  StudyCircleDirectory,
+  StudyCircleRoom,
+  type StudyCircleDirectoryProps,
+  type StudyCircleRoomProps,
+  type StudyCircleItem,
+  type CircleReflectionItem,
+  type ReflectionModerationStatus,
+} from "./composites/study-circles.js";
+export {
+  DeedsActivityLedger,
+  type DeedsActivityLedgerProps,
+  type BeneficialDeedRecord,
+  type BeneficialDeedKind,
+} from "./composites/deeds-ledger.js";
+export {
+  EthicsChecklistDialog,
+  type EthicsChecklistDialogProps,
+  type EthicsAffirmationPayload,
+} from "./composites/ethics-dialog.js";
+
+export {
+  MetricSparkline,
+  TelemetryOrbitWidget,
+  type MetricSparklineProps,
+  type TelemetryOrbitWidgetProps,
+  type TelemetryMetricItem,
+} from "./composites/telemetry-orbit-widget.js";
+export {
+  StudioExportDialog,
+  type StudioExportDialogProps,
+  type ExportFormat,
+  type ExportMetadataOption,
+} from "./composites/export-dialog.js";
+export {
+  OfflineStatusPill,
+  type OfflineStatusPillProps,
+} from "./composites/offline-status-pill.js";
+export { Progress, type ProgressProps } from "./atoms/progress.js";
+export { FileInput, type FileInputProps } from "./atoms/file-input.js";
+export {
+  AttachmentUpload,
+  type AttachmentUploadLabels,
+  type AttachmentUploadProps,
+  type UploadItem,
+  type UploadItemStatus,
+} from "./composites/attachment-upload.js";
+export {
+  AttachmentList,
+  type AttachmentListLabels,
+  type AttachmentListProps,
+  type AttachmentRow,
+} from "./composites/attachment-list.js";
 
 

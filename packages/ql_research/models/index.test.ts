@@ -676,3 +676,38 @@ void test("studio.artifact is registered in ql_research and validates draft life
     },
   );
 });
+
+void test("research.syntax_segment stores word-by-word I'rab and syntactic relations", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+      researchManifest,
+    ],
+    async (orm) => {
+      const segment = await orm.createRecordForService("research.syntax_segment", {
+        passage_id: "mw:passage:1:1",
+        surah_number: 1,
+        ayah_number: 1,
+        word_index: 1,
+        segment_index: 1,
+        arabic_text: "بِسْمِ",
+        pos_tag: "N",
+        grammatical_case: "majrur",
+        irab_explanation_id: "Majrur bi harf jar",
+        irab_explanation_en: "Genitive by preposition",
+        dependency_relation: "prep",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      assert.ok(segment.id);
+
+      const found = await orm.findOneByService("research.syntax_segment", { id: segment.id });
+      assert.equal(found?.["arabic_text"], "بِسْمِ");
+      assert.equal(found?.["grammatical_case"], "majrur");
+      assert.equal(found?.["pos_tag"], "N");
+    },
+  );
+});

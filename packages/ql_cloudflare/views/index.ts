@@ -25,4 +25,10 @@ export const views: QlViewDefinition[] = [
     type: "form",
     fields: ["name", "type", "content", "ttl", "proxied", "comment"],
   },
+  {
+    name: "telemetry.metric_snapshot.list",
+    model: "telemetry.metric_snapshot",
+    type: "list",
+    fields: ["metric_key", "metric_value", "unit", "status", "recorded_at"],
+  },
 ];

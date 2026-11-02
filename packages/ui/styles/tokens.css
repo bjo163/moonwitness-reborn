@@ -123,6 +123,7 @@
   --ql-side-panel-shadow: rgba(0, 0, 0, 0.5);
   --ql-glow-gold: rgba(242, 193, 94, 0.34);
   --ql-glow-gold-strong: rgba(242, 193, 94, 0.55);
+  --ql-progress-value: 0%;
 
   /*
    * Hero stage (home). The artwork behind it is always a night scene, so

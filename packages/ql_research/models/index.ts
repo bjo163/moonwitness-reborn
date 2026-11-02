@@ -11,6 +11,7 @@ import { researchLexicalReview } from "./research_lexical_review.js";
 import { storyNarrative } from "./story_narrative.js";
 import { studioArtifact } from "./studio_artifact.js";
 import { witnessStatement } from "./witness_statement.js";
+import { researchSyntaxSegment } from "./research_syntax_segment.js";
 
 export const models: QlModelDefinition[] = [
   researchLexicalReview,
@@ -25,6 +26,7 @@ export const models: QlModelDefinition[] = [
   characterClassification,
   characterAppearance,
   studioArtifact,
+  researchSyntaxSegment,
 ];
 
 export { researchLexicalReview } from "./research_lexical_review.js";
@@ -39,3 +41,4 @@ export { characterCanon, CHARACTER_CANON_STATUSES } from "./character_canon.js";
 export { characterClassification, CHARACTER_ARCHETYPES, CHARACTER_ALIGNMENTS } from "./character_classification.js";
 export { characterAppearance, APPEARANCE_PROMINENCES } from "./character_appearance.js";
 export { studioArtifact, STUDIO_ARTIFACT_KINDS, STUDIO_LIFECYCLE_STAGES } from "./studio_artifact.js";
+export { researchSyntaxSegment } from "./research_syntax_segment.js";

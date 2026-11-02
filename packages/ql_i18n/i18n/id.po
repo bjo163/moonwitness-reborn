@@ -3587,4 +3587,388 @@ msgctxt "web:corpus.verifiedAuthenticity"
 msgid "Bukti Keaslian Ayat Terverifikasi"
 msgstr "Bukti Keaslian Ayat Terverifikasi"
 
+msgctxt "web:corpus.proofDigest"
+msgid "Sidik Kriptografis"
+msgstr "Sidik Kriptografis"
+
+msgctxt "web:corpus.proofPanelTitle"
+msgid "Bukti kutipan (SHA-256)"
+msgstr "Bukti kutipan (SHA-256)"
+
+msgctxt "web:corpus.copyProofFailed"
+msgid "Gagal menyalin ke papan klip."
+msgstr "Gagal menyalin ke papan klip."
+
+msgctxt "web:corpus.audioUnavailableTitle"
+msgid "Tilawah belum tersedia"
+msgstr "Tilawah belum tersedia"
+
+msgctxt "web:corpus.audioUnavailableBody"
+msgid "Belum ada manifest qari dan batas waktu ayat yang terverifikasi untuk edisi ini."
+msgstr "Belum ada manifest qari dan batas waktu ayat yang terverifikasi untuk edisi ini."
+
+msgctxt "web:corpus.verificationReport"
+msgid "Laporan verifikasi ayat"
+msgstr "Laporan verifikasi ayat"
+
+msgctxt "web:corpus.canonicalText"
+msgid "Teks kanonis dari mushaf"
+msgstr "Teks kanonis dari mushaf"
+
+msgctxt "web:corpus.submittedText"
+msgid "Teks kiriman yang berbeda"
+msgstr "Teks kiriman yang berbeda"
+
+msgctxt "web:corpus.expectedHash"
+msgid "Hash harapan"
+msgstr "Hash harapan"
+
+msgctxt "web:corpus.providedHash"
+msgid "Hash kiriman"
+msgstr "Hash kiriman"
+
+msgctxt "web:graph.summary"
+msgid "Jaringan semantik lintas surah ({nodes} simpul, {edges} relasi)"
+msgstr "Jaringan semantik lintas surah ({nodes} simpul, {edges} relasi)"
+
+msgctxt "web:graph.description"
+msgid "Graf relasi semantik antar entitas lintas surah"
+msgstr "Graf relasi semantik antar entitas lintas surah"
+
+msgctxt "web:graph.viewModeGroup"
+msgid "Mode tampilan graf"
+msgstr "Mode tampilan graf"
+
+msgctxt "web:graph.empty"
+msgid "Belum ada entitas maupun relasi terdaftar untuk divisualisasikan."
+msgstr "Belum ada entitas maupun relasi terdaftar untuk divisualisasikan."
+
+msgctxt "web:graph.nodeColumn"
+msgid "Simpul entitas"
+msgstr "Simpul entitas"
+
+msgctxt "web:graph.categoryColumn"
+msgid "Kategori"
+msgstr "Kategori"
+
+msgctxt "web:graph.surahColumn"
+msgid "Surah acuan"
+msgstr "Surah acuan"
+
+msgctxt "web:graph.weightColumn"
+msgid "Bobot"
+msgstr "Bobot"
+
+msgctxt "web:graph.relationColumn"
+msgid "Jenis relasi"
+msgstr "Jenis relasi"
+
+msgctxt "web:graph.fromColumn"
+msgid "Dari"
+msgstr "Dari"
+
+msgctxt "web:graph.toColumn"
+msgid "Ke"
+msgstr "Ke"
+
+msgctxt "web:graph.evidenceColumn"
+msgid "Ayat bukti"
+msgstr "Ayat bukti"
+
+msgctxt "web:attachments.title"
+msgid "Lampiran"
+msgstr "Lampiran"
+
+msgctxt "web:attachments.description"
+msgid "Unggah dan kelola berkas milik Anda. Unggahan besar dilanjutkan otomatis bila jaringan terputus."
+msgstr "Unggah dan kelola berkas milik Anda. Unggahan besar dilanjutkan otomatis bila jaringan terputus."
+
+msgctxt "web:attachments.navLabel"
+msgid "Lampiran"
+msgstr "Lampiran"
+
+msgctxt "web:attachments.loading"
+msgid "Memuat lampiran..."
+msgstr "Memuat lampiran..."
+
+msgctxt "web:attachments.signedOut"
+msgid "Sesi berakhir. Silakan masuk ulang."
+msgstr "Sesi berakhir. Silakan masuk ulang."
+
+msgctxt "web:attachments.uploadTitle"
+msgid "Unggah berkas"
+msgstr "Unggah berkas"
+
+msgctxt "web:attachments.uploadIntro"
+msgid "Pilih satu atau beberapa berkas. Berkas besar dipecah menjadi beberapa bagian."
+msgstr "Pilih satu atau beberapa berkas. Berkas besar dipecah menjadi beberapa bagian."
+
+msgctxt "web:attachments.pickFile"
+msgid "Pilih berkas"
+msgstr "Pilih berkas"
+
+msgctxt "web:attachments.hint"
+msgid "Maksimum 500 MiB per berkas. Format yang diterima: gambar, video, audio MP3, PDF, ZIP, JSON, CSV, TXT."
+msgstr "Maksimum 500 MiB per berkas. Format yang diterima: gambar, video, audio MP3, PDF, ZIP, JSON, CSV, TXT."
+
+msgctxt "web:attachments.uploadEmpty"
+msgid "Belum ada unggahan."
+msgstr "Belum ada unggahan."
+
+msgctxt "web:attachments.progressText"
+msgid "{sent} dari {total}"
+msgstr "{sent} dari {total}"
+
+msgctxt "web:attachments.cancel"
+msgid "Batalkan"
+msgstr "Batalkan"
+
+msgctxt "web:attachments.retry"
+msgid "Unggah ulang"
+msgstr "Unggah ulang"
+
+msgctxt "web:attachments.pause"
+msgid "Jeda"
+msgstr "Jeda"
+
+msgctxt "web:attachments.resume"
+msgid "Lanjutkan"
+msgstr "Lanjutkan"
+
+msgctxt "web:attachments.statusQueued"
+msgid "Menunggu"
+msgstr "Menunggu"
+
+msgctxt "web:attachments.statusUploading"
+msgid "Mengunggah"
+msgstr "Mengunggah"
+
+msgctxt "web:attachments.statusVerifying"
+msgid "Memverifikasi"
+msgstr "Memverifikasi"
+
+msgctxt "web:attachments.statusPaused"
+msgid "Dijeda"
+msgstr "Dijeda"
+
+msgctxt "web:attachments.statusNeedsFile"
+msgid "Perlu dipilih ulang"
+msgstr "Perlu dipilih ulang"
+
+msgctxt "web:attachments.statusDone"
+msgid "Selesai"
+msgstr "Selesai"
+
+msgctxt "web:attachments.statusFailed"
+msgid "Gagal"
+msgstr "Gagal"
+
+msgctxt "web:attachments.libraryTitle"
+msgid "Berkas tersimpan"
+msgstr "Berkas tersimpan"
+
+msgctxt "web:attachments.refresh"
+msgid "Muat ulang"
+msgstr "Muat ulang"
+
+msgctxt "web:attachments.empty"
+msgid "Belum ada lampiran tersimpan."
+msgstr "Belum ada lampiran tersimpan."
+
+msgctxt "web:attachments.listFailed"
+msgid "Daftar lampiran gagal dimuat."
+msgstr "Daftar lampiran gagal dimuat."
+
+msgctxt "web:attachments.download"
+msgid "Unduh"
+msgstr "Unduh"
+
+msgctxt "web:attachments.delete"
+msgid "Hapus"
+msgstr "Hapus"
+
+msgctxt "web:attachments.confirmDelete"
+msgid "Ketuk lagi untuk menghapus"
+msgstr "Ketuk lagi untuk menghapus"
+
+msgctxt "web:attachments.uploaded"
+msgid "{name} selesai diunggah."
+msgstr "{name} selesai diunggah."
+
+msgctxt "web:attachments.deleted"
+msgid "{name} dihapus."
+msgstr "{name} dihapus."
+
+msgctxt "web:attachments.deleteFailed"
+msgid "Lampiran tidak terhapus: {reason}"
+msgstr "Lampiran tidak terhapus: {reason}"
+
+msgctxt "web:attachments.needsFile"
+msgid "Halaman ini sempat tertutup, sehingga berkas perlu dipilih ulang untuk melanjutkan unggahan."
+msgstr "Halaman ini sempat tertutup, sehingga berkas perlu dipilih ulang untuk melanjutkan unggahan."
+
+msgctxt "web:attachments.previewAlt"
+msgid "Pratinjau lampiran"
+msgstr "Pratinjau lampiran"
+
+msgctxt "web:attachments.signOutFailed"
+msgid "Keluar gagal dilakukan. Coba lagi."
+msgstr "Keluar gagal dilakukan. Coba lagi."
+
+msgctxt "web:attachments.stateLabels.uploading"
+msgid "Mengunggah"
+msgstr "Mengunggah"
+
+msgctxt "web:attachments.stateLabels.verifying"
+msgid "Memverifikasi"
+msgstr "Memverifikasi"
+
+msgctxt "web:attachments.stateLabels.ready"
+msgid "Siap"
+msgstr "Siap"
+
+msgctxt "web:attachments.stateLabels.deleted"
+msgid "Dihapus"
+msgstr "Dihapus"
+
+msgctxt "web:errors.attachmentTooLarge"
+msgid "Berkas melebihi batas ukuran yang diizinkan."
+msgstr "Berkas melebihi batas ukuran yang diizinkan."
+
+msgctxt "web:errors.attachmentType"
+msgid "Format berkas ini tidak diterima."
+msgstr "Format berkas ini tidak diterima."
+
+msgctxt "web:errors.attachmentQuota"
+msgid "Kuota penyimpanan lampiran Anda sudah penuh."
+msgstr "Kuota penyimpanan lampiran Anda sudah penuh."
+
+msgctxt "web:errors.attachmentIntegrity"
+msgid "Berkas tidak cocok saat diperiksa. Silakan unggah ulang."
+msgstr "Berkas tidak cocok saat diperiksa. Silakan unggah ulang."
+
+msgctxt "web:corpus.verifyTitle"
+msgid "Verifikasi Bukti Ayat"
+msgstr "Verifikasi Bukti Ayat"
+
+msgctxt "web:corpus.verifyDescription"
+msgid "MoonWitness menghitung ulang SHA-256 dari teks yang tayang di edisi resmi, jadi baris yang diubah di basis data tetap terdeteksi."
+msgstr "MoonWitness menghitung ulang SHA-256 dari teks yang tayang di edisi resmi, jadi baris yang diubah di basis data tetap terdeteksi."
+
+msgctxt "web:corpus.verifyEditionLabel"
+msgid "Edisi"
+msgstr "Edisi"
+
+msgctxt "web:corpus.verifyLoadingEditions"
+msgid "Memuat daftar edisi…"
+msgstr "Memuat daftar edisi…"
+
+msgctxt "web:corpus.verifyNoEditions"
+msgid "Belum ada edisi yang tayang"
+msgstr "Belum ada edisi yang tayang"
+
+msgctxt "web:corpus.verifySurahLabel"
+msgid "Surah (1–114)"
+msgstr "Surah (1–114)"
+
+msgctxt "web:corpus.verifyAyahLabel"
+msgid "Ayat (1–286)"
+msgstr "Ayat (1–286)"
+
+msgctxt "web:corpus.verifyHashLabel"
+msgid "Digest yang diklaim (SHA-256)"
+msgstr "Digest yang diklaim (SHA-256)"
+
+msgctxt "web:corpus.verifyHashHint"
+msgid "Tempel persis 64 karakter heksadesimal dari kartu bukti."
+msgstr "Tempel persis 64 karakter heksadesimal dari kartu bukti."
+
+msgctxt "web:corpus.verifyHashPlaceholder"
+msgid "Contoh: 3a7f… (64 karakter)"
+msgstr "Contoh: 3a7f… (64 karakter)"
+
+msgctxt "web:corpus.verifyHashIncomplete"
+msgid "Digest belum lengkap 64 karakter heksadesimal."
+msgstr "Digest belum lengkap 64 karakter heksadesimal."
+
+msgctxt "web:corpus.verifyTextOptionalLabel"
+msgid "Teks yang diklaim (opsional)"
+msgstr "Teks yang diklaim (opsional)"
+
+msgctxt "web:corpus.verifyTextPlaceholder"
+msgid "Tempel kutipan yang ingin Anda periksa"
+msgstr "Tempel kutipan yang ingin Anda periksa"
+
+msgctxt "web:corpus.loadCanonicalAction"
+msgid "Muat teks kanonis"
+msgstr "Muat teks kanonis"
+
+msgctxt "web:corpus.loadingCanonical"
+msgid "Memuat teks kanonis…"
+msgstr "Memuat teks kanonis…"
+
+msgctxt "web:corpus.verifying"
+msgid "Menghitung ulang digest…"
+msgstr "Menghitung ulang digest…"
+
+msgctxt "web:corpus.verifyAction"
+msgid "Verifikasi"
+msgstr "Verifikasi"
+
+msgctxt "web:corpus.verifyEmptyTitle"
+msgid "Belum ada locator bukti"
+msgstr "Belum ada locator bukti"
+
+msgctxt "web:corpus.verifyEmptyBody"
+msgid "Isi surah, ayat, dan digest yang Anda terima, atau buka tautan Verifikasi dari kartu bukti di penerjemah."
+msgstr "Isi surah, ayat, dan digest yang Anda terima, atau buka tautan Verifikasi dari kartu bukti di penerjemah."
+
+msgctxt "web:corpus.verifyResultTitle"
+msgid "Hasil verifikasi"
+msgstr "Hasil verifikasi"
+
+msgctxt "web:corpus.canonicalDigestLabel"
+msgid "Digest kanonis"
+msgstr "Digest kanonis"
+
+msgctxt "web:corpus.anchorStateLabel"
+msgid "Status jangkar"
+msgstr "Status jangkar"
+
+msgctxt "web:corpus.anchorPresent"
+msgid "Dijangkarkan di korpus"
+msgstr "Dijangkarkan di korpus"
+
+msgctxt "web:corpus.anchorAbsent"
+msgid "Belum dijangkarkan"
+msgstr "Belum dijangkarkan"
+
+msgctxt "web:corpus.anchorDigestLabel"
+msgid "Digest jangkar"
+msgstr "Digest jangkar"
+
+msgctxt "web:corpus.anchorCounterLabel"
+msgid "Penghitung jangkar tersimpan"
+msgstr "Penghitung jangkar tersimpan"
+
+msgctxt "web:corpus.closeProofPanel"
+msgid "Tutup panel bukti"
+msgstr "Tutup panel bukti"
+
+msgctxt "web:corpus.explainVerified"
+msgid "Digest yang Anda kirim sama dengan digest yang dihitung ulang dari teks yang tayang."
+msgstr "Digest yang Anda kirim sama dengan digest yang dihitung ulang dari teks yang tayang."
+
+msgctxt "web:corpus.explainTampered"
+msgid "Digest yang dihitung ulang dari teks yang tayang berbeda dari yang Anda kirim — teks atau digestnya tidak berasal dari edisi ini."
+msgstr "Digest yang dihitung ulang dari teks yang tayang berbeda dari yang Anda kirim — teks atau digestnya tidak berasal dari edisi ini."
+
+msgctxt "web:corpus.explainEditionMismatch"
+msgid "Digest yang Anda kirim cocok dengan locator ini pada edisi lain, bukan edisi yang dipilih."
+msgstr "Digest yang Anda kirim cocok dengan locator ini pada edisi lain, bukan edisi yang dipilih."
+
+msgctxt "web:corpus.explainNotFound"
+msgid "Tidak ada ayat dengan locator tersebut pada edisi yang tayang."
+msgstr "Tidak ada ayat dengan locator tersebut pada edisi yang tayang."
+
 

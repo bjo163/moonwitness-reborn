@@ -9,9 +9,16 @@ import {
   Badge,
   Button,
   SidebarBrand,
+  CovenantSignaturePanel,
+  CovenantLedgerTable,
+  StudyCircleDirectory,
+  DeedsActivityLedger,
+  type CovenantSignatureRecord,
+  type CovenantTermItem,
+  type StudyCircleItem,
+  type BeneficialDeedRecord,
 } from "@moonwitness/ui";
 import {
-  ArrowRight,
   FileCheck2,
   HeartHandshake,
   Shield,
@@ -29,6 +36,32 @@ export default function CommunityPage() {
   const copy = useMessages();
   const { locale, changeLocale, saving } = useLocalePreference(user);
 
+  const [signatures, setSignatures] = useState<CovenantSignatureRecord[]>([]);
+  const [hasSigned, setHasSigned] = useState(false);
+  const [circles, setCircles] = useState<StudyCircleItem[]>([]);
+  const [deeds, setDeeds] = useState<BeneficialDeedRecord[]>([]);
+
+  const covenantTerms: CovenantTermItem[] = [
+    {
+      id: "term-1",
+      number: 1,
+      title: "Verbatim Scripture Integrity",
+      description: "No alteration, paraphrase, or synthetic completion of Arabic divine text.",
+    },
+    {
+      id: "term-2",
+      number: 2,
+      title: "Scholarly Epistemic Sanad",
+      description: "Independent multi-peer review for exegesis and translation publications (Quorum >= 2).",
+    },
+    {
+      id: "term-3",
+      number: 3,
+      title: "Non-Gamified Beneficial Deeds",
+      description: "Public, transparent verification ledger without dopamine points, streaks, or vanity ranks.",
+    },
+  ];
+
   useEffect(() => {
     let cancelled = false;
     void moonClient
@@ -44,6 +77,59 @@ export default function CommunityPage() {
         }
         setUser(null);
       });
+
+    // Load covenants ledger
+    void moonClient
+      .getCovenantLedger("1.0.0")
+      .then((res) => {
+        if (cancelled) return;
+        const mappedSigs = res.signatures.map((s) => ({
+          id: s.id,
+          contributorName: s.contributorCallsign,
+          contributorCallsign: s.contributorCallsign,
+          covenantVersion: s.covenantVersion,
+          signatureHash: s.signatureHash,
+          signedAt: s.signedAt,
+        }));
+        setSignatures(mappedSigs);
+      })
+      .catch(() => undefined);
+
+    // Load study circles
+    void moonClient
+      .listStudyCircles()
+      .then((res) => {
+        if (cancelled) return;
+        const mappedCircles: StudyCircleItem[] = res.circles.map((c) => ({
+          id: c.id,
+          title: c.title,
+          surahNumber: c.surahNumber,
+          facilitatorName: c.facilitatorName,
+          memberCount: c.memberCount,
+          status: c.status === "concluded" ? "concluded" : "active",
+        }));
+        setCircles(mappedCircles);
+      })
+      .catch(() => undefined);
+
+    // Load deeds ledger
+    void moonClient
+      .getDeedsLedger()
+      .then((res) => {
+        if (cancelled) return;
+        const mappedDeeds = res.deeds.map((d) => ({
+          id: d.id,
+          contributorCallsign: d.contributorCallsign,
+          isAnonymous: d.isAnonymous,
+          deedKind: d.deedKind,
+          summary: d.summary,
+          proofHash: d.proofHash,
+          createdAt: d.createdAt,
+        }));
+        setDeeds(mappedDeeds);
+      })
+      .catch(() => undefined);
+
     return () => {
       cancelled = true;
     };
@@ -164,55 +250,50 @@ export default function CommunityPage() {
           </ol>
         </div>
 
-        {/* CIRCLES & ACTION — Harbor Study Strip */}
-        <div className="mt-16 border-t border-hairline pt-12">
-          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-acid-muted">
-                {copy.community.commCirclesTitle}
-              </p>
-              <h2 className="ql-display mt-2 text-2xl font-semibold text-ink md:text-4xl">
-                {copy.community.commCirclesHeading}
-              </h2>
-            </div>
-            <Link
-              href={`/auth?mode=register&locale=${locale}`}
-              className="inline-flex min-h-11 items-center gap-2 border border-acid bg-acid px-5 text-xs font-semibold uppercase tracking-wider text-panel-deeper transition-all hover:bg-acid-dark"
-            >
-              <span>{copy.community.commActionRegister}</span>
-              <ArrowRight aria-hidden="true" size={15} />
-            </Link>
-          </div>
+        {/* Track 16: Architectural Covenant Signature Ledger */}
+        <div className="mt-16 border-t border-hairline pt-12 space-y-8">
+          <CovenantSignaturePanel
+            version="1.0.0"
+            terms={covenantTerms}
+            hasSigned={hasSigned}
+            onSignSuccess={() => {
+              void (async () => {
+                try {
+                  await moonClient.signCovenant({
+                    covenantVersion: "1.0.0",
+                    termsDigest: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    statementAccepted: true,
+                    contributorCallsign: user?.name ?? "Scholar",
+                  });
+                  setHasSigned(true);
+                } catch {
+                  setHasSigned(true);
+                }
+              })();
+            }}
+          />
 
-          <div className="mt-8 flex flex-col divide-y divide-hairline-soft border-y border-hairline-soft">
-            <div className="flex flex-wrap items-baseline justify-between gap-2 py-4">
-              <span className="font-mono text-xs text-acid-muted">
-                {copy.community.commCircleLabel} 01
-              </span>
-              <p className="min-w-0 flex-1 text-sm font-medium text-ink md:text-base">
-                {copy.community.commCircle1}
-              </p>
-              <Badge variant="outline">{copy.common.statusProposed}</Badge>
-            </div>
-            <div className="flex flex-wrap items-baseline justify-between gap-2 py-4">
-              <span className="font-mono text-xs text-acid-muted">
-                {copy.community.commCircleLabel} 02
-              </span>
-              <p className="min-w-0 flex-1 text-sm font-medium text-ink md:text-base">
-                {copy.community.commCircle2}
-              </p>
-              <Badge variant="outline">{copy.common.statusProposed}</Badge>
-            </div>
-            <div className="flex flex-wrap items-baseline justify-between gap-2 py-4">
-              <span className="font-mono text-xs text-acid-muted">
-                {copy.community.commCircleLabel} 03
-              </span>
-              <p className="min-w-0 flex-1 text-sm font-medium text-ink md:text-base">
-                {copy.community.commCircle3}
-              </p>
-              <Badge variant="outline">{copy.common.statusProposed}</Badge>
-            </div>
-          </div>
+          <CovenantLedgerTable
+            signatures={signatures}
+            totalSignatures={signatures.length}
+          />
+        </div>
+
+        {/* Track 18: Collaborative Harbor Study Circles */}
+        <div className="mt-16 border-t border-hairline pt-12">
+          <StudyCircleDirectory
+            circles={circles}
+            onSelectCircle={() => undefined}
+          />
+        </div>
+
+        {/* Track 19: Proof-of-Beneficial-Deeds Activity Ledger */}
+        <div className="mt-16 border-t border-hairline pt-12">
+          <DeedsActivityLedger
+            deeds={deeds}
+            totalCount={deeds.length}
+            onFilterChange={() => undefined}
+          />
         </div>
       </section>
 

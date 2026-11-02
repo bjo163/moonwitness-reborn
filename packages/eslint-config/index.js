@@ -185,12 +185,16 @@ const uiPurePaletteBan = {
  * @param {string} [options.webAppDir] Workspace-relative directory of the Next.js app.
  * @param {string} [options.apiConnectorsDir] Workspace-relative directory of the
  *   API's credential-touching connectors module.
+ * @param {string} [options.packagesDir] Workspace-relative directory of the
+ *   packages that ship local `.mjs` scripts (eslint-config build, i18n catalog
+ *   tools). These run under Node, so they need the node globals.
  * @returns {import("typescript-eslint").ConfigArray}
  */
 export function moonwitnessConfig({
   tsconfigRootDir,
   webAppDir = "apps/web",
   apiConnectorsDir = "apps/api/src/connectors",
+  packagesDir = "packages",
 }) {
   if (!tsconfigRootDir) {
     throw new Error(
@@ -293,6 +297,14 @@ export function moonwitnessConfig({
     },
     {
       files: [`${webAppDir}/scripts/**/*.mjs`],
+      languageOptions: {
+        globals: globals.node,
+      },
+    },
+    {
+      // Package-local build and catalog scripts run under Node; without this
+      // block `process` and `console` are undeclared identifiers.
+      files: [`${packagesDir}/**/*.mjs`],
       languageOptions: {
         globals: globals.node,
       },

@@ -1150,12 +1150,48 @@
   position: relative;
 }
 
+.ql-semantic-graph-canvas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 440px;
+}
+
+.ql-graph-view-toggle {
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--color-hairline);
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
+}
+
+.ql-graph-view-toggle:hover {
+  color: var(--color-ink-soft);
+  border-color: var(--color-hairline-strong);
+}
+
+.ql-graph-view-toggle.is-active {
+  color: var(--color-acid);
+  border-color: var(--color-acid);
+  background: var(--color-panel);
+}
+
+.ql-graph-view-toggle:focus-visible,
+.ql-graph-node-focus:focus-visible {
+  outline: 2px solid var(--color-acid);
+  outline-offset: 2px;
+}
+
 .ql-graph-node {
   fill: var(--color-panel-raised);
   stroke: var(--color-hairline-strong);
   stroke-width: 1.5;
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: fill 150ms ease, stroke 150ms ease;
 }
 
 .ql-graph-node.is-active {
@@ -1164,11 +1200,26 @@
   filter: drop-shadow(0 0 8px var(--ql-glow-gold));
 }
 
+.ql-graph-node-label {
+  fill: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  pointer-events: none;
+  user-select: none;
+}
+
 .ql-graph-edge {
   stroke: var(--color-hairline);
   stroke-width: 1.5;
   fill: none;
   opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ql-graph-node,
+  .ql-graph-view-toggle {
+    transition: none;
+  }
 }
 
 /* Track 04: Verifiable Ayah Cryptographic Proofs & Attribution Stamp */
@@ -1226,4 +1277,238 @@
   height: 28px;
   display: inline-block;
   vertical-align: middle;
+}
+
+
+/* Track 08: Lexical Morphology Search & Root Word Indexer */
+.ql-lexical-root-search {
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel);
+  border-radius: 0.75rem;
+}
+
+.ql-root-chip {
+  cursor: pointer;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel-edge);
+  transition: all 150ms ease;
+}
+
+.ql-root-chip:hover {
+  border-color: var(--color-hairline-strong);
+  background: var(--color-panel-raised);
+}
+
+/* Track 09: Quranic Morphological Visualizer */
+.ql-morphology-visualizer {
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel);
+  border-radius: 0.75rem;
+}
+
+.ql-syntax-node {
+  cursor: pointer;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel-edge);
+  transition: all 150ms ease;
+}
+
+.ql-syntax-node:hover {
+  border-color: var(--color-hairline-strong);
+  background: var(--color-panel-raised);
+}
+
+.ql-irab-drawer {
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel-deep);
+  border-radius: 0.75rem;
+}
+
+/* Track 10: Local-First Private AI Inference Mode */
+.ql-local-inference-toggle {
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel);
+  border-radius: 0.75rem;
+  transition: all 150ms ease;
+}
+
+/*
+ * Attachment management.
+ *
+ * Geometry stays sharp and the fill is driven by `--ql-progress-value`, so a
+ * screen sets a number rather than reaching for an inline style (MW-ADR-020).
+ */
+.ql-progress {
+  position: relative;
+  height: 0.45rem;
+  overflow: hidden;
+  border: 1px solid var(--ql-ui-border);
+  border-radius: 0;
+  background: var(--color-panel-well);
+}
+
+.ql-progress__fill {
+  display: block;
+  height: 100%;
+  width: var(--ql-progress-value, 0%);
+  background: var(--ql-ui-acid);
+  transition: width 200ms ease;
+}
+
+.ql-progress.is-indeterminate .ql-progress__fill {
+  width: 32%;
+  animation: ql-progress-sweep 1.3s linear infinite;
+}
+
+@keyframes ql-progress-sweep {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(330%);
+  }
+}
+
+.ql-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+}
+
+.ql-file-input:disabled + .ql-attachment-upload__trigger {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.ql-file-input:focus-visible + .ql-attachment-upload__trigger {
+  outline: 2px solid var(--ql-ui-acid);
+  outline-offset: 3px;
+}
+
+.ql-attachment-upload {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.ql-attachment-upload__picker {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  gap: 0.6rem;
+}
+
+.ql-attachment-upload__trigger.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.ql-attachment-upload__hint {
+  color: var(--ql-ui-muted);
+  font: 400 0.8rem/1.5 var(--ql-ui-font-sans);
+}
+
+.ql-attachment-upload__empty,
+.ql-attachment-list__state {
+  color: var(--ql-ui-muted);
+  font: 400 0.88rem/1.6 var(--ql-ui-font-sans);
+  border: 1px dashed var(--ql-ui-border);
+  padding: 1.1rem 1.2rem;
+}
+
+.ql-attachment-list__state.is-error {
+  color: var(--ql-ui-danger);
+  border-style: solid;
+  border-color: var(--ql-ui-danger);
+}
+
+.ql-attachment-upload__list,
+.ql-attachment-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ql-attachment-upload__item,
+.ql-attachment-list__row {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--ql-ui-border);
+  background: var(--color-panel);
+}
+
+.ql-attachment-upload__meta,
+.ql-attachment-list__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.9rem;
+}
+
+.ql-attachment-upload__name,
+.ql-attachment-list__name {
+  color: var(--ql-ui-ink);
+  font: 600 0.92rem/1.4 var(--ql-ui-font-sans);
+  overflow-wrap: anywhere;
+}
+
+.ql-attachment-upload__status,
+.ql-attachment-list__status,
+.ql-attachment-list__meta {
+  color: var(--ql-ui-muted);
+  font: 400 0.78rem/1.4 var(--ql-ui-font-sans);
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.ql-attachment-upload__error {
+  color: var(--ql-ui-danger);
+  font: 500 0.8rem/1.5 var(--ql-ui-font-sans);
+}
+
+.ql-attachment-upload__actions,
+.ql-attachment-list__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.ql-attachment-list__preview {
+  overflow: hidden;
+  border: 1px solid var(--ql-ui-hairline);
+  background: var(--color-panel-well);
+}
+
+.ql-attachment-list__preview img,
+.ql-attachment-list__preview video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (min-width: 40rem) {
+  .ql-attachment-list__row {
+    grid-template-columns: minmax(9rem, 14rem) 1fr auto;
+    align-items: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ql-progress__fill {
+    transition: none;
+  }
+
+  .ql-progress.is-indeterminate .ql-progress__fill {
+    width: 100%;
+    animation: none;
+    opacity: 0.5;
+  }
 }

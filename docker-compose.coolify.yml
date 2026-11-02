@@ -30,6 +30,10 @@ services:
       TZ: Asia/Jakarta
       PORT: 3000
       DATABASE_URL: file:/app/data/moonwitness.db
+      # Wajib absolut dan di bawah /app/data: jalur default "../../data/attachments"
+      # milik mode host, dan di dalam container ia tidak jatuh ke volume api_data,
+      # sehingga lampiran akan hilang setiap deploy ulang.
+      ATTACHMENT_STORAGE_DIR: ${ATTACHMENT_STORAGE_DIR:-/app/data/attachments}
       PROVIDER_ENCRYPTION_KEY: ${PROVIDER_ENCRYPTION_KEY:-}
       # Klaim super_admin sekali di produksi: isi keduanya di environment Coolify,
       # registrasi akun owner, lalu kosongkan kembali keduanya.

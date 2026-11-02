@@ -10,6 +10,8 @@
     "lint": "eslint apps packages",
     "test": "turbo run test --concurrency=1",
     "typecheck": "turbo run typecheck",
+    "i18n:sync": "node scripts/sync-po-catalogs.mjs",
+    "i18n:sync:check": "node scripts/sync-po-catalogs.mjs --check",
     "verify:package-conventions": "node scripts/verify-package-conventions.mjs"
   },
   "devDependencies": {

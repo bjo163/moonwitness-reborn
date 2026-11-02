@@ -137,6 +137,9 @@ importers:
       ql_ai:
         specifier: workspace:*
         version: link:../../packages/ql_ai
+      ql_attachment:
+        specifier: workspace:*
+        version: link:../../packages/ql_attachment
       ql_auth:
         specifier: workspace:*
         version: link:../../packages/ql_auth
@@ -291,6 +294,12 @@ importers:
         specifier: workspace:*
         version: link:../ql-orm
 
+  packages/ql_attachment:
+    dependencies:
+      ql_orm:
+        specifier: workspace:*
+        version: link:../ql-orm
+
   packages/ql_auth:
     dependencies:
       ql_orm:
@@ -338,6 +347,10 @@ importers:
       ql_source:
         specifier: workspace:*
         version: link:../ql_source
+    devDependencies:
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
 
   packages/ql_geo:
     dependencies:
@@ -437,7 +450,11 @@ importers:
         specifier: workspace:*
         version: link:../ql-orm
 
-  packages/types: {}
+  packages/types:
+    devDependencies:
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
 
   packages/ui:
     dependencies:

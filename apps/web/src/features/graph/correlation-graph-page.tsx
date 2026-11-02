@@ -48,6 +48,7 @@ interface GraphNode {
 }
 
 interface GraphEdge {
+  id: string;
   from: string;
   to: string;
   relation: string;
@@ -94,35 +95,40 @@ export default function CorrelationGraphPage() {
         const loadedNodes: GraphNode[] = [];
         const loadedEdges: GraphEdge[] = [];
 
+        // `research.correlation` points at entities by `canonical_id`, so the
+        // graph joins on that key rather than the row id.
+        const entityKey = (r: ModelRecordDto) => String(r.canonical_id ?? r.id);
+
         personRes.records.forEach((r: ModelRecordDto) => {
           loadedNodes.push({
-            id: String(r.id),
-            label: String(r.name ?? r.id),
+            id: entityKey(r),
+            label: String(r.primary_name ?? r.id),
             kind: "person",
           });
         });
 
         storyRes.records.forEach((r: ModelRecordDto) => {
           loadedNodes.push({
-            id: String(r.id),
-            label: String(r.title ?? r.name ?? r.id),
+            id: entityKey(r),
+            label: String(r.title ?? r.id),
             kind: "story",
           });
         });
 
         eventRes.records.forEach((r: ModelRecordDto) => {
           loadedNodes.push({
-            id: String(r.id),
-            label: String(r.name ?? r.id),
+            id: entityKey(r),
+            label: String(r.title ?? r.id),
             kind: "event",
           });
         });
 
         corrRes.records.forEach((r: ModelRecordDto) => {
-          if (r.source_id && r.target_id) {
+          if (r.source_entity_id && r.target_entity_id) {
             loadedEdges.push({
-              from: String(r.source_id),
-              to: String(r.target_id),
+              id: String(r.id),
+              from: String(r.source_entity_id),
+              to: String(r.target_entity_id),
               relation: String(r.correlation_type ?? "relates_to"),
             });
           }
@@ -312,32 +318,43 @@ export default function CorrelationGraphPage() {
                       : "No entities registered yet to visualize. Populate models via the Models workspace."}
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    <SemanticCrossSurahGraph
-                      nodes={nodes.map((n, i) => ({
-                        id: n.id,
-                        label: n.label,
-                        category: n.kind === "concept" ? "concept" : n.kind === "person" ? "prophet_narrative" : "surah",
-                        weight: Math.min(10, 3 + (i % 5) * 2),
-                        x: 100 + ((i * 180) % 600),
-                        y: 80 + Math.floor(i / 3) * 120,
-                      }))}
-                      edges={edges.map((e, idx) => ({
-                        id: `edge-${idx}`,
-                        sourceId: e.from,
-                        targetId: e.to,
-                        relationType: "thematic_echo",
-                        weight: 3,
-                        evidencePassages: [],
-                      }))}
-                      graphLabel={t("web.corpus.graphViewTab")}
-                      tableLabel={t("web.corpus.tableViewTab")}
-                      onNodeClick={(node) => {
-                        const matched = nodes.find((n) => n.id === node.id);
-                        if (matched) setSelectedNode(matched);
-                      }}
-                    />
-                  </div>
+                  <SemanticCrossSurahGraph
+                    nodes={nodes.map((n) => ({
+                      id: n.id,
+                      label: n.label,
+                      category: n.kind,
+                    }))}
+                    edges={edges.map((e) => ({
+                      id: e.id,
+                      sourceId: e.from,
+                      targetId: e.to,
+                      relationType: e.relation,
+                    }))}
+                    summaryLabel={t("web.graph.summary", {
+                      nodes: nodes.length,
+                      edges: edges.length,
+                    })}
+                    graphDescriptionLabel={t("web.graph.description")}
+                    viewModeGroupLabel={t("web.graph.viewModeGroup")}
+                    graphLabel={t("web.corpus.graphViewTab")}
+                    tableLabel={t("web.corpus.tableViewTab")}
+                    emptyLabel={t("web.graph.empty")}
+                    nodeColumnLabel={t("web.graph.nodeColumn")}
+                    categoryColumnLabel={t("web.graph.categoryColumn")}
+                    surahColumnLabel={t("web.graph.surahColumn")}
+                    weightColumnLabel={t("web.graph.weightColumn")}
+                    relationColumnLabel={t("web.graph.relationColumn")}
+                    fromColumnLabel={t("web.graph.fromColumn")}
+                    toColumnLabel={t("web.graph.toColumn")}
+                    evidenceColumnLabel={t("web.graph.evidenceColumn")}
+                    actionsLabel={t("web.common.actions")}
+                    yesLabel={t("web.common.yes")}
+                    noLabel={t("web.common.no")}
+                    onNodeClick={(node) => {
+                      const matched = nodes.find((n) => n.id === node.id);
+                      if (matched) setSelectedNode(matched);
+                    }}
+                  />
                 )}
               </CardContent>
             </Card>

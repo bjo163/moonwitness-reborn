@@ -774,6 +774,118 @@ void test("service CRUD and ACL hold on libsql", async () => {
   await runRecordSuite("file::memory:", "ai_provider_libsql_test");
 });
 
+function transactionManifest(tableName: string): QlAddonManifest {
+  return {
+    ...base,
+    models: [
+      {
+        name: "tx.note",
+        description: "Transaction probe",
+        tableName,
+        ownerField: "owner_id",
+        fields: {
+          label: { type: "char", required: true },
+          owner_id: { type: "char", required: true, private: true },
+        },
+      },
+    ],
+    access: [
+      {
+        model: "tx.note",
+        group: "user",
+        read: true,
+        write: true,
+        create: true,
+        unlink: true,
+      },
+    ],
+  };
+}
+
+async function runTransactionSuite(
+  databaseUrl: string,
+  tableName: string,
+): Promise<void> {
+  const runtime = await createQlOrm(databaseUrl, [transactionManifest(tableName)]);
+  const owner = { id: "owner-1", groups: ["user"] };
+  try {
+    const created = await runtime.orm.transaction(async (tx) => {
+      const record = await tx.createForService("tx.note", owner.id, {
+        label: "committed",
+      });
+      const visible = await tx.findManyForService("tx.note", owner.id);
+      assert.equal(visible.length, 1, "a transaction must see its own writes");
+      return record;
+    });
+    assert.equal(typeof created.id, "string");
+
+    // The outer connection only sees what was committed.
+    assert.deepEqual(
+      (await runtime.orm.findManyForService("tx.note", owner.id)).map(
+        (row) => row.label,
+      ),
+      ["committed"],
+    );
+
+    await assert.rejects(
+      async () =>
+        await runtime.orm.transaction(async (tx) => {
+          await tx.createForService("tx.note", owner.id, { label: "rolled back" });
+          throw new Error("deliberate rollback");
+        }),
+      /deliberate rollback/,
+    );
+    assert.deepEqual(
+      (await runtime.orm.findManyForService("tx.note", owner.id)).map(
+        (row) => row.label,
+      ),
+      ["committed"],
+      "a rolled back transaction must leave no row",
+    );
+
+    // A nested call through the session joins the open transaction, so the
+    // single-connection driver cannot deadlock or nest BEGIN.
+    const nested = await runtime.orm.transaction(async (tx) => {
+      await tx.createForService("tx.note", owner.id, { label: "outer" });
+      await tx.transaction(async (inner) => {
+        await inner.createForService("tx.note", owner.id, { label: "inner" });
+      });
+      return (await tx.findManyForService("tx.note", owner.id)).map(
+        (row) => row.label,
+      );
+    });
+    assert.deepEqual(
+      nested.sort(),
+      ["committed", "inner", "outer"],
+      "a nested transaction must join its parent",
+    );
+
+    await assert.rejects(
+      async () =>
+        await runtime.orm.transaction(async (tx) => {
+          await tx.transaction(async (inner) => {
+            await inner.createForService("tx.note", owner.id, { label: "abandoned" });
+          });
+          throw new Error("outer fails");
+        }),
+      /outer fails/,
+    );
+    assert.equal(
+      (
+        await runtime.orm.findManyForService("tx.note", owner.id)
+      ).filter((row) => row.label === "abandoned").length,
+      0,
+      "a joined nested transaction must roll back with its parent",
+    );
+  } finally {
+    runtime.close();
+  }
+}
+
+void test("transactions commit, roll back, and nest on libsql", async () => {
+  await runTransactionSuite("file::memory:", "tx_note_libsql_test");
+});
+
 // Release yang menambah field harus tetap membuka tabel yang sudah berisi data,
 // jadi jalur ALTER TABLE diuji pada database yang sama, bukan tabel baru.
 async function runEvolutionSuite(
@@ -924,6 +1036,14 @@ if (postgresUrl) {
     const tableName = `ai_note_pg_${Date.now().toString(36)}`;
     try {
       await runEvolutionSuite(postgresUrl, tableName);
+    } finally {
+      await dropScratchTable(postgresUrl, tableName);
+    }
+  });
+  void test("transactions commit and roll back on postgres", async () => {
+    const tableName = `tx_note_pg_${Date.now().toString(36)}`;
+    try {
+      await runTransactionSuite(postgresUrl, tableName);
     } finally {
       await dropScratchTable(postgresUrl, tableName);
     }

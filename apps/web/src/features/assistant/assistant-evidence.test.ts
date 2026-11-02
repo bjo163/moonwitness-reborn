@@ -23,11 +23,12 @@ const citation: ChatCitationDto = {
 void test("grounded messages expose their citations", () => {
   assert.deepEqual(
     assistantEvidenceFor({ groundingStatus: "grounded", citations: [citation] }),
-    { status: "grounded", citations: [citation] },
+    { status: "grounded", citations: [citation], unverifiedCitations: [] },
   );
   assert.deepEqual(assistantEvidenceFor({ groundingStatus: "grounded" }), {
     status: "grounded",
     citations: [],
+    unverifiedCitations: [],
   });
 });
 
@@ -37,15 +38,16 @@ void test("insufficient and legacy messages never expose citations", () => {
       groundingStatus: "insufficient_evidence",
       citations: [citation],
     }),
-    { status: "insufficient_evidence", citations: [] },
+    { status: "insufficient_evidence", citations: [], unverifiedCitations: [] },
   );
   assert.deepEqual(
     assistantEvidenceFor({ groundingStatus: "legacy", citations: [citation] }),
-    { status: "legacy", citations: [] },
+    { status: "legacy", citations: [], unverifiedCitations: [] },
   );
   assert.deepEqual(assistantEvidenceFor({ citations: [citation] }), {
     status: "legacy",
     citations: [],
+    unverifiedCitations: [],
   });
 });
 

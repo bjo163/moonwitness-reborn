@@ -1,24 +1,33 @@
-import { useState, useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { cn } from "../lib/utils.js";
 import { DataTable, type DataTableColumn } from "../components/data-table.js";
 
 export interface ThematicGraphNode {
   id: string;
   label: string;
-  category: "concept" | "surah" | "prophet_narrative" | "legal_ruling";
+  /**
+   * Display category as stored on the source record. The corpus thematic model
+   * narrows it to `concept | surah | prophet_narrative | legal_ruling`; other
+   * graphs pass their own entity kind.
+   */
+  category: string;
   surahNumber?: number;
-  weight: number;
-  x: number;
-  y: number;
+  /**
+   * Relative importance for sizing. Only a real record field belongs here (for
+   * example `search.thematic_node.passage_count`); omit it when the source has
+   * no such field and the graph falls back to a uniform radius.
+   */
+  weight?: number;
 }
 
 export interface ThematicGraphEdge {
   id: string;
   sourceId: string;
   targetId: string;
-  relationType: "chronological" | "thematic_echo" | "contrast" | "elaboration";
-  weight: number;
-  evidencePassages: Array<{ surah: number; ayah: number }>;
+  /** Relation label as stored on the source record, e.g. `research.correlation.correlation_type`. */
+  relationType: string;
+  weight?: number;
+  evidencePassages?: readonly { surah: number; ayah: number }[];
 }
 
 export interface SemanticCrossSurahGraphProps {
@@ -30,9 +39,24 @@ export interface SemanticCrossSurahGraphProps {
   onEdgeClick?(this: void, edge: ThematicGraphEdge): void;
   viewMode?: "graph" | "table";
   onViewModeChange?(this: void, mode: "graph" | "table"): void;
-  graphLabel?: string;
-  tableLabel?: string;
-  emptyLabel?: string;
+  /** Counts line; the caller formats it, e.g. `t("web.graph.summary", { nodes, edges })`. */
+  summaryLabel: string;
+  graphDescriptionLabel: string;
+  viewModeGroupLabel: string;
+  graphLabel: string;
+  tableLabel: string;
+  emptyLabel: string;
+  nodeColumnLabel: string;
+  categoryColumnLabel: string;
+  surahColumnLabel: string;
+  weightColumnLabel: string;
+  relationColumnLabel: string;
+  fromColumnLabel: string;
+  toColumnLabel: string;
+  evidenceColumnLabel: string;
+  actionsLabel: string;
+  yesLabel: string;
+  noLabel: string;
   className?: string;
 }
 
@@ -40,8 +64,52 @@ interface TableRowRecord extends Record<string, string | number | boolean | null
   id: string;
   label: string;
   category: string;
-  surahNumber: number;
-  weight: number;
+  surahNumber: number | null;
+  weight: number | null;
+}
+
+interface EdgeRowRecord extends Record<string, string | number | boolean | null> {
+  id: string;
+  relationType: string;
+  sourceLabel: string;
+  targetLabel: string;
+  evidence: string | null;
+}
+
+const VIEWBOX_WIDTH = 800;
+const VIEWBOX_HEIGHT = 500;
+const MIN_NODE_RADIUS = 12;
+const MAX_NODE_RADIUS = 24;
+const UNIFORM_NODE_RADIUS = 16;
+
+/**
+ * Positions are presentation, not knowledge: they come from the node order in
+ * the current selection so that no coordinate is mistaken for a stored fact.
+ */
+function useLayoutPositions(
+  nodes: readonly ThematicGraphNode[],
+): ReadonlyMap<string, { x: number; y: number }> {
+  return useMemo(() => {
+    const positions = new Map<string, { x: number; y: number }>();
+    const centerX = VIEWBOX_WIDTH / 2;
+    const centerY = VIEWBOX_HEIGHT / 2;
+    nodes.forEach((node, index) => {
+      if (nodes.length === 1) {
+        positions.set(node.id, { x: centerX, y: centerY });
+        return;
+      }
+      const angle = (index / nodes.length) * Math.PI * 2 - Math.PI / 2;
+      positions.set(node.id, {
+        x: centerX + 300 * Math.cos(angle),
+        y: centerY + 170 * Math.sin(angle),
+      });
+    });
+    return positions;
+  }, [nodes]);
+}
+
+function scaleByWeight(value: number, max: number, min: number, span: number): number {
+  return max === 0 ? min : min + (value / max) * span;
 }
 
 export function SemanticCrossSurahGraph({
@@ -53,9 +121,23 @@ export function SemanticCrossSurahGraph({
   onEdgeClick,
   viewMode: controlledViewMode,
   onViewModeChange,
-  graphLabel = "Graph View",
-  tableLabel = "Accessible Table",
-  emptyLabel = "No semantic relations available.",
+  summaryLabel,
+  graphDescriptionLabel,
+  viewModeGroupLabel,
+  graphLabel,
+  tableLabel,
+  emptyLabel,
+  nodeColumnLabel,
+  categoryColumnLabel,
+  surahColumnLabel,
+  weightColumnLabel,
+  relationColumnLabel,
+  fromColumnLabel,
+  toColumnLabel,
+  evidenceColumnLabel,
+  actionsLabel,
+  yesLabel,
+  noLabel,
   className,
 }: SemanticCrossSurahGraphProps) {
   const [internalViewMode, setInternalViewMode] = useState<"graph" | "table">("graph");
@@ -65,10 +147,10 @@ export function SemanticCrossSurahGraph({
 
   const handleModeChange = useCallback(
     (mode: "graph" | "table") => {
-      setInternalViewMode(mode);
+      if (controlledViewMode === undefined) setInternalViewMode(mode);
       onViewModeChange?.(mode);
     },
-    [onViewModeChange],
+    [controlledViewMode, onViewModeChange],
   );
 
   const handleNodeSelect = useCallback(
@@ -79,46 +161,73 @@ export function SemanticCrossSurahGraph({
     [onNodeClick],
   );
 
+  const positions = useLayoutPositions(nodes);
+
   const filteredNodes = activeSurahFilter
     ? nodes.filter((n) => n.surahNumber === activeSurahFilter || !n.surahNumber)
     : nodes;
 
-  const nodeMap = new Map<string, ThematicGraphNode>();
-  for (const node of nodes) {
-    nodeMap.set(node.id, node);
-  }
+  const nodeMap = useMemo(() => {
+    const map = new Map<string, ThematicGraphNode>();
+    for (const node of nodes) {
+      map.set(node.id, node);
+    }
+    return map;
+  }, [nodes]);
+
+  const maxNodeWeight = useMemo(
+    () => nodes.reduce((max, n) => Math.max(max, n.weight ?? 0), 0),
+    [nodes],
+  );
+  const maxEdgeWeight = useMemo(
+    () => edges.reduce((max, e) => Math.max(max, e.weight ?? 0), 0),
+    [edges],
+  );
+
+  const hasNodeWeights = nodes.some((n) => n.weight !== undefined);
+  const hasEdgeEvidence = edges.some((e) => (e.evidencePassages?.length ?? 0) > 0);
 
   const tableColumns: DataTableColumn<TableRowRecord>[] = [
-    { key: "label", label: "Entity Node" },
-    { key: "category", label: "Category" },
-    { key: "surahNumber", label: "Surah Anchor" },
-    { key: "weight", label: "Weight" },
+    { key: "label", label: nodeColumnLabel },
+    { key: "category", label: categoryColumnLabel },
+    { key: "surahNumber", label: surahColumnLabel },
+    ...(hasNodeWeights ? [{ key: "weight" as const, label: weightColumnLabel }] : []),
   ];
 
   const tableRows: TableRowRecord[] = filteredNodes.map((node) => ({
     id: node.id,
     label: node.label,
     category: node.category,
-    surahNumber: node.surahNumber ?? 0,
-    weight: node.weight,
+    surahNumber: node.surahNumber ?? null,
+    weight: node.weight ?? null,
+  }));
+
+  const edgeColumns: DataTableColumn<EdgeRowRecord>[] = [
+    { key: "relationType", label: relationColumnLabel },
+    { key: "sourceLabel", label: fromColumnLabel },
+    { key: "targetLabel", label: toColumnLabel },
+    ...(hasEdgeEvidence ? [{ key: "evidence" as const, label: evidenceColumnLabel }] : []),
+  ];
+
+  const edgeRows: EdgeRowRecord[] = edges.map((edge) => ({
+    id: edge.id,
+    relationType: edge.relationType,
+    sourceLabel: nodeMap.get(edge.sourceId)?.label ?? edge.sourceId,
+    targetLabel: nodeMap.get(edge.targetId)?.label ?? edge.targetId,
+    evidence:
+      edge.evidencePassages && edge.evidencePassages.length > 0
+        ? edge.evidencePassages.map((passage) => `${passage.surah}:${passage.ayah}`).join(", ")
+        : null,
   }));
 
   return (
     <div className={cn("ql-semantic-graph flex flex-col", className)} data-testid="semantic-cross-surah-graph">
-      {/* Controls toolbar */}
-      <div className="flex items-center justify-between border-b border-hairline px-4 py-2 bg-panel-raised/50">
-        <span className="text-xs font-medium text-ink-soft">
-          Cross-Surah Semantic Network ({filteredNodes.length} nodes, {edges.length} edges)
-        </span>
-        <div className="flex items-center gap-1.5" role="group" aria-label="View Mode">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline px-4 py-2">
+        <span className="text-xs font-medium text-ink-soft">{summaryLabel}</span>
+        <div className="flex items-center gap-1.5" role="group" aria-label={viewModeGroupLabel}>
           <button
             type="button"
-            className={cn(
-              "px-2.5 py-1 text-xs rounded border transition-colors",
-              activeMode === "graph"
-                ? "border-acid text-acid bg-panel"
-                : "border-hairline text-muted hover:text-ink-soft",
-            )}
+            className={cn("ql-graph-view-toggle", activeMode === "graph" && "is-active")}
             onClick={() => handleModeChange("graph")}
             aria-pressed={activeMode === "graph"}
           >
@@ -126,12 +235,7 @@ export function SemanticCrossSurahGraph({
           </button>
           <button
             type="button"
-            className={cn(
-              "px-2.5 py-1 text-xs rounded border transition-colors",
-              activeMode === "table"
-                ? "border-acid text-acid bg-panel"
-                : "border-hairline text-muted hover:text-ink-soft",
-            )}
+            className={cn("ql-graph-view-toggle", activeMode === "table" && "is-active")}
             onClick={() => handleModeChange("table")}
             aria-pressed={activeMode === "table"}
           >
@@ -140,94 +244,117 @@ export function SemanticCrossSurahGraph({
         </div>
       </div>
 
-      {/* Main Content Area */}
       {activeMode === "graph" ? (
-        <div className="relative flex-1 w-full min-h-[440px] flex items-center justify-center">
-          <svg
-            className="w-full h-full min-h-[440px]"
-            viewBox="0 0 800 500"
-            role="img"
-            aria-label="Interactive Cross-Surah Semantic Knowledge Network Graph"
-          >
-            {/* Edge quadratic beziers */}
-            <g className="edges" aria-hidden="true">
-              {edges.map((edge) => {
-                const source = nodeMap.get(edge.sourceId);
-                const target = nodeMap.get(edge.targetId);
-                if (!source || !target) return null;
+        filteredNodes.length === 0 ? (
+          <p className="px-4 py-8 text-center text-sm text-muted">{emptyLabel}</p>
+        ) : (
+          <div className="ql-semantic-graph-canvas">
+            <svg
+              width="100%"
+              height="100%"
+              viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
+              role="img"
+              aria-label={graphDescriptionLabel}
+            >
+              {/* Curves repeat what the nodes and the relation table already
+                  state, so they stay out of the a11y tree. */}
+              <g className="edges" aria-hidden="true">
+                {edges.map((edge) => {
+                  const source = positions.get(edge.sourceId);
+                  const target = positions.get(edge.targetId);
+                  if (!source || !target) return null;
 
-                const midX = (source.x + target.x) / 2;
-                const midY = (source.y + target.y) / 2 - 20;
-                const d = `M ${source.x} ${source.y} Q ${midX} ${midY} ${target.x} ${target.y}`;
+                  const midX = (source.x + target.x) / 2;
+                  const midY = (source.y + target.y) / 2 - 20;
+                  const d = `M ${source.x} ${source.y} Q ${midX} ${midY} ${target.x} ${target.y}`;
 
-                return (
-                  <path
-                    key={edge.id}
-                    d={d}
-                    className="ql-graph-edge"
-                    strokeWidth={Math.min(4, Math.max(1, edge.weight))}
-                    onClick={() => onEdgeClick?.(edge)}
-                  />
-                );
-              })}
-            </g>
-
-            {/* Nodes */}
-            <g className="nodes">
-              {filteredNodes.map((node) => {
-                const isSelected = selectedNodeId === node.id;
-                const radius = Math.min(24, Math.max(12, node.weight * 2 + 10));
-
-                return (
-                  <g
-                    key={node.id}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`${node.label} (${node.category})`}
-                    className="cursor-pointer focus:outline-none"
-                    onClick={() => handleNodeSelect(node)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        handleNodeSelect(node);
-                      }
-                    }}
-                  >
-                    <circle
-                      cx={node.x}
-                      cy={node.y}
-                      r={radius}
-                      className={cn("ql-graph-node", isSelected && "is-active")}
+                  return (
+                    <path
+                      key={edge.id}
+                      d={d}
+                      className="ql-graph-edge"
+                      strokeWidth={scaleByWeight(edge.weight ?? 0, maxEdgeWeight, 1.5, 2.5)}
+                      onClick={() => onEdgeClick?.(edge)}
                     />
-                    <text
-                      x={node.x}
-                      y={node.y + radius + 14}
-                      textAnchor="middle"
-                      className="fill-ink text-[11px] font-sans pointer-events-none select-none"
+                  );
+                })}
+              </g>
+
+              <g className="nodes">
+                {filteredNodes.map((node) => {
+                  const position = positions.get(node.id);
+                  if (!position) return null;
+                  const isSelected = selectedNodeId === node.id;
+                  const radius =
+                    node.weight === undefined
+                      ? UNIFORM_NODE_RADIUS
+                      : scaleByWeight(
+                          node.weight,
+                          maxNodeWeight,
+                          MIN_NODE_RADIUS,
+                          MAX_NODE_RADIUS - MIN_NODE_RADIUS,
+                        );
+
+                  return (
+                    <g
+                      key={node.id}
+                      tabIndex={0}
+                      role="button"
+                      aria-pressed={isSelected}
+                      aria-label={node.label}
+                      className="ql-graph-node-focus cursor-pointer"
+                      onClick={() => handleNodeSelect(node)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          handleNodeSelect(node);
+                        }
+                      }}
                     >
-                      {node.label}
-                    </text>
-                  </g>
-                );
-              })}
-            </g>
-          </svg>
-        </div>
+                      <circle
+                        cx={position.x}
+                        cy={position.y}
+                        r={radius}
+                        className={cn("ql-graph-node", isSelected && "is-active")}
+                      />
+                      <text
+                        x={position.x}
+                        y={position.y + radius + 14}
+                        textAnchor="middle"
+                        className="ql-graph-node-label"
+                      >
+                        {node.label}
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            </svg>
+          </div>
+        )
       ) : (
-        /* Accessible structured data table */
-        <div className="p-4 overflow-x-auto">
+        <div className="space-y-5 overflow-x-auto p-4">
           <DataTable<TableRowRecord>
             columns={tableColumns}
             rows={tableRows}
             rowKey="id"
             emptyMessage={emptyLabel}
-            actionsLabel="Actions"
-            yesLabel="Yes"
-            noLabel="No"
+            actionsLabel={actionsLabel}
+            yesLabel={yesLabel}
+            noLabel={noLabel}
             onRowClick={(row) => {
               const matched = filteredNodes.find((n) => n.id === row.id);
               if (matched) handleNodeSelect(matched);
             }}
+          />
+          <DataTable<EdgeRowRecord>
+            columns={edgeColumns}
+            rows={edgeRows}
+            rowKey="id"
+            emptyMessage={emptyLabel}
+            actionsLabel={actionsLabel}
+            yesLabel={yesLabel}
+            noLabel={noLabel}
           />
         </div>
       )}

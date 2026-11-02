@@ -1,6 +1,10 @@
 import type { QlModelDefinition } from "ql_orm";
 import { sha256Validator } from "../services/field-validators.js";
-import { SURAH_MAX, SURAH_MIN } from "../services/corpus-vocabulary.js";
+import {
+  AYAH_MAX_BOUND,
+  SURAH_MAX,
+  SURAH_MIN,
+} from "../services/corpus-vocabulary.js";
 
 export const corpusAyahProof: QlModelDefinition = {
   name: "corpus.ayah_proof",
@@ -24,7 +28,9 @@ export const corpusAyahProof: QlModelDefinition = {
       type: "integer",
       required: true,
       minValue: 1,
-      maxValue: 286,
+      // Coarse ceiling only; the per-surah verse count is a cross-field rule
+      // enforced by `assertAyahWithinSurah` in the services and the API.
+      maxValue: AYAH_MAX_BOUND,
     },
     edition_code: {
       type: "char",

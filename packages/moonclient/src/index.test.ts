@@ -400,6 +400,36 @@ void test("corpus and source routes stay under their own prefixes and encode eve
   );
 });
 
+void test("MoonClient reaches the ayah proof contract on the shared path", async () => {
+  const { client, requests } = recorder({ status: "verified", isValid: true });
+  await client.getAyahProof("mw:edition:quran|ar", 2, 255);
+  await client.verifyAyahProof({
+    surahNumber: 2,
+    ayahNumber: 255,
+    editionCode: "mw:edition:quran|ar",
+    claimedHash: "a".repeat(64),
+  });
+
+  assert.equal(
+    apiRoutes.corpusProofs.getProof("mw:edition:quran|ar", 2, 255),
+    "/corpus/proofs/mw%3Aedition%3Aquran%7Car/2/255",
+  );
+  assert.equal(requests[0].url, "/api/corpus/proofs/mw%3Aedition%3Aquran%7Car/2/255");
+  assert.equal(requests[0].method, "GET");
+  assert.equal(requests[1].url, "/api/corpus/proofs/verify");
+  assert.equal(requests[1].method, "POST");
+
+  // The server dispatches the locator form with three segments under the same
+  // prefix, so `verify` must never be parseable as `edition/surah/ayah`.
+  assert.ok(apiRoutes.corpusProofs.verify.startsWith(apiRoutes.corpusProofs.prefix));
+  assert.equal(
+    new RegExp(
+      `^${apiRoutes.corpusProofs.prefix}([^/]+)/([0-9]+)/([0-9]+)$`,
+    ).test(apiRoutes.corpusProofs.verify),
+    false,
+  );
+});
+
 void test("no connector contract surface accepts a credential", () => {
   const clientMembers = [
     ...Object.getOwnPropertyNames(MoonClient.prototype),
@@ -608,5 +638,241 @@ void test("MoonClient supports Batch 3 contracts: searchGraph, corpusProofs, and
     "/api/corpus/audio/manifest/al-husary/surah/1",
   );
   assert.equal(manifestRecorder.requests[0].method, "GET");
+});
+
+void test("MoonClient supports Batch 5 contracts: covenant, sanad, study circles, deeds, telemetry, export, offline", async () => {
+  // Track 16: Covenant
+  const covenantRec = recorder({ signatures: [], totalCount: 0 });
+  await covenantRec.client.getCovenantLedger("1.0.0");
+  assert.equal(covenantRec.requests[0].url, "/api/community/covenants?version=1.0.0");
+
+  const signRec = recorder({
+    signatureId: "sig-1",
+    signatureHash: "sha256hash",
+    signedAt: "2026-11-02T00:00:00Z",
+    covenantVersion: "1.0.0",
+  });
+  await signRec.client.signCovenant({
+    covenantVersion: "1.0.0",
+    termsDigest: "digest",
+    statementAccepted: true,
+    contributorCallsign: "Scholar1",
+  });
+  assert.equal(signRec.requests[0].url, "/api/community/covenants/sign");
+  assert.equal(signRec.requests[0].method, "POST");
+
+  // Track 17: Sanad
+  const sanadRec = recorder({
+    changeId: "ch-1",
+    currentState: "in_review",
+    requiredReviews: 2,
+    approvedCount: 1,
+    canPublish: false,
+    reviews: [],
+  });
+  await sanadRec.client.getSanadPipelineStatus("ch-1");
+  assert.equal(sanadRec.requests[0].url, "/api/workflow/changes/ch-1/sanad");
+
+  await sanadRec.client.submitPeerReview("ch-1", {
+    decision: "approved",
+    notes: "Verified classical chain",
+    sanadChainRef: "Ibn Kathir",
+  });
+  assert.equal(sanadRec.requests[1].url, "/api/workflow/changes/ch-1/sanad");
+  assert.equal(sanadRec.requests[1].method, "POST");
+
+  // Track 18: Study Circles
+  const circlesRec = recorder({ circles: [] });
+  await circlesRec.client.listStudyCircles();
+  assert.equal(circlesRec.requests[0].url, "/api/community/study-circles");
+
+  const reflRec = recorder({ reflections: [] });
+  await reflRec.client.getCircleReflections("circle-1");
+  assert.equal(reflRec.requests[0].url, "/api/community/study-circles/circle-1/reflections");
+
+  await reflRec.client.submitCircleReflection("circle-1", {
+    passageLocator: "18:10",
+    content: "Deep reflection on the cave seekers.",
+  });
+  assert.equal(reflRec.requests[1].url, "/api/community/study-circles/circle-1/reflections");
+  assert.equal(reflRec.requests[1].method, "POST");
+
+  // Track 19: Deeds
+  const deedsRec = recorder({ deeds: [], totalCount: 0 });
+  await deedsRec.client.getDeedsLedger("typo_correction");
+  assert.equal(deedsRec.requests[0].url, "/api/community/deeds-ledger?kind=typo_correction");
+
+  // Track 20: Ethics publish
+  const ethicsRec = recorder({
+    changeId: "ch-1",
+    newState: "under_review",
+    ethicsAffirmedAt: "2026-11-02T00:00:00Z",
+  });
+  await ethicsRec.client.publishWorkflowChange("ch-1", {
+    ethicsAffirmation: {
+      isNotFatwaAffirmed: true,
+      citationsVerifiedAffirmed: true,
+      decorumAffirmed: true,
+      affirmedAt: "2026-11-02T00:00:00Z",
+      ethicsDigest: "hash",
+    },
+  });
+  assert.equal(ethicsRec.requests[0].url, "/api/workflow/changes/ch-1/publish");
+  assert.equal(ethicsRec.requests[0].method, "POST");
+
+  // Track 21: Telemetry
+  const telemetryRec = recorder({
+    uptimeSeconds: 12000,
+    apiLatencyP95Ms: 42,
+    dbPingMs: 2,
+    dnsConnectorsOnline: 1,
+    overallStatus: "healthy",
+    metrics: [],
+  });
+  await telemetryRec.client.getSystemTelemetry();
+  assert.equal(telemetryRec.requests[0].url, "/api/telemetry/orbit-metrics");
+
+  // Track 25: Offline manifest
+  const offlineRec = recorder({ manifests: [] });
+  await offlineRec.client.getOfflineCorpusManifest();
+  assert.equal(offlineRec.requests[0].url, "/api/corpus/offline-manifest");
+});
+
+interface Captured {
+  url: string;
+  method?: string;
+  headers: Record<string, string>;
+  body: unknown;
+  credentials?: RequestCredentials;
+  signal?: AbortSignal;
+}
+
+function capture(
+  respond: () => { status: number; body: unknown } = () => ({
+    status: 200,
+    body: {},
+  }),
+): { client: MoonClient; sent: Captured[] } {
+  const sent: Captured[] = [];
+  const client = new MoonClient({
+    baseUrl: "/api",
+    fetcher: (input, init = {}) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
+      sent.push({
+        url,
+        method: init.method,
+        headers: (init.headers ?? {}) as Record<string, string>,
+        body: init.body,
+        credentials: init.credentials,
+        signal: init.signal ?? undefined,
+      });
+      const outcome = respond();
+      return Promise.resolve(
+        new Response(JSON.stringify(outcome.body), { status: outcome.status }),
+      );
+    },
+  });
+  return { client, sent };
+}
+
+function sentAt(sent: readonly Captured[], index: number): Captured {
+  const entry = sent[index];
+  if (!entry) throw new Error(`request ${index} was never made`);
+  return entry;
+}
+
+void test("attachment routes are reached through the shared route table", async () => {
+  const { client, sent } = capture();
+  await client.listAttachments();
+  await client.getAttachment("a-1");
+  await client.createAttachmentUpload({
+    name: "clip.png",
+    mimeType: "image/png",
+    kind: "media",
+    sizeBytes: 10,
+  });
+  await client.completeAttachmentUpload("u-1");
+  await client.deleteAttachment("a-1");
+
+  assert.deepEqual(
+    sent.map((entry) => [entry.method ?? "GET", entry.url]),
+    [
+      ["GET", "/api/attachments"],
+      ["GET", "/api/attachments/a-1"],
+      ["POST", "/api/attachments/uploads"],
+      ["POST", "/api/attachments/uploads/u-1/complete"],
+      ["DELETE", "/api/attachments/a-1"],
+    ],
+  );
+  const createPayload = JSON.parse(sentAt(sent, 2).body as string) as {
+    sizeBytes: number;
+  };
+  assert.equal(createPayload.sizeBytes, 10);
+});
+
+void test("a chunk is sent as an octet-stream body, never as JSON", async () => {
+  const { client, sent } = capture(() => ({
+    status: 200,
+    body: { receivedChunks: 1, receivedBytes: 4, totalChunks: 2, expectedBytes: 8 },
+  }));
+  const bytes = new Uint8Array([1, 2, 3, 4]);
+  const controller = new AbortController();
+  const progress = await client.uploadAttachmentChunk(
+    "u-1",
+    1,
+    bytes,
+    controller.signal,
+  );
+
+  assert.equal(progress.receivedBytes, 4);
+  const request = sentAt(sent, 0);
+  assert.equal(request.method, "PUT");
+  assert.equal(request.url, "/api/attachments/uploads/u-1/chunks/1");
+  assert.equal(request.headers["content-type"], "application/octet-stream");
+  assert.equal(request.body, bytes);
+  assert.equal(request.credentials, "same-origin");
+  assert.equal(request.signal, controller.signal);
+});
+
+void test("a binary failure maps the same code and status as a JSON one", async () => {
+  const failing = () => ({
+    status: 413,
+    body: { error: "Chunk is too large.", code: "ATTACHMENT_TOO_LARGE" },
+  });
+  const { client } = capture(failing);
+  const json = capture(failing).client;
+
+  const binaryError = await client
+    .uploadAttachmentChunk("u-1", 0, new Uint8Array([1]))
+    .then(() => undefined)
+    .catch((error: unknown) => error);
+  const jsonError = await json
+    .deleteAttachment("a-1")
+    .then(() => undefined)
+    .catch((error: unknown) => error);
+
+  assert.ok(binaryError instanceof MoonClientError);
+  assert.ok(jsonError instanceof MoonClientError);
+  assert.equal(binaryError.status, jsonError.status);
+  assert.equal(binaryError.code, jsonError.code);
+  assert.equal(binaryError.message, "Chunk is too large.");
+});
+
+void test("the content URL stays same-origin and cannot gain a path segment", () => {
+  assert.equal(
+    moonClient.attachmentContentUrl("a-1"),
+    `/api${apiRoutes.attachments.content("a-1")}`,
+  );
+  const tricky = "../else";
+  const url = moonClient.attachmentContentUrl(tricky);
+  // A literal slash would let an id reshape the route it is served from; the
+  // dots survive encoding but stay inside one segment.
+  assert.equal(url, "/api/attachments/..%2Felse/content");
+  assert.equal(url.split("/").length, 5);
 });
 

@@ -344,6 +344,48 @@ export interface AppMessages {
     decisions: Record<string, string>;
     researchDisclaimer: string;
   };
+  attachments: {
+    title: string;
+    description: string;
+    navLabel: string;
+    loading: string;
+    signedOut: string;
+    uploadTitle: string;
+    uploadIntro: string;
+    pickFile: string;
+    hint: string;
+    uploadEmpty: string;
+    /** Carries `{sent}` and `{total}`. */
+    progressText: string;
+    cancel: string;
+    retry: string;
+    pause: string;
+    resume: string;
+    statusQueued: string;
+    statusUploading: string;
+    statusVerifying: string;
+    statusPaused: string;
+    statusNeedsFile: string;
+    statusDone: string;
+    statusFailed: string;
+    libraryTitle: string;
+    refresh: string;
+    empty: string;
+    listFailed: string;
+    download: string;
+    delete: string;
+    confirmDelete: string;
+    /** Carries `{name}`. */
+    uploaded: string;
+    /** Carries `{name}`. */
+    deleted: string;
+    /** Carries `{reason}`. */
+    deleteFailed: string;
+    needsFile: string;
+    signOutFailed: string;
+    previewAlt: string;
+    stateLabels: Record<string, string>;
+  };
 }
 
 function isUiMessageKey(value: string): value is UiMessageKey {

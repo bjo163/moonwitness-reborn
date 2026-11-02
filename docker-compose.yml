@@ -34,6 +34,9 @@ services:
     environment:
       PORT: 3000
       DATABASE_URL: ${DATABASE_URL_CONTAINER:-postgresql://moonwitness:moonwitness@postgres:5432/moonwitness}
+      # Lampiran ditulis ke volume `api_data` yang sama dengan database, jadi ikut
+      # terlindungi saat container dibangun ulang.
+      ATTACHMENT_STORAGE_DIR: ${ATTACHMENT_STORAGE_DIR:-/app/data/attachments}
       # Kunci enkripsi credential provider untuk development lokal. Ganti di produksi.
       PROVIDER_ENCRYPTION_KEY: ${PROVIDER_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
       # Opsional: keduanya wajib terisi agar klaim super_admin saat registrasi berlaku. Cabut setelah dipakai.

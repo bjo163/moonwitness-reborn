@@ -18,6 +18,7 @@ export default [
       "**/.next-*/**",
       "**/node_modules/**",
       ".turbo/**",
+      "apps/web/public/sw.js",
     ],
   },
   ...moonwitnessConfig({ tsconfigRootDir: import.meta.dirname }),

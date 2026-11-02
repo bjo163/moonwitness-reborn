@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "tsx --tsconfig tests/tsconfig.json --test tests/composites.test.tsx tests/class-name-contract.test.tsx tests/tokens.test.ts tests/quran-text.test.tsx tests/batch2-spatial.test.tsx tests/batch3-composites.test.tsx",
+    "test": "tsx --tsconfig tests/tsconfig.json --test tests/*.test.ts tests/*.test.tsx",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tests/tsconfig.json"
   },
   "dependencies": {
