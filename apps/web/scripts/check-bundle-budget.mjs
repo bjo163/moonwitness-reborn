@@ -92,6 +92,25 @@ if (
   process.exit(1);
 }
 
+// `--update` records the `BUILD_ID` alongside the sizes so the next check can
+// tell a fresh build from a stale one even when every route name matches. A dev
+// server that later rewrites chunks under the same route set can otherwise slip
+// past the "route missing" check while inflating the reported KB (MW-0584).
+const currentBuildId = readFileSync(join(appDir, distDir, "BUILD_ID"), "utf8").trim();
+if (
+  !update &&
+  typeof budget.buildId === "string" &&
+  budget.buildId !== currentBuildId
+) {
+  console.error(
+    `${distDir} build id ${currentBuildId} does not match the baseline id ${budget.buildId}.\n` +
+      `A dev server may have rewritten this build directory after the baseline was recorded.\n` +
+      `Run \`NEXT_DIST_DIR=${distDir} pnpm --filter @moonwitness/web build\` before checking, or\n` +
+      `\`pnpm --filter @moonwitness/web size --update\` to intentionally re-record the baseline.`,
+  );
+  process.exit(1);
+}
+
 const measured = measuredFirstLoad();
 const baseline = budget.routes ?? {};
 const problems = [];
@@ -135,9 +154,15 @@ if (problems.length > 0 && !update) {
 if (update) {
   writeFileSync(
     budgetPath,
-    JSON.stringify({ ...budget, routes: nextBaseline }, null, 2) + "\n",
+    JSON.stringify(
+      { ...budget, routes: nextBaseline, buildId: currentBuildId },
+      null,
+      2,
+    ) + "\n",
   );
-  console.log(`Baseline recorded for ${Object.keys(nextBaseline).length} routes.`);
+  console.log(
+    `Baseline recorded for ${Object.keys(nextBaseline).length} routes (build ${currentBuildId}).`,
+  );
 } else {
   console.log(
     `First Load JS within budget: ${measured.size} routes, ceiling ${budget.maxFirstLoadKb} kB.`,

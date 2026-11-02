@@ -45,6 +45,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useRouter } from "next/navigation";
 import { apiErrorMessage } from "../locale/api-error-message";
 import { translateMetadata } from "../locale/translate-metadata";
 import {
@@ -103,6 +104,7 @@ export default function ModelWorkspace() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
   const selectedModel = models.find((model) => model.name === modelName);
@@ -306,7 +308,7 @@ export default function ModelWorkspace() {
   async function logout() {
     try {
       await moonClient.logout();
-      window.location.href = "/command-center";
+      router.replace("/auth");
     } catch (requestError) {
       setError(apiErrorMessage(requestError, t));
     }
@@ -349,12 +351,14 @@ export default function ModelWorkspace() {
             {
               href: "/command-center",
               label: t("web.models.aiWorkspace"),
-              icon: <ArrowLeft aria-hidden="true" size={16} />,
+              icon: <ArrowLeft aria-hidden="true" size={16} />,,
+            onSelect: () => setSidebarOpen(false),
             },
             {
               href: "/providers",
               label: t("web.models.providers"),
-              icon: <KeyRound aria-hidden="true" size={16} />,
+              icon: <KeyRound aria-hidden="true" size={16} />,,
+            onSelect: () => setSidebarOpen(false),
             },
           ]}
           logout={{ label: t("web.common.logout"), onLogout: () => void logout() }}

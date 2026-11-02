@@ -41,6 +41,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiErrorMessage } from "../locale/api-error-message";
 import { translateMetadata } from "../locale/translate-metadata";
 import {
@@ -97,6 +98,7 @@ export default function ConnectorWorkspace() {
   const [saving, setSaving] = useState(false);
   const [pendingRow, setPendingRow] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -255,7 +257,7 @@ export default function ConnectorWorkspace() {
   async function logout() {
     try {
       await moonClient.logout();
-      window.location.href = "/command-center";
+      router.replace("/auth");
     } catch (logoutError) {
       setError(apiErrorMessage(logoutError, t));
     }
@@ -320,25 +322,29 @@ export default function ConnectorWorkspace() {
             {
               href: "/models",
               label: t("web.connectors.models"),
-              icon: <Boxes aria-hidden="true" size={16} />,
+              icon: <Boxes aria-hidden="true" size={16} />,,
+            onSelect: () => setSidebarOpen(false),
             },
             {
               href: "/providers",
               label: t("web.connectors.providers"),
-              icon: <KeyRound aria-hidden="true" size={16} />,
+              icon: <KeyRound aria-hidden="true" size={16} />,,
+            onSelect: () => setSidebarOpen(false),
             },
             {
               href: "/connectors",
               label: t("web.common.integrations"),
               icon: <Plug aria-hidden="true" size={16} />,
-              active: true,
+              active: true,,
+            onSelect: () => setSidebarOpen(false),
             },
             ...(user.groups.includes("admin")
               ? [
                   {
                     href: "/admin/users",
                     label: t("web.connectors.users"),
-                    icon: <ShieldCheck aria-hidden="true" size={16} />,
+                    icon: <ShieldCheck aria-hidden="true" size={16} />,,
+                  onSelect: () => setSidebarOpen(false),
                   },
                 ]
               : []),

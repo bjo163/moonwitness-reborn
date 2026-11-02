@@ -59,6 +59,16 @@ function isReviewDecision(value: string): value is LexicalResearchDecisionDto {
 
 export default function ResearchReviewPage() {
   const router = useRouter();
+
+  async function logout() {
+    setError(null);
+    try {
+      await moonClient.logout();
+      router.replace("/auth");
+    } catch (logoutError) {
+      setError(apiErrorMessage(logoutError, t));
+    }
+  }
   const copy = useMessages();
   const research = copy.research;
   const { t } = useTranslationCatalog();
@@ -271,9 +281,7 @@ export default function ResearchReviewPage() {
           ]}
           logout={{
             label: copy.common.logout,
-            onLogout: () => {
-              void moonClient.logout().then(() => router.replace("/auth"));
-            },
+            onLogout: () => void logout(),
           }}
           navLabel={copy.common.mainNavigation}
           onCloseSidebar={() => setSidebarOpen(false)}

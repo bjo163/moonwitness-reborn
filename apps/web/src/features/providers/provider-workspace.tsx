@@ -24,6 +24,7 @@ import {
   WorkspaceTemplate,
 } from "@moonwitness/ui";
 import { ArrowDown, ArrowLeft, ArrowUp, KeyRound, Plus, Save, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
 import { useTranslationCatalog } from "../locale/translation-catalog";
@@ -57,6 +58,17 @@ export default function ProviderWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  async function logout() {
+    setError(null);
+    try {
+      await moonClient.logout();
+      router.replace("/auth");
+    } catch (logoutError) {
+      setError(apiErrorMessage(logoutError, t));
+    }
+  }
 
   const loadProviders = useCallback(async () => {
     const result = await moonClient.listProviders();
@@ -182,11 +194,13 @@ export default function ProviderWorkspace() {
           brandIcon={<KeyRound aria-hidden="true" size={16} />}
           closeLabel={t("web.common.closeMenu")}
           identity={{ name: user.name, subtitle: user.email }}
+          logout={{ label: t("web.common.logout"), onLogout: () => void logout() }}
           items={[
             {
               href: "/command-center/chat",
               label: t("web.providers.back"),
-              icon: <ArrowLeft aria-hidden="true" size={16} />,
+              icon: <ArrowLeft aria-hidden="true" size={16} />,,
+            onSelect: () => setSidebarOpen(false),
             },
           ]}
           navLabel={t("web.providers.title")}

@@ -51,7 +51,7 @@ const colourNamespaces = new Set([
  * `font-semibold` are Tailwind scale utilities and are deliberately out of
  * scope here, so the check stays free of a maintained scale allowlist.
  */
-const designStems = ["ink", "muted", "panel", "hairline", "acid", "danger", "void", "hud"];
+const designStems = ["ink", "muted", "panel", "hairline", "acid", "danger", "success", "warning", "void", "hud"];
 
 function cssFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
@@ -78,6 +78,8 @@ void test("the theme and root blocks declare the tokens the package relies on", 
     "--color-acid-muted",
     "--color-acid-shadow",
     "--color-danger",
+    "--color-success",
+    "--color-warning",
     "--color-void",
     "--font-sans",
     "--font-mono",

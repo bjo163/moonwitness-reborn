@@ -23,6 +23,7 @@ import {
 } from "@moonwitness/ui";
 import { ArrowLeft, Download, Languages, Upload } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
 import { useLocalePreference } from "../locale/use-locale-preference";
@@ -55,6 +56,17 @@ export default function TranslationAdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  async function logout() {
+    setError(null);
+    try {
+      await moonClient.logout();
+      router.replace("/auth");
+    } catch (logoutError) {
+      setError(apiErrorMessage(logoutError, t));
+    }
+  }
   const { locale, changeLocale } = useLocalePreference(user);
   const { t, refresh } = useTranslationCatalog();
 
@@ -337,11 +349,13 @@ export default function TranslationAdminPage() {
           brandIcon={<Languages aria-hidden="true" size={16} />}
           closeLabel={t("web.common.closeMenu")}
           identity={{ name: user.name, subtitle: user.role }}
+          logout={{ label: t("web.common.logout"), onLogout: () => void logout() }}
           items={[
             {
               href: "/command-center",
               label: t("web.translationAdmin.back"),
-              icon: <ArrowLeft aria-hidden="true" size={16} />,
+              icon: <ArrowLeft aria-hidden="true" size={16} />,,
+            onSelect: () => setSidebarOpen(false),
             },
           ]}
           navLabel={t("web.common.mainNavigation")}
