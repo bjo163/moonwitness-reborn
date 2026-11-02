@@ -516,3 +516,36 @@ void test("mizan.assessment is registered in ql_research and validates rubric ba
     },
   );
 });
+
+void test("research.correlation is registered in ql_research and validates relationship taxonomy", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+      researchManifest,
+    ],
+    async (orm) => {
+      const corr = await orm.createRecordForService("research.correlation", {
+        canonical_id: "mw:corr:badr-hadith-to-event",
+        source_entity_type: "witness.statement",
+        source_entity_id: "mw:witness:hadith-badr-01",
+        target_entity_type: "event.record",
+        target_entity_id: "mw:event:battle-of-badr",
+        correlation_type: "corroborates",
+        certainty: "definite",
+        scholarly_rationale: "Direct primary witness testimony matching established battle accounts.",
+        contestation_notes: "None across canonical transmissions.",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      assert.ok(corr.id);
+
+      const found = await orm.findOneByService("research.correlation", { id: corr.id });
+      assert.equal(found?.["correlation_type"], "corroborates");
+      assert.equal(found?.["certainty"], "definite");
+      assert.equal(found?.["target_entity_type"], "event.record");
+    },
+  );
+});
