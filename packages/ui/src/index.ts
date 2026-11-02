@@ -49,8 +49,10 @@ export {
 export { IconTile, type IconTileProps } from "./composites/icon-tile.js";
 export {
   NavSectionLabel,
+  OptionNav,
   SidebarNav,
   type NavSectionLabelProps,
+  type OptionNavProps,
   type SidebarNavItem,
   type SidebarNavProps,
 } from "./composites/sidebar-nav.js";

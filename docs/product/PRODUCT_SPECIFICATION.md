@@ -46,6 +46,12 @@ These are role hypotheses, not a final role or permission matrix.
 
 Availability, latency, throughput, corpus size, restore point/time, retention and accessibility conformance are **TBD**. Set measurable targets in a later ADR before a production claim. Initial release must have structured logs without secrets, health checks, backup/restore evidence and a rollback route.
 
+## Scoped product decisions recorded under owner delegation (2026-11-02)
+
+- **Tenant model:** use a single-installation model for the current scope. Accounts and records retain installation-level identity and existing per-owner boundaries. There is no organization creation, invitation, membership, tenant selector, or tenant-level sharing. Organization-wide access is denied unless a later decision defines an explicit role and ACL. No tenant columns or data backfill are authorized; any future adoption of tenants requires a reviewed migration or quarantine policy.
+- **Tenant security acceptance:** tests for the current model must prove cross-user records remain inaccessible through IDs, filters, internal service calls, and crafted tenant/workspace selectors. Any future tenant model must add cross-tenant read/write, revoked-membership, sharing-revocation, and migration/quarantine negative tests before implementation.
+- **Performance and reliability targets:** no numeric SLA or release threshold is selected. Reopen MW-0609 after the first-release critical journeys, rights-cleared representative workload, isolated measurement environment, and observation windows are approved. Do not run load against production or report unmeasured values.
+
 ## Product acceptance for first slice
 
 1. User can open an allowed source/edition/passage and see attribution and rights state.

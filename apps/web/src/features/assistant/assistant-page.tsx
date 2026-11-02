@@ -13,7 +13,9 @@ import {
   Badge,
   Button,
   LoadingScreen,
+  ListOption,
   NavSectionLabel,
+  OptionNav,
   Textarea,
   WorkspaceSidebar,
   WorkspaceTemplate,
@@ -295,36 +297,27 @@ export default function Home() {
           <NavSectionLabel className="mb-2 mt-7">
             {copy.assistant.history}
           </NavSectionLabel>
-          <nav
-            className="min-h-0 flex-1 space-y-1 overflow-y-auto"
-            aria-label={copy.assistant.history}
-          >
+          <OptionNav label={copy.assistant.history}>
           {conversations.map((conversation) => (
             <div
               key={conversation.id}
               className="group flex items-center gap-1"
             >
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
+              <ListOption
+                selected={activeId === conversation.id}
+                variant="nav"
+                className="min-w-0 flex-1"
+                onSelect={() => {
                   setActiveId(conversation.id);
                   setError(null);
                   setSidebarOpen(false);
                 }}
-                className={cn(
-                  "flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
-                  activeId === conversation.id
-                    ? "bg-panel text-ink shadow-sm"
-                    : "text-muted-dim hover:bg-panel/70 hover:text-ink",
-                )}
               >
                 <MessageSquare size={15} className="shrink-0 text-muted" />
                 <span className="min-w-0 flex-1 truncate">
                   {conversation.title}
                 </span>
-              </Button>
+              </ListOption>
               <Button
                 type="button"
                 variant="ghost"
@@ -345,7 +338,7 @@ export default function Home() {
               {copy.assistant.emptyHistory}
             </p>
           )}
-          </nav>
+          </OptionNav>
         </WorkspaceSidebar>
       }
       header={

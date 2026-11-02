@@ -412,6 +412,78 @@ function isUnknownArray(value: unknown): value is readonly unknown[] {
   return Array.isArray(value);
 }
 
+function isUnknownRecord(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
+}
+
+function isSeedDataRecord(value: unknown): value is QlSeedDataRecord {
+  if (!isUnknownRecord(value)) return false;
+  const key = value.key;
+  return (
+    typeof value.id === "string" &&
+    typeof value.model === "string" &&
+    isUnknownRecord(key) &&
+    typeof key.field === "string" &&
+    isRecordValue(key.value) &&
+    isQlRecord(value.values) &&
+    Object.hasOwn(value.values, key.field) &&
+    value.values[key.field] === key.value &&
+    (value.updatePolicy === "insert_only" ||
+      value.updatePolicy === "reconcile")
+  );
+}
+
+function validateAddonData(
+  addonName: string,
+  data: unknown,
+): asserts data is readonly QlSeedDataRecord[] {
+  if (!isUnknownArray(data)) {
+    throw new Error(`Addon '${addonName}' must declare a data array.`);
+  }
+  const seedIds = new Set<string>();
+  const seedKeys = new Set<string>();
+  for (const rawSeed of data) {
+    if (!isSeedDataRecord(rawSeed)) {
+      throw new Error(`Addon '${addonName}' contains an invalid seed.`);
+    }
+    if (
+      !/^[a-z][a-z0-9_.:-]{0,255}$/.test(rawSeed.id) ||
+      addonName.length + rawSeed.id.length + 1 > 255
+    ) {
+      throw new Error(
+        `Addon '${addonName}' has invalid seed identifier '${rawSeed.id}'.`,
+      );
+    }
+    if (seedIds.has(rawSeed.id)) {
+      throw new Error(
+        `Addon '${addonName}' declares duplicate seed '${rawSeed.id}'.`,
+      );
+    }
+    seedIds.add(rawSeed.id);
+    if (!/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/.test(rawSeed.model)) {
+      throw new Error(
+        `Addon '${addonName}' has an invalid seed model '${rawSeed.model}'.`,
+      );
+    }
+    if (!/^[a-z][a-z0-9_]*$/.test(rawSeed.key.field)) {
+      throw new Error(
+        `Addon '${addonName}' has an invalid key field for seed '${rawSeed.id}'.`,
+      );
+    }
+    const seedKey = `${rawSeed.model}:${rawSeed.key.field}:${JSON.stringify(rawSeed.key.value)}`;
+    if (seedKeys.has(seedKey)) {
+      throw new Error(
+        `Addon '${addonName}' declares multiple seeds for '${rawSeed.model}.${rawSeed.key.field}'.`,
+      );
+    }
+    seedKeys.add(seedKey);
+  }
+}
+
 export function loadAddons(
   manifests: readonly QlAddonManifest[],
 ): QlAddonManifest[] {
@@ -423,60 +495,7 @@ export function loadAddons(
     if (byName.has(manifest.name)) {
       throw new Error(`Duplicate addon '${manifest.name}'.`);
     }
-    if (!Array.isArray(manifest.data)) {
-      throw new Error(`Addon '${manifest.name}' must declare a data array.`);
-    }
-    const seedIds = new Set<string>();
-    const seedKeys = new Set<string>();
-    for (const seed of manifest.data) {
-      if (typeof seed !== "object" || seed === null) {
-        throw new Error(`Addon '${manifest.name}' contains an invalid seed.`);
-      }
-      if (
-        typeof seed.id !== "string" ||
-        !/^[a-z][a-z0-9_.:-]{0,255}$/.test(seed.id) ||
-        manifest.name.length + seed.id.length + 1 > 255
-      ) {
-        throw new Error(
-          `Addon '${manifest.name}' has invalid seed identifier '${seed.id}'.`,
-        );
-      }
-      if (seedIds.has(seed.id)) {
-        throw new Error(
-          `Addon '${manifest.name}' declares duplicate seed '${seed.id}'.`,
-        );
-      }
-      seedIds.add(seed.id);
-      if (
-        typeof seed.model !== "string" ||
-        !/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/.test(seed.model)
-      ) {
-        throw new Error(
-          `Addon '${manifest.name}' has an invalid seed model '${seed.model}'.`,
-        );
-      }
-      if (
-        typeof seed.key?.field !== "string" ||
-        !/^[a-z][a-z0-9_]*$/.test(seed.key.field) ||
-        !isRecordValue(seed.key.value) ||
-        !isQlRecord(seed.values) ||
-        !Object.hasOwn(seed.values, seed.key.field) ||
-        seed.values[seed.key.field] !== seed.key.value ||
-        (seed.updatePolicy !== "insert_only" &&
-          seed.updatePolicy !== "reconcile")
-      ) {
-        throw new Error(
-          `Addon '${manifest.name}' has an invalid seed definition '${seed.id}'.`,
-        );
-      }
-      const seedKey = `${seed.model}:${seed.key.field}:${JSON.stringify(seed.key.value)}`;
-      if (seedKeys.has(seedKey)) {
-        throw new Error(
-          `Addon '${manifest.name}' declares multiple seeds for '${seed.model}.${seed.key.field}'.`,
-        );
-      }
-      seedKeys.add(seedKey);
-    }
+    validateAddonData(manifest.name, manifest.data);
     byName.set(manifest.name, manifest);
   }
 

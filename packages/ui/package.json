@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "tsx --tsconfig tests/tsconfig.json --test tests/composites.test.tsx tests/tokens.test.ts",
+    "test": "tsx --tsconfig tests/tsconfig.json --test tests/composites.test.tsx tests/class-name-contract.test.tsx tests/tokens.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tests/tsconfig.json"
   },
   "dependencies": {

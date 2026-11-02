@@ -30,7 +30,7 @@ const BROWSER_BOUNDARY_MESSAGE =
 const UI_CONSISTENCY_MESSAGE =
   "Use @moonwitness/ui components and the cn() utility; do not duplicate the design system.";
 const UI_PRIMITIVE_BAN_MESSAGE =
-  "Use @moonwitness/ui primitives (Button, Input, Textarea, Select, Checkbox, NavLink, SidebarBrand, SidebarFooter, PageHeader, LoadingScreen, EmptyState, SectionGrid, Card, Badge, Alert, DataTable, WorkspaceTemplate, CenteredAuth); do not hand-roll them in apps/web.";
+  "Use @moonwitness/ui primitives (Button, Input, Textarea, Select, Checkbox, Badge, Alert, Card, DataTable, FormField, RawField, WorkspaceTemplate, CenteredAuth) and its composites (NavLink, SidebarNav, OptionNav, NavSectionLabel, SidebarBrand, SidebarFooter, WorkspaceSidebar, PageHeader, LoadingScreen, EmptyState, SectionGrid, IconTile, MetricRow, ListOption, SidePanel); do not hand-roll them in apps/web.";
 const UI_INTERNAL_LINK_MESSAGE =
   "Use Next.js <Link> or @moonwitness/ui NavLink for internal routes in apps/web.";
 const UI_INLINE_STYLE_MESSAGE =
@@ -283,6 +283,12 @@ export function moonwitnessConfig({
       rules: {
         ...nextPlugin.configs.recommended.rules,
         "@next/next/no-html-link-for-pages": ["error", `${webAppDir}/src/app`],
+      },
+    },
+    {
+      files: [`${webAppDir}/scripts/**/*.mjs`],
+      languageOptions: {
+        globals: globals.node,
       },
     },
     {

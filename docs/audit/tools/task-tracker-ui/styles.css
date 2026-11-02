@@ -41,6 +41,20 @@ body {
   outline-offset: 3px;
 }
 
+button,
+select,
+summary {
+  cursor: pointer;
+}
+
+:disabled {
+  cursor: not-allowed;
+}
+
+option:disabled {
+  color: var(--muted);
+}
+
 code,
 .task-id {
   font-family: var(--mono);
@@ -301,7 +315,8 @@ h2 {
 
 .section-name,
 .completion-date,
-.status-note {
+.status-note,
+.evidence-note {
   color: var(--muted);
   font-size: 0.75rem;
 }
@@ -374,6 +389,44 @@ h2 {
 .state-select:disabled {
   cursor: wait;
   opacity: 0.6;
+}
+
+.task-form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.task-form .state-control {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font: 550 0.72rem/1.35 var(--mono);
+}
+
+.field[hidden] {
+  display: none;
+}
+
+.field-input {
+  min-height: 4.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: #0c110e;
+  color: var(--ink);
+  font: 450 0.82rem/1.5 var(--sans);
+  resize: vertical;
+}
+
+.field-input:focus {
+  border-color: var(--accent-dark);
+  outline: none;
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .dependency-cell {
@@ -472,8 +525,12 @@ h2 {
   }
 
   .task-state {
-    grid-column: 2;
-    grid-row: 1;
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .field-input {
+    font-size: 1rem;
   }
 
   .dependency-cell {

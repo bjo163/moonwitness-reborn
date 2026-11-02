@@ -7,29 +7,27 @@ import { cn } from "../lib/utils.js";
  * surfaces. Consolidates the 13 copies of
  * `<span className="flex size-8 … border-[#354135] bg-[#121a13] text-[#d7ff63]">`
  * and the 4 light-theme copies of `bg-stone-900 text-white` that lived
- * across `apps/web` screens (MW-ADR-020). Every colour resolves to a
- * design token, so retinting the HUD never touches a screen.
+ * across `apps/web` screens (MW-ADR-020). The shape and its colours are
+ * defined once in `.ql-icon-tile` (`packages/ui/styles/components.css`), so no
+ * screen or component can restate a size or a colour independently.
  */
-const iconTileVariants = cva(
-  "flex shrink-0 items-center justify-center rounded-xl border",
-  {
-    variants: {
-      size: {
-        sm: "size-8",
-        md: "size-10",
-        lg: "size-14 border-hairline-strong shadow-hud-sm",
-      },
-      tone: {
-        accent: "border-hairline bg-panel-edge text-acid",
-        plain: "border-hairline bg-panel text-ink-soft",
-      },
+const iconTileVariants = cva("ql-icon-tile", {
+  variants: {
+    size: {
+      sm: "ql-icon-tile--sm",
+      md: undefined,
+      lg: "ql-icon-tile--lg",
     },
-    defaultVariants: {
-      size: "md",
-      tone: "accent",
+    tone: {
+      accent: undefined,
+      plain: "ql-icon-tile--plain",
     },
   },
-);
+  defaultVariants: {
+    size: "md",
+    tone: "accent",
+  },
+});
 
 export interface IconTileProps
   extends VariantProps<typeof iconTileVariants> {

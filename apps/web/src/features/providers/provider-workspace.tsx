@@ -209,7 +209,7 @@ export default function ProviderWorkspace() {
               <EmptyState title={t("web.providers.empty")} />
             )}
             {providers.map((provider, index) => (
-              <article key={provider.id} className="flex flex-wrap items-center gap-4 rounded-2xl border border-hairline bg-panel p-4 shadow-sm">
+              <article key={provider.id} className="ql-card flex flex-wrap items-center gap-4 p-4">
                 <IconTile tone="plain"><KeyRound aria-hidden="true" size={17} /></IconTile>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -230,7 +230,7 @@ export default function ProviderWorkspace() {
             ))}
           </section>
 
-          <form onSubmit={(event) => void save(event)} className="rounded-2xl border border-hairline bg-panel p-5 shadow-sm md:p-7">
+          <form onSubmit={(event) => void save(event)} className="ql-card p-5 md:p-7">
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold text-ink">{draft.id ? t("web.providers.editTitle") : t("web.providers.addTitle")}</h2>

@@ -30,7 +30,7 @@ interface MessageValues {
 interface TranslationContextValue {
   locale: UiLocale;
   setLocale(locale: UiLocale): void;
-  t(key: UiMessageKey, values?: MessageValues): string;
+  t(this: void, key: UiMessageKey, values?: MessageValues): string;
   tm(key: string, fallback: string): string;
   refresh(locale?: UiLocale): Promise<void>;
 }
@@ -167,11 +167,14 @@ export function TranslationCatalogProvider({
   return (
     <TranslationContext.Provider value={context}>
       {catalogError && (
-        <div className="fixed inset-x-0 top-0 z-[100] text-xs">
-          <Alert variant="error" className="flex flex-wrap items-center justify-center gap-1">
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-[100] text-xs">
+          <Alert
+            variant="error"
+            className="pointer-events-none flex flex-wrap items-center justify-center gap-1"
+          >
             {t("web.common.catalogUnavailable")}
             <Button
-              className="ml-3 underline underline-offset-2"
+              className="pointer-events-auto ml-3 underline underline-offset-2"
               onClick={() => void refresh()}
               size="sm"
               type="button"

@@ -1,5 +1,5 @@
 import type { QlAddonManifest } from "ql_orm";
-import { countryData } from "./data/index.js";
+import { countryData } from "./country-data.js";
 import { models } from "./models/index.js";
 import { views } from "./views/index.js";
 

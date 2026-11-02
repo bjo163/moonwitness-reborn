@@ -23,7 +23,7 @@ const refreshButton = document.querySelector("#refresh-button");
 let tasks = [];
 let readyTaskIds = [];
 let aiReadyTaskIds = [];
-let busy = false;
+let revision = null;
 
 function makeElement(tag, className, text) {
   const element = document.createElement(tag);
@@ -32,7 +32,16 @@ function makeElement(tag, className, text) {
   return element;
 }
 
-function updateSummary() {
+function setFeedback(message, kind) {
+  feedback.className = kind ? `feedback is-${kind}` : "feedback";
+  feedback.textContent = message;
+}
+
+function taskById(taskId) {
+  return tasks.find((task) => task.id === taskId);
+}
+
+function refreshSummary() {
   document.querySelector("#count-total").textContent = String(tasks.length);
   for (const state of states) {
     const count = tasks.filter((task) => task.state === state).length;
@@ -64,34 +73,76 @@ function taskSearchText(task) {
     task.status_label,
     task.owner,
     task.acceptance_criteria,
+    task.evidence || "",
     ...task.depends_on,
     ...packetText,
   ].join(" ").toLocaleLowerCase("id");
 }
 
-function makeStateSelect(task) {
-  const label = makeElement("label", "state-control");
-  const accessibleLabel = makeElement("span", "sr-only", `Ubah status ${task.id}`);
+function makeField(name, fieldName, placeholder) {
+  const label = makeElement("label", "field");
+  label.append(makeElement("span", "field-name", fieldName));
+  const input = document.createElement("textarea");
+  input.className = "field-input";
+  input.name = name;
+  input.rows = 3;
+  input.placeholder = placeholder;
+  label.append(input);
+  return label;
+}
+
+function showField(field, shown) {
+  field.hidden = !shown;
+  field.querySelector("textarea").required = shown;
+}
+
+function makeStateForm(task) {
+  const form = makeElement("form", "task-form");
+  form.dataset.taskId = task.id;
+
+  const stateLabel = makeElement("label", "state-control");
+  stateLabel.append(makeElement("span", "sr-only", `Status ${task.id}`));
   const select = document.createElement("select");
   select.className = "state-select";
-  select.dataset.taskId = task.id;
-  select.disabled = busy;
+  select.name = "state";
   for (const state of states) {
     const option = document.createElement("option");
     option.value = state;
     option.textContent = stateLabels[state];
     option.selected = task.state === state;
+    option.disabled = state !== task.state && !task.allowed_states.includes(state);
     select.append(option);
   }
-  select.addEventListener("change", () => void saveTaskState(task, select));
-  label.append(accessibleLabel, select);
-  return label;
+  stateLabel.append(select);
+
+  const reasonField = makeField(
+    "status_label",
+    "Alasan blocker atau reopen",
+    "Kosongkan untuk mempertahankan catatan yang tersimpan."
+  );
+  const evidenceField = makeField(
+    "evidence",
+    "Bukti penyelesaian",
+    "Perintah atau hasil yang menunjukkan task ini benar selesai."
+  );
+  const submit = makeElement("button", "button button-secondary", "Simpan perubahan");
+  submit.type = "submit";
+
+  function syncFields() {
+    const target = select.value;
+    showField(reasonField, target === "blocked" || (task.state === "done" && target !== "done"));
+    showField(evidenceField, target === "done" && !task.evidence);
+  }
+  syncFields();
+  select.addEventListener("change", syncFields);
+
+  form.append(stateLabel, reasonField, evidenceField, submit);
+  return form;
 }
 
 function makeTaskDetails(task) {
-  const details = document.createElement("details");
-  details.className = "task-details";
-  const summary = makeElement("summary", "task-title", task.title);
+  const details = makeElement("details", "task-details");
+  details.append(makeElement("summary", "task-title", task.title));
   const content = makeElement("div", "task-detail-content");
   content.append(makeElement("p", "section-name", task.section));
   content.append(makeElement("h3", "detail-label", "Kriteria penerimaan"));
@@ -120,11 +171,14 @@ function makeTaskDetails(task) {
       content.append(makeElement("h4", "packet-label", label), list);
     }
   }
-  content.append(makeElement("p", "status-note", `Catatan status (dipertahankan): ${task.status_label}`));
+  content.append(makeElement("p", "status-note", `Catatan status: ${task.status_label}`));
+  if (task.evidence) {
+    content.append(makeElement("p", "evidence-note", `Bukti: ${task.evidence}`));
+  }
   if (task.completed_at) {
     content.append(makeElement("p", "completion-date", `Selesai tercatat: ${task.completed_at}`));
   }
-  details.append(summary, content);
+  details.append(content);
   return details;
 }
 
@@ -136,14 +190,33 @@ function makeDependencyCell(task) {
     return cell;
   }
   for (const dependencyId of task.depends_on) {
-    const dependency = tasks.find((candidate) => candidate.id === dependencyId);
+    const dependency = taskById(dependencyId);
     const text = dependency
       ? `${dependencyId} · ${stateLabels[dependency.state]}`
       : `${dependencyId} · tidak ditemukan`;
-    const item = makeElement("span", "dependency-item", text);
-    cell.append(item);
+    cell.append(makeElement("span", "dependency-item", text));
   }
   return cell;
+}
+
+function makeRow(task) {
+  const row = makeElement("tr");
+  row.dataset.taskId = task.id;
+  row.dataset.state = task.state;
+
+  const idCell = makeElement("td", "task-id", task.id);
+  idCell.dataset.label = "ID";
+  const mainCell = makeElement("td", "task-main");
+  mainCell.dataset.label = "Task dan kriteria";
+  mainCell.append(makeTaskDetails(task));
+  const stateCell = makeElement("td", "task-state");
+  stateCell.dataset.label = "Status";
+  stateCell.append(makeStateForm(task));
+  const ownerCell = makeElement("td", "owner-cell", task.owner);
+  ownerCell.dataset.label = "Pemilik";
+
+  row.append(idCell, mainCell, stateCell, makeDependencyCell(task), ownerCell);
+  return row;
 }
 
 function renderTasks() {
@@ -159,109 +232,130 @@ function renderTasks() {
   rows.replaceChildren();
   if (filtered.length === 0) {
     const row = document.createElement("tr");
-    row.append(makeElement("td", "table-message", "Tidak ada task yang cocok. Ubah kata pencarian atau filter status."));
-    row.firstElementChild.colSpan = 5;
+    const message = makeElement("td", "table-message", "Tidak ada task yang cocok. Ubah kata pencarian atau filter status.");
+    message.colSpan = 5;
+    row.append(message);
     rows.append(row);
     return;
   }
+  for (const task of filtered) rows.append(makeRow(task));
+}
 
-  for (const task of filtered) {
-    const row = document.createElement("tr");
-    row.dataset.state = task.state;
-    const idCell = makeElement("td", "task-id", task.id);
-    idCell.dataset.label = "ID";
-    const detailsCell = document.createElement("td");
-    detailsCell.className = "task-main";
-    detailsCell.dataset.label = "Task dan kriteria";
-    detailsCell.append(makeTaskDetails(task));
-    const stateCell = document.createElement("td");
-    stateCell.className = "task-state";
-    stateCell.dataset.label = "Status";
-    stateCell.append(makeStateSelect(task));
-    const dependencyCell = makeDependencyCell(task);
-    const ownerCell = makeElement("td", "owner-cell", task.owner);
-    ownerCell.dataset.label = "Pemilik";
-    row.append(idCell, detailsCell, stateCell, dependencyCell, ownerCell);
-    rows.append(row);
+function patchTaskRow(taskId) {
+  const task = taskById(taskId);
+  const row = rows.querySelector(`tr[data-task-id="${taskId}"]`);
+  if (!task || !row) return;
+  row.dataset.state = task.state;
+  const mainCell = row.querySelector(".task-main");
+  const wasOpen = mainCell.querySelector("details")?.open;
+  mainCell.replaceChildren(makeTaskDetails(task));
+  mainCell.querySelector("details").open = Boolean(wasOpen);
+  row.querySelector(".task-state").replaceChildren(makeStateForm(task));
+  row.querySelector(".owner-cell").textContent = task.owner;
+  // A dependency column that still shows the old state of this task is a second,
+  // contradicting copy of the same fact, so refresh every row that lists it.
+  for (const dependent of tasks.filter((item) => item.depends_on.includes(taskId))) {
+    const dependentRow = rows.querySelector(`tr[data-task-id="${dependent.id}"]`);
+    if (dependentRow) dependentRow.querySelector(".dependency-cell")
+      .replaceWith(makeDependencyCell(dependent));
   }
 }
 
+function adopt(payload) {
+  tasks = payload.tasks;
+  readyTaskIds = payload.ready_task_ids;
+  aiReadyTaskIds = payload.ai_ready_task_ids;
+  revision = payload.revision;
+  refreshSummary();
+}
+
 async function loadTasks() {
-  busy = true;
   refreshButton.disabled = true;
-  feedback.className = "feedback";
-  feedback.textContent = "Memuat task...";
+  setFeedback("Memuat task...");
   try {
     const response = await fetch("/api/tasks", { headers: { Accept: "application/json" } });
     const body = await response.json();
     if (!response.ok) throw new Error(body.error || `Gagal memuat task (${response.status}).`);
-    tasks = body.tasks;
-    readyTaskIds = body.ready_task_ids;
-    aiReadyTaskIds = body.ai_ready_task_ids;
-    updateSummary();
-    feedback.textContent = "";
+    adopt(body);
+    setFeedback("");
     renderTasks();
   } catch (error) {
-    feedback.className = "feedback is-error";
-    feedback.textContent = error instanceof Error ? error.message : "Gagal memuat task.";
+    setFeedback(error instanceof Error ? error.message : "Gagal memuat task.", "error");
     tasks = [];
     readyTaskIds = [];
     aiReadyTaskIds = [];
-    updateSummary();
-    rows.replaceChildren();
+    revision = null;
+    refreshSummary();
     const row = document.createElement("tr");
-    row.append(makeElement("td", "table-message", "Periksa server dan muat ulang untuk mencoba lagi."));
-    row.firstElementChild.colSpan = 5;
-    rows.append(row);
+    const message = makeElement("td", "table-message", "Periksa server dan muat ulang untuk mencoba lagi.");
+    message.colSpan = 5;
+    row.append(message);
+    rows.replaceChildren(row);
   } finally {
-    busy = false;
     refreshButton.disabled = false;
-    for (const select of rows.querySelectorAll(".state-select")) select.disabled = false;
   }
 }
 
-async function saveTaskState(task, select) {
-  const previousState = task.state;
-  const nextState = select.value;
-  if (!states.includes(nextState) || nextState === previousState) return;
-  busy = true;
-  for (const item of rows.querySelectorAll(".state-select")) item.disabled = true;
-  feedback.className = "feedback";
-  feedback.textContent = `Menyimpan ${task.id}...`;
+async function submitTask(form) {
+  const taskId = form.dataset.taskId;
+  const task = taskById(taskId);
+  if (!task) return;
+  const body = { state: form.elements.state.value };
+  const reason = form.elements.status_label.value.trim();
+  const evidence = form.elements.evidence.value.trim();
+  if (reason) body.status_label = reason;
+  if (evidence) body.evidence = evidence;
+  if (body.state === task.state && !reason && !evidence) {
+    setFeedback(`${taskId}: tidak ada yang berubah, jadi tidak ada yang disimpan.`, "error");
+    return;
+  }
+
+  for (const control of form.elements) control.disabled = true;
+  setFeedback(`Menyimpan ${taskId}...`);
   try {
-    const response = await fetch(`/api/tasks/${encodeURIComponent(task.id)}/state`, {
+    const response = await fetch(`/api/tasks/${encodeURIComponent(taskId)}/state`, {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         "X-Tracker-Token": token,
+        ...(revision ? { "If-Match": `"${revision}"` } : {}),
       },
-      body: JSON.stringify({ state: nextState }),
+      body: JSON.stringify(body),
     });
-    const body = await response.json();
-    if (!response.ok) throw new Error(body.error || `Gagal menyimpan (${response.status}).`);
-    tasks = body.tasks;
-    readyTaskIds = body.ready_task_ids;
-    aiReadyTaskIds = body.ai_ready_task_ids;
-    updateSummary();
-    feedback.className = "feedback is-success";
-    feedback.textContent = `${task.id} disimpan sebagai ${stateLabels[nextState]}.`;
-    renderTasks();
-    const updatedSelect = rows.querySelector(`select[data-task-id="${task.id}"]`);
-    if (updatedSelect) updatedSelect.focus();
+    const payload = await response.json();
+    if (!response.ok) {
+      if (response.status === 409) {
+        adopt(payload);
+        patchTaskRow(taskId);
+        setFeedback(
+          `${taskId} sudah diubah proses lain. Data terbaru sudah dimuat, perubahan Anda belum tersimpan.`,
+          "error"
+        );
+        return;
+      }
+      throw new Error(payload.error || `Gagal menyimpan (${response.status}).`);
+    }
+    adopt(payload);
+    patchTaskRow(taskId);
+    setFeedback(`${taskId} tersimpan sebagai ${stateLabels[body.state]}.`, "success");
+    rows.querySelector(`tr[data-task-id="${taskId}"] .state-select`)?.focus();
   } catch (error) {
-    select.value = previousState;
-    feedback.className = "feedback is-error";
-    feedback.textContent = error instanceof Error
-      ? `${error.message} Status lokal belum dikonfirmasi; muat ulang sebelum mencoba lagi.`
-      : "Status gagal disimpan. Muat ulang sebelum mencoba lagi.";
+    setFeedback(
+      `${error instanceof Error ? error.message : "Status gagal disimpan."} Isian Anda masih ada di form.`,
+      "error"
+    );
   } finally {
-    busy = false;
-    refreshButton.disabled = false;
-    for (const item of rows.querySelectorAll(".state-select")) item.disabled = false;
+    for (const control of form.elements) control.disabled = false;
   }
 }
 
+rows.addEventListener("submit", (event) => {
+  const form = event.target.closest(".task-form");
+  if (!form) return;
+  event.preventDefault();
+  void submitTask(form);
+});
 searchInput.addEventListener("input", renderTasks);
 stateFilter.addEventListener("change", renderTasks);
 refreshButton.addEventListener("click", () => void loadTasks());

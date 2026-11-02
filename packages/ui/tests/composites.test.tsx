@@ -1,7 +1,5 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { renderToStaticMarkup } from "react-dom/server";
-import type { ReactNode } from "react";
 import {
   EmptyState,
   IconTile,
@@ -11,6 +9,7 @@ import {
   MetricRow,
   NavSectionLabel,
   NavLink,
+  OptionNav,
   PageHeader,
   SectionGrid,
   SidePanel,
@@ -20,33 +19,14 @@ import {
   WorkspaceSidebar,
   type SidebarNavItem,
 } from "../src/index.js";
+import { assertNoOwnColours, render } from "./render-helpers.js";
 
 /**
- * Rendering contract for the `@moonwitness/ui` composites (MW-0574, MW-0580).
- *
- * Two properties matter for the centralisation workstream and are easy to
- * regress silently: the design-system class must survive a caller-supplied
- * `className`, and no screen may end up shipping its own colours again. The
- * second one is asserted on rendered markup, so it catches a hardcoded colour
- * wherever it lands, and comments are irrelevant to it.
+ * Behaviour of each composite (MW-0574, MW-0580): the states it renders, the
+ * slots it exposes, and the accessibility names it carries. The shared
+ * `className`-override contract lives in `class-name-contract.test.tsx`, and
+ * the colour rules it is checked against come from `render-helpers.tsx`.
  */
-const HEX = /#[0-9a-fA-F]{3,8}\b/;
-const DEFAULT_PALETTE =
-  /(?:bg|text|border|divide|outline|ring|placeholder)-(?:stone|zinc|neutral|gray|slate|white|black|amber|emerald|green|red|rose|sky|blue)-\d?/;
-
-function render(node: ReactNode): string {
-  return renderToStaticMarkup(node);
-}
-
-function assertNoOwnColours(markup: string, label: string): void {
-  assert.equal(HEX.test(markup), false, `${label} rendered a hex colour`);
-  assert.equal(
-    DEFAULT_PALETTE.test(markup),
-    false,
-    `${label} rendered a Tailwind default-palette class`,
-  );
-}
-
 void test("NavLink keeps ql-nav-link when className overrides and marks the active row", () => {
   const plain = render(
     <NavLink href="/models">Models</NavLink>,
@@ -77,10 +57,8 @@ void test("SidebarBrand renders the wordmark, the tile, and a safe default href"
   const markup = render(<SidebarBrand icon={<i />} label="MoonWitness" />);
   assert.match(markup, /href="\/command-center"/);
   assert.match(markup, /ql-hud-brand/);
-  assert.match(markup, /rounded-xl/);
-  assert.match(markup, /border-hairline/);
-  assert.match(markup, /bg-panel-edge/);
-  assert.match(markup, /text-acid/);
+  assert.match(markup, /ql-icon-tile/);
+  assert.match(markup, /ql-icon-tile--sm/);
   assert.match(markup, /MoonWitness/);
   assertNoOwnColours(markup, "SidebarBrand");
 });
@@ -119,7 +97,9 @@ void test("PageHeader emits eyebrow, heading, description and an action slot", (
   assert.match(markup, /<h1[^>]*>Providers<\/h1>/);
   assert.match(markup, /A description/);
   assert.match(markup, /Section/);
-  assert.match(markup, /text-acid-dark/);
+  // The eyebrow is the package's shared `.ql-eyebrow` rule (the one SidePanel
+  // uses), not a per-component utility copy of it.
+  assert.match(markup, /class="ql-eyebrow"/);
   assertNoOwnColours(markup, "PageHeader");
 });
 
@@ -140,7 +120,7 @@ void test("EmptyState and SectionGrid compose without stealing the caller class"
   const empty = render(
     <EmptyState className="mt-6" description="Nothing here" title="Empty" />,
   );
-  assert.match(empty, /border-hairline/);
+  assert.match(empty, /ql-card/);
   assert.match(empty, /mt-6/);
   assert.match(empty, /Nothing here/);
   assertNoOwnColours(empty, "EmptyState");
@@ -168,8 +148,15 @@ void test("MetricList/MetricRow pair the terms and can drop the divider", () => 
   assert.match(markup, /<dd/);
   assert.match(markup, /last run/);
   const rows = markup.split("</dt>");
-  assert.equal(/sm:border-b-0/.test(rows[0]), false, "first row must be undivided");
-  assert.match(rows[1], /sm:border-b-0/);
+  assert.equal(
+    /ql-metric-row--divided/.test(rows[0]),
+    false,
+    "first row must be undivided",
+  );
+  assert.match(rows[1], /ql-metric-row--divided/);
+  assert.match(markup, /ql-metric-row__label/);
+  assert.match(markup, /ql-metric-row__value/);
+  assert.match(markup, /ql-metric-row__hint/);
   assertNoOwnColours(markup, "MetricRow");
 });
 
@@ -179,8 +166,8 @@ void test("IconTile exposes size and tone variants", () => {
       <i />
     </IconTile>,
   );
-  assert.match(accent, /size-8/);
-  assert.match(accent, /text-acid/);
+  assert.match(accent, /ql-icon-tile/);
+  assert.match(accent, /ql-icon-tile--sm/);
   assert.match(accent, /aria-hidden="true"/);
 
   const large = render(
@@ -188,10 +175,18 @@ void test("IconTile exposes size and tone variants", () => {
       <i />
     </IconTile>,
   );
-  assert.match(large, /size-14/);
-  assert.match(large, /shadow-hud-sm/);
-  assert.match(large, /text-ink-soft/);
+  assert.match(large, /ql-icon-tile--lg/);
+  assert.match(large, /ql-icon-tile--plain/);
   assertNoOwnColours(large, "IconTile");
+});
+
+void test("SidebarNav renders its list shape from ql-sidebar-nav", () => {
+  const nav = render(
+    <SidebarNav items={[{ href: "/corpus", label: "Quran" }]} label="Sections" />,
+  );
+  assert.match(nav, /<nav[^>]*class="ql-sidebar-nav mt-6"/);
+  assert.match(nav, /aria-label="Sections"/);
+  assertNoOwnColours(nav, "SidebarNav");
 });
 
 void test("NavSectionLabel renders the design-system section heading", () => {
@@ -199,6 +194,23 @@ void test("NavSectionLabel renders the design-system section heading", () => {
   assert.match(markup, /ql-nav-section/);
   assert.match(markup, /Zones/);
   assertNoOwnColours(markup, "NavSectionLabel");
+});
+
+void test("OptionNav keeps the shared list shape for row-provided navs", () => {
+  const nav = render(
+    <OptionNav label="Zones">
+      <ListOption selected onSelect={() => undefined} variant="nav">
+        example.com
+      </ListOption>
+    </OptionNav>,
+  );
+  // No top margin: the section label above already carries the spacing, and
+  // the geometry of the list must come from the stylesheet, not the screen.
+  assert.match(nav, /<nav[^>]*class="ql-sidebar-nav"/);
+  assert.doesNotMatch(nav, /ql-sidebar-nav mt-/);
+  assert.match(nav, /aria-label="Zones"/);
+  assert.match(nav, /ql-nav-link[^>"]*is-active|is-active/);
+  assertNoOwnColours(nav, "OptionNav");
 });
 
 void test("ListOption marks selection with is-selected, and is-active in the nav variant", () => {

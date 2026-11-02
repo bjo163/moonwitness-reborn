@@ -286,8 +286,8 @@
       "id": "MW-0558",
       "title": "Manual browser click-through evidence (member submit → admin approve → PATCH bypass refused)",
       "section": "Workstream MW-0550 — CAB / Project Management via `ql_workflow`",
-      "state": "pending",
-      "status_label": "Pending owner browser verification",
+      "state": "blocked",
+      "status_label": "Blocked by manual-verification stop condition: isolated local workflow environment and non-production test accounts are unavailable",
       "owner": "Owner",
       "depends_on": [],
       "acceptance_criteria": "MW-0507 precedent applies — must not be reported as \"done\" until verified in a real browser. Automated tests already cover the bypass refusal and self-approval refusal (MW-0553/0554/0556); only the end-to-end UI flow needs manual capture",
@@ -395,7 +395,7 @@
       "title": "Ship composite primitives in `packages/ui/src/composites/` with rendering tests",
       "section": "Workstream MW-0570 — Centralise UI into `@moonwitness/ui`",
       "state": "done",
-      "status_label": "Implemented; 18 rendering/token tests green under `turbo run test` (row was reopened because none of them had existed)",
+      "status_label": "Implemented; 37 rendering/token tests green under `turbo run test` (row was reopened because none of them had existed) — 16 behaviour tests plus a table-driven `className`-override contract that asserts every composite keeps its design-system class (`ql-nav-link`, `ql-hud-brand`, `ql-sidebar-nav`, `ql-icon-tile`, `ql-metric-row`, `ql-list-option`, `ql-side-panel`, `ql-card`, `ql-hud-app`, `ql-eyebrow` path) and renders no hex or default-palette class",
       "owner": "Owner",
       "depends_on": [
         "MW-0572"
@@ -431,7 +431,7 @@
         "Acceptance Criterion"
       ],
       "metadata": {},
-      "completed_at": null,
+      "completed_at": "2026-11-01T16:05:00Z",
       "dependency_label": "MW-0571"
     },
     {
@@ -439,7 +439,7 @@
       "title": "Migrate `apps/web` screens to composite primitives and design tokens (14 sub-screens)",
       "section": "Workstream MW-0570 — Centralise UI into `@moonwitness/ui`",
       "state": "done",
-      "status_label": "Complete — shared workspace primitives and tokens wired; localized `DataTable` labels, UI consistency, full tests/typecheck, and RTL contract verified",
+      "status_label": "Complete — all 14 screens compose from `@moonwitness/ui`; the last hand-rolled metric `<dl>` on `/command-center` and the three hand-applied `ql-sidebar-nav` shells moved to `MetricList`/`MetricRow`/`OptionNav`; browser-verified at 1280px: 3 `.ql-metric-row` on `/` and `/command-center` with identical computed geometry (baseline, space-between, 16px padding, 18px tabular-nums value), 0 `div.flex.items-baseline.justify-between` leftovers, 0 elements carrying a hex/`stone-*`/`bg-white` class, localized `DataTable` labels, UI consistency and RTL contract verified",
       "owner": "Owner",
       "depends_on": [
         "MW-0573",
@@ -485,7 +485,7 @@
       "title": "Update skill and package documentation (`.github/skills/moonwitness-development`, `packages/ui/README.md`)",
       "section": "Workstream MW-0570 — Centralise UI into `@moonwitness/ui`",
       "state": "done",
-      "status_label": "Implemented; skill, package README, AGENTS.md and the domain row all describe the shipped surface",
+      "status_label": "Implemented; `moonwitness-development` skill has a UI Consistency Rules section pointing at MW-ADR-020 with the add-a-token procedure, `packages/ui/README.md` documents every layer with one example usage per primitive and composite (now including `OptionNav`) plus a table of the raw `.ql-*` class contracts a screen may still apply, AGENTS.md and the domain row list the shipped surface; `pnpm tracker:check` green",
       "owner": "Owner",
       "depends_on": [
         "MW-0577"
@@ -499,7 +499,7 @@
         "Acceptance Criterion"
       ],
       "metadata": {},
-      "completed_at": "2026-11-01T17:20:00Z",
+      "completed_at": "2026-11-01T19:05:00Z",
       "dependency_label": "MW-0577"
     },
     {
@@ -529,7 +529,7 @@
       "title": "Ship SidebarNav, IconTile, MetricRow, ListOption, SidePanel and WorkspaceSidebar composites",
       "section": "Workstream MW-0570 — Centralise UI into `@moonwitness/ui`",
       "state": "done",
-      "status_label": "Implemented; exported from `@moonwitness/ui` and consumed by apps/web screens",
+      "status_label": "Implemented; exported from `@moonwitness/ui` and consumed by apps/web screens, plus `OptionNav` for the sidebar lists whose rows are selectable options (model picker, DNS zones, chat history) so no screen writes `className=\"ql-sidebar-nav\"` any more; `PageHeader`'s eyebrow now renders the shared `.ql-eyebrow` rule instead of a utility copy (measured in the browser: 0.65rem/650/uppercase, the same rule `SidePanel` uses)",
       "owner": "Owner",
       "depends_on": [
         "MW-0579"
@@ -550,8 +550,8 @@
       "id": "MW-0581",
       "title": "Convert the three light-theme screens to the dark HUD surface vocabulary",
       "section": "Workstream MW-0570 — Centralise UI into `@moonwitness/ui`",
-      "state": "in_progress",
-      "status_label": "In progress — markup converted to `Card`/`Select` and tokens; before/after browser screenshots still required as evidence",
+      "state": "done",
+      "status_label": "Verified in a browser on 2026-11-01 against a local build and re-verified on the post-refactor production build at 1280px: /providers, /admin/users and /admin/translations compute to rgb(17,23,19) panels with 1px rgb(56,68,58) hairlines and border-radius 0, zero elements with a near-white background (scripted scan of every node), the 500 catalogue rows all resolve to radius 0 with rgb(18,26,19) on selection, the auth input focus shows the lime inset bar rgb(215,255,99) 3px 0 0 inset with rgb(158,189,66) border, and /models with the API stopped renders the shared dark auth card plus a `ql-alert--error` surface; screenshots in the run record",
       "owner": "Owner",
       "depends_on": [
         "MW-0579",
@@ -566,7 +566,7 @@
         "Acceptance Criterion"
       ],
       "metadata": {},
-      "completed_at": null,
+      "completed_at": "2026-11-01T18:20:00Z",
       "dependency_label": "MW-0579, MW-0580"
     },
     {
@@ -596,7 +596,7 @@
       "title": "Remove design-system CSS that reached into `apps/web` markup",
       "section": "Workstream MW-0570 — Centralise UI into `@moonwitness/ui`",
       "state": "done",
-      "status_label": "Implemented; 74 lines of app-coupled rules deleted",
+      "status_label": "Implemented; 74 lines of app-coupled rules deleted, then the 8 legacy names left behind (`.ql-model-workspace`, `.ql-model-heading`, `.ql-model-table-content`, `.ql-model-editor`, `.ql-model-editor__header`, `.ql-model-editor__form`, `.ql-model-checkbox`, `.ql-page-heading`) removed once a source scan proved no reference; the production CSS build now contains 0 occurrences of `ql-model-`/`ql-page-heading`",
       "owner": "Owner",
       "depends_on": [
         "MW-0576"
@@ -807,8 +807,8 @@
       "id": "MW-0604",
       "title": "Specify search and indexing boundaries",
       "section": "Planning gaps and audit goals",
-      "state": "proposed",
-      "status_label": "Proposed",
+      "state": "done",
+      "status_label": "Decision brief prepared; unratified owner choices remain at MW-0616",
       "owner": "Owner",
       "depends_on": [],
       "acceptance_criteria": "Define `ql_search` inputs, source-of-truth boundary, indexing/update/delete lifecycle, rights/private-field exclusions, query API, ownership, failure behavior, and tests; no canonical content is owned by indexes.",
@@ -823,7 +823,7 @@
       "metadata": {
         "Master-prompt mapping": "PHASE 3: Search; PILLAR 10 §10.4"
       },
-      "completed_at": null,
+      "completed_at": "2026-11-01T18:24:30Z",
       "dependency_label": "—",
       "execution_packet": {
         "mode": "decision_prep",
@@ -874,8 +874,8 @@
       "id": "MW-0605",
       "title": "Decide storage scope and write its security contract",
       "section": "Planning gaps and audit goals",
-      "state": "proposed",
-      "status_label": "Proposed",
+      "state": "done",
+      "status_label": "Delegated decision recorded in infrastructure blueprint: external/object storage is deferred with a binary-media, rights, lifecycle, threat-model, and recovery trigger; no provider or product upload is approved",
       "owner": "Owner",
       "depends_on": [],
       "acceptance_criteria": "Decide whether external/object storage is in the approved scope; if yes, specify ownership, access, encryption, rights, retention/deletion, limits, threat model, and verification; if no, record the deferral and trigger.",
@@ -890,7 +890,9 @@
       "metadata": {
         "Master-prompt mapping": "PHASE 3: Storage; PILLAR 10 §10.5"
       },
-      "completed_at": null,
+      "completed_at": "2026-11-02T00:42:54Z",
+      "evidence": "Delegated deferral and re-open trigger are documented in docs/operations/INFRASTRUCTURE_AND_DEPLOYMENT_BLUEPRINT.md; python -B docs/audit/tools/requirement_coverage_gate.py passed.",
+      "changed_by": "Agent under explicit user delegation on 2026-11-02",
       "dependency_label": "—",
       "execution_packet": {
         "mode": "decision_prep",
@@ -944,8 +946,8 @@
       "id": "MW-0606",
       "title": "Complete the visual brand specification under the official identity",
       "section": "Planning gaps and audit goals",
-      "state": "proposed",
-      "status_label": "Proposed",
+      "state": "done",
+      "status_label": "Delegated identity, voice, semantic-token ownership, and tenant-brand boundaries recorded in MASTER_DESIGN.md; no logo, palette values, or broader design-system authority is implied",
       "owner": "Owner",
       "depends_on": [
         "MW-0602"
@@ -962,15 +964,17 @@
       "metadata": {
         "Master-prompt mapping": "PHASE 5: Brand; PILLAR 08 §§8.5–8.7"
       },
-      "completed_at": null,
+      "completed_at": "2026-11-02T00:42:54Z",
+      "evidence": "Scoped wordmark, voice, palette-ownership, and tenant-brand decisions are documented in MASTER_DESIGN.md; python -B docs/audit/tools/requirement_coverage_gate.py passed.",
+      "changed_by": "Agent under explicit user delegation on 2026-11-02",
       "dependency_label": "MW-0602"
     },
     {
       "id": "MW-0607",
       "title": "Inventory and name design tokens",
       "section": "Planning gaps and audit goals",
-      "state": "proposed",
-      "status_label": "Proposed",
+      "state": "blocked",
+      "status_label": "Snapshot token saat ini sudah didokumentasikan, tetapi acceptance masih membutuhkan keputusan direction/palette dan token light theme, typography scale, spacing, elevation, radius, focus, serta status yang belum disetujui. Tidak ada nilai baru yang dipilih.",
       "owner": "Owner",
       "depends_on": [
         "MW-0606"
@@ -988,14 +992,17 @@
         "Master-prompt mapping": "PHASE 5: Design Tokens; PILLAR 08 §8.5"
       },
       "completed_at": null,
-      "dependency_label": "MW-0606"
+      "dependency_label": "MW-0606",
+      "state_changed_at": "2026-11-02T00:56:40Z",
+      "changed_by": "Agent",
+      "evidence": "Snapshot nama/nilai token yang ada dan gap per kategori tercatat pada MASTER_DESIGN.md, bagian Existing token inventory. Pemilik terverifikasi melalui ekspor @moonwitness/ui/styles/tokens.css, deklarasi single-source di packages/ui/styles/tokens.css, dan 37 tes paket UI lulus (pnpm --filter @moonwitness/ui test); tracker:check, tracker:test, serta requirement_coverage_gate.py juga lulus. Nilai light theme dan semantic scale tetap belum diratifikasi."
     },
     {
       "id": "MW-0608",
       "title": "Decide and specify the tenant and workspace model",
       "section": "Planning gaps and audit goals",
-      "state": "proposed",
-      "status_label": "Proposed",
+      "state": "done",
+      "status_label": "Delegated single-installation scope recorded in product and security specifications; owner isolation, denied-by-default organization access, no tenant migration, and future negative-test gates are explicit",
       "owner": "Owner",
       "depends_on": [],
       "acceptance_criteria": "Record whether and how tenants exist, membership/ownership rules, isolation and sharing boundaries, identity/ACL effects, and migration implications; add cross-tenant negative tests to the acceptance plan.",
@@ -1010,7 +1017,9 @@
       "metadata": {
         "Master-prompt mapping": "PHASE 6: Tenant Model; PILLAR 08 §8.7; PILLAR 09"
       },
-      "completed_at": null,
+      "completed_at": "2026-11-02T00:42:54Z",
+      "evidence": "Single-installation, owner-scope, migration, and negative-test boundaries are documented in docs/product/PRODUCT_SPECIFICATION.md and docs/security/SECURITY_AND_PRIVACY_BLUEPRINT.md; requirement coverage gate passed.",
+      "changed_by": "Agent under explicit user delegation on 2026-11-02",
       "dependency_label": "—",
       "execution_packet": {
         "mode": "decision_prep",
@@ -1065,8 +1074,8 @@
       "id": "MW-0609",
       "title": "Set measurable performance and reliability targets",
       "section": "Planning gaps and audit goals",
-      "state": "proposed",
-      "status_label": "Proposed",
+      "state": "blocked",
+      "status_label": "Delegated decision recorded to defer numeric targets; remains blocked until critical journeys, rights-cleared workload, isolated measurement environment, observation windows, and release gates are approved",
       "owner": "Owner",
       "depends_on": [],
       "acceptance_criteria": "Owner-approved targets cover latency, throughput, corpus/search scale, availability, and recovery where applicable; each target names measurement method, environment, and release gate.",
@@ -1082,6 +1091,7 @@
         "Master-prompt mapping": "PHASE 6: Performance Requirements; PILLAR 10 §§10.8, 10.10"
       },
       "completed_at": null,
+      "changed_by": "Agent under explicit user delegation on 2026-11-02",
       "dependency_label": "—",
       "execution_packet": {
         "mode": "decision_prep",
@@ -1148,8 +1158,8 @@
       "id": "MW-0610",
       "title": "Specify per-domain contracts and events/notifications",
       "section": "Planning gaps and audit goals",
-      "state": "proposed",
-      "status_label": "Proposed",
+      "state": "blocked",
+      "status_label": "Draf matriks P0 §4.4 untuk 23 domain dan 20 atribut sudah dicatat; tetap blocked karena bukti/owner per-domain belum lengkap, kandidat owner belum diratifikasi, dan test coverage belum dibuktikan. Tidak ada domain/event implementation yang disetujui.",
       "owner": "Owner",
       "depends_on": [],
       "acceptance_criteria": "Select a single contract-depth policy; define the previously missing events/notifications contract, then map every required §4.4 attribute to its canonical owner and a test/evidence source.",
@@ -1165,6 +1175,8 @@
         "Master-prompt mapping": "PILLAR 04 §4.4; R-46/R-48"
       },
       "completed_at": null,
+      "evidence": "Draf per-domain P0 dan evidence/test gaps tercatat di docs/architecture/DOMAIN_OWNERSHIP_AND_DEPENDENCIES.md (Draft per-domain §4.4 matrix). python -B docs/audit/tools/requirement_coverage_gate.py lulus; pnpm tracker:check lulus. Matriks belum diterima sebagai kontrak dan task tetap blocked.",
+      "changed_by": "Agent",
       "dependency_label": "—",
       "execution_packet": {
         "mode": "decision_prep",
@@ -1212,14 +1224,15 @@
           "Stop at the documented owner choice; do not mark unresolved contract requirements as accepted.",
           "Stop if an attribute has no evidence-backed owner or test boundary."
         ]
-      }
+      },
+      "state_changed_at": "2026-11-02T00:52:38Z"
     },
     {
       "id": "MW-0611",
       "title": "Resolve domains without estate-source material",
       "section": "Planning gaps and audit goals",
-      "state": "proposed",
-      "status_label": "Proposed",
+      "state": "blocked",
+      "status_label": "Blocked by MW-0610 and owner disposition: no scope, entities, or dependencies will be invented for the five domains",
       "owner": "Owner",
       "depends_on": [
         "MW-0610"
@@ -1280,7 +1293,7 @@
           "docs/governance/TODO.template.md",
           "docs/audit/tools/task_tracker.py",
           "docs/audit/tools/test_task_tracker.py",
-          ".github/skills/task-tracker/SKILL.md"
+          ".github/skills/github-issues/SKILL.md"
         ],
         "checks": [
           "pnpm tracker:check",
@@ -1299,8 +1312,8 @@
       "id": "MW-0613",
       "title": "Define the GitHub label taxonomy",
       "section": "Planning gaps and audit goals",
-      "state": "proposed",
-      "status_label": "Proposed",
+      "state": "done",
+      "status_label": "Proposed taxonomy documented; no GitHub labels created",
       "owner": "Owner",
       "depends_on": [
         "MW-0612"
@@ -1317,15 +1330,15 @@
       "metadata": {
         "Master-prompt mapping": "PHASE 7: Labels; PILLAR 12 §12.4"
       },
-      "completed_at": null,
+      "completed_at": "2026-11-01T18:27:09Z",
       "dependency_label": "MW-0612"
     },
     {
       "id": "MW-0614",
       "title": "Map GitHub Issues, Projects, and Milestones to TODO goals",
       "section": "Planning gaps and audit goals",
-      "state": "proposed",
-      "status_label": "Proposed",
+      "state": "done",
+      "status_label": "Issue/project/milestone mapping documented; no GitHub objects created",
       "owner": "Owner",
       "depends_on": [
         "MW-0612",
@@ -1343,20 +1356,20 @@
       "metadata": {
         "Master-prompt mapping": "PHASE 7: Issues, Project, Milestones; PILLAR 12 §12.4"
       },
-      "completed_at": null,
+      "completed_at": "2026-11-01T18:30:19Z",
       "dependency_label": "MW-0612, MW-0613"
     },
     {
       "id": "MW-0615",
       "title": "Reconcile TODO phase numbering with the legacy phase catalog",
       "section": "Planning gaps and audit goals",
-      "state": "proposed",
-      "status_label": "Proposed",
+      "state": "done",
+      "status_label": "Delegated non-destructive D30 crosswalk added to TODO.template.md; existing headings and task IDs are unchanged, and Cloudflare MW-0500 is explicitly separate from PHASE 12",
       "owner": "Owner",
       "depends_on": [
         "MW-0612"
       ],
-      "acceptance_criteria": "Owner-approved mapping uses the D30 catalog's phase IDs; Cloudflare MW-0500 workstream is explicitly cross-referenced without mislabeling it as catalog PHASE 12.",
+      "acceptance_criteria": "The mapping selected under explicit owner delegation uses the D30 catalog's phase IDs; Cloudflare MW-0500 is explicitly cross-referenced without mislabeling it as catalog PHASE 12.",
       "table_headers": [
         "ID",
         "Goal",
@@ -1368,15 +1381,17 @@
       "metadata": {
         "Master-prompt mapping": "PHASE 0–12; R-45"
       },
-      "completed_at": null,
+      "completed_at": "2026-11-02T00:42:54Z",
+      "evidence": "Separate D30 phase-ID crosswalk and Cloudflare MW-0500 workstream treatment are in docs/governance/TODO.template.md; SHA-256 and base HEAD are recorded in docs/decisions/ADR_REGISTRY.md; requirement coverage gate passed.",
+      "changed_by": "Agent under explicit user delegation on 2026-11-02",
       "dependency_label": "MW-0612"
     },
     {
       "id": "MW-0616",
       "title": "Ratify a stable planning baseline and disposition prior work",
       "section": "Planning gaps and audit goals",
-      "state": "proposed",
-      "status_label": "Proposed; owner action",
+      "state": "blocked",
+      "status_label": "Delegated choice is to defer exact-SHA ratification until dirty worktree changes are dispositioned; current HEAD is context only and the baseline audit remains incomplete",
       "owner": "Owner",
       "depends_on": [
         "MW-0601",
@@ -1408,6 +1423,7 @@
         "Master-prompt mapping": "PILLAR 12; acceptance I; R-42/R-49/R-52"
       },
       "completed_at": null,
+      "changed_by": "Agent under explicit user delegation on 2026-11-02",
       "dependency_label": "MW-0601, MW-0602, MW-0603, MW-0604, MW-0605, MW-0606, MW-0607, MW-0608, MW-0609, MW-0610, MW-0611, MW-0612, MW-0613, MW-0614, MW-0615"
     },
     {
@@ -2510,7 +2526,7 @@
       "title": "Harden workspace i18n metadata coverage",
       "section": "Developer tooling — i18n catalog and browser verification",
       "state": "blocked",
-      "status_label": "Blocked — account-gated workspace locale flows remain unverified because no non-production test account was available; first-use auth UI verified in id/en at desktop/mobile with no horizontal overflow, and local API/web now return 200",
+      "status_label": "Blocked: addon metadata key parity and anonymous locale/error fallback checks pass; locale controls meet 44px at 375/768/1280px with no overflow and locale persists on reload. Authenticated workspace locale flows still need a safe non-production account/session.",
       "owner": "Owner",
       "depends_on": [
         "MW-0806"
@@ -4303,8 +4319,8 @@
       "id": "MW-1238",
       "title": "Standardize addon default data and add country reference data",
       "section": "Addon platform - default data and reference catalogs",
-      "state": "in_progress",
-      "status_label": "Implementing user-approved addon seed standard and country reference model",
+      "state": "done",
+      "status_label": "Default data standard and ql_geo res.country verified; workspace lint passes with existing warnings, build, typecheck, tests, and tracker gates pass",
       "owner": "Owner",
       "depends_on": [],
       "acceptance_criteria": "Every ql_* addon manifest explicitly declares default data; a shared QlOrm runner validates and applies it after schema sync in dependency order with stable external IDs and per-record insert-only/reconcile policy; existing ql_auth and ql_i18n defaults use the shared mechanism; ql_geo provides res.country for all ISO 3166-1 alpha-2 countries with English names; empty seed lists are allowed only where no safe, legitimate system/reference data exists; no synthetic user-owned or unlicensed corpus/source records are introduced; focused tests, documentation, workspace quality gates, and task-tracker checks pass.",
@@ -4318,8 +4334,140 @@
       "metadata": {
         "Master-prompt mapping": "Addon architecture and default reference data"
       },
-      "completed_at": null,
+      "completed_at": "2026-11-01T18:02:54Z",
       "dependency_label": "None"
+    },
+    {
+      "id": "MW-1239",
+      "title": "Recording delegated decision authority and safe owner choices",
+      "section": "Developer tooling — canonical project task tracker",
+      "state": "done",
+      "status_label": "Delegated choices and workflow guidance are documented; exact-SHA ratification and account-gated verification remain separate blockers.",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Record only evidence-backed, reversible delegated choices for MW-0605, MW-0606, MW-0608, MW-0610, and MW-0615 in their canonical documents; keep MW-0609 and MW-0616 blocked where targets or clean-baseline ratification cannot be supplied; update root and agent workflow instructions so explicit owner delegation can authorize bounded decisions without overriding rights, direct-evidence, manual-verification, or release gates; synchronize tracker and generated TODO; run tracker and focused documentation gates.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "Explicit owner-delegated decision workflow"
+      },
+      "completed_at": "2026-11-02T00:42:54Z",
+      "evidence": "Bounded delegated decisions are recorded in the canonical design, product, security, infrastructure, architecture, and ADR documents; agent guidance is updated; tracker:check, tracker:test, and requirement_coverage_gate.py passed.",
+      "changed_by": "Agent under explicit user delegation on 2026-11-02",
+      "dependency_label": "—",
+      "execution_packet": {
+        "mode": "autonomous",
+        "scope": "Record the owner's explicit chat delegation and make conservative, evidence-backed decisions from the prepared options for storage, brand boundary, tenancy, domain-contract depth/events, and phase crosswalk; update the decision records and agent instructions for this bounded delegation pattern.",
+        "non_goals": [
+          "Do not ratify an exact commit SHA or accept dirty-worktree changes.",
+          "Do not invent numeric performance targets or claim measurements.",
+          "Do not claim rights, legal, security, provider, production, or external approvals without their required evidence.",
+          "Do not fabricate account-gated browser evidence or mark manual-verification tasks done.",
+          "Do not commit, push, create GitHub records, or deploy."
+        ],
+        "spec_refs": [
+          "AGENTS.md#Alur kerja dan validasi",
+          ".github/skills/github-issues/SKILL.md",
+          "docs/decisions/ADR_REGISTRY.md"
+        ],
+        "requirement_ids": [],
+        "touchpoints": [
+          "AGENTS.md",
+          ".github/agents/moonwitness-engineer.agent.md",
+          ".github/skills/github-issues/SKILL.md",
+          "docs/governance/TODO.template.md",
+          "docs/governance/task-tracker.json",
+          "docs/governance/REQUIREMENTS_TRACEABILITY.md",
+          "docs/decisions/ADR_REGISTRY.md",
+          "docs/architecture/DOMAIN_OWNERSHIP_AND_DEPENDENCIES.md",
+          "MASTER_DESIGN.md",
+          "docs/product/PRODUCT_SPECIFICATION.md",
+          "docs/operations/INFRASTRUCTURE_AND_DEPLOYMENT_BLUEPRINT.md",
+          "docs/security/SECURITY_AND_PRIVACY_BLUEPRINT.md"
+        ],
+        "checks": [
+          "pnpm tracker:render",
+          "pnpm tracker:check",
+          "pnpm tracker:test",
+          "python -B docs/audit/tools/requirement_coverage_gate.py"
+        ],
+        "stop_conditions": [
+          "Keep any decision blocked if its acceptance requires exact-SHA ratification, legal/rights evidence, an approved numeric workload, or an actual non-production browser/account interaction.",
+          "Do not infer that a bounded delegated decision authorizes implementation, release, or external action."
+        ]
+      }
+    },
+    {
+      "id": "MW-1240",
+      "title": "Migrate canonical task and documentation sources to GitHub",
+      "section": "Developer tooling — canonical project task tracker",
+      "state": "in_progress",
+      "status_label": "Inventarisasi migrasi task, dokumentasi, tautan, dan dependensi dimulai; belum membuat Issue/Wiki atau menghapus sumber lokal.",
+      "owner": "Owner",
+      "depends_on": [],
+      "acceptance_criteria": "Migrate every pre-existing task ID to exactly one GitHub Issue while preserving status, dependencies, scope, acceptance criteria, evidence, and execution constraints; migrate all human-authored non-code project documentation to GitHub Wiki and repair its references; update local agent bootstrap, CI, audit tooling, and all repository references; remove local task-tracker JSON, generated TODO/template, tracker-only UI/server/tests, and migrated non-code docs only after their remote canonical replacements and consumers are verified. Preserve necessary code/build/test assets and unrelated dirty worktree changes. Use no GitHub Project.",
+      "table_headers": [
+        "ID",
+        "Goal",
+        "Master-prompt mapping",
+        "Depends on",
+        "Status",
+        "Acceptance criterion"
+      ],
+      "metadata": {
+        "Master-prompt mapping": "GitHub Issues and Wiki canonical-source migration"
+      },
+      "completed_at": null,
+      "dependency_label": "—",
+      "execution_packet": {
+        "mode": "autonomous",
+        "scope": "Inventory and migrate the canonical task tracker and human-authored documentation to GitHub Issues and Wiki, then retire local duplicates and update agent/CI/tool references. Preserve all task data and unrelated worktree changes.",
+        "non_goals": [
+          "Do not create a GitHub Project, commit or push repository code, deploy, or change branch protection.",
+          "Do not delete local sources until remote copies, task mappings, and consumers have been verified.",
+          "Do not drop requirement catalog data or audit checks without a verified replacement.",
+          "Do not discard or overwrite unrelated dirty worktree changes."
+        ],
+        "spec_refs": [
+          "docs/governance/GITHUB_GOVERNANCE.md",
+          ".github/skills/github-issues/SKILL.md",
+          "AGENTS.md"
+        ],
+        "requirement_ids": [],
+        "touchpoints": [
+          "docs/governance/task-tracker.json",
+          "docs/governance/TODO.template.md",
+          "TODO.md",
+          "docs/audit/tools/task_tracker.py",
+          "docs/audit/tools/task_tracker_server.py",
+          "docs/audit/tools/test_task_tracker.py",
+          "docs/audit/tools/test_tracker_invariants.py",
+          ".github/workflows/ci.yml",
+          "AGENTS.md",
+          ".github/skills/github-issues/SKILL.md",
+          ".github/skills/moonwitness-development/SKILL.md",
+          ".github/agents/moonwitness-engineer.agent.md",
+          "docs/governance/GITHUB_GOVERNANCE.md"
+        ],
+        "checks": [
+          "Verify one GitHub Issue per task ID with preserved status, dependencies, acceptance criteria, and evidence.",
+          "Verify migrated Wiki pages, internal links, and local cross-references.",
+          "Run relevant lint, typecheck, build, and test commands after local cutover."
+        ],
+        "stop_conditions": [
+          "Stop before local source deletion if Wiki or Issue write access is unavailable or remote replacement content cannot be verified.",
+          "Stop if any task or document cannot be mapped without losing status, evidence, rights constraints, or provenance.",
+          "Stop if a touched dirty file contains conflicting user changes that cannot be safely integrated."
+        ]
+      },
+      "state_changed_at": "2026-11-02T01:13:38Z",
+      "changed_by": "Agent"
     }
   ]
 }

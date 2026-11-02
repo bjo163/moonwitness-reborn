@@ -23,7 +23,7 @@ export interface MetricRowProps {
   value: ReactNode;
   /** Secondary line under the label, e.g. a unit or a timestamp. */
   hint?: ReactNode;
-  /** Draws the hairline separator on wide viewports. Defaults to `true`. */
+  /** Draws the hairline separator. Defaults to `true`. */
   divided?: boolean;
   className?: string;
 }
@@ -39,16 +39,16 @@ export function MetricRow({
   return (
     <div
       className={cn(
-        "flex items-baseline justify-between gap-3 py-4",
-        divided && "border-b border-hairline sm:border-b-0",
+        "ql-metric-row",
+        divided && "ql-metric-row--divided",
         className,
       )}
     >
-      <dt className="min-w-0 text-sm text-ink-soft">
+      <dt className="ql-metric-row__label">
         {label}
-        {hasHint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
+        {hasHint && <span className="ql-metric-row__hint">{hint}</span>}
       </dt>
-      <dd className="text-lg font-semibold tabular-nums text-ink">{value}</dd>
+      <dd className="ql-metric-row__value">{value}</dd>
     </div>
   );
 }

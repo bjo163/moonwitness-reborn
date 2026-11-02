@@ -8,9 +8,10 @@ Browser is untrusted. API is the authentication/request boundary, not the domain
 
 ## Required controls
 
-- Deny by default; explicit model/action ACL and owner field; tenant scope only if adopted.
+- Deny by default; explicit model/action ACL and owner field. The delegated current scope is single-installation with no tenant or organization-wide sharing dimension; any organization-wide access remains denied unless separately modeled and authorized.
 - Enforce authorization in server-side addon/service on every operation, including internal service calls and background jobs.
 - Test cross-user/tenant reads and writes, private-field omission, role escalation and direct object references.
+- Under the current single-installation scope, reject crafted tenant/workspace selectors as an authorization bypass and prove cross-user isolation on generic CRUD and internal service paths. If tenants are later adopted, require cross-tenant membership, revocation, sharing, and migration/quarantine negative tests before implementation.
 - Keep credentials and provider keys private; encrypt provider secrets at rest; write-only input and masked output; rotate/revoke path.
 - Hash passwords with established password KDF; store only session-token hashes; expire/revoke sessions; secure cookie settings.
 - Validate request size/type and domain constraints; prevent unsafe query construction; rate limit authentication and expensive AI/search paths.
@@ -57,4 +58,4 @@ Additional runtime limits from the same source: `readJson()` buffers `request.te
 
 ## Open policy decisions
 
-Encryption key storage/rotation, breach response, retention schedule, data subject/export/deletion policy, tenant model, MFA, rate limits, session lifetimes, audit-log retention, external provider data residency, and rights takedown workflow. Define before production deployment.
+Encryption key storage/rotation, breach response, retention schedule, data subject/export/deletion policy, any future multi-tenant or organization-sharing model, MFA, rate limits, session lifetimes, audit-log retention, external provider data residency, and rights takedown workflow. Define before production deployment.

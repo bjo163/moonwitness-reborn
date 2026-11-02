@@ -13,9 +13,10 @@ export interface EmptyStateProps {
  * Standard "no data yet / nothing matches" surface. Consolidates the
  * per-screen empty-state blocks (`workflow.empty`, `corpus-shelf
  * "No published editions yet"`, etc.) that previously each picked their
- * own spacing and colour. Colour comes from the design-system tokens
- * (`text-muted`, `border-hairline`), so the message reads consistently
- * across every workspace (MW-ADR-020).
+ * own spacing and colour. It is a `Card` surface by class (`ql-card`: hairline
+ * border, `--color-panel`, hard offset shadow, square corners) so an empty
+ * state cannot look like a different design language from the panel it sits in.
+ * Colour comes from the design-system tokens (MW-ADR-020).
  */
 export function EmptyState({
   title,
@@ -27,7 +28,7 @@ export function EmptyState({
   return (
     <section
       className={cn(
-        "flex flex-col items-center gap-3 rounded-lg border border-hairline bg-panel p-8 text-center",
+        "ql-card flex flex-col items-center gap-3 p-8 text-center",
         className,
       )}
     >

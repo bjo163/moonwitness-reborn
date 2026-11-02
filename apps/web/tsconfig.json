@@ -29,8 +29,16 @@
     }
   },
   "include": [
+    ".next-budget/types/**/*.ts",
     ".next-i18n-preview/types/**/*.ts",
     ".next-size-check/types/**/*.ts",
+    ".next-verify-ui/types/**/*.ts",
+    ".next-verify/types/**/*.ts",
+    ".next-verify3003/types/**/*.ts",
+    ".next-verify3007/types/**/*.ts",
+    ".next-verify3008/types/**/*.ts",
+    ".next-verify3009/types/**/*.ts",
+    ".next-verify3010/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",

@@ -9,9 +9,9 @@ This table now covers **all 23 domains mapped from the D30 legacy requirement ca
 | `ql_base` / shared kernel | shared identifiers, locale primitives, temporal primitives, common errors, the metadata shapes other domains reuse, and the technical external-ID registry (`ir.model.data`) | No universal business entity table; holds no operational or domain records itself |
 | `ql_geo` / geographic reference | shared ISO 3166-1 country reference records (`res.country`, alpha-2 code and English name) | Does not own user addresses, country subdivisions, or event/place records |
 | `@moonwitness/types` / type-only vocabulary kernel | transport-neutral TypeScript unions reused by `ql_orm`, `@moonwitness/moonclient`, and every `ql_*` addon: `FieldType`, `ViewType`, `Operation`, `RecordValue`/`RecordValues`, `ConnectorTokenSource`, `ConnectorVerifyStatus`, `ChatRole` | Not a domain model. Holds no `*Dto`, no routes, no runtime values. Request/response contracts and the SDK still live in `@moonwitness/moonclient` (MW-ADR-004). `ql_base` remains the shared *addon* kernel that owns models. |
-| `@moonwitness/ui` / design-system kernel (MW-ADR-020) | The single Tailwind v4 `@theme` block (`packages/ui/styles/tokens.css`), the browser reset (`base.css`), every `.ql-*` rule (`components.css`), the composed one-line app entry (`preset.css`), and every React primitive/composite: `Button`, `Input`, `Textarea`, `Select`, `Checkbox`, `Badge`, `Alert`, `Card`/`CardHeader`/`CardContent`, `FormField`, `RawField`, `DataTable`, `WorkspaceTemplate`, `CenteredAuth`, and the composites added under MW-0570: `NavLink`, `SidebarBrand`, `SidebarFooter`, `PageHeader`, `LoadingScreen`, `EmptyState`, `SectionGrid`, plus `SidebarNav`, `NavSectionLabel`, `IconTile`, `MetricRow`/`MetricList`, `ListOption`, `SidePanel` and `WorkspaceSidebar` (MW-0580) | Owns no data fetching and no HTTP contract; does not import `@moonwitness/moonclient` or any `ql_*` addon. Session/auth state hooks belong to the consuming app, not here. No second design-system dependency is permitted in the estate. |
+| `@moonwitness/ui` / design-system kernel (MW-ADR-020) | The single Tailwind v4 `@theme` block (`packages/ui/styles/tokens.css`), the browser reset (`base.css`), every `.ql-*` rule (`components.css`), the composed one-line app entry (`preset.css`), and every React primitive/composite: `Button`, `Input`, `Textarea`, `Select`, `Checkbox`, `Badge`, `Alert`, `Card`/`CardHeader`/`CardContent`, `FormField`, `RawField`, `DataTable`, `WorkspaceTemplate`, `CenteredAuth`, and the composites added under MW-0570: `NavLink`, `SidebarBrand`, `SidebarFooter`, `PageHeader`, `LoadingScreen`, `EmptyState`, `SectionGrid`, plus `SidebarNav`, `OptionNav`, `NavSectionLabel`, `IconTile`, `MetricRow`/`MetricList`, `ListOption`, `SidePanel` and `WorkspaceSidebar` (MW-0580) | Owns no data fetching and no HTTP contract; does not import `@moonwitness/moonclient` or any `ql_*` addon. Session/auth state hooks belong to the consuming app, not here. No second design-system dependency is permitted in the estate. |
 | `ql_auth` / identity | user principals, credentials, sessions, roles/grants, single-use verification tokens (`res.verification`) | Not a historical/fictional person registry; no addon stores message content — the API-side SMTP adapter and password-reset email were removed |
-| `ql_org` / organization | organizations, tenant scopes, memberships/groups if required | Not product navigation or person biography |
+| `ql_org` / organization (candidate) | Organizations, tenant scopes, memberships/groups only if separately adopted | Not present in the current single-installation scope; not product navigation or person biography |
 | `ql_source` / source registry | source artifact, source version, source citation, rights record and provenance — **first-slice MVP implemented** as four models (`source.artifact`, `source.version`, `source.rights`, append-only `source.provenance`) behind a `/source/*` read-only prefix handler; the 9-stage lifecycle from `docs/data/DATA_LIFECYCLE_AND_PROVENANCE.md:8-12` is a required field on every record with `rights_status` defaulting to `"unknown"` (deny-by-default); rights/provenance transitions only via service path per MW-ADR-019 | Does not own normalized corpus text or research conclusions — that is `ql_corpus` |
 | `ql_corpus` / RGBL | work, expression/edition, passage, exact text, translation and lexical records — **first-slice MVP implemented** as four stored models (`corpus.work`, `corpus.edition`, `corpus.passage`, `corpus.annotation`) plus the read-only `corpus.lexical_candidate` computed model. The computed model emits exploratory, deterministic, versioned Arabic token frequencies only from published Quran editions whose `source.rights` action `transform` is cleared; it carries verse/checksum provenance and deliberately exposes no unmeasured confidence score or review state. It does not detect or certify Divine Names. Human assessments live separately in `ql_research`. The storage-level religious-integrity invariant from MW-ADR-019 remains enforced: `corpus.passage.authority` accepts only `"revelation_verbatim"` or `"translation"` via `authorityValidator(TEXT_AUTHORITIES)`, `corpus.annotation.authority` rejects `"revelation_verbatim"` via `authorityValidator(ANNOTATION_AUTHORITIES)`, and `assertEditionKindLocaleInvariant` closes the cross-field gap that a single-value QlOrm validator cannot express; text is imported exclusively via the offline `pnpm --filter ql_corpus import:quran` CLI (bulk HTTP is disallowed by `apps/api/src/http/server.ts:111` body cap and by the capability-surface rule in `AGENTS.md:20`); nothing renders publicly until `source.rights.rights_status === "cleared"` and an operator publish action flips `stage` from `"staged"` to `"published"` | Does not own evidence verdicts, rights authority, or all annotation — rights/provenance live in `ql_source`, research conclusions live in `ql_research` |
 | `ql_ontology` / UNILEX | canonical term/concept, definition, alias, semantic mapping — **deferred, not implemented**; nothing in reading or attributing the Al-Qur'an requires canonical-term mapping in this slice. `mw:dataset:lexicon:quran-arabic-core` (14 rows supplemental, per `docs/knowledge/CORPUS_INTEGRATION_PLAN.md:73`) is the first candidate once UNILEX ships. | Does not own every domain's descriptive text |
@@ -33,9 +33,9 @@ This table now covers **all 23 domains mapped from the D30 legacy requirement ca
 | `ql_chat` | conversation/message records and retention policy | Not a research claim or canonical source record |
 | `ql_integration` | external-service connector registry (`integration.connector`) and the action audit trail (`integration.audit`); the kind catalog and its read-only flag | Never stores a service credential — no secret column, no token in any DTO; it does not know transport details of any provider |
 | `ql_cloudflare` | mirrored Cloudflare zones/records (`cloudflare.zone`, `cloudflare.record`), the API client, sync and DNS mutation rules | The mirror is a cache, not the authority (Cloudflare owns the real zone); it does not own the connector row, the credential, or the audit store |
-| `ql_media` (candidate) | media metadata and approved asset links | Binary storage may be external adapter; rights remain linked to `ql_source` |
+| `ql_media` (candidate) | media metadata and approved asset links | External/object storage is deferred; rights remain linked to `ql_source` |
 | `ql_search` | derived indexes, search sessions and retrieval configuration | Never canonical content: an index is rebuildable and search results never replace the authoritative record |
-| `ql_ops` / platform operations | operational records inside the product — job/run state, notification records, health and configuration state, domain audit references | Not domain knowledge; it records that something happened, it does not decide content. Cloud credentials and connector actions stay in `ql_integration` |
+| `ql_ops` / platform operations (candidate) | Operational records inside the product — job/run state, health/configuration state, and domain audit references | Generalized notification/event ownership is not approved; it records operational facts, not domain knowledge. Cloud credentials and connector actions stay in `ql_integration` |
 
 ## Dependency graph (proposed; arrows mean “depends on/reference contract”)
 
@@ -69,7 +69,7 @@ The D30 catalog preserves the §4.3 source requirements. This table records the 
 | §4.3 domain | Registry owner | Must not own (§4.3) | Owner status here |
 |---|---|---|---|
 | Identity | `ql_auth` | Historical person identity | already present |
-| Organization | `ql_org` | Person biographies | already present |
+| Organization | `ql_org` | Person biographies | addon exists; organization/tenant use is outside the current single-installation scope |
 | Person | `ql_person` | Fictional character | already present |
 | Character | `ql_character` | System user and AI execution | already present |
 | Source Registry | `ql_source` | Full corpus content ownership | already present |
@@ -85,7 +85,7 @@ The D30 catalog preserves the §4.3 source requirements. This table records the 
 | Assessment / Mizan | `ql_mizan` | Universal truth authority | already present |
 | Journey | `ql_journey` | System workflow state machine | already present |
 | Creative | `ql_creative` | Source content canonical ownership | ADDED by this pass |
-| Media | `ql_media` | Physical storage implementation | already present |
+| Media | `ql_media` | Physical storage implementation | addon exists; external/object storage remains deferred |
 | AI Platform | `ql_ai` | User identity and domain canonical truth | already present |
 | Workflow | `ql_workflow` | Domain-specific canonical data | already present |
 | Publication | `ql_publication` | Original authoring data of every domain | ADDED by this pass |
@@ -120,7 +120,7 @@ The D30 catalog preserves the legacy §4.4 requirement for 20 attributes per dom
 | 10 | Permissions | `docs/security/SECURITY_AND_PRIVACY_BLUEPRINT.md`, MW-ADR-014 role catalog, `ownerField` deny-by-default ACL | estate-wide rule only; per-entity ACL matrix pending |
 | 11 | Dependencies | the graph above and each manifest's explicit dependency list | complete as a proposal, unratified |
 | 12 | Read models | view metadata per addon (`MASTER_DESIGN.md`, `@moonwitness/ui`) | estate-wide rule only |
-| 13 | Events and notifications | **nowhere yet** | **gap.** Until this pass no domain owned them at all; §4.3 assigns them to Platform Operations, so `ql_ops` is now the owner and the specification itself is still to be written |
+| 13 | Events and notifications | Domain owns event meaning; operational/delivery ownership remains undecided | **Deferred by delegated decision (2026-11-02):** no general event bus, event-record contract, or outbound notification delivery is in scope. Preserve current synchronous domain/service behavior and existing operational records. This does not ratify `ql_ops` as owner of generalized notifications or delivery. Reopen only for a named use case with authorization, privacy, versioning, idempotency, retry, retention, and failure-visibility requirements. |
 | 14 | Provenance | `docs/data/DATA_LIFECYCLE_AND_PROVENANCE.md` provenance minimum | complete as a rule |
 | 15 | Retention | `docs/data/DATA_LIFECYCLE_AND_PROVENANCE.md` + `docs/security/SECURITY_AND_PRIVACY_BLUEPRINT.md` | estate-wide rule only |
 | 16 | Migration | `docs/data/DATABASE_AND_SCHEMA_STRATEGY.md` + `docs/operations/MIGRATION_AND_ROLLBACK_PLAN.md` | complete as a rule |
@@ -129,7 +129,66 @@ The D30 catalog preserves the legacy §4.4 requirement for 20 attributes per dom
 | 19 | Owner | this registry, one owner row per concept | complete for all 23 |
 | 20 | Non-goals | the non-ownership column above and §4.3 verbatim | complete for all 23 |
 
-Three rows are load-bearing for ratification: #4 (six domains have no entity inventory), #13 (events and notifications have no specification anywhere in the baseline), and the cluster of "estate-wide rule only" rows, which §4.4 asks for per domain. Those are recorded as R-45 and R-46 in `docs/audit/ARCHITECTURE_AND_DOCUMENTATION_RECONCILIATION.md`.
+Three rows are load-bearing for ratification: #4 (six domains have no entity inventory), #13 (a general event/notification implementation contract remains deferred), and the cluster of "estate-wide rule only" rows, which §4.4 asks for per domain. R-45 and R-46 in `docs/audit/ARCHITECTURE_AND_DOCUMENTATION_RECONCILIATION.md` record the original baseline gaps; the delegated deferral and hybrid documentation choice below do not close unresolved domain ownership or implementation evidence.
+
+### Delegated contract-depth decision
+
+The owner delegated selection among the prepared MW-0610 options on 2026-11-02. Use the **hybrid matrix** as the required documentation shape: one shared minimum plus a row for every domain and each of the 20 attributes, explicitly inherited, specified, or not applicable with a reason, with an evidence/test source. This selects a documentation policy only. The candidate domain owners in this proposed registry are not thereby ratified, and the per-domain matrix remains incomplete until ownership and evidence gaps are resolved. No event bus or notification implementation is authorized.
+
+### Draft per-domain §4.4 matrix (not ratified)
+
+This is a compressed matrix: each domain row below applies profile `P0` to all 20 §4.4 attributes. The attribute table defines the status of every cell, its current documentary source, and the test/evidence expected before ratification. `SD` means specified in a proposal, not approved; `INH` means inherited from a shared rule, not proven for a domain; `OPEN` means domain-specific ownership or evidence is missing; `DEF` means explicitly deferred. No attribute is marked not applicable because no domain-specific justification has been established. These statuses describe documentation coverage only and do not claim implementation conformance.
+
+| # | Attribute | P0 status | Current documentary source | Evidence/test needed; current gap |
+|---|---|---|---|---|
+| 1 | Domain ID | SD | §4.3 coverage table above; D30 §4.3 | Check catalog-to-registry name mapping; the requirement gate checks catalog integrity/count, not owner correctness. |
+| 2 | Purpose | SD | Canonical ownership column above; `docs/vision/MASTER_VISION_NARRATIVE.md` | Review purpose against the ratified product journey; no per-domain approval evidence is recorded. |
+| 3 | Scope | SD | Ownership/non-ownership columns above; `docs/product/PRODUCT_SPECIFICATION.md` | Review domain boundaries and overlap; no per-domain ratification evidence is recorded. |
+| 4 | Canonical entities | OPEN | `docs/data/CANONICAL_DATA_DICTIONARY.md` | Complete entity inventory and owner mapping per domain; six added domains have no entity rows. No completeness test evidence is recorded. |
+| 5 | Owned schema/tables | OPEN | `docs/data/DATABASE_AND_SCHEMA_STRATEGY.md`; addon manifests/models are the implementation source | Ratify model inventory and verify manifest/model/schema-sync tests per addon. The conformance audit reports only three implemented target domains; it does not establish a complete approved schema map. |
+| 6 | Identifier strategy | INH | `docs/architecture/SHARED_KERNEL_SPECIFICATION.md` | Verify each ratified model's identifier fields against shared ID primitives; per-domain results are not recorded here. |
+| 7 | Data lifecycle | INH | `docs/data/DATA_LIFECYCLE_AND_PROVENANCE.md` | Verify lifecycle fields/transitions and rights gates in each applicable model/service; per-domain results are not recorded here. |
+| 8 | API routes/contracts | OPEN | `docs/api/API_CONTRACT_SPECIFICATION.md`; shared DTO/routes belong to `@moonwitness/moonclient` | Inventory each approved domain route and run shared-contract/API boundary tests. Per-domain route sets remain pending. |
+| 9 | Service boundaries | INH | `AGENTS.md` (API boundary only) and `BLUEPRINT.md` | Verify behavior remains in addon/runtime services with focused service/API-boundary tests; no complete per-domain evidence matrix exists. |
+| 10 | Permissions | OPEN | `docs/security/SECURITY_AND_PRIVACY_BLUEPRINT.md`; MW-ADR-014 role catalog | Define per-entity ACL/owner fields and test deny-by-default, cross-owner access, private fields, and internal service paths. Shared policy does not prove each domain ACL. |
+| 11 | Dependencies | OPEN | Dependency graph above; addon manifest dependency lists | Ratify proposed edges and verify addon dependency declarations/bootstrap order. The current graph is explicitly a proposal. |
+| 12 | Read models | OPEN | `MASTER_DESIGN.md`; view metadata per addon | Inventory each approved model view and test metadata/rendering. Shared UI policy is not domain view evidence. |
+| 13 | Events and notifications | DEF | Delegated deferral recorded in this section | No general event bus, event-record contract, or outbound notification delivery is in scope. No implementation/test is authorized; reopen only for a named use case and its security/reliability requirements. |
+| 14 | Provenance | INH | `docs/data/DATA_LIFECYCLE_AND_PROVENANCE.md` provenance minimum | Verify source/provenance references and immutable-history rules in applicable models/services; per-domain results are not recorded here. |
+| 15 | Retention | OPEN | `docs/data/DATA_LIFECYCLE_AND_PROVENANCE.md`; `docs/security/SECURITY_AND_PRIVACY_BLUEPRINT.md` | Define per-domain retention/deletion/legal-hold behavior and tests. The estate-wide policy does not supply domain schedules. |
+| 16 | Migration | INH | `docs/data/DATABASE_AND_SCHEMA_STRATEGY.md`; `docs/operations/MIGRATION_AND_ROLLBACK_PLAN.md` | Verify schema rollout and rollback against each ratified addon; per-domain migration evidence is not recorded here. |
+| 17 | Testing | OPEN | `docs/quality/QUALITY_AND_TESTING_STRATEGY.md`; `AGENTS.md` addon test requirements | Provide manifest/model/ACL/service tests for each implemented domain. A shared testing rule is not a test result. |
+| 18 | Integration contracts | OPEN | `docs/api/API_CONTRACT_SPECIFICATION.md`; `ql_integration` connector catalog | Specify domain-specific connector interactions only where approved; test through shared contracts. Per-domain integration evidence is not recorded here. |
+| 19 | Owner | OPEN | Candidate owners in the §4.3 coverage table above | Owner decisions remain proposals until ratified. Reconcile overlaps and unresolved domains before assigning canonical ownership. |
+| 20 | Non-goals | SD | Non-ownership column above; §4.3 boundary rules | Review boundaries against the D30 catalog and test forbidden cross-domain writes/ownership where implemented; no per-domain approval is recorded. |
+
+| §4.3 domain | Candidate owner | Applied §4.4 profile | Domain-specific exception/evidence |
+|---|---|---|---|
+| Identity | `ql_auth` | P0 | A04–A05 inventory/schema and A08–A12 route/ACL/dependency/view details remain open; candidate owner is not ratified. |
+| Organization | `ql_org` | P0 | Current product scope excludes organization/tenant use; A04–A05 and any future re-entry remain open. |
+| Person | `ql_person` | P0 | No domain-specific manifest, entity inventory, ACL, view, or test evidence attached to this draft. |
+| Character | `ql_character` | P0 | No domain-specific manifest, entity inventory, ACL, view, or test evidence attached to this draft. |
+| Source Registry | `ql_source` | P0 | A bounded implementation is described in the §4.3 registry; this profile does not independently verify every §4.4 attribute or test. |
+| Corpus / RGBL | `ql_corpus` | P0 | A bounded implementation is described in the §4.3 registry; rights and religious-integrity gates remain as stated there. This profile does not independently verify every attribute or test. |
+| Ontology / UNILEX | `ql_ontology` | P0 | Implementation is deferred; A04–A05 and all implementation-bound evidence remain open. |
+| Witness | `ql_witness` | P0 | No domain-specific manifest, entity inventory, ACL, view, or test evidence attached to this draft. |
+| Event / LEGEND | `ql_event` | P0 | No domain-specific manifest, entity inventory, ACL, view, or test evidence attached to this draft. |
+| Story / MFTL | `ql_story` | P0 | No domain-specific manifest, entity inventory, ACL, view, or test evidence attached to this draft. |
+| Evidence | `ql_evidence` | P0 | Added to the registry in this pass; A04–A05 and implementation-bound evidence remain open. |
+| Research | `ql_research` | P0 | A bounded review slice is described in the §4.3 registry; this profile does not independently verify every §4.4 attribute or test. |
+| Legal / AWS | `ql_law` | P0 | Added to the registry in this pass; A04–A05 and implementation-bound evidence remain open. |
+| Relationship / CORRELATION | `ql_relationship` | P0 | No domain-specific manifest, entity inventory, ACL, view, or test evidence attached to this draft. |
+| Assessment / Mizan | `ql_mizan` | P0 | No domain-specific manifest, entity inventory, ACL, view, or test evidence attached to this draft. |
+| Journey | `ql_journey` | P0 | No domain-specific manifest, entity inventory, ACL, view, or test evidence attached to this draft. |
+| Creative | `ql_creative` | P0 | Added to the registry in this pass; A04–A05 and implementation-bound evidence remain open. |
+| Media | `ql_media` | P0 | External/object storage remains deferred; A04–A05 and any approved media lifecycle remain open. |
+| AI Platform | `ql_ai` | P0 | No domain-specific manifest, entity inventory, ACL, view, or test evidence attached to this draft. |
+| Workflow | `ql_workflow` | P0 | A bounded implementation is described in the §4.3 registry; this profile does not independently verify every §4.4 attribute or test. |
+| Publication | `ql_publication` | P0 | Added to the registry in this pass; A04–A05 and implementation-bound evidence remain open. |
+| Search | `ql_search` | P0 | Added to the registry in this pass; A04–A05 and implementation-bound evidence remain open. |
+| Platform Operations | `ql_ops` | P0 | Added to the registry in this pass; generalized events/notifications remain deferred; A04–A05 and implementation-bound evidence remain open. |
+
+Profile P0 applies the attribute statuses above to every domain row; the exception column does not upgrade any status. `docs/audit/tools/requirement_coverage_gate.py` validates catalog integrity, counts, and canonical links, not domain-owner approval, model conformance, or test execution. Accordingly, the matrix is a decision-ready gap map, not an accepted contract. Keep MW-0610 blocked until the open cells have evidence-backed owners and test sources, the candidate owners are ratified, and any remaining event/notification question is explicitly resolved as deferred or scoped to a named use case.
 
 ## First slice candidate
 

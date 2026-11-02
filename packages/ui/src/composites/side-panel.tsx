@@ -20,10 +20,10 @@ export interface SidePanelProps {
 
 /**
  * Right-hand editor drawer used to create or edit a record without
- * leaving the list. Promotes the `.ql-model-editor` rule — which was
- * named after its first screen but reused verbatim by the DNS record
- * form — into a component every workspace can call (MW-0580). The close
- * control is a design-system `Button`, never a raw `<button>`.
+ * leaving the screen. It owns the panel rule that first shipped as
+ * `.ql-model-editor` — named after its first screen, then reused verbatim by
+ * the DNS record form — as a component every workspace can call (MW-0580).
+ * The close control is a design-system `Button`, never a raw `<button>`.
  */
 export function SidePanel({
   title,

@@ -11,6 +11,8 @@ import {
   Badge,
   Button,
   LoadingScreen,
+  MetricList,
+  MetricRow,
   PageHeader,
   WorkspaceSidebar,
   WorkspaceTemplate,
@@ -539,32 +541,21 @@ export default function DashboardPage() {
                   )}
                   {projectTracker && (
                     <>
-                      <dl className="grid gap-x-6 border-y border-hairline sm:grid-cols-3">
-                        <div className="flex items-baseline justify-between gap-3 border-b border-hairline py-4 sm:border-b-0">
-                          <dt className="text-sm text-ink-soft">
-                            {copy.dashboard.trackerStateLabels.done}
-                          </dt>
-                          <dd className="text-lg font-semibold tabular-nums text-ink">
-                            {doneCount} / {projectTracker.tasks.length}
-                          </dd>
-                        </div>
-                        <div className="flex items-baseline justify-between gap-3 border-b border-hairline py-4 sm:border-b-0">
-                          <dt className="text-sm text-ink-soft">
-                            {copy.dashboard.trackerReadyTitle}
-                          </dt>
-                          <dd className="text-lg font-semibold tabular-nums text-ink">
-                            {readyTasks.length}
-                          </dd>
-                        </div>
-                        <div className="flex items-baseline justify-between gap-3 py-4">
-                          <dt className="text-sm text-ink-soft">
-                            {copy.dashboard.trackerStateLabels.blocked}
-                          </dt>
-                          <dd className="text-lg font-semibold tabular-nums text-ink">
-                            {blockedCount}
-                          </dd>
-                        </div>
-                      </dl>
+                      <MetricList className="grid gap-x-6 border-y border-hairline sm:grid-cols-3">
+                        <MetricRow
+                          label={copy.dashboard.trackerStateLabels.done}
+                          value={`${doneCount} / ${projectTracker.tasks.length}`}
+                        />
+                        <MetricRow
+                          label={copy.dashboard.trackerReadyTitle}
+                          value={readyTasks.length}
+                        />
+                        <MetricRow
+                          label={copy.dashboard.trackerStateLabels.blocked}
+                          value={blockedCount}
+                          divided={false}
+                        />
+                      </MetricList>
 
                       <h3 className="mt-7 text-lg font-semibold text-ink">
                         {copy.dashboard.trackerReadyTitle}

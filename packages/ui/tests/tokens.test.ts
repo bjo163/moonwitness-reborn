@@ -15,11 +15,18 @@ const STYLES = join(import.meta.dirname, "..", "styles");
 const SOURCE = join(import.meta.dirname, "..", "src");
 
 const tokensCss = readFileSync(join(STYLES, "tokens.css"), "utf8");
-const themeBlock = /@theme\s*\{([^}]*)\}/.exec(tokensCss)?.[1] ?? "";
-const rootBlock = /:root\s*\{([^}]*)\}/.exec(tokensCss)?.[1] ?? "";
+// `@theme` feeds Tailwind utilities; the `:root` blocks hold the `--ql-*`
+// component palette and the legacy `--ql-ui-*` aliases. There is more than one
+// `:root` block, so every one of them has to be collected.
+const themeBlock = [...tokensCss.matchAll(/@theme\s*\{([^}]*)\}/g)]
+  .map((match) => match[1])
+  .join("\n");
+const rootBlocks = [...tokensCss.matchAll(/:root\s*\{([^}]*)\}/g)]
+  .map((match) => match[1])
+  .join("\n");
 
 const declared = new Set<string>();
-for (const block of [themeBlock, rootBlock]) {
+for (const block of [themeBlock, rootBlocks]) {
   for (const match of block.matchAll(/(--[\w-]+)\s*:/g)) {
     declared.add(match[1]);
   }
@@ -139,6 +146,32 @@ void test("shadow utilities used by components resolve to a declared shadow toke
   assert.deepEqual(offenders, [], "components use undeclared shadow tokens");
 });
 
+void test("no stylesheet outside tokens.css writes a colour literal of its own", () => {
+  // A `var(--token, #hex)` / `var(--token, rgba(…))` fallback is allowed: it is
+  // defensive text for a token declared right here in tokens.css. Anything else
+  // is a colour that escaped the single source of truth (MW-ADR-020) — the
+  // browser audit of this migration found `rgba()` tints living in
+  // `components.css` that this rule would not have caught with a hex-only check.
+  const offenders: string[] = [];
+  for (const file of cssFiles(STYLES)) {
+    if (!file.endsWith(".css") || file.endsWith("tokens.css")) continue;
+    const withoutFallbacks = readFileSync(file, "utf8").replace(
+      /var\(\s*--[\w-]+\s*,\s*(?:"[^"]*"|'[^']*'|[^)]*)\)/g,
+      "",
+    );
+    for (const match of withoutFallbacks.matchAll(
+      /#[0-9a-fA-F]{3,8}\b|\brgba?\s*\(/g,
+    )) {
+      offenders.push(`${file}: ${match[0]}`);
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    "colour literals must be declared in tokens.css and consumed via var()",
+  );
+});
+
 void test("the legacy --ql-ui-* surface documented by MW-0572 is intact", () => {
   for (const alias of [
     "--ql-ui-ink",
@@ -152,6 +185,6 @@ void test("the legacy --ql-ui-* surface documented by MW-0572 is intact", () => 
     "--ql-ui-font-mono",
     "--ql-ui-font-sans",
   ]) {
-    assert.equal(rootBlock.includes(`${alias}:`), true, `${alias} was removed`);
+    assert.equal(rootBlocks.includes(`${alias}:`), true, `${alias} was removed`);
   }
 });

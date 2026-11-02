@@ -24,6 +24,10 @@ Local development, CI and production use validated typed configuration. Secrets 
 
 Object storage, email, AI providers and possible MOONSKY/ECHOLOG adapters are optional dependencies. Each needs a threat model, owner, contract, timeout/retry policy, data classification, and degraded mode. ECHOLOG's separate operator identity and MOONSKY's separate console do not become MoonWitness identity.
 
+### Storage scope decision
+
+Under explicit owner delegation on 2026-11-02, external/object storage is deferred. Do not add product uploads, buckets, or a provider dependency. Local filesystem storage remains development/test-only unless separately approved. Reopen this decision only for a named owner-approved binary-media use case with rights and data-classification evidence, access and size limits, retention/deletion/legal-hold policy, threat model, and tested backup/recovery requirements. This decision does not certify any provider or resolve source rights.
+
 ## Transactional mail
 
 Not implemented. Email delivery was removed: the SMTP adapter in `apps/api/src/mail`, the `/auth/forgot-password` and `/auth/reset-password` routes, their `@moonwitness/moonclient` contract, and every `SMTP_*` environment are gone. There is therefore no self-service password recovery; password changes remain manual work on the database. The first owner is created through the one-time setup flow, which is available only while the installation has no active super admin; later public registrations receive the `member` role. Complete this setup from a trusted network before exposing a fresh installation publicly. The Stalwart mail server and Roundcube webmail that were deployed on the Coolify host for the removed email feature are separate infrastructure and still need teardown.

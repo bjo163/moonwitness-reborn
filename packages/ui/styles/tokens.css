@@ -48,6 +48,70 @@
   --shadow-hud-sm: 4px 4px 0 var(--color-void);
 }
 
+
+/*
+ * Component palette.
+ *
+ * Every colour value in the package lives in this file. These are declared
+ * outside the `@theme` block on purpose: they belong to one component and must
+ * NOT become Tailwind utilities (`bg-nav-active-bg` and friends would be a
+ * 30-entry pseudo-palette with no meaning). `components.css` reads them as
+ * `var(--ql-*)`, and `tests/tokens.test.ts` fails if any stylesheet writes a
+ * hex literal of its own.
+ */
+:root {
+  --ql-on-acid: #141912;
+  --ql-button-secondary-border: #687744;
+  --ql-button-secondary-bg: #293320;
+  --ql-button-secondary-bg-hover: #364329;
+  --ql-button-ghost-bg-hover: #202a22;
+  --ql-button-danger-border: #633d38;
+  --ql-button-danger-bg: #311f1e;
+  --ql-input-placeholder: #747d72;
+  --ql-field-ink: #dce5d6;
+  --ql-card-shadow: #080b09;
+  --ql-alert-error-border: #70413b;
+  --ql-alert-error-bg: #251615;
+  --ql-alert-error-ink: #ffb6aa;
+  --ql-badge-default-border: #53613d;
+  --ql-badge-default-bg: #20281b;
+  --ql-hud-panel: #101612;
+  --ql-nav-active-border: #3b4937;
+  --ql-nav-active-bg: #192119;
+  --ql-hud-topbar-border: #2e392f;
+  --ql-hud-user-border: #566543;
+  --ql-hud-user-bg: #293220;
+  --ql-hud-user-ink: #eff8dd;
+  --ql-hud-user-shadow: #10150e;
+  --ql-hud-assistant-border: #607444;
+  --ql-hud-assistant-bg: #29351f;
+  --ql-hud-composer-border: #495540;
+  --ql-hud-composer-border-focus: #859e56;
+  --ql-hud-status-border: #374532;
+  --ql-hud-status-bg: #151d15;
+  --ql-hud-status-ink: #cfdda8;
+  --ql-hud-auth-bg: #090d0a;
+  --ql-hud-auth-card-border: #49563e;
+  --ql-hud-auth-card-shadow: #030504;
+
+  --ql-hud-grid-line: rgba(185, 204, 157, 0.025);
+  --ql-hud-auth-grid-line: rgba(185, 204, 157, 0.04);
+  --ql-table-row-border: rgba(56, 68, 58, 0.65);
+  --ql-table-row-hover: rgba(215, 255, 99, 0.045);
+  --ql-hud-app-glow: rgba(84, 111, 54, 0.14);
+  --ql-backdrop: rgba(0, 0, 0, 0.58);
+  --ql-scanline: rgba(255, 255, 255, 0.016);
+  --ql-hud-sidebar-tint: rgba(208, 255, 92, 0.045);
+  --ql-hud-topbar-bg: rgba(11, 16, 12, 0.78);
+  --ql-hud-composer-bg: rgba(15, 21, 16, 0.97);
+  --ql-hud-composer-sheen: rgba(220, 255, 133, 0.08);
+  --ql-hud-auth-glow: rgba(115, 145, 66, 0.2);
+  --ql-hud-auth-card-tint: rgba(205, 255, 95, 0.055);
+  --ql-hud-auth-card-glow: rgba(145, 185, 78, 0.09);
+  --ql-side-panel-tint: rgba(215, 255, 99, 0.055);
+  --ql-side-panel-shadow: rgba(0, 0, 0, 0.4);
+}
+
 :root {
   --ql-ui-ink: var(--color-ink);
   --ql-ui-ink-soft: var(--color-ink-soft);

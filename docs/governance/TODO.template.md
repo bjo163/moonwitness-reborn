@@ -48,7 +48,7 @@ No requirement without an owner. No task without an acceptance criterion.
 Tasks with an `execution_packet` expose a bounded working contract: execution mode, scope, non-goals, canonical spec references, requirement IDs, likely touchpoints, checks, and stop conditions. Use the packet together with the task's dependencies and acceptance criteria; it is not permission to bypass owner, rights, security, or release gates.
 
 - `autonomous`: safe for an AI to implement when the task is pending/proposed and every dependency is done.
-- `decision_prep`: prepare evidence and options only; do not make or imply the owner's decision.
+- `decision_prep`: prepare evidence and options only unless the user explicitly delegates the decision in the active conversation. If delegated, choose a bounded, evidence-backed option and record it as an agent-made decision under that delegation; this never bypasses rights, security, manual verification, exact-SHA, or release gates, and does not authorize implementation.
 - `manual_verification`: requires a human to perform and record the named interaction.
 - `gated_implementation`: implementation is blocked until every explicit ratification and release dependency is done.
 
@@ -323,11 +323,32 @@ These are source-section work packets, not newly approved product scope. Each pa
 | **Prompt PHASE 0** | Repository census and capability map are documented; complete GitHub/org/team permissions inventory and code-level implementation audit remain pending |
 | **Prompt PHASE 1** | Reconciliation register has 53 evidence-backed entries; 18 owner decisions remain open |
 | **Prompt PHASE 2** | Official A-L-L-A-H.COM identity is ratified; product specification, audience, first journey, and product scope still need ratification |
-| **Prompt PHASE 3** | BLUEPRINT.md and D06/D07 architecture exist as target design; implementation conformance and search/storage decisions remain open |
-| **Prompt PHASE 4** | 23/23 domains and 20/20 contract attributes map to owners; per-domain contract depth, events/notifications, and five no-source domains remain open |
-| **Prompt PHASE 5** | Master design and I18N specs exist; visual identity system, design-token inventory, UI conformance, and owner ratification remain open |
-| **Prompt PHASE 6** | Security, infrastructure, quality, migration, and release specs exist; tenant model, performance targets, current CI, and recovery evidence remain open |
-| **Prompt PHASE 7** | TODO is the sole task register; task dependency, label, issue/project/milestone mapping, and phase-number reconciliation are now explicit goals |
+| **Prompt PHASE 3** | BLUEPRINT.md and D06/D07 architecture exist as target design; implementation conformance and search specification remain open; external/object storage is explicitly deferred pending an approved use case |
+| **Prompt PHASE 4** | 23/23 candidate domains and 20/20 contract attributes map to the proposed registry; hybrid contract depth is selected, but the per-domain owner/evidence matrix and unresolved domain ratification remain open; a general event bus and outbound notifications are deferred |
+| **Prompt PHASE 5** | Scoped text-wordmark, public-voice, palette-ownership, and no-tenant-brand decisions plus an observed, non-ratified token snapshot are recorded; the overall design system, approved palette, light-theme values, semantic scales, UI conformance, and broader owner ratification remain open |
+| **Prompt PHASE 6** | Single-installation tenant scope is selected; numeric performance targets remain TBD; current CI and recovery evidence remain open |
+| **Prompt PHASE 7** | TODO is the sole task register; task dependency, label, issue/project/milestone mapping are tracked; a separate D30 phase-ID crosswalk is recorded without renaming existing headings |
+
+#### D30 phase-ID crosswalk (existing TODO headings retained)
+
+The owner delegated the non-destructive crosswalk option on 2026-11-02. Existing TODO headings and task IDs remain unchanged; this table maps them to the D30 phase catalog only.
+
+| Existing TODO heading/workstream | D30 phase ID | Treatment |
+|---|---|---|
+| Phase 0 — Live Repository Audit | PHASE 0 | Retain |
+| Phase 1 — Reconciliation | PHASE 1 | Retain |
+| Phase 2 — Master Vision Narrative | PHASE 2 | Retain |
+| Phase 3 — Product Specification | PHASE 3 | Retain |
+| Phase 4 — Master Blueprint | PHASE 4 | Retain |
+| Phase 5 — Master Design System | PHASE 5 | Retain |
+| Phase 6 — Engineering & Security Specifications | PHASE 6 | Retain |
+| Governance and task-planning goals currently outside the numbered lane | PHASE 7 | Map governance goals; do not relabel foundation work |
+| Phase 7 — Single Application Foundation | PHASE 8 | Keep heading; D30 ID is PHASE 8 |
+| Phase 8 — First Vertical Slice | PHASE 9 | Keep heading; D30 ID is PHASE 9 |
+| Phase 9 — Domain Expansion | PHASE 10 | Keep heading; D30 ID is PHASE 10 |
+| Phase 10 — Integration & Hardening | PHASE 11 | Keep heading; D30 ID is PHASE 11 |
+| Phase 11 — Release Preparation | PHASE 12 | Keep heading; D30 ID is PHASE 12 |
+| MW-0500 — Cloudflare DNS integration workstream | Not a numbered phase | Keep separate; cross-reference integration evidence to PHASE 11 only, never label it PHASE 12 |
 
 ### Developer tooling — UI centralisation
 
@@ -357,6 +378,8 @@ These are source-section work packets, not newly approved product scope. Each pa
 <!-- TASK:MW-1213 -->
 <!-- TASK:MW-1214 -->
 <!-- TASK:MW-1237 -->
+<!-- TASK:MW-1239 -->
+<!-- TASK:MW-1240 -->
 | **Prompt PHASE 8** | Partial foundation exists in-workspace; all 14 foundation outcomes are separate blocked tasks pending ratification and implementation audit |
 | **Prompt PHASE 9** | First source-to-publication slice is not verified; five lifecycle goals are defined and blocked on rights, product decisions, and foundation gates |
 | **Prompt PHASE 10** | MW-1001 is decomposed into 22 source-section child tasks covering 365 exact MWREQ rows; two cross-cutting rows stay on the parent. Every child remains blocked on owner/product/release gates and must pass addon-specific DoD |
@@ -388,7 +411,7 @@ These are source-section work packets, not newly approved product scope. Each pa
 
 1. **Approve domain/addon names and exact-text/corpus owner.**
 2. **Approve initial journey and dataset/edition after rights check.**
-3. **Decide whether object storage and messaging are external integrations at all.**
+3. **Keep external/object storage deferred** until an owner-approved binary-media use case has rights, data-classification, lifecycle, threat-model, and recovery requirements.
 4. **Review and ratify the remaining planning baseline before feature implementation.**
 5. **Name the citation target for the shared "EMPIRE OF THE LIGHT" foundation-design baseline** — `bjo163/A-L-L-A-H` and `bjo163/empire-of-the-light` both publish the identical title block and the verbatim "FOUNDATION DESIGN BASELINE — PROPOSED" status line (R-37).
 6. **Rule on the broken supersession pointer** — `ecosystem-foundation` declares LEGACY and mandates `universe-foundation`, which now redirects to `universal-ontology-engine` (R-38).
@@ -396,12 +419,12 @@ These are source-section work packets, not newly approved product scope. Each pa
 8. **Confirm disposition of the third-party code inside the account** — `surealdb-rebrand-mwdb` is a SurrealDB fork under BSL 1.1 whose grant forbids use "as a Database Service", and `mooncripsy` is an unlinked copy of an external CDP assistant agent that is **still being developed in this account** (tip `bf580cb…`; its second commit (07:45:06Z) added a `PRODUCT.md` that protects its "no API key / no MCP / no tunnel" positioning as a product commitment and its third (08:09:06Z) rewrote the desktop UI under an automated design agent); both are currently excluded from migration, `rocksoul-mind` stays an upstream MiniMind reference (R-40, R-41).
 9. **Accept that ratification is SHA-bound** — `bjo163/moonwitness-reborn` `main` kept advancing through the whole audit (twelve tips by 08:29Z, `7d801c3…`, `validate` **green**), then the commits this workspace held locally were merged through PR #1 and PR #2 and cut as tag and release `v0.1.0` at `4fdb7c7…`, with classic `main` protection (required `validate`, `enforce_admins`) switched on — all of it by another session, while this audit's planning documents were, at that reading, still sitting outside git (they are committed now; blocker 11 names the SHAs). Whether this workspace sits ahead of or behind `origin/main` changes within minutes; the governance gates report branch/upstream and commit evidence. Reading "ahead of `origin/main`" as "unpushed" was itself an error this audit made and corrected, because a checkout on `dev` is ahead of `main` by every `dev` commit. The open decision is stabilization: ratification must name a commit, and that commit must then be held, or every ratified plan expires on the next merge (R-42).
 10. **Ratify the single-owner capacity rule** — the estate-wide roll-up maps 7 design-system sources, 2 contract sources, 10 separate web surfaces and 4 worker/API designs onto slots that `AGENTS.md` allows exactly once each; adopting from any of them means absorbing into `@moonwitness/ui` / `@moonwitness/moonclient` / one `apps/web`, never adding a second package or shell (R-43).
-11. **Ratify the baseline at a named commit** — the documents are now in git: `8016edc…` on `dev` carries `BLUEPRINT.md`, `MASTER_DESIGN.md`, every register document path except the three under `docs/data/`, and the two gate scripts (29 files, +3454/−114), and its child `85feec0…` unblocked those three, which `.gitignore` line 9 (`data/`, unanchored) had made un-committable (R-53). The coverage gate measures against HEAD, so the child commit is what makes it read `0 not in HEAD` — staging alone used to print zero, which is why the earlier claim "26 of 29 untracked — an owner decision" was partly a tooling defect and partly a flattering instrument, not a refusal. What is left is the owner's accept/amend decision against a named commit and the stabilization that decision requires (R-49/R-42).
-12. **Reconcile phase meanings** — TODO now has headings for all catalog PHASE 0–12, and Cloudflare is a separate MW-0500 workstream. However, the older task-lane meanings for PHASE 3–11 still do not align with the catalog's architecture/data/design/governance/build sequence. Approve a single mapping before GitHub milestones are created (R-45; MW-0615).
-13. **Decide what "per domain" means for §4.4** — the twenty contract attributes are currently covered by estate-wide rules plus this registry, not by a written contract per domain; attribute 13 (events and notifications) is defined nowhere. Choose between defaults-plus-addon-manifests and one contract block per domain (R-46).
+11. **Ratify the baseline at a named commit** — the current choice is to defer exact-SHA ratification while this worktree is dirty. A future decision must name a clean commit, disposition already-landed work, and stabilize that exact baseline (R-49/R-42; MW-0616).
+12. **Preserve the separate phase crosswalk** — mapping is recorded above without renaming existing headings. GitHub milestones remain gated on the broader baseline decision (R-42/R-49; MW-0616).
+13. **Complete the hybrid §4.4 domain contract matrix** — hybrid documentation depth and explicit deferral of a general event bus/outbound notifications are recorded; the per-domain owner/evidence rows and unresolved domain ratification are still incomplete (R-46).
 14. **Ratify the six §4.3 domains added by the coverage pass** — `ql_evidence`, `ql_law`, `ql_creative`, `ql_publication`, `ql_search` and `ql_ops`, plus the three owner narrowings that came with them (evidence records out of `ql_research`, publication records out of `ql_workflow`, creative production out of `ql_story`). Then rule on whether `rocksoul-aws`'s LAW corpus enters scope as an import candidate and whether the two `TBD` private repositories (`moonwitness-xiv`, `bjo163/mw-core`) justify a commissioned inventory (R-44).
 15. **Rule on the five §4.3 domains with no estate material** — `ql_creative`, `ql_journey`, `ql_org`, `ql_person` and `ql_search` receive zero mapped rows from the 102-row roll-up, so they are required by the prompt but nothing in the estate feeds them; decide whether each is in-scope-by-design or a placeholder owner (R-48).
-16. **Close the six phase-list gaps** — all 87 PHASE 0–7 planning items are mapped; 13 remain PARTIAL/NONE and each now links to a TODO goal (MW-0603–MW-0609, MW-0612–MW-0614). Search has no specification; storage, visual brand, tokens, tenant model, and performance targets are incomplete. Write the missing specification or explicitly defer it with an owner decision (R-50).
+16. **Close the six phase-list gaps** — all 87 PHASE 0–7 planning items are mapped; 13 remain PARTIAL/NONE and each now links to a TODO goal (MW-0603–MW-0609, MW-0612–MW-0614). Search has no specification; storage and tenant scope have explicit deferrals/selections; visual-brand boundaries are recorded but palette values and tokens remain incomplete; performance targets remain deferred. Write the missing specification or retain an explicit trigger (R-50).
 17. **Approve the governance mechanics** — GitHub Issues, Projects, and Milestones remain uncreated until ratification. The missing label taxonomy, task dependencies, task decomposition, and issue/project/milestone mapping now have TODO goals (MW-0612–MW-0614). Existing branch-protection state is an observed baseline, not a fully ratified policy (R-51/R-52).
 18. **Decide release sequencing and prior work** — the 14 PHASE 8, 13 PHASE 11, and 8 PHASE 12 list items now each map to separate TODO goals; PHASE 9/10 prose outcomes also have explicit goals. Owner must decide whether `v0.1.0` and work landed before ratification are accepted retroactively, and the current exact-SHA gates must pass before new release work proceeds (R-52; MW-0616, MW-0801–MW-1208).
 

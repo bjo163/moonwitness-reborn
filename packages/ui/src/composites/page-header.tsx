@@ -14,7 +14,9 @@ export interface PageHeaderProps {
  * optional right-aligned actions. Replaces the two-plus copies of
  * `<header className="border-b border-[#354135] pb-6"><h1
  * className="text-3xl font-semibold tracking-[-0.04em]">…</h1>…</header>`
- * (MW-ADR-020). Border colour comes from the `border-hairline` token.
+ * (MW-ADR-020). Border colour comes from the `border-hairline` token, and the
+ * eyebrow is the package's own `.ql-eyebrow` rule — the same one `SidePanel`
+ * uses — so there is one eyebrow shape rather than a utility copy.
  */
 export function PageHeader({
   title,
@@ -31,11 +33,7 @@ export function PageHeader({
       )}
     >
       <div className="min-w-0 flex-1">
-        {eyebrow && (
-          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-acid-dark">
-            {eyebrow}
-          </div>
-        )}
+        {eyebrow && <div className="ql-eyebrow">{eyebrow}</div>}
         <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-ink md:text-4xl">
           {title}
         </h1>

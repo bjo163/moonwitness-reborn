@@ -26,12 +26,14 @@ import {
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LocaleSwitcher } from "../features/locale/locale-switcher";
+import { apiErrorMessage } from "../features/locale/api-error-message";
 import { useMessages } from "../features/locale/messages";
+import { useTranslationCatalog } from "../features/locale/translation-catalog";
 import { useLocalePreference } from "../features/locale/use-locale-preference";
 
 export default function LandingPage() {
   const [user, setUser] = useState<AuthUserDto | null | undefined>(undefined);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [progressSummary, setProgressSummary] =
     useState<ProjectProgressSummaryDto | null>(null);
   const [progressError, setProgressError] = useState(false);
@@ -39,6 +41,7 @@ export default function LandingPage() {
   const { locale, changeLocale, saving, error: localeError } =
     useLocalePreference(user);
   const copy = useMessages();
+  const { t } = useTranslationCatalog();
 
   useEffect(() => {
     let cancelled = false;
@@ -54,16 +57,12 @@ export default function LandingPage() {
           return;
         }
         setUser(null);
-        setLoadError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Gagal memeriksa sesi akun.",
-        );
+        setLoadError(requestError);
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,6 +85,8 @@ export default function LandingPage() {
   const dashboardHref = user
     ? "/command-center"
     : `/auth?locale=${locale}`;
+  const loadErrorMessage =
+    loadError === null ? null : apiErrorMessage(loadError, t);
 
   return (
     <main className="ql-hud-app min-h-dvh">
@@ -142,12 +143,12 @@ export default function LandingPage() {
               <ArrowDownRight aria-hidden="true" size={15} />
             </Link>
           </div>
-          {loadError && (
+          {loadErrorMessage !== null && (
             <Alert className="mt-6 max-w-xl" variant="error">
-              {loadError}
+              {loadErrorMessage}
             </Alert>
           )}
-          {localeError && (
+          {localeError !== null && (
             <Alert className="mt-3 max-w-xl" variant="error">
               {copy.landing.localeSaveError}
             </Alert>
@@ -156,7 +157,7 @@ export default function LandingPage() {
 
         <aside
           id="product-direction"
-          className="relative overflow-hidden rounded-3xl border border-hairline bg-panel-edge/90 p-6 md:p-8"
+          className="ql-card bg-panel-edge/90 p-6 md:p-8"
           aria-labelledby="product-direction-title"
         >
           <div className="flex items-center justify-between gap-4">

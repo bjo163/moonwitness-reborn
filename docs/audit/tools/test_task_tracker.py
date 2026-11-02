@@ -31,7 +31,10 @@ class TaskTrackerTests(unittest.TestCase):
         rendered = task_tracker.render(self.template, self.tracker)
         with open(task_tracker.OUTPUT, encoding="utf-8") as current:
             self.assertEqual(rendered, current.read())
-        self.assertIn("## Ready for AI work", rendered)
+        self.assertEqual(
+            "## Ready for AI work" in rendered,
+            bool(task_tracker.ai_ready_tasks(self.tracker)),
+        )
         self.assertIn("## AI execution packets", rendered)
         self.assertIn("MW-1215", rendered)
         task_rows = [
@@ -46,9 +49,17 @@ class TaskTrackerTests(unittest.TestCase):
         )
 
     def test_ready_tasks_require_all_dependencies_to_be_done(self):
-        ready_ids = {task["id"] for task in task_tracker.dependency_ready_tasks(self.tracker)}
-        by_id = {task["id"]: task for task in self.tracker["tasks"]}
-        self.assertTrue(ready_ids)
+        tracker = {
+            "tasks": [
+                {"id": "ready", "state": "pending", "depends_on": ["completed"]},
+                {"id": "completed", "state": "done", "depends_on": []},
+                {"id": "waiting", "state": "proposed", "depends_on": ["blocked"]},
+                {"id": "blocked", "state": "blocked", "depends_on": []},
+            ]
+        }
+        ready_ids = {task["id"] for task in task_tracker.dependency_ready_tasks(tracker)}
+        by_id = {task["id"]: task for task in tracker["tasks"]}
+        self.assertEqual({"ready"}, ready_ids)
         for task_id in ready_ids:
             self.assertIn(by_id[task_id]["state"], {"proposed", "pending"})
             self.assertTrue(all(by_id[dependency]["state"] == "done" for dependency in by_id[task_id]["depends_on"]))
@@ -137,12 +148,62 @@ class TaskTrackerTests(unittest.TestCase):
         self.assertTrue(any("is not linked from catalog requirement" in error for error in errors))
 
     def test_ai_queue_excludes_manual_and_gated_work(self):
-        queue = task_tracker.ai_ready_tasks(self.tracker)
-        by_id = {task["id"]: task for task in self.tracker["tasks"]}
-        self.assertTrue(queue)
+        tracker = {
+            "tasks": [
+                {
+                    "id": "ready-decision",
+                    "state": "pending",
+                    "depends_on": ["completed"],
+                    "execution_packet": {"mode": "decision_prep"},
+                },
+                {"id": "completed", "state": "done", "depends_on": []},
+                {
+                    "id": "manual",
+                    "state": "pending",
+                    "depends_on": [],
+                    "execution_packet": {"mode": "manual_verification"},
+                },
+                {
+                    "id": "gated",
+                    "state": "pending",
+                    "depends_on": [],
+                    "execution_packet": {"mode": "gated_implementation"},
+                },
+                {
+                    "id": "waiting",
+                    "state": "pending",
+                    "depends_on": ["blocked"],
+                    "execution_packet": {"mode": "autonomous"},
+                },
+                {"id": "blocked", "state": "blocked", "depends_on": []},
+            ]
+        }
+        queue = task_tracker.ai_ready_tasks(tracker)
+        by_id = {task["id"]: task for task in tracker["tasks"]}
+        self.assertEqual(["ready-decision"], [task["id"] for task in queue])
         for task in queue:
             self.assertIn(task["execution_packet"]["mode"], {"autonomous", "decision_prep"})
             self.assertTrue(all(by_id[dependency]["state"] == "done" for dependency in task["depends_on"]))
+
+    def test_ai_queue_can_be_empty_when_no_eligible_work_is_ready(self):
+        tracker = {
+            "tasks": [
+                {
+                    "id": "manual",
+                    "state": "pending",
+                    "depends_on": [],
+                    "execution_packet": {"mode": "manual_verification"},
+                },
+                {
+                    "id": "waiting",
+                    "state": "pending",
+                    "depends_on": ["blocked"],
+                    "execution_packet": {"mode": "autonomous"},
+                },
+                {"id": "blocked", "state": "blocked", "depends_on": []},
+            ]
+        }
+        self.assertEqual([], task_tracker.ai_ready_tasks(tracker))
 
     def test_missing_dependency_and_cycle_are_rejected(self):
         tracker = copy.deepcopy(self.tracker)

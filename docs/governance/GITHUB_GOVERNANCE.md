@@ -59,9 +59,19 @@ The workflow definition and live branch-protection settings must both be present
 
 The live `dev` protection now permits direct pushes while preventing force-pushes and deletion; it no longer has required status checks or PR reviews. The automation changes are still local and are not active until merged into the default branch. The repository allows Actions to create PRs and auto-merge, and `main` still requires a PR plus strict `validate`.
 
-## Task and issue governance
+## Canonical task and documentation model
 
-`docs/governance/task-tracker.json` is the only canonical task/status register. `TODO.md` is generated from that JSON and its template with `pnpm tracker:render`; CI runs `pnpm tracker:check` and rejects stale output, duplicate IDs, missing dependencies, and dependency cycles. Once approved, each GitHub issue mirrors one stable `MW-NNNN` task ID, scope, acceptance criteria, dependencies, tests, owner, priority, complexity and evidence. Projects/milestones visualize tasks but do not become another status authority. Do not create duplicate tasks or issue mirrors before ratification. A task marked Done is not a release record; only released work belongs in `CHANGELOG.md`.
+**Accepted by the repository owner during the GitHub migration plan.** GitHub Issues are the sole canonical task register, and this Wiki is the sole canonical home for human-authored project documentation. Local task JSON, generated TODO views, task-tracker UI, duplicate issue mirrors, GitHub Projects, and milestones are not used.
+
+- **One Issue per task ID:** each task has one stable `MW-NNNN` ID in its title and body. The body carries scope, owner, acceptance criteria, dependencies, evidence, and any execution constraints.
+- **Current status:** Issue open/closed state plus exactly one status label for an open task: `status:proposed`, `status:pending`, `status:in-progress`, or `status:blocked`. A completed task is closed with no status label. Every task Issue has `type:task`.
+- **Dependencies:** the Issue body links directly to dependency Issues and records their stable IDs. The read-only CI validator rejects duplicate IDs, missing dependencies, and dependency cycles.
+- **Provenance:** imported tracker rows remain in each Issue as a cutover snapshot. That snapshot is historical evidence; current status is never read from it.
+- **No second board:** GitHub Projects and milestones are intentionally not used as status or planning authorities.
+- **Documentation:** human-authored project specifications and governance live in this Wiki. `AGENTS.md` and `.github/skills/` remain local repository instructions for coding agents and link back to canonical Wiki pages.
+- **Release integrity:** closing a task Issue is not a release claim; only released work belongs in `CHANGELOG.md`.
+
+The label and Issue model above is accepted and active; the proposed taxonomies and project/milestone mappings in earlier audit snapshots are superseded. Do not create duplicate task registers or status mirrors.
 
 ## Automation
 

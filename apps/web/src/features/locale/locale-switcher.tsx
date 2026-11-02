@@ -7,7 +7,7 @@ import { Globe2 } from "lucide-react";
 interface LocaleSwitcherProps {
   locale: UiLocale;
   label: string;
-  onChange(locale: UiLocale): void;
+  onChange(this: void, locale: UiLocale): void;
   disabled?: boolean;
 }
 
@@ -28,9 +28,10 @@ export function LocaleSwitcher({
         <Button
           key={option}
           type="button"
-          size="sm"
+          size="default"
           variant={locale === option ? "secondary" : "ghost"}
           aria-pressed={locale === option}
+          className="min-w-11"
           disabled={disabled}
           onClick={() => onChange(option)}
         >

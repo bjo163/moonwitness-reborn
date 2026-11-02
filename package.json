@@ -13,7 +13,7 @@
     "tracker:render": "python -B docs/audit/tools/task_tracker.py --write",
     "tracker:ui": "python -B docs/audit/tools/task_tracker_server.py",
     "tracker:check": "python -B docs/audit/tools/task_tracker.py --check",
-    "tracker:test": "python -B docs/audit/tools/test_task_tracker.py"
+    "tracker:test": "python -B docs/audit/tools/test_task_tracker.py && python -B docs/audit/tools/test_tracker_invariants.py"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",

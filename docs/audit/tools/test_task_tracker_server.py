@@ -23,8 +23,8 @@ class TrackerStateTransitionTests(unittest.TestCase):
 
     def test_state_transition_preserves_label_and_existing_timestamp(self):
         tracker = copy.deepcopy(self.tracker)
-        task = tracker["tasks"][0]
-        task["state"] = "pending"
+        task = next(item for item in tracker["tasks"] if item["id"] == "MW-1212")
+        task["state"] = "in_progress"
         task["status_label"] = "Owner verification pending"
         task["completed_at"] = "2026-10-30T12:00:00Z"
 
@@ -32,13 +32,16 @@ class TrackerStateTransitionTests(unittest.TestCase):
             tracker, task["id"], "done", "2026-11-01T12:00:00Z"
         )
 
-        self.assertEqual(updated["tasks"][0]["status_label"], "Owner verification pending")
-        self.assertEqual(updated["tasks"][0]["completed_at"], "2026-10-30T12:00:00Z")
-        self.assertEqual(tracker["tasks"][0]["state"], "pending")
+        updated_task = next(
+            item for item in updated["tasks"] if item["id"] == task["id"]
+        )
+        self.assertEqual(updated_task["status_label"], "Owner verification pending")
+        self.assertEqual(updated_task["completed_at"], "2026-10-30T12:00:00Z")
+        self.assertEqual(task["state"], "in_progress")
 
     def test_entering_done_records_known_utc_time_and_reopening_preserves_it(self):
         tracker = copy.deepcopy(self.tracker)
-        task = tracker["tasks"][0]
+        task = next(item for item in tracker["tasks"] if item["id"] == "MW-1212")
         task["state"] = "in_progress"
         task["completed_at"] = None
 
@@ -46,11 +49,17 @@ class TrackerStateTransitionTests(unittest.TestCase):
             tracker, task["id"], "done", "2026-11-01T12:00:00Z"
         )
         reopened = task_tracker.transition_task_state(
-            completed, task["id"], "pending"
+            completed, task["id"], "in_progress"
         )
 
-        self.assertEqual(completed["tasks"][0]["completed_at"], "2026-11-01T12:00:00Z")
-        self.assertEqual(reopened["tasks"][0]["completed_at"], "2026-11-01T12:00:00Z")
+        completed_task = next(
+            item for item in completed["tasks"] if item["id"] == task["id"]
+        )
+        reopened_task = next(
+            item for item in reopened["tasks"] if item["id"] == task["id"]
+        )
+        self.assertEqual(completed_task["completed_at"], "2026-11-01T12:00:00Z")
+        self.assertEqual(reopened_task["completed_at"], "2026-11-01T12:00:00Z")
 
     def test_invalid_state_and_unknown_task_are_rejected(self):
         with self.assertRaises(ValueError):
@@ -88,6 +97,7 @@ class TrackerHTTPTests(unittest.TestCase):
             "Origin": self.server.origin,
             "X-Tracker-Token": self.server.csrf_token,
             "Content-Type": "application/json",
+            "If-Match": "*",
         }
 
     def test_get_serves_ui_and_validated_tasks(self):
@@ -108,7 +118,7 @@ class TrackerHTTPTests(unittest.TestCase):
 
     def test_update_changes_only_state_data_and_renders_markdown(self):
         task = next(
-            item for item in self.server_tasks() if item["id"] == "MW-1209"
+            item for item in self.server_tasks() if item["id"] == "MW-1212"
         )
         original_label = task["status_label"]
         captured_writes = {}

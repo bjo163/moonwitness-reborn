@@ -26,6 +26,7 @@ import {
   ListOption,
   LoadingScreen,
   NavSectionLabel,
+  OptionNav,
   PageHeader,
   Select,
   SidePanel,
@@ -461,10 +462,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
           onCloseSidebar={() => setSidebarOpen(false)}
         >
           <NavSectionLabel>{t("web.dns.zones")}</NavSectionLabel>
-          <nav
-            className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto"
-            aria-label={t("web.dns.zoneList")}
-          >
+          <OptionNav label={t("web.dns.zoneList")}>
             {zones.map((item) => (
               <ListOption
                 key={item.id}
@@ -481,7 +479,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
                 {t("web.dns.zonesEmpty")}
               </p>
             )}
-          </nav>
+          </OptionNav>
         </WorkspaceSidebar>
       }
       header={

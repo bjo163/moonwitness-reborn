@@ -1,6 +1,6 @@
 # Requirements Traceability Matrix
 
-**Status: canonical requirement catalog and traceability authority.** The target repository (`moonwitness-reborn`) is ratified. The companion [`requirement-catalog.json`](./requirement-catalog.json) preserves 1,891 atomic source statements from the retired planning prompt as stable `MWREQ-*` records. Each record links one canonical specification owner and one or more TODO tasks, while specification review and implementation evidence remain separate status fields. This document maps all 12 pillars, all 31 deliverables, execution phases, acceptance criteria, final-assignment steps, and the absolute constitution. [`task-tracker.json`](./task-tracker.json) is the sole task-status register; [`TODO.md`](../../TODO.md) is a generated Markdown view. A catalog row does not imply implementation, testing, owner ratification, or release approval.
+**Status: canonical requirement catalog and traceability authority.** The target repository (`moonwitness-reborn`) is ratified. The companion [`requirement-catalog.json`](./requirement-catalog.json) preserves 1,891 atomic source statements from the retired planning prompt as stable `MWREQ-*` records. Each record links one canonical specification owner and one or more GitHub Issues, while specification review and implementation evidence remain separate status fields. This document maps all 12 pillars, all 31 deliverables, execution phases, acceptance criteria, final-assignment steps, and the absolute constitution. GitHub Issues are the sole task-status register; the GitHub Wiki is the canonical home for project documentation. A catalog row does not imply implementation, testing, owner ratification, or release approval.
 
 The current code/test/CI evidence snapshot is recorded separately in
 [`IMPLEMENTATION_CONFORMANCE_AUDIT.md`](../audit/IMPLEMENTATION_CONFORMANCE_AUDIT.md).
@@ -45,7 +45,7 @@ The source inventory has four mapped layers: 12 product/architecture pillars, 87
 | PILLAR 05 §§5.1–5.12 — Knowledge, corpus, research | Source, exact text, editions, rights, provenance, research methods/evidence | D11, D12, D15, D16; D29 | Specifications mapped; dataset/edition rights and first-slice evidence remain unapproved; implementation unverified | MW-0601, MW-0605, MW-0901–MW-0905 |
 | PILLAR 06 §§6.1–6.5 — Character, story, creative | Person/character/agent/story separation, canon, visual/narrative use, creative studio | D11, D17, D04 | Boundary specification mapped; five-domain/source gap includes `ql_creative`; implementation unverified | MW-0601, MW-0611, MW-1001 |
 | PILLAR 07 §§7.1–7.8 — AI, agents, workflows | Provider/config boundary, agents, lifecycle, memory, safety/evaluation, workflows | D18, D19, D28; D22 | Safety and workflow specs mapped; code-level permissions, evaluations, and no-silent-write evidence remain to audit | MW-0601, MW-1001, MW-1105 |
-| PILLAR 08 §§8.1–8.8 — UX, design, branding, I18N | One shell, patterns/routes, brand, tokens, components, tenant branding, id/en | D20, D21; `docs/vision/ALLAH_COM_OFFICIAL_CANON.md` | Public identity is canonically defined; visual brand/token inventory and tenant model are partial; current UI is not a verified implementation of the proposed system | MW-0601, MW-0602, MW-0606–MW-0608, MW-0803–MW-0806 |
+| PILLAR 08 §§8.1–8.8 — UX, design, branding, I18N | One shell, patterns/routes, brand, tokens, components, tenant branding, id/en | D20, D21; `docs/vision/ALLAH_COM_OFFICIAL_CANON.md` | Public identity is canonically defined; an observed token snapshot exists, while visual direction and normative token scales remain partial; current UI is not a verified implementation of the proposed system | MW-0601, MW-0602, MW-0606–MW-0608, MW-0803–MW-0806 |
 | PILLAR 09 §§9.1–9.6 — Security, privacy, rights, integrity | Identity/ACL, privacy, rights, religious/research integrity, admin governance | D12, D22, D28; D08; D13 | Requirements mapped; tenant decision, rights evidence, and full negative-test coverage remain open | MW-0601, MW-0605, MW-0608, MW-1104, MW-1105 |
 | PILLAR 10 §§10.1–10.10 — Data, API, infrastructure, quality | Database, API, search, storage/media, import/export, observability, performance, tests, NFRs | D13–D16, D23, D24, D29, D31 | Search specification absent; storage decision/threat model and quantitative performance targets incomplete; implementation/CI evidence must be rechecked | MW-0601, MW-0604, MW-0605, MW-0609, MW-0807, MW-0810–MW-0814, MW-1102–MW-1113 |
 | PILLAR 11 §§11.1–11.4 — Scope, journeys, roadmap | Personas, seven journeys, horizons, first-release principle | D04, D05, D19, D31 | Product requirements mapped but priority, first journey, and approved dataset remain pending owner ratification | MW-0601, MW-0616, MW-0901–MW-1001 |
@@ -92,17 +92,17 @@ imply product readiness or owner ratification.
 
 ## Goal links for planning-list gaps
 
-Each PARTIAL/NONE entry in PHASE 0–7 has a concrete TODO goal. These goals make the gap actionable; they do not upgrade its coverage status until the acceptance criterion is evidenced.
+Each PARTIAL/NONE entry in PHASE 0–7 has a concrete GitHub Issue. These goals make the gap actionable; they do not upgrade its coverage status until the acceptance criterion is evidenced.
 
-| Phase | Prompt item | Goal in TODO.md | Status before goal evidence |
+| Phase | Prompt item | Goal Issue(s) | Status before goal evidence |
 |---|---|---|---|
 | 0 | Inspect GitHub permissions | MW-0603 | PARTIAL |
 | 3 | Search | MW-0604 | NONE |
-| 3 | Storage | MW-0605 | PARTIAL |
-| 5 | Brand | MW-0606 | PARTIAL — official identity is ratified; visual brand specification is not complete |
+| 3 | Storage | MW-0605 | PARTIAL — external/object storage is explicitly deferred; no provider contract or implementation is approved |
+| 5 | Brand | MW-0606 | PARTIAL — text-wordmark, public-voice, palette-ownership, and tenant-brand boundaries are recorded; actual palette/tokens and full design-system ratification remain open |
 | 5 | Design Tokens | MW-0607 | PARTIAL |
-| 6 | Tenant Model | MW-0608 | PARTIAL |
-| 6 | Performance Requirements | MW-0609 | PARTIAL |
+| 6 | Tenant Model | MW-0608 | PARTIAL — single-installation scope is selected; tenant implementation and migration remain deferred |
+| 6 | Performance Requirements | MW-0609 | PARTIAL — numeric targets remain deferred pending an approved workload and measurement environment |
 | 7 | Microtask breakdown | MW-0612 | PARTIAL |
 | 7 | Dependencies | MW-0612 | PARTIAL |
 | 7 | GitHub Issues | MW-0614 | PARTIAL — creation deliberately gated |
@@ -162,7 +162,7 @@ assigned during the migration and are not recalculated by the independent catalo
 | 3 | Database | D14 | COVERED | — |
 | 3 | API | D13 | COVERED | — |
 | 3 | Search | D08 `ql_search` owner row and its dependency arrows only — no search specification exists | NONE | R-50 |
-| 3 | Storage | D23 §Integrations names object storage as an optional dependency that still needs a threat model; no storage specification | PARTIAL | R-50 |
+| 3 | Storage | D23 §Integrations; external/object storage explicitly deferred until an approved binary-media use case and its rights, lifecycle, threat-model, and recovery evidence exist | PARTIAL | R-50 |
 | 3 | AI | D18 | COVERED | — |
 | 3 | Workflow | D19 | COVERED | — |
 | 3 | Security | D22 | COVERED | — |
@@ -180,7 +180,7 @@ assigned during the migration and are not recalculated by the independent catalo
 | 5 | Visual System | D20 §2 Visual system requirements | COVERED | — |
 | 5 | Application Shell | D20 §9 Application shell | COVERED | — |
 | 5 | Navigation | D20 §5 Navigation plus the §9 role-checked routes | COVERED | — |
-| 5 | Design Tokens | D20 §2 mandates semantic tokens and §3 records that `@moonwitness/ui` tokens are dark-only; there is no token inventory or naming rule | PARTIAL | R-50 |
+| 5 | Design Tokens | D20 §2 mandates semantic tokens and §3 records that `@moonwitness/ui` tokens are dark-only; `MASTER_DESIGN.md` now records the existing declarations as a non-ratified snapshot, while light-theme values and semantic scales for typography, spacing, elevation, radii, focus, and status remain unresolved | PARTIAL | R-50 |
 | 5 | Component System | D20 §5 Component system | COVERED | — |
 | 5 | Character Bible | D17 | COVERED | — |
 | 5 | Page Templates | D20 §5 Templates (reader, explorer, workspace, admin, creative) | COVERED | — |
@@ -191,13 +191,13 @@ assigned during the migration and are not recalculated by the independent catalo
 | 6 | ADRs | D25 | COVERED | — |
 | 6 | Authentication | D22 §Required controls; D13 §Authentication and authorization | COVERED | — |
 | 6 | Authorization | D22 §Required controls; D08 §4.3 coverage ACL column | COVERED | — |
-| 6 | Tenant Model | D10 §Owner/tenant scope and the D08 `ql_org` row; D22 says "tenant scope only if adopted", and D01 keeps the tenant decision open | PARTIAL | R-50 |
+| 6 | Tenant Model | D10 §Owner/tenant scope and the D08 `ql_org` row; D22 says "tenant scope only if adopted". A delegated decision now selects single-installation/per-owner boundaries for current scope; multi-tenant implementation remains deferred. | PARTIAL | R-50 |
 | 6 | Database Security | D14 §Integrity and access; D22 §Required controls | COVERED | — |
 | 6 | Data Rights | D12 §Rights gates | COVERED | — |
 | 6 | API Contracts | D13 | COVERED | — |
 | 6 | AI Safety | D18 §Failure and safety; D28 | COVERED | — |
 | 6 | Testing Strategy | D24 | COVERED | — |
-| 6 | Performance Requirements | D24 §Quality attributes to quantify and D05 §Non-functional requirements both state the numbers are still to be set; none are set | PARTIAL | R-50 |
+| 6 | Performance Requirements | D24 §Quality attributes to quantify and D05 §Non-functional requirements: numeric targets are explicitly deferred until workload and measurement prerequisites are approved; none are claimed | PARTIAL | R-50 |
 | 6 | Backup and Recovery | D14 §Backup and recovery; D29; D31 | COVERED | — |
 | 6 | Deployment | D23 | COVERED | — |
 | 7 | Unique milestone register | D26 §2 Microtask breakdown; D27 §Task and issue governance (TODO is the sole register) | COVERED | — |

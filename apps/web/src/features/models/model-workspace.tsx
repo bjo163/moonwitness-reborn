@@ -22,6 +22,7 @@ import {
   ListOption,
   LoadingScreen,
   NavSectionLabel,
+  OptionNav,
   PageHeader,
   SidePanel,
   Textarea,
@@ -361,10 +362,7 @@ export default function ModelWorkspace() {
           onCloseSidebar={() => setSidebarOpen(false)}
         >
           <NavSectionLabel>{t("web.models.addonModels")}</NavSectionLabel>
-          <nav
-            className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto"
-            aria-label={t("web.models.addonModels")}
-          >
+          <OptionNav label={t("web.models.addonModels")}>
             {models.map((model) => (
               <ListOption
                 key={model.name}
@@ -382,7 +380,7 @@ export default function ModelWorkspace() {
                 {model.name}
               </ListOption>
             ))}
-          </nav>
+          </OptionNav>
         </WorkspaceSidebar>
       }
       header={

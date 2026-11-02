@@ -5,7 +5,7 @@ description: "Use when implementing, debugging, testing, or reviewing code in th
 
 # MoonWitness Development
 
-Use the repository's [AGENTS.md](../../../AGENTS.md) as the always-on source of architecture and safety rules. Before every coding task, load and follow the mandatory [task-tracker skill](../task-tracker/SKILL.md). This skill provides the repeatable implementation workflow without duplicating the full policy.
+Use the repository's [AGENTS.md](../../../AGENTS.md) as the always-on source of architecture and safety rules. Before every coding task, load and follow the [GitHub Issues skill](../github-issues/SKILL.md). GitHub Issues are canonical for work; project documentation is canonical in the GitHub Wiki.
 
 ## Workflow
 
@@ -25,14 +25,17 @@ Use the repository's [AGENTS.md](../../../AGENTS.md) as the always-on source of 
    ```
 
    `pnpm build` runs `pnpm lint` before `turbo run build`; on a clean checkout, use the CI order above rather than assuming generated package types already exist.
-5. **Validate governance when applicable.** If the change touches the canonical task tracker or its generator, run:
+5. **Validate governance when applicable.** If the change touches Issues/Wiki governance or requirement traceability, fetch a fresh public Wiki clone and issue export, set `MW_WIKI_ROOT` and `MW_TASK_ISSUES_FILE`, then run:
 
    ```powershell
-   pnpm tracker:check
-   pnpm tracker:test
+   python -B docs/audit/tools/test_requirement_coverage_gate.py
+   python -B docs/audit/tools/requirement_coverage_gate.py
+   python -B docs/audit/tools/requirements_traceability_gate.py
    ```
 
 6. **Report evidence precisely.** Name the commands run and their outcomes. Report lint errors and warnings separately; a successful lint with warnings is not warning-free. Do not claim CI, deployment, commit, or push results without direct evidence.
+
+An explicit owner delegation in the active conversation may authorize a bounded, evidence-backed decision from a `decision_prep` packet. Record it as agent-made under delegation and follow the limits in root `AGENTS.md` and the `task-tracker` skill; this does not authorize feature implementation or replace independent approval, evidence, manual-verification, exact-SHA, or release gates.
 
 ## UI consistency rules (MW-ADR-020)
 
@@ -52,9 +55,9 @@ is `no-restricted-syntax` at **`error`**, scoped to every `.tsx` under
 When markup repeats in two or more screens, it moves into
 `packages/ui/src/composites/` instead of being copied again. Before adding one:
 
-1. Check what already exists — `WorkspaceSidebar`, `SidebarNav`, `NavLink`,
-   `SidebarBrand`, `SidebarFooter`, `PageHeader`, `LoadingScreen`, `EmptyState`,
-   `SectionGrid`, `IconTile`, `MetricRow`, `ListOption`, `SidePanel`.
+1. Check what already exists — `WorkspaceSidebar`, `SidebarNav`, `OptionNav`,
+   `NavLink`, `SidebarBrand`, `SidebarFooter`, `PageHeader`, `LoadingScreen`,
+   `EmptyState`, `SectionGrid`, `IconTile`, `MetricRow`, `ListOption`, `SidePanel`.
 2. Add no user-facing text to the package: all copy arrives as props, and the
    screen reads it from the i18n catalogue (`DataTable` label props are required
    for exactly this reason).

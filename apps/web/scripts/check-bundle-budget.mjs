@@ -73,6 +73,25 @@ if (!existsSync(manifestPath)) {
   process.exit(1);
 }
 
+// `BUILD_ID` and `required-server-files.json` are written only by `next build`,
+// so they prove the directory is not a pure `next dev` artefact. They do NOT
+// prove it is current: a dev server that runs afterwards rewrites chunk files
+// while leaving both markers in place (observed as 13 of 16 routes and an
+// inflated 242 kB for /providers). The stale-manifest case is caught by the
+// "removed route" failure below rather than by a filesystem heuristic, because
+// `cache/webpack` turns out to exist in production builds too.
+if (
+  !existsSync(join(appDir, distDir, "BUILD_ID")) ||
+  !existsSync(join(appDir, distDir, "required-server-files.json"))
+) {
+  console.error(
+    `${distDir} is not a production build.\n` +
+      `Run \`NEXT_DIST_DIR=${distDir} next build\` first, and not into a directory\n` +
+      `a \`next dev\` server is also writing to.`,
+  );
+  process.exit(1);
+}
+
 const measured = measuredFirstLoad();
 const baseline = budget.routes ?? {};
 const problems = [];
@@ -101,8 +120,10 @@ for (const [route, kb] of [...measured].sort((a, b) => b[1] - a[1])) {
 }
 
 for (const route of Object.keys(baseline)) {
-  if (!measured.has(route) && !update) {
-    problems.push(`${route.padEnd(34)}  removed route`);
+  if (!measured.has(route)) {
+    problems.push(
+      `${route.padEnd(34)}  missing from ${distDir} - a dev server may have rewritten this build directory; re-run \`next build\``,
+    );
   }
 }
 
