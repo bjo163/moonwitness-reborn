@@ -13,6 +13,11 @@ void test("ql_search manifest and model specifications", () => {
   assert.equal(searchIndexEntryModel.fields.token.type, "char");
   assert.equal(searchIndexEntryModel.fields.target_model.type, "char");
   assert.equal(searchIndexEntryModel.fields.weight.type, "integer");
+  assert.equal(searchIndexEntryModel.fields.edition_key.private, true);
+  assert.equal(searchIndexEntryModel.fields.locale.private, true);
+  assert.equal(searchIndexEntryModel.fields.surah.private, true);
+  assert.equal(searchIndexEntryModel.fields.ayah.private, true);
+  assert.equal(searchIndexEntryModel.fields.owner_id.private, true);
 
   assert.equal(searchThematicNode.name, "search.thematic_node");
   assert.equal(searchThematicNode.fields.slug.type, "char");
@@ -32,6 +37,11 @@ void test("tokenizeText extracts unique tokens without stopwords", () => {
   // Stopword "dan" and "di" should be filtered
   assert.ok(!tokens.includes("dan"));
   assert.ok(!tokens.includes("di"));
+});
+
+void test("tokenizeText normalizes Arabic diacritics and bounds token length", () => {
+  assert.deepEqual(tokenizeText("الرَّحْمَٰنُ الرَّحْمَٰنُ"), ["الرحمن"]);
+  assert.deepEqual(tokenizeText(`valid ${"x".repeat(129)}`), ["valid"]);
 });
 
 void test("generateIndexEntries excludes private fields", () => {
@@ -54,6 +64,20 @@ void test("generateIndexEntries excludes private fields", () => {
   // Private field token must not exist
   assert.ok(!entries.some((e) => e.token === "rahasia"));
   assert.ok(!entries.some((e) => e.token === "intelijen"));
+});
+
+void test("generateIndexEntries can omit passage snippets", () => {
+  const entries = generateIndexEntries(
+    {
+      targetModel: "corpus.passage",
+      targetId: "passage-01",
+      fields: { text: "A passage that must not become a generic search snippet." },
+    },
+    { includeSnippet: false },
+  );
+
+  assert.ok(entries.length > 0);
+  assert.ok(entries.every((entry) => entry.snippet === undefined));
 });
 
 void test("generateIndexEntries generates unique collision-free IDs for long model names and UUIDs", () => {
