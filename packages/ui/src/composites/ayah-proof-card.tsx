@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "../lib/utils.js";
 import { Badge } from "../atoms/badge.js";
 import { Button } from "../atoms/button.js";
@@ -9,7 +9,7 @@ export interface AyahProofMetadata {
   editionCode: string;
   editionName: string;
   sha256Hash: string;
-  verificationUri: string;
+  verificationUri?: string;
   copiedAtIso: string;
 }
 
@@ -18,62 +18,89 @@ export interface AyahProofCardProps {
   ayahNumber: number;
   text: string;
   editionCode: string;
-  editionName?: string;
+  editionName: string;
   proofHash: string;
-  isVerified?: boolean;
+  /**
+   * Absolute deep link that recomputes the digest server-side. The card does
+   * not invent one: a copy action is not a verification, so a link only
+   * appears when the caller actually owns a verification surface.
+   */
+  verificationUri?: string;
+  proofBadgeLabel: string;
+  digestLabel: string;
+  copyLabel: string;
+  copiedLabel: string;
+  copyFailedLabel: string;
   onCopyProof?(this: void, metadata: AyahProofMetadata): void;
-  copyLabel?: string;
-  copiedLabel?: string;
-  proofBadgeLabel?: string;
   className?: string;
 }
+
+type CopyState = "idle" | "copied" | "failed";
 
 export function AyahProofCard({
   surahNumber,
   ayahNumber,
   text,
   editionCode,
-  editionName = "Canonical Edition",
+  editionName,
   proofHash,
-  isVerified = true,
+  verificationUri,
+  proofBadgeLabel,
+  digestLabel,
+  copyLabel,
+  copiedLabel,
+  copyFailedLabel,
   onCopyProof,
-  copyLabel = "Copy Ayah with Cryptographic Proof",
-  copiedLabel = "Copied with Proof!",
-  proofBadgeLabel = "SHA-256 Provenance Stamp",
   className,
 }: AyahProofCardProps) {
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<CopyState>("idle");
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
 
-  const verificationUri = `https://moonwitness.com/verify/ayah/${surahNumber}/${ayahNumber}?hash=${proofHash}`;
+  useEffect(() => () => clearTimeout(resetTimerRef.current), []);
 
-  const handleCopy = useCallback(async () => {
-    const formattedProof = `"${text}"\n[QS. ${surahNumber}:${ayahNumber} | ${editionName}]\nMoonWitness Proof: ${verificationUri}`;
+  const citation = `QS. ${surahNumber}:${ayahNumber}`;
+  const lines = [`"${text}"`, `[${citation} | ${editionName}]`];
+  if (verificationUri) lines.push(verificationUri);
+  lines.push(`SHA-256: ${proofHash}`);
+  const formattedProof = lines.join("\n");
 
-    try {
-      if (typeof navigator !== "undefined" && navigator.clipboard) {
+  const handleCopy = useCallback(() => {
+    void (async () => {
+      let next: CopyState;
+      try {
+        if (!navigator.clipboard) throw new Error("clipboard unavailable");
         await navigator.clipboard.writeText(formattedProof);
+        next = "copied";
+      } catch {
+        next = "failed";
       }
-    } catch {
-      // clipboard fallback
-    }
-
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-
-    onCopyProof?.({
-      surahNumber,
-      ayahNumber,
-      editionCode,
-      editionName,
-      sha256Hash: proofHash,
-      verificationUri,
-      copiedAtIso: new Date().toISOString(),
-    });
-  }, [text, surahNumber, ayahNumber, editionName, verificationUri, editionCode, proofHash, onCopyProof]);
-
-  const onCopyClick = useCallback(() => {
-    void handleCopy();
-  }, [handleCopy]);
+      setCopyState(next);
+      clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = setTimeout(() => setCopyState("idle"), 2500);
+      if (next === "copied") {
+        onCopyProof?.({
+          surahNumber,
+          ayahNumber,
+          editionCode,
+          editionName,
+          sha256Hash: proofHash,
+          verificationUri,
+          copiedAtIso: new Date().toISOString(),
+        });
+      }
+    })();
+  }, [
+    formattedProof,
+    surahNumber,
+    ayahNumber,
+    editionCode,
+    editionName,
+    proofHash,
+    verificationUri,
+    onCopyProof,
+  ]);
 
   return (
     <div
@@ -82,46 +109,57 @@ export function AyahProofCard({
     >
       <div className="flex items-center justify-between gap-2 border-b border-hairline pb-2.5">
         <span className="text-xs font-mono font-medium text-ink-soft">
-          Surah {surahNumber}:{ayahNumber} &middot; {editionName}
+          {citation} &middot; {editionName}
         </span>
-        <span
-          className={cn(
-            "ql-proof-badge",
-            isVerified ? "is-valid" : "is-tampered",
-          )}
-          role="status"
-          aria-label={proofBadgeLabel}
-        >
+        <span className="ql-proof-badge">
           <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
           <span>{proofBadgeLabel}</span>
         </span>
       </div>
 
       <div className="py-2">
-        <p className="text-sm leading-relaxed text-ink font-serif" dir="auto">
+        <p className="text-sm leading-relaxed text-ink font-display" dir="auto">
           {text}
         </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-hairline pt-2.5">
+      <div className="flex flex-col gap-3 border-t border-hairline pt-2.5 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col">
           <span className="text-[10px] uppercase tracking-wider text-muted font-mono">
-            Cryptographic Digest
+            {digestLabel}
           </span>
-          <span className="text-xs font-mono text-acid truncate max-w-[280px]" title={proofHash}>
+          <span
+            className="max-w-xs truncate text-xs font-mono text-acid"
+            title={proofHash}
+          >
             {proofHash.slice(0, 16)}…{proofHash.slice(-8)}
           </span>
         </div>
 
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          onClick={onCopyClick}
-          aria-label={copied ? copiedLabel : copyLabel}
-        >
-          {copied ? copiedLabel : copyLabel}
-        </Button>
+        <div className="flex flex-col items-start gap-1 sm:items-end">
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={handleCopy}
+          >
+            {copyLabel}
+          </Button>
+          <p
+            role="status"
+            aria-live="polite"
+            className={cn(
+              "text-[10px] font-mono",
+              copyState === "failed" ? "text-danger" : "text-ink-soft",
+            )}
+          >
+            {copyState === "copied"
+              ? copiedLabel
+              : copyState === "failed"
+                ? copyFailedLabel
+                : "\u00A0"}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -135,6 +173,13 @@ export interface ProofVerificationResultProps {
   submittedText?: string;
   surahNumber: number;
   ayahNumber: number;
+  verifiedStampLabel: string;
+  mismatchStampLabel: string;
+  canonicalTextLabel: string;
+  submittedTextLabel: string;
+  expectedHashLabel: string;
+  providedHashLabel: string;
+  reportLabel: string;
   className?: string;
 }
 
@@ -146,6 +191,13 @@ export function ProofVerificationResult({
   submittedText,
   surahNumber,
   ayahNumber,
+  verifiedStampLabel,
+  mismatchStampLabel,
+  canonicalTextLabel,
+  submittedTextLabel,
+  expectedHashLabel,
+  providedHashLabel,
+  reportLabel,
   className,
 }: ProofVerificationResultProps) {
   const isMatch = status === "verified";
@@ -155,12 +207,12 @@ export function ProofVerificationResult({
       className={cn("ql-proof-verification-result flex flex-col gap-4", className)}
       data-testid="proof-verification-result"
       role={isMatch ? "region" : "alert"}
-      aria-label="Ayah Verification Report"
+      aria-label={reportLabel}
     >
-      <div className="flex items-center justify-between gap-2 border-b border-hairline pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline pb-3">
         <div className="flex items-center gap-2">
           <span className="font-mono text-sm font-semibold text-ink">
-            Surah {surahNumber}:{ayahNumber}
+            {`QS. ${surahNumber}:${ayahNumber}`}
           </span>
           <Badge variant={isMatch ? "live" : "outline"}>
             {status.toUpperCase()}
@@ -172,16 +224,16 @@ export function ProofVerificationResult({
             isMatch ? "is-valid" : "is-tampered",
           )}
         >
-          {isMatch ? "TAMPER-PROOF VERIFIED" : "INTEGRITY MISMATCH"}
+          {isMatch ? verifiedStampLabel : mismatchStampLabel}
         </span>
       </div>
 
       <div className="space-y-3">
         <div>
           <span className="text-xs uppercase tracking-wider text-muted font-mono">
-            Canonical Text from Scripture
+            {canonicalTextLabel}
           </span>
-          <p className="mt-1 text-sm text-ink font-serif leading-relaxed" dir="auto">
+          <p className="mt-1 text-sm text-ink font-display leading-relaxed" dir="auto">
             {canonicalText}
           </p>
         </div>
@@ -189,23 +241,35 @@ export function ProofVerificationResult({
         {submittedText && submittedText !== canonicalText && (
           <div className="rounded border border-danger/40 bg-panel-deeper p-3">
             <span className="text-xs uppercase tracking-wider text-danger font-mono font-medium">
-              Submitted Altered Text
+              {submittedTextLabel}
             </span>
-            <p className="mt-1 text-sm text-danger font-serif leading-relaxed" dir="auto">
+            <p className="mt-1 text-sm text-danger font-display leading-relaxed" dir="auto">
               {submittedText}
             </p>
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-hairline pt-3 font-mono text-xs">
+      <div className="grid grid-cols-1 gap-3 border-t border-hairline pt-3 font-mono text-xs md:grid-cols-2">
         <div>
-          <span className="text-[10px] uppercase text-muted block">Expected Hash</span>
-          <span className="text-success truncate block" title={expectedHash}>{expectedHash}</span>
+          <span className="block text-[10px] uppercase text-muted">
+            {expectedHashLabel}
+          </span>
+          <span className="block truncate text-success" title={expectedHash}>
+            {expectedHash}
+          </span>
         </div>
         <div>
-          <span className="text-[10px] uppercase text-muted block">Provided Hash</span>
-          <span className={cn("truncate block", isMatch ? "text-success" : "text-danger")} title={providedHash}>
+          <span className="block text-[10px] uppercase text-muted">
+            {providedHashLabel}
+          </span>
+          <span
+            className={cn(
+              "block truncate",
+              isMatch ? "text-success" : "text-danger",
+            )}
+            title={providedHash}
+          >
             {providedHash}
           </span>
         </div>

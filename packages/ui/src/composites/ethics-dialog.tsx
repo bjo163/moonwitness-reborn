@@ -1,6 +1,5 @@
-import type { ReactElement } from "react";
-import { useState } from "react";
-import { AlertTriangle, Check, ShieldCheck, X } from "lucide-react";
+import { type ReactElement, useState } from "react";
+import { AlertTriangle, ShieldCheck, X } from "lucide-react";
 import { Button } from "../atoms/button.js";
 import { Checkbox } from "../atoms/checkbox.js";
 
@@ -17,8 +16,8 @@ export interface EthicsChecklistDialogProps {
   open: boolean;
   articleTitle: string;
   changeId: string;
-  onConfirm: (this: void, payload: EthicsAffirmationPayload) => Promise<void>;
-  onCancel: (this: void) => void;
+  onConfirm(this: void, payload: EthicsAffirmationPayload): Promise<void>;
+  onCancel(this: void): void;
   className?: string;
   title?: string;
 }
@@ -152,7 +151,9 @@ export function EthicsChecklistDialog({
             Cancel
           </Button>
           <Button
-            onClick={handleConfirm}
+            onClick={() => {
+              void handleConfirm();
+            }}
             disabled={!allAffirmed || submitting}
             className="inline-flex items-center gap-2"
           >

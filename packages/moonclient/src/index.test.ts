@@ -708,3 +708,138 @@ void test("MoonClient supports Batch 5 contracts: covenant, sanad, study circles
   assert.equal(offlineRec.requests[0].url, "/api/corpus/offline-manifest");
 });
 
+interface Captured {
+  url: string;
+  method?: string;
+  headers: Record<string, string>;
+  body: unknown;
+  credentials?: RequestCredentials;
+  signal?: AbortSignal;
+}
+
+function capture(
+  respond: () => { status: number; body: unknown } = () => ({
+    status: 200,
+    body: {},
+  }),
+): { client: MoonClient; sent: Captured[] } {
+  const sent: Captured[] = [];
+  const client = new MoonClient({
+    baseUrl: "/api",
+    fetcher: (input, init = {}) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
+      sent.push({
+        url,
+        method: init.method,
+        headers: (init.headers ?? {}) as Record<string, string>,
+        body: init.body,
+        credentials: init.credentials,
+        signal: init.signal ?? undefined,
+      });
+      const outcome = respond();
+      return Promise.resolve(
+        new Response(JSON.stringify(outcome.body), { status: outcome.status }),
+      );
+    },
+  });
+  return { client, sent };
+}
+
+function sentAt(sent: readonly Captured[], index: number): Captured {
+  const entry = sent[index];
+  if (!entry) throw new Error(`request ${index} was never made`);
+  return entry;
+}
+
+void test("attachment routes are reached through the shared route table", async () => {
+  const { client, sent } = capture();
+  await client.listAttachments();
+  await client.getAttachment("a-1");
+  await client.createAttachmentUpload({
+    name: "clip.png",
+    mimeType: "image/png",
+    kind: "media",
+    sizeBytes: 10,
+  });
+  await client.completeAttachmentUpload("u-1");
+  await client.deleteAttachment("a-1");
+
+  assert.deepEqual(
+    sent.map((entry) => [entry.method ?? "GET", entry.url]),
+    [
+      ["GET", "/api/attachments"],
+      ["GET", "/api/attachments/a-1"],
+      ["POST", "/api/attachments/uploads"],
+      ["POST", "/api/attachments/uploads/u-1/complete"],
+      ["DELETE", "/api/attachments/a-1"],
+    ],
+  );
+  assert.equal(JSON.parse(sentAt(sent, 2).body as string).sizeBytes, 10);
+});
+
+void test("a chunk is sent as an octet-stream body, never as JSON", async () => {
+  const { client, sent } = capture(() => ({
+    status: 200,
+    body: { receivedChunks: 1, receivedBytes: 4, totalChunks: 2, expectedBytes: 8 },
+  }));
+  const bytes = new Uint8Array([1, 2, 3, 4]);
+  const controller = new AbortController();
+  const progress = await client.uploadAttachmentChunk(
+    "u-1",
+    1,
+    bytes,
+    controller.signal,
+  );
+
+  assert.equal(progress.receivedBytes, 4);
+  const request = sentAt(sent, 0);
+  assert.equal(request.method, "PUT");
+  assert.equal(request.url, "/api/attachments/uploads/u-1/chunks/1");
+  assert.equal(request.headers["content-type"], "application/octet-stream");
+  assert.equal(request.body, bytes);
+  assert.equal(request.credentials, "same-origin");
+  assert.equal(request.signal, controller.signal);
+});
+
+void test("a binary failure maps the same code and status as a JSON one", async () => {
+  const failing = () => ({
+    status: 413,
+    body: { error: "Chunk is too large.", code: "ATTACHMENT_TOO_LARGE" },
+  });
+  const { client } = capture(failing);
+  const json = capture(failing).client;
+
+  const binaryError = await client
+    .uploadAttachmentChunk("u-1", 0, new Uint8Array([1]))
+    .then(() => undefined)
+    .catch((error: unknown) => error);
+  const jsonError = await json
+    .deleteAttachment("a-1")
+    .then(() => undefined)
+    .catch((error: unknown) => error);
+
+  assert.ok(binaryError instanceof MoonClientError);
+  assert.ok(jsonError instanceof MoonClientError);
+  assert.equal(binaryError.status, jsonError.status);
+  assert.equal(binaryError.code, jsonError.code);
+  assert.equal(binaryError.message, "Chunk is too large.");
+});
+
+void test("the content URL stays same-origin and cannot gain a path segment", () => {
+  assert.equal(
+    moonClient.attachmentContentUrl("a-1"),
+    `/api${apiRoutes.attachments.content("a-1")}`,
+  );
+  const tricky = "../else";
+  const url = moonClient.attachmentContentUrl(tricky);
+  // A literal slash would let an id reshape the route it is served from; the
+  // dots survive encoding but stay inside one segment.
+  assert.equal(url, "/api/attachments/..%2Felse/content");
+  assert.equal(url.split("/").length, 5);
+});
+

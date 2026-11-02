@@ -4,7 +4,11 @@ import dotenv from "dotenv";
 import { OpenAICompatibleProvider } from "@moonwitness/agent-runtime";
 import { createConversationStore } from "@moonwitness/database";
 import { createQlOrm } from "ql_orm";
+import { LocalDiskStorageDriver } from "ql_orm/storage/local";
 import aiManifest from "ql_ai/__manifest__";
+import attachmentManifest from "ql_attachment/__manifest__";
+import { reapExpiredUploads } from "ql_attachment/services/attachment-service";
+import { attachmentPolicyFromEnv } from "ql_attachment/services/policy-env";
 import authManifest from "ql_auth/__manifest__";
 import baseManifest from "ql_base/__manifest__";
 import chatManifest from "ql_chat/__manifest__";
@@ -40,26 +44,49 @@ const provider = modelProvider.config
   : undefined;
 const databaseUrl =
   process.env.DATABASE_URL ?? "file:../../data/moonwitness.db";
-const { orm, close: closeOrm } = await createQlOrm(databaseUrl, [
-  authManifest,
-  baseManifest,
-  aiManifest,
-  chatManifest,
-  integrationManifest,
-  i18nManifest,
-  geoManifest,
-  cloudflareManifest,
-  workflowManifest,
-  sourceManifest,
-  corpusManifest,
-  researchManifest,
-  searchManifest,
-]);
+const attachmentStorage = new LocalDiskStorageDriver({
+  rootDir: process.env.ATTACHMENT_STORAGE_DIR ?? "../../data/attachments",
+});
+const attachmentPolicy = attachmentPolicyFromEnv(process.env);
+const { orm, close: closeOrm } = await createQlOrm(
+  databaseUrl,
+  [
+    authManifest,
+    baseManifest,
+    aiManifest,
+    chatManifest,
+    integrationManifest,
+    i18nManifest,
+    geoManifest,
+    cloudflareManifest,
+    workflowManifest,
+    sourceManifest,
+    corpusManifest,
+    researchManifest,
+    searchManifest,
+    attachmentManifest,
+  ],
+  { storage: attachmentStorage },
+);
+
+function runAttachmentReap(origin: string): void {
+  void reapExpiredUploads(orm, attachmentStorage).catch((error: unknown) => {
+    console.error(`Attachment reaper pass failed (${origin}).`, error);
+  });
+}
+
+// A process-local sweep is the current bound: uploads interrupted by a deploy
+// are reclaimed here rather than by a job queue the stack does not have yet.
+runAttachmentReap("boot");
+const attachmentReaper = setInterval(() => runAttachmentReap("interval"), 15 * 60 * 1000);
+attachmentReaper.unref();
+
 const store = createConversationStore(orm);
 const server = createApiServer(provider, store, orm, {
   encryptionKey: parseProviderEncryptionKey(
     process.env.PROVIDER_ENCRYPTION_KEY,
   ),
+  attachmentPolicy,
 });
 
 server.listen(port, () => {
@@ -73,6 +100,7 @@ server.listen(port, () => {
 });
 
 function closeServer() {
+  clearInterval(attachmentReaper);
   server.close((error) => {
     store.close();
     closeOrm();

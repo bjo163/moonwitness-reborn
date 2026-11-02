@@ -1,5 +1,4 @@
-import type { ReactElement } from "react";
-import { useState } from "react";
+import { type ReactElement, useState } from "react";
 import { CheckCircle2, AlertCircle, Send } from "lucide-react";
 import { Button } from "../atoms/button.js";
 import { Textarea } from "../atoms/textarea.js";
@@ -22,12 +21,12 @@ export interface SanadVerificationStepperProps {
   currentUserId: string;
   reviews: SanadReviewerItem[];
   requiredReviews?: number;
-  onSubmitReview: (
+  onSubmitReview(
     this: void,
     decision: PeerReviewDecision,
     notes: string,
     sanadRef: string,
-  ) => Promise<void>;
+  ): Promise<void>;
   className?: string;
   title?: string;
   authorNotice?: string;
@@ -194,7 +193,9 @@ export function SanadVerificationStepper({
               />
             </div>
             <Button
-              onClick={handleSubmit}
+              onClick={() => {
+                void handleSubmit();
+              }}
               disabled={!notes.trim() || !sanadRef.trim() || submitting}
               className="inline-flex items-center gap-2"
             >

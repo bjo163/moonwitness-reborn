@@ -137,6 +137,9 @@ importers:
       ql_ai:
         specifier: workspace:*
         version: link:../../packages/ql_ai
+      ql_attachment:
+        specifier: workspace:*
+        version: link:../../packages/ql_attachment
       ql_auth:
         specifier: workspace:*
         version: link:../../packages/ql_auth
@@ -287,6 +290,12 @@ importers:
       ql_base:
         specifier: workspace:*
         version: link:../ql_base
+      ql_orm:
+        specifier: workspace:*
+        version: link:../ql-orm
+
+  packages/ql_attachment:
+    dependencies:
       ql_orm:
         specifier: workspace:*
         version: link:../ql-orm

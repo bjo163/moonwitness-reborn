@@ -3584,4 +3584,92 @@ msgctxt "web:corpus.verifiedAuthenticity"
 msgid "Bukti Keaslian Ayat Terverifikasi"
 msgstr "Ayah Authenticity Proof Verified"
 
+msgctxt "web:corpus.proofDigest"
+msgid "Sidik Kriptografis"
+msgstr "Cryptographic Digest"
+
+msgctxt "web:corpus.proofPanelTitle"
+msgid "Bukti kutipan (SHA-256)"
+msgstr "Citation proof (SHA-256)"
+
+msgctxt "web:corpus.copyProofFailed"
+msgid "Gagal menyalin ke papan klip."
+msgstr "Copying to the clipboard failed."
+
+msgctxt "web:corpus.audioUnavailableTitle"
+msgid "Tilawah belum tersedia"
+msgstr "Tilawah audio is not available yet"
+
+msgctxt "web:corpus.audioUnavailableBody"
+msgid "Belum ada manifest qari dan batas waktu ayat yang terverifikasi untuk edisi ini."
+msgstr "No verified reciter manifest or ayah timing boundaries exist for this edition yet."
+
+msgctxt "web:corpus.verificationReport"
+msgid "Laporan verifikasi ayat"
+msgstr "Ayah verification report"
+
+msgctxt "web:corpus.canonicalText"
+msgid "Teks kanonis dari mushaf"
+msgstr "Canonical text from the mushaf"
+
+msgctxt "web:corpus.submittedText"
+msgid "Teks kiriman yang berbeda"
+msgstr "Submitted text that differs"
+
+msgctxt "web:corpus.expectedHash"
+msgid "Hash harapan"
+msgstr "Expected hash"
+
+msgctxt "web:corpus.providedHash"
+msgid "Hash kiriman"
+msgstr "Provided hash"
+
+msgctxt "web:graph.summary"
+msgid "Jaringan semantik lintas surah ({nodes} simpul, {edges} relasi)"
+msgstr "Cross-surah semantic network ({nodes} nodes, {edges} relations)"
+
+msgctxt "web:graph.description"
+msgid "Graf relasi semantik antar entitas lintas surah"
+msgstr "Graph of semantic relations between entities across surahs"
+
+msgctxt "web:graph.viewModeGroup"
+msgid "Mode tampilan graf"
+msgstr "Graph view mode"
+
+msgctxt "web:graph.empty"
+msgid "Belum ada entitas maupun relasi terdaftar untuk divisualisasikan."
+msgstr "No entities or relations are registered yet to visualize."
+
+msgctxt "web:graph.nodeColumn"
+msgid "Simpul entitas"
+msgstr "Entity node"
+
+msgctxt "web:graph.categoryColumn"
+msgid "Kategori"
+msgstr "Category"
+
+msgctxt "web:graph.surahColumn"
+msgid "Surah acuan"
+msgstr "Surah anchor"
+
+msgctxt "web:graph.weightColumn"
+msgid "Bobot"
+msgstr "Weight"
+
+msgctxt "web:graph.relationColumn"
+msgid "Jenis relasi"
+msgstr "Relation type"
+
+msgctxt "web:graph.fromColumn"
+msgid "Dari"
+msgstr "From"
+
+msgctxt "web:graph.toColumn"
+msgid "Ke"
+msgstr "To"
+
+msgctxt "web:graph.evidenceColumn"
+msgid "Ayat bukti"
+msgstr "Evidence verses"
+
 

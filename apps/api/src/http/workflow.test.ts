@@ -296,6 +296,22 @@ void test("Track 17: Sanad review pipeline blocks self-approval and transitions 
 
 void test("Track 20: Pre-publication ethics checklist requires all clauses", async () => {
   const changeId = await createDraft(submitterCookie, "Ethics test article");
+  await api(apiRoutes.workflow.transition(changeId), {
+    method: "POST",
+    cookie: submitterCookie,
+    body: { action: "submit" },
+  });
+  await api(apiRoutes.workflow.transition(changeId), {
+    method: "POST",
+    cookie: ownerCookie,
+    body: { action: "start_review" },
+  });
+  await api(apiRoutes.workflow.transition(changeId), {
+    method: "POST",
+    cookie: ownerCookie,
+    body: { action: "approve", reason: "Ethics review approved" },
+  });
+
   // Missing clauses
   const badPublish = await api<{ error: string }>(
     apiRoutes.workflow.publishChange(changeId),

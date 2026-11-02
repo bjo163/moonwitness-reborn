@@ -12,6 +12,10 @@ import type {
   RecordValues,
   ViewType,
 } from "@moonwitness/types";
+import {
+  QlConfigurationError,
+  type QlStorageDriver,
+} from "./storage.js";
 
 export type {
   AddonCategory,
@@ -19,6 +23,26 @@ export type {
   LandingViewSection,
   Operation as QlOperation,
 } from "@moonwitness/types";
+
+export {
+  QlConfigurationError,
+  QlStorageError,
+  attachmentKey,
+  assertQlStorageKey,
+  assertQlStoragePrefix,
+  chunkKey,
+  newStorageId,
+  normalizeRange,
+} from "./storage.js";
+
+export type {
+  QlStoredObject,
+  QlStorageDriver,
+  QlStorageKey,
+  QlStorageRange,
+  QlStorageSink,
+  QlStorageStat,
+} from "./storage.js";
 
 export interface QlFieldDefinition {
   type: QlFieldType;
@@ -127,6 +151,10 @@ export interface QlAddonManifest {
 export interface QlUserContext {
   id: string;
   groups: readonly string[];
+}
+
+export interface QlOrmOptions {
+  storage?: QlStorageDriver;
 }
 
 export type QlRecord = RecordValues;
@@ -273,6 +301,14 @@ function sqlType(driver: "libsql" | "postgres", type: QlFieldType): string {
     case "char":
     case "text":
       return "TEXT";
+    default: {
+      // A new FieldType that is not mapped here must fail at boot rather than
+      // emit a column definition of `undefined`.
+      const unmapped: never = type;
+      throw new QlValidationError(
+        `Field type '${String(unmapped)}' has no SQL mapping.`,
+      );
+    }
   }
 }
 
@@ -925,7 +961,21 @@ export class QlOrm {
   constructor(
     private readonly connection: QlConnection,
     readonly registry: QlModelRegistry,
+    private readonly options: QlOrmOptions = {},
   ) {}
+
+  /**
+   * Reading this when no driver is installed is a deployment mistake, so it
+   * throws instead of returning an object that silently stores nothing.
+   */
+  get storage(): QlStorageDriver {
+    if (!this.options.storage) {
+      throw new QlConfigurationError(
+        "No storage driver is installed; pass one to createQlOrm().",
+      );
+    }
+    return this.options.storage;
+  }
 
   async syncSchema(): Promise<void> {
     const driver = this.connection.driver;
@@ -1740,6 +1790,7 @@ export function isPostgresUrl(databaseUrl: string): boolean {
 export async function createQlOrm(
   databaseUrl: string,
   manifests: readonly QlAddonManifest[],
+  options: QlOrmOptions = {},
 ): Promise<{ orm: QlOrm; close(): void }> {
   let connection: QlConnection;
   if (isPostgresUrl(databaseUrl)) {
@@ -1756,7 +1807,7 @@ export async function createQlOrm(
     connection = new LibSqlConnection(createClient({ url: databaseUrl }));
   }
   try {
-    const orm = new QlOrm(connection, new QlModelRegistry(manifests));
+    const orm = new QlOrm(connection, new QlModelRegistry(manifests), options);
     await orm.syncSchema();
     await orm.loadDefaultData();
     return { orm, close: () => connection.close() };

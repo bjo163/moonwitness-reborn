@@ -76,11 +76,15 @@ import {
   QlAccessError,
   QlConflictError,
   QlNotFoundError,
+  QlStorageError,
   QlValidationError,
   type QlOrm,
   type QlRecord,
   type QlServiceValue,
 } from "ql_orm";
+import { AttachmentError } from "ql_attachment/services/errors";
+import type { AttachmentPolicy } from "ql_attachment/services/attachment-service";
+import { handleAttachmentRequest } from "./attachments.js";
 import {
   normalizeProviderBaseUrl,
   ProviderConfigurationError,
@@ -141,6 +145,7 @@ import {
   type EnabledLocale,
 } from "ql_i18n/services/catalog-service";
 import { firstUseSetupRequired } from "../auth/setup.js";
+import { RequestError, sendJson } from "./respond.js";
 import { ConnectorAccessError } from "../connectors/connector-boundary.js";
 import {
   ConnectorCredentialError,
@@ -291,15 +296,6 @@ async function messageDto(
     return { ...dto, groundingStatus: "legacy" };
   }
   return { ...dto, groundingStatus, citations };
-}
-
-class RequestError extends Error {
-  constructor(
-    message: string,
-    readonly statusCode: number,
-  ) {
-    super(message);
-  }
 }
 
 async function readJsonBody(
@@ -538,47 +534,6 @@ function parseAgentRequest(body: unknown): AgentRequest & ChatRequestDto {
   };
 }
 
-function sendJson(
-  response: ServerResponse,
-  statusCode: number,
-  body: object,
-  headers: Record<string, string> = {},
-) {
-  const bodyRecord = body as Record<string, unknown>;
-  const errorBody =
-    statusCode >= 400 &&
-    typeof bodyRecord.error === "string" &&
-    typeof bodyRecord.code !== "string"
-      ? {
-          ...bodyRecord,
-          code:
-            statusCode === 400
-              ? "REQUEST_INVALID"
-              : statusCode === 401
-                ? "AUTHENTICATION_REQUIRED"
-                : statusCode === 403
-                  ? "ACCESS_DENIED"
-                  : statusCode === 404
-                    ? "RESOURCE_NOT_FOUND"
-                    : statusCode === 405
-                      ? "METHOD_NOT_ALLOWED"
-                      : statusCode === 409
-                        ? "RESOURCE_CONFLICT"
-                        : statusCode === 413
-                          ? "REQUEST_TOO_LARGE"
-                          : statusCode === 429
-                            ? "RATE_LIMITED"
-                            : statusCode === 502
-                              ? "UPSTREAM_FAILURE"
-                              : statusCode === 503
-                                ? "SERVICE_UNAVAILABLE"
-                                : "INTERNAL_ERROR",
-        }
-      : body;
-  response.writeHead(statusCode, { "content-type": "application/json", ...headers });
-  response.end(JSON.stringify(errorBody));
-}
-
 function retryAfterHeaders(retryAfterMs: number): Record<string, string> {
   return { "retry-after": String(Math.max(1, Math.ceil(retryAfterMs / 1000))) };
 }
@@ -589,6 +544,14 @@ function handleRequestError(
 ) {
   if (error instanceof RequestError || error instanceof AuthenticationError) {
     sendJson(response, error.statusCode, { error: error.message });
+    return;
+  }
+  if (error instanceof AttachmentError) {
+    sendJson(response, error.statusCode, { code: error.code, error: error.message });
+    return;
+  }
+  if (error instanceof QlStorageError) {
+    sendJson(response, 503, { error: "Attachment storage is unavailable." });
     return;
   }
   if (error instanceof QlAccessError) {
@@ -1284,7 +1247,19 @@ async function handleWorkflowRequest(
   );
   if (sanadMatch) {
     const changeId = decodeURIComponent(sanadMatch[1]);
+    const [changeRecord] = await orm.findManyByService(
+      "workflow.change",
+      { id: changeId },
+      { limit: 1 },
+    );
+    if (!changeRecord) {
+      throw new QlNotFoundError(`Change '${changeId}' not found.`);
+    }
+
     if (method === "GET") {
+      const isReviewer = ctx.groups.some(
+        (group) => group === "admin" || group === "operator",
+      );
       const status = await getSanadPipelineStatusForService(orm, changeId);
       sendJson(response, 200, {
         changeId: status.changeId,
@@ -1292,15 +1267,20 @@ async function handleWorkflowRequest(
         requiredReviews: status.requiredReviews,
         approvedCount: status.approvedCount,
         canPublish: status.canPublish,
-        reviews: status.reviews.map((r) => ({
-          id: String(r.id ?? ""),
-          reviewerId: String(r.reviewer_id ?? ""),
-          reviewerName: String(r.reviewer_id ?? "Reviewer"),
-          decision: String(r.decision) as "approved" | "changes_requested",
-          notes: String(r.notes ?? ""),
-          sanadChainRef: String(r.sanad_chain_ref ?? ""),
-          createdAt: new Date(Number(r.created_at ?? Date.now())).toISOString(),
-        })),
+        reviews: status.reviews.map((r, index) => {
+          const rawReviewer = String(r.reviewer_id ?? "");
+          const isOwnReview = rawReviewer === user.id;
+          const displayReviewer = isReviewer || isOwnReview ? rawReviewer : `Peer Reviewer #${index + 1}`;
+          return {
+            id: String(r.id ?? ""),
+            reviewerId: isReviewer || isOwnReview ? rawReviewer : `reviewer-${index + 1}`,
+            reviewerName: displayReviewer,
+            decision: String(r.decision) as "approved" | "changes_requested",
+            notes: String(r.notes ?? ""),
+            sanadChainRef: String(r.sanad_chain_ref ?? ""),
+            createdAt: new Date(Number(r.created_at ?? Date.now())).toISOString(),
+          };
+        }),
       });
       return true;
     }
@@ -1350,6 +1330,13 @@ async function handleWorkflowRequest(
     }
     const [change] = await orm.findManyByService("workflow.change", { id: changeId }, { limit: 1 });
     if (!change) throw new QlNotFoundError(`Change '${changeId}' not found.`);
+
+    if (change.state !== "approved") {
+      sendJson(response, 400, {
+        error: `Change '${changeId}' cannot be published from state '${String(change.state)}'. Must be 'approved'.`,
+      });
+      return true;
+    }
 
     const now = new Date();
     await orm.updateRecordsForService(
@@ -1725,8 +1712,10 @@ export function createApiServer(
     resolveConnectorToken?(): Promise<ResolvedCredential>;
     cloudflareFetcher?: typeof fetch;
     projectTasksFetcher?: typeof fetch;
+    attachmentPolicy?: Partial<AttachmentPolicy>;
   } = {},
 ) {
+  const attachmentPolicy = options.attachmentPolicy ?? {};
   const connectorCredentials: ConnectorCredentials = {
     resolveToken: options.resolveConnectorToken ?? (() => resolveCloudflareToken()),
     fetcher: options.cloudflareFetcher ?? globalThis.fetch,
@@ -3585,6 +3574,30 @@ export function createApiServer(
           reply,
         );
         sendJson(response, 200, { reply } satisfies ChatResponseDto);
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    if (
+      pathname === apiRoutes.attachments.collection ||
+      pathname.startsWith(apiRoutes.attachments.prefix)
+    ) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        const handled = await handleAttachmentRequest(
+          request,
+          response,
+          userContext(user),
+          orm,
+          pathname,
+          attachmentPolicy,
+        );
+        if (!handled) {
+          sendJson(response, 405, { error: "Method not allowed." });
+        }
       } catch (error) {
         handleRequestError(response, error);
       }

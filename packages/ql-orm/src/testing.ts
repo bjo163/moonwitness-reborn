@@ -1,9 +1,14 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   createQlOrm,
   type QlAddonManifest,
   type QlModelDefinition,
   type QlOrm,
 } from "./index.js";
+import { LocalDiskStorageDriver } from "./storage-local.js";
+import type { QlStorageDriver } from "./storage.js";
 
 const externalIdModel: QlModelDefinition = {
   name: "ir.model.data",
@@ -60,15 +65,32 @@ export function stubAddonManifest(name: string): QlAddonManifest {
  * Boot a libsql in-memory ORM against the given manifests, run the supplied
  * async callback with it, and always close the connection afterwards — even
  * when the callback throws.
+ *
+ * Pass `storage: "temp"` to install a throwaway local-disk driver, or supply
+ * your own. Without it no driver is installed, so `orm.storage` throws.
  */
 export async function withMemoryOrm(
   manifests: readonly QlAddonManifest[],
   run: (orm: QlOrm) => Promise<void>,
+  options: { storage?: QlStorageDriver | "temp" } = {},
 ): Promise<void> {
-  const runtime = await createQlOrm("file::memory:", [...manifests]);
+  let storage: QlStorageDriver | undefined;
+  let tempDir: string | undefined;
+  if (options.storage === "temp") {
+    tempDir = await mkdtemp(join(tmpdir(), "ql-orm-"));
+    storage = new LocalDiskStorageDriver({ rootDir: tempDir });
+  } else {
+    storage = options.storage;
+  }
+  const runtime = await createQlOrm("file::memory:", [...manifests], {
+    ...(storage ? { storage } : {}),
+  });
   try {
     await run(runtime.orm);
   } finally {
     runtime.close();
+    if (tempDir) {
+      await rm(tempDir, { recursive: true, force: true });
+    }
   }
 }

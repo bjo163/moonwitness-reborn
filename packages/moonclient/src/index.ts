@@ -1139,6 +1139,64 @@ export interface SourceArtifactResponseDto {
   rights: SourceRightsSummaryDto[];
 }
 
+export type AttachmentKindDto = "media" | "document" | "dataset";
+
+export type AttachmentStateDto =
+  | "uploading"
+  | "verifying"
+  | "ready"
+  | "deleted";
+
+export interface AttachmentDto {
+  id: string;
+  name: string;
+  kind: AttachmentKindDto;
+  mimeType: string;
+  sizeBytes: number;
+  sha256?: string;
+  state: AttachmentStateDto;
+  parentModel?: string;
+  parentRecordId?: string;
+  createdAt: string;
+  updatedAt: string;
+  uploadedAt?: string;
+}
+
+export interface AttachmentListResponseDto {
+  attachments: AttachmentDto[];
+}
+
+export interface CreateAttachmentUploadRequestDto {
+  name: string;
+  mimeType: string;
+  kind: AttachmentKindDto;
+  sizeBytes: number;
+  sha256?: string;
+  parentModel?: string;
+  parentRecordId?: string;
+}
+
+export interface CreateAttachmentUploadResponseDto {
+  uploadId: string;
+  attachmentId: string;
+  chunkBytes: number;
+  totalChunks: number;
+  maxChunkBytes: number;
+  expectedBytes: number;
+  expiresAt: string;
+}
+
+export interface AttachmentChunkProgressDto {
+  receivedChunks: number;
+  receivedBytes: number;
+  totalChunks: number;
+  expectedBytes: number;
+}
+
+export interface DeleteAttachmentResponseDto {
+  deleted: boolean;
+}
+
 export interface MoonClientOptions {
   baseUrl?: string;
   fetcher?: typeof fetch;
@@ -1243,6 +1301,17 @@ export const apiRoutes = {
     item: (id: string) => `/source/artifacts/${segment(id)}`,
     rights: (id: string) => `/source/artifacts/${segment(id)}/rights`,
     provenance: (id: string) => `/source/artifacts/${segment(id)}/provenance`,
+  },
+  attachments: {
+    collection: "/attachments",
+    prefix: "/attachments/",
+    item: (id: string) => `/attachments/${segment(id)}`,
+    content: (id: string) => `/attachments/${segment(id)}/content`,
+    uploads: "/attachments/uploads",
+    upload: (id: string) => `/attachments/uploads/${segment(id)}`,
+    complete: (id: string) => `/attachments/uploads/${segment(id)}/complete`,
+    chunk: (id: string, index: number) =>
+      `/attachments/uploads/${segment(id)}/chunks/${segment(String(index))}`,
   },
   projectProgress: {
     summary: "/project/progress/summary",
@@ -1821,6 +1890,54 @@ export class MoonClient {
     return this.request(apiRoutes.corpus.offlineManifest, "GET");
   }
 
+  listAttachments(): Promise<AttachmentListResponseDto> {
+    return this.request(apiRoutes.attachments.collection);
+  }
+
+  getAttachment(id: string): Promise<{ attachment: AttachmentDto }> {
+    return this.request(apiRoutes.attachments.item(id));
+  }
+
+  createAttachmentUpload(
+    input: CreateAttachmentUploadRequestDto,
+  ): Promise<CreateAttachmentUploadResponseDto> {
+    return this.request(apiRoutes.attachments.uploads, "POST", input);
+  }
+
+  uploadAttachmentChunk(
+    uploadId: string,
+    index: number,
+    body: Uint8Array | Blob,
+    signal?: AbortSignal,
+  ): Promise<AttachmentChunkProgressDto> {
+    return this.requestBinary(
+      apiRoutes.attachments.chunk(uploadId, index),
+      "PUT",
+      body,
+      signal,
+    );
+  }
+
+  completeAttachmentUpload(
+    uploadId: string,
+  ): Promise<{ attachment: AttachmentDto }> {
+    return this.request(apiRoutes.attachments.complete(uploadId), "POST", {});
+  }
+
+  deleteAttachment(id: string): Promise<DeleteAttachmentResponseDto> {
+    return this.request(apiRoutes.attachments.item(id), "DELETE");
+  }
+
+  /**
+   * URL for a native resource load (`<img src>`, `<video src>`). Browsers do
+   * not offer a fetch-free way to stream a ranged body, so this hands back the
+   * same-origin URL built from the shared route table rather than making a
+   * screen write an endpoint path.
+   */
+  attachmentContentUrl(id: string): string {
+    return `${this.baseUrl}${apiRoutes.attachments.content(id)}`;
+  }
+
   private async request<T>(
     path: string,
     method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" = "GET",
@@ -1832,6 +1949,26 @@ export class MoonClient {
       headers: { "content-type": "application/json" },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
+    return this.parseJson<T>(response);
+  }
+
+  private async requestBinary<T>(
+    path: string,
+    method: "PUT",
+    body: Uint8Array | Blob,
+    signal?: AbortSignal,
+  ): Promise<T> {
+    const response = await this.fetcher(`${this.baseUrl}${path}`, {
+      method,
+      credentials: "same-origin",
+      headers: { "content-type": "application/octet-stream" },
+      body: body as BodyInit,
+      ...(signal ? { signal } : {}),
+    });
+    return this.parseJson<T>(response);
+  }
+
+  private async parseJson<T>(response: Response): Promise<T> {
     const text = await response.text();
     let payload: unknown;
     try {

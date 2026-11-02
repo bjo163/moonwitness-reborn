@@ -6,7 +6,7 @@ export interface OfflineStatusPillProps {
   totalSurahCount?: number;
   syncProgress?: number; // 0 - 100
   isSyncing?: boolean;
-  onSyncOfflineData?: (this: void) => void;
+  onSyncOfflineData?(this: void): void;
   className?: string;
 }
 

@@ -47,6 +47,12 @@ import {
 } from "../src/index.js";
 
 import { assertNoOwnColours, render } from "./render-helpers.js";
+import {
+  graphLabels,
+  proofCardLabels,
+  proofResultLabels,
+  tilawahLabels,
+} from "./batch3-labels.js";
 
 /**
  * MW-0574's core contract, asserted for every composite at once: a caller
@@ -141,7 +147,7 @@ const classNameContract: readonly [string, RegExp, (className: string) => ReactN
     />
   )],
   ["SemanticCrossSurahGraph", /ql-semantic-graph/, (c) => (
-    <SemanticCrossSurahGraph className={c} nodes={[]} edges={[]} />
+    <SemanticCrossSurahGraph className={c} nodes={[]} edges={[]} {...graphLabels} />
   )],
   ["AyahProofCard", /ql-ayah-proof-card/, (c) => (
     <AyahProofCard
@@ -151,6 +157,7 @@ const classNameContract: readonly [string, RegExp, (className: string) => ReactN
       text="Bismillah"
       editionCode="uthmani"
       proofHash="abc1234567890def"
+      {...proofCardLabels}
     />
   )],
   ["ProofVerificationResult", /ql-proof-verification-result/, (c) => (
@@ -162,10 +169,18 @@ const classNameContract: readonly [string, RegExp, (className: string) => ReactN
       canonicalText="Bismillah"
       surahNumber={1}
       ayahNumber={1}
+      {...proofResultLabels}
     />
   )],
   ["AudioTilawahPlayer", /ql-audio-bar/, (c) => (
-    <AudioTilawahPlayer className={c} surahNumber={1} activeAyahNumber={1} />
+    <AudioTilawahPlayer
+      className={c}
+      surahNumber={1}
+      activeAyahNumber={1}
+      reciterName="Ustadz Salim"
+      reciterStyle="Murattal"
+      {...tilawahLabels}
+    />
   )],
   ["WhisperingWaveform", /ql-whispering-waveform/, (c) => (
     <WhisperingWaveform className={c} isPlaying={false} />

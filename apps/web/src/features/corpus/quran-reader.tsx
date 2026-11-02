@@ -16,8 +16,8 @@ import {
   ChimeToggle,
   SanctuaryZenStage,
   microChimeEngine,
-  AudioTilawahPlayer,
   AyahProofCard,
+  EmptyState,
 } from "@moonwitness/ui";
 import { ArrowLeft, Sparkles, ShieldCheck } from "lucide-react";
 import Link from "next/link";
@@ -78,7 +78,6 @@ export default function QuranReader() {
   const [zenActive, setZenActive] = useState(false);
   const [chimeEnabled, setChimeEnabled] = useState(false);
   const [activeAyah, setActiveAyah] = useState<number>(1);
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [proofAyah, setProofAyah] = useState<CorpusPassageDto | null>(null);
 
   useEffect(() => {
@@ -100,10 +99,6 @@ export default function QuranReader() {
 
   const handleExitZen = useCallback(() => {
     setZenActive(false);
-  }, []);
-
-  const handleAyahChange = useCallback((newAyah: number) => {
-    setActiveAyah(newAyah);
   }, []);
 
   useEffect(() => {
@@ -232,30 +227,19 @@ export default function QuranReader() {
             </div>
 
             <div className="space-y-4">
-              <AudioTilawahPlayer
-                surahNumber={surah}
-                activeAyahNumber={activeAyah}
-                reciterName="Sheikh Mahmoud Khalil Al-Husary"
-                reciterStyle="Murattal"
-                audioStreamUrl={`https://everyayah.com/data/Husary_128kbps/${String(surah).padStart(3, "0")}${String(activeAyah).padStart(3, "0")}.mp3`}
-                segments={reading.passages.map((p, idx) => ({
-                  surahNumber: surah,
-                  ayahNumber: p.ayah,
-                  startMs: idx * 5000,
-                  endMs: (idx + 1) * 5000,
-                }))}
-                isPlaying={isPlayingAudio}
-                onPlayStateChange={(playing) => setIsPlayingAudio(playing)}
-                onAyahChange={handleAyahChange}
-                playLabel={t("web.corpus.playTilawah")}
-                pauseLabel={t("web.corpus.pauseTilawah")}
+              {/* `corpus.reciter` / `corpus.audio_segment` hold no verified reciter
+                  manifest or ayah boundaries yet, so the reader says that instead
+                  of inventing timings and an attribution. */}
+              <EmptyState
+                title={t("web.corpus.audioUnavailableTitle")}
+                description={t("web.corpus.audioUnavailableBody")}
               />
 
               {proofAyah && (
                 <div className="relative">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-xs text-acid font-mono font-medium">
-                      {t("web.corpus.verifiedAuthenticity")}
+                      {t("web.corpus.proofPanelTitle")}
                     </span>
                     <Button
                       type="button"
@@ -274,10 +258,11 @@ export default function QuranReader() {
                     editionCode={reading.editionKey}
                     editionName={reading.passages[0]?.edition_attribution_text || reading.editionKey}
                     proofHash={proofAyah.text_checksum}
-                    isVerified={true}
+                    proofBadgeLabel={t("web.corpus.sha256ProofBadge")}
+                    digestLabel={t("web.corpus.proofDigest")}
                     copyLabel={t("web.corpus.copyProofButton")}
                     copiedLabel={t("web.corpus.proofCopiedNotice")}
-                    proofBadgeLabel={t("web.corpus.sha256ProofBadge")}
+                    copyFailedLabel={t("web.corpus.copyProofFailed")}
                   />
                 </div>
               )}
@@ -334,7 +319,10 @@ export default function QuranReader() {
                         type="button"
                         size="sm"
                         variant="ghost"
-                        onClick={() => setProofAyah(passage)}
+                        onClick={() => {
+                          setActiveAyah(passage.ayah);
+                          setProofAyah(passage);
+                        }}
                         className="text-[10px] h-6 px-1.5 font-mono text-muted hover:text-acid gap-1"
                         aria-label={t("web.corpus.sha256ProofBadge")}
                       >

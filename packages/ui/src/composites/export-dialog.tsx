@@ -13,8 +13,8 @@ export interface ExportMetadataOption {
 
 export interface StudioExportDialogProps {
   isOpen: boolean;
-  onClose: (this: void) => void;
-  onExport: (this: void, format: ExportFormat, options: ExportMetadataOption) => void;
+  onClose(this: void): void;
+  onExport(this: void, format: ExportFormat, options: ExportMetadataOption): void;
   isExporting?: boolean;
   documentTitle?: string;
   className?: string;

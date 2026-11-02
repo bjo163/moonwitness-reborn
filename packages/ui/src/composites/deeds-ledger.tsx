@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { Check, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
 
 export type BeneficialDeedKind =
   | "typo_correction"
@@ -21,7 +21,7 @@ export interface DeedsActivityLedgerProps {
   deeds: BeneficialDeedRecord[];
   totalCount: number;
   activeKindFilter?: BeneficialDeedKind;
-  onFilterChange: (this: void, kind?: BeneficialDeedKind) => void;
+  onFilterChange(this: void, kind?: BeneficialDeedKind): void;
   className?: string;
   title?: string;
   emptyLabel?: string;
@@ -118,7 +118,7 @@ export function DeedsActivityLedger({
                   </td>
                   <td className="p-3 text-ink-soft">{deed.summary}</td>
                   <td className="p-3 font-mono text-[11px] text-muted">
-                    {deed.proofHash ? deed.proofHash.slice(0, 16) + "..." : "verified"}
+                    {deed.proofHash ? `${deed.proofHash.slice(0, 16)}...` : "verified"}
                   </td>
                   <td className="p-3 text-muted">
                     {new Date(deed.createdAt).toLocaleDateString()}

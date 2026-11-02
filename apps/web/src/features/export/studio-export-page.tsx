@@ -381,33 +381,35 @@ export default function StudioExportPage() {
             artifacts.find((a) => String(a.id) === selectedArtifactId)?.title as string ?? "Studio Artifact"
           }
           isExporting={isExporting}
-          onExport={async (format: ExportFormat, options: ExportMetadataOption) => {
-            setIsExporting(true);
-            try {
-              const apiFormat = format === "mushaf_pdf" ? "pdf" : format;
-              const blob = await moonClient.exportResearchArtifact({
-                artifactId: selectedArtifactId,
-                format: apiFormat,
-                options: {
-                  includeAttributionStamps: options.includeSanadChain,
-                  includeArabicScript: options.includeMorphologyAnalysis,
-                  paperSize: "a4",
-                },
-              });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `artifact-${selectedArtifactId}.${apiFormat === "pdf" ? "pdf" : apiFormat === "json" ? "json" : "md"}`;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
-              setExportDialogOpen(false);
-            } catch (exportErr) {
-              setError(apiErrorMessage(exportErr, t));
-            } finally {
-              setIsExporting(false);
-            }
+          onExport={(format: ExportFormat, options: ExportMetadataOption) => {
+            void (async () => {
+              setIsExporting(true);
+              try {
+                const apiFormat = format === "mushaf_pdf" ? "pdf" : format;
+                const blob = await moonClient.exportResearchArtifact({
+                  artifactId: selectedArtifactId,
+                  format: apiFormat,
+                  options: {
+                    includeAttributionStamps: options.includeSanadChain,
+                    includeArabicScript: options.includeMorphologyAnalysis,
+                    paperSize: "a4",
+                  },
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `artifact-${selectedArtifactId}.${apiFormat === "pdf" ? "pdf" : apiFormat === "json" ? "json" : "md"}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                setExportDialogOpen(false);
+              } catch (exportErr) {
+                setError(apiErrorMessage(exportErr, t));
+              } finally {
+                setIsExporting(false);
+              }
+            })();
           }}
         />
       </div>

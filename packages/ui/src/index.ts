@@ -228,5 +228,20 @@ export {
   OfflineStatusPill,
   type OfflineStatusPillProps,
 } from "./composites/offline-status-pill.js";
+export { Progress, type ProgressProps } from "./atoms/progress.js";
+export { FileInput, type FileInputProps } from "./atoms/file-input.js";
+export {
+  AttachmentUpload,
+  type AttachmentUploadLabels,
+  type AttachmentUploadProps,
+  type UploadItem,
+  type UploadItemStatus,
+} from "./composites/attachment-upload.js";
+export {
+  AttachmentList,
+  type AttachmentListLabels,
+  type AttachmentListProps,
+  type AttachmentRow,
+} from "./composites/attachment-list.js";
 
 

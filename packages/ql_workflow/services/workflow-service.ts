@@ -236,6 +236,18 @@ export async function submitPeerReviewForService(
     );
   }
 
+  // Prevent duplicate review submissions by the same reviewer
+  const existingReviews = await orm.findManyByService(
+    "workflow.peer_review",
+    { change_id: changeId, reviewer_id: reviewerId },
+    { limit: 1 },
+  );
+  if (existingReviews.length > 0) {
+    throw new QlConflictError(
+      "Reviewer has already submitted a review for this change.",
+    );
+  }
+
   const stamped = new Date();
   const review = await orm.createRecordForService("workflow.peer_review", {
     change_id: changeId,
@@ -252,8 +264,14 @@ export async function submitPeerReviewForService(
     { change_id: changeId, decision: "approved" },
   );
 
+  const distinctReviewerIds = new Set(
+    approvedReviews
+      .map((r) => (typeof r.reviewer_id === "string" ? r.reviewer_id : ""))
+      .filter((id) => id.length > 0),
+  );
+
   let updatedChange = change;
-  const quorumReached = approvedReviews.length >= 2;
+  const quorumReached = distinctReviewerIds.size >= 2;
   if (quorumReached && (change.state === "in_review" || change.state === "submitted")) {
     const nextRevision = (typeof change.revision === "number" ? change.revision : 1) + 1;
     await orm.updateRecordsForService(
@@ -266,7 +284,7 @@ export async function submitPeerReviewForService(
       from_state: String(change.state),
       to_state: "approved",
       action: "approve",
-      reason: `Quorum of ${approvedReviews.length} Sanad peer reviews reached.`,
+      reason: `Quorum of ${distinctReviewerIds.size} distinct Sanad peer reviews reached.`,
       revision: nextRevision,
       actor_id: reviewerId,
       owner_id: owner,
@@ -305,7 +323,13 @@ export async function getSanadPipelineStatusForService(
     { limit: 100, orderBy: { field: "created_at", direction: "desc" } },
   );
 
-  const approvedCount = reviews.filter((r) => r.decision === "approved").length;
+  const distinctApprovedReviewers = new Set(
+    reviews
+      .filter((r) => r.decision === "approved")
+      .map((r) => (typeof r.reviewer_id === "string" ? r.reviewer_id : ""))
+      .filter((id) => id.length > 0),
+  );
+  const approvedCount = distinctApprovedReviewers.size;
 
   return {
     changeId,

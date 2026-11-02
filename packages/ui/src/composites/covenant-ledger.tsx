@@ -1,5 +1,4 @@
-import type { ReactElement } from "react";
-import { useState } from "react";
+import { type ReactElement, useState } from "react";
 import { Check, ShieldCheck, PenTool } from "lucide-react";
 import { Button } from "../atoms/button.js";
 import { Checkbox } from "../atoms/checkbox.js";
@@ -25,7 +24,7 @@ export interface CovenantSignaturePanelProps {
   terms: CovenantTermItem[];
   hasSigned: boolean;
   userSignature?: CovenantSignatureRecord;
-  onSignSuccess: (this: void, signature: CovenantSignatureRecord) => void;
+  onSignSuccess(this: void, signature: CovenantSignatureRecord): void;
   className?: string;
   title?: string;
   signButtonLabel?: string;

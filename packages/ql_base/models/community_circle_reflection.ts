@@ -29,8 +29,8 @@ export const communityCircleReflection: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
-      options: ["pending", "verified", "flagged"],
-      default: "verified",
+      options: ["pending", "approved", "rejected"],
+      default: "approved",
     },
     author_id: {
       type: "char",
