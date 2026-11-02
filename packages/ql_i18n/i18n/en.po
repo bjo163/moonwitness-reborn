@@ -2920,3 +2920,27 @@ msgstr "External Connectors & Integrations"
 msgctxt "web:landing.views.integration_connector.description"
 msgid "Hubungkan layanan infrastruktur dan DNS melalui kredensial OS tanpa menyimpan token mentah."
 msgstr "Connect infrastructure and DNS services via OS credential stores without persisting raw tokens."
+
+msgctxt "web.models:searchModels"
+msgid "Cari model..."
+msgstr "Search models..."
+
+msgctxt "web.models:searchRecords"
+msgid "Saring rekaman..."
+msgstr "Filter records..."
+
+msgctxt "web.models:noMatchingModels"
+msgid "Tidak ada model yang cocok."
+msgstr "No matching models."
+
+msgctxt "web.models:viewRecord"
+msgid "DETAIL REKAMAN"
+msgstr "RECORD DETAILS"
+
+msgctxt "web.models:publicExplorerNotice"
+msgid "Mode baca publik. Masuk untuk mengelola data sesuai hak akses akun."
+msgstr "Public read-only mode. Sign in to manage records with your account permissions."
+
+msgctxt "web.models:signInToManage"
+msgid "Masuk"
+msgstr "Sign in"

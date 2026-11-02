@@ -38,6 +38,7 @@ export const eventRecord: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: EVENT_EPISTEMIC_STATUSES,
       validator(value) {
         return EVENT_EPISTEMIC_STATUSES.some((status) => status === value)
           ? undefined

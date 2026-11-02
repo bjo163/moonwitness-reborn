@@ -25,6 +25,7 @@ import {
   NavSectionLabel,
   OptionNav,
   PageHeader,
+  Select,
   SidePanel,
   Textarea,
   SidebarTrigger,
@@ -108,6 +109,23 @@ function humanizeModelName(modelName: string): string {
     .join(" ");
 }
 
+function resolveOptionLabel(
+  optionValue: string,
+  field: ModelField,
+  tm: (key: string, fallback: string) => string,
+): string {
+  const selectionKey = field.selectionKeys?.[optionValue];
+  if (selectionKey) {
+    const localized = translateMetadata(selectionKey, "", tm);
+    if (localized) return localized;
+  }
+  return optionValue
+    .split("_")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function resolveModelLabel(
   model: ModelMetadata,
   tm: (key: string, fallback: string) => string,
@@ -157,6 +175,9 @@ export default function ModelWorkspace() {
   const [models, setModels] = useState<ModelMetadata[]>([]);
   const [modelName, setModelName] = useState("");
   const [codeMode, setCodeMode] = useState(false);
+  const [modelSearch, setModelSearch] = useState("");
+  const [recordSearch, setRecordSearch] = useState("");
+  const [isPublicExplorer, setIsPublicExplorer] = useState(false);
   const [records, setRecords] = useState<ModelRecord[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<ModelRecord | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -180,15 +201,23 @@ export default function ModelWorkspace() {
         tm,
       )
     : t("web.models.chooseModel");
-  const groupedModels = useMemo(
-    () =>
-      CATEGORY_ORDER.map((category) => ({
-        category,
-        label: t(CATEGORY_LABEL_KEYS[category]),
-        items: models.filter((model) => inferCategory(model) === category),
-      })).filter((group) => group.items.length > 0),
-    [models, t],
-  );
+  const groupedModels = useMemo(() => {
+    const query = modelSearch.trim().toLowerCase();
+    return CATEGORY_ORDER.map((category) => ({
+      category,
+      label: t(CATEGORY_LABEL_KEYS[category]),
+      items: models.filter((model) => {
+        if (inferCategory(model) !== category) return false;
+        if (!query) return true;
+        const label = resolveModelLabel(model, tm).toLowerCase();
+        return (
+          label.includes(query) ||
+          model.name.toLowerCase().includes(query) ||
+          (model.addon?.toLowerCase().includes(query) ?? false)
+        );
+      }),
+    })).filter((group) => group.items.length > 0);
+  }, [modelSearch, models, t, tm]);
   const listView = selectedModel?.views.find((view) => view.type === "list");
   const formView = selectedModel?.views.find((view) => view.type === "form");
   const formFields = useMemo(
@@ -208,6 +237,23 @@ export default function ModelWorkspace() {
       ),
     [formFields, listView, selectedModel],
   );
+  const detailFields = useMemo(
+    () =>
+      formFields.length > 0
+        ? formFields
+        : listFields,
+    [formFields, listFields],
+  );
+  const filteredRecords = useMemo(() => {
+    const query = recordSearch.trim().toLowerCase();
+    if (!query) return records;
+    return records.filter((row) =>
+      listFields.some((fieldName) => {
+        const val = row[fieldName];
+        return val !== null && val !== undefined && String(val).toLowerCase().includes(query);
+      }),
+    );
+  }, [listFields, recordSearch, records]);
 
   const loadRecords = useCallback(async (model: ModelMetadata) => {
     const result =
@@ -220,6 +266,8 @@ export default function ModelWorkspace() {
   useEffect(() => {
     let cancelled = false;
     async function initialize() {
+      const requested =
+        new URLSearchParams(window.location.search).get("model") ?? "";
       try {
         const [session, metadata] = await Promise.all([
           moonClient.currentUser(),
@@ -227,20 +275,35 @@ export default function ModelWorkspace() {
         ]);
         if (cancelled) return;
         setUser(session.user);
+        setIsPublicExplorer(false);
         setModels(metadata.models);
-        const requested = new URLSearchParams(window.location.search).get(
-          "model",
-        );
         const initialModel =
           requested && metadata.models.some((item) => item.name === requested)
             ? requested
             : (metadata.models[0]?.name ?? "");
         setModelName(initialModel);
       } catch (requestError) {
-        if (!cancelled) {
-          if (!(requestError instanceof MoonClientError && requestError.status === 401)) {
-            setError(apiErrorMessage(requestError, t));
+        if (cancelled) return;
+        if (
+          requestError instanceof MoonClientError &&
+          requestError.status === 401
+        ) {
+          try {
+            const explorer = await moonClient.publicModelExplorer(
+              requested || undefined,
+            );
+            if (cancelled) return;
+            if (explorer.models.length > 0 && explorer.model) {
+              setIsPublicExplorer(true);
+              setModels(explorer.models);
+              setModelName(explorer.model.name);
+              setRecords(explorer.records);
+            }
+          } catch {
+            // Keep unauthenticated sign-in state when requested model is not public.
           }
+        } else {
+          setError(apiErrorMessage(requestError, t));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -254,11 +317,19 @@ export default function ModelWorkspace() {
 
   useEffect(() => {
     const model = models.find((item) => item.name === modelName);
-    if (!user || !model) return;
+    if (!model) return;
+    if (!user && !isPublicExplorer) return;
     const activeModel = model;
     let cancelled = false;
     async function refresh() {
       try {
+        if (!user && isPublicExplorer) {
+          const explorer = await moonClient.publicModelExplorer(
+            activeModel.name,
+          );
+          if (!cancelled) setRecords(explorer.records);
+          return;
+        }
         const result =
           activeModel.kind === "computed"
             ? await moonClient.computeModel(activeModel.name)
@@ -274,14 +345,14 @@ export default function ModelWorkspace() {
     return () => {
       cancelled = true;
     };
-  }, [modelName, models, t, user]);
+  }, [isPublicExplorer, modelName, models, t, user]);
 
   function openForm(record?: ModelRecord) {
     setFormOpen(true);
     setSelectedRecord(record ?? null);
     setFormValues(
       Object.fromEntries(
-        formFields.map((name) => {
+        detailFields.map((name) => {
           const field = selectedModel?.fields[name];
           const value = record?.[name];
           return [
@@ -387,7 +458,7 @@ export default function ModelWorkspace() {
     return <LoadingScreen label={t("web.models.loading")} />;
   }
 
-  if (!user) {
+  if (!user && !isPublicExplorer) {
     return (
       <CenteredAuth>
         <div className="mb-5 flex items-center gap-3">
@@ -406,6 +477,8 @@ export default function ModelWorkspace() {
     );
   }
 
+  const readOnlyForm = !selectedModel?.permissions.write;
+
   return (
     <WorkspaceTemplate
       sidebarOpen={sidebarOpen}
@@ -416,50 +489,90 @@ export default function ModelWorkspace() {
           brandIcon={<Boxes aria-hidden="true" size={18} />}
           className="flex-none"
           closeLabel={t("web.common.closeMenu")}
-          identity={{ name: user.name, subtitle: user.email }}
-          items={[
-            {
-              href: "/command-center",
-              label: t("web.models.aiWorkspace"),
-              icon: <ArrowLeft aria-hidden="true" size={16} />,
-              onSelect: () => setSidebarOpen(false),
-            },
-            {
-              href: "/providers",
-              label: t("web.models.providers"),
-              icon: <KeyRound aria-hidden="true" size={16} />,
-              onSelect: () => setSidebarOpen(false),
-            },
-          ]}
-          logout={{ label: t("web.common.logout"), onLogout: () => void logout() }}
+          identity={
+            user
+              ? { name: user.name, subtitle: user.email }
+              : undefined
+          }
+          items={
+            user
+              ? [
+                  {
+                    href: "/command-center",
+                    label: t("web.models.aiWorkspace"),
+                    icon: <ArrowLeft aria-hidden="true" size={16} />,
+                    onSelect: () => setSidebarOpen(false),
+                  },
+                  {
+                    href: "/providers",
+                    label: t("web.models.providers"),
+                    icon: <KeyRound aria-hidden="true" size={16} />,
+                    onSelect: () => setSidebarOpen(false),
+                  },
+                ]
+              : [
+                  {
+                    href: "/",
+                    label: "A-L-L-A-H.com",
+                    icon: <ArrowLeft aria-hidden="true" size={16} />,
+                    onSelect: () => setSidebarOpen(false),
+                  },
+                  {
+                    href: "/auth",
+                    label: t("web.models.signInToManage"),
+                    icon: <KeyRound aria-hidden="true" size={16} />,
+                    onSelect: () => setSidebarOpen(false),
+                  },
+                ]
+          }
+          logout={
+            user
+              ? { label: t("web.common.logout"), onLogout: () => void logout() }
+              : undefined
+          }
           navLabel={t("web.models.title")}
           onCloseSidebar={() => setSidebarOpen(false)}
         >
+          <div className="px-2 pt-2">
+            <Input
+              aria-label={t("web.models.searchModels")}
+              placeholder={t("web.models.searchModels")}
+              value={modelSearch}
+              onChange={(event) => setModelSearch(event.target.value)}
+            />
+          </div>
           <OptionNav label={t("web.models.addonModels")}>
-            {groupedModels.map((group) => (
-              <div key={group.category}>
-                <NavSectionLabel>{group.label}</NavSectionLabel>
-                {group.items.map((model) => (
-                  <ListOption
-                    key={model.name}
-                    onSelect={() => {
-                      setModelName(model.name);
-                      setSelectedRecord(null);
-                      setFormOpen(false);
-                      setSidebarOpen(false);
-                      setError(null);
-                    }}
-                    selected={modelName === model.name}
-                    variant="nav"
-                  >
-                    <Boxes aria-hidden="true" size={15} />
-                    <span className="truncate">
-                      {codeMode ? model.name : resolveModelLabel(model, tm)}
-                    </span>
-                  </ListOption>
-                ))}
-              </div>
-            ))}
+            {groupedModels.length === 0 ? (
+              <p className="px-3 py-2 text-xs text-muted">
+                {t("web.models.noMatchingModels")}
+              </p>
+            ) : (
+              groupedModels.map((group) => (
+                <div key={group.category}>
+                  <NavSectionLabel>{group.label}</NavSectionLabel>
+                  {group.items.map((model) => (
+                    <ListOption
+                      key={model.name}
+                      onSelect={() => {
+                        setModelName(model.name);
+                        setRecordSearch("");
+                        setSelectedRecord(null);
+                        setFormOpen(false);
+                        setSidebarOpen(false);
+                        setError(null);
+                      }}
+                      selected={modelName === model.name}
+                      variant="nav"
+                    >
+                      <Boxes aria-hidden="true" size={15} />
+                      <span className="truncate">
+                        {codeMode ? model.name : resolveModelLabel(model, tm)}
+                      </span>
+                    </ListOption>
+                  ))}
+                </div>
+              ))
+            )}
           </OptionNav>
         </WorkspaceSidebar>
       }
@@ -477,6 +590,15 @@ export default function ModelWorkspace() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {!user && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => (window.location.href = "/auth")}
+              >
+                {t("web.models.signInToManage")}
+              </Button>
+            )}
             <Button
               size="sm"
               variant={codeMode ? "secondary" : "ghost"}
@@ -510,6 +632,10 @@ export default function ModelWorkspace() {
           title={modelLabel}
         />
 
+        {!user && (
+          <Alert className="mb-4">{t("web.models.publicExplorerNotice")}</Alert>
+        )}
+
         {error && <Alert variant="error">{error}</Alert>}
 
         {!selectedModel ? (
@@ -521,6 +647,18 @@ export default function ModelWorkspace() {
         ) : (
           <Card className="mt-5">
             <CardContent className="ql-card--flush">
+              <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+                <Input
+                  aria-label={t("web.models.searchRecords")}
+                  className="max-w-xs"
+                  placeholder={t("web.models.searchRecords")}
+                  value={recordSearch}
+                  onChange={(event) => setRecordSearch(event.target.value)}
+                />
+                <Badge variant="outline">
+                  {filteredRecords.length} / {records.length}
+                </Badge>
+              </div>
               <DataTable
                 columns={listFields.map((name) => ({
                   key: name,
@@ -531,16 +669,12 @@ export default function ModelWorkspace() {
                     tm,
                   ),
                 }))}
-                rows={records}
+                rows={filteredRecords}
                 rowKey="id"
                 actionsLabel={t("web.common.actions")}
                 yesLabel={t("web.common.yes")}
                 noLabel={t("web.common.no")}
-                onRowClick={
-                  selectedModel.permissions.write
-                    ? (record) => openForm(record)
-                    : undefined
-                }
+                onRowClick={(record) => openForm(record)}
                 emptyMessage={t("web.models.emptyRecords")}
                 renderActions={
                   selectedModel.permissions.unlink
@@ -567,9 +701,11 @@ export default function ModelWorkspace() {
           <SidePanel
             closeLabel={t("web.models.closeForm")}
             eyebrow={
-              selectedRecord
-                ? t("web.models.editRecord")
-                : t("web.models.newRecord")
+              readOnlyForm
+                ? t("web.models.viewRecord")
+                : selectedRecord
+                  ? t("web.models.editRecord")
+                  : t("web.models.newRecord")
             }
             label={t("web.models.formRecord")}
             onClose={() => {
@@ -579,20 +715,29 @@ export default function ModelWorkspace() {
             }}
             title={
               selectedRecord
-                ? String(selectedRecord.name ?? t("web.models.editData"))
+                ? String(
+                    selectedRecord.name ??
+                      selectedRecord.title ??
+                      selectedRecord.term ??
+                      selectedRecord.witness_name ??
+                      selectedRecord.canonical_id ??
+                      t("web.models.editData"),
+                  )
                 : t("web.models.addData")
             }
           >
             <form className="ql-side-panel__form" onSubmit={(event) => void saveRecord(event)}>
-              {formFields.map((name) => {
+              {detailFields.map((name) => {
                 const field = selectedModel?.fields[name];
                 if (!field) return null;
                 const id = `model-field-${name}`;
+                const disabled = readOnlyForm || Boolean(field.readOnly);
                 if (field.type === "boolean") {
                   return (
                     <label className="ql-inline-label" key={name} htmlFor={id}>
                       <Checkbox
                         id={id}
+                        disabled={disabled}
                         checked={formValues[name] === true}
                         onChange={(event) =>
                           setFormValues((current) => ({
@@ -611,13 +756,22 @@ export default function ModelWorkspace() {
                   );
                 }
                 const value = String(formValues[name] ?? "");
+                const optionValues =
+                  field.options && field.options.length > 0
+                    ? field.options
+                    : field.selectionKeys
+                      ? Object.keys(field.selectionKeys)
+                      : undefined;
                 const props = {
                   id,
+                  disabled,
                   required: field.required,
                   maxLength: field.maxLength,
                   value,
                   onChange: (
-                    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+                    event: React.ChangeEvent<
+                      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+                    >,
                   ) =>
                     setFormValues((current) => ({
                       ...current,
@@ -647,7 +801,24 @@ export default function ModelWorkspace() {
                     )}
                     htmlFor={id}
                   >
-                    {field.type === "text" ? (
+                    {optionValues ? (
+                      <Select
+                        id={id}
+                        disabled={disabled}
+                        required={field.required}
+                        value={value}
+                        onChange={props.onChange}
+                      >
+                        {(!field.required || value === "") && (
+                          <option value="">--</option>
+                        )}
+                        {optionValues.map((optionValue) => (
+                          <option key={optionValue} value={optionValue}>
+                            {resolveOptionLabel(optionValue, field, tm)}
+                          </option>
+                        ))}
+                      </Select>
+                    ) : field.type === "text" ? (
                       <Textarea {...props} rows={3} />
                     ) : (
                       <Input
@@ -670,12 +841,14 @@ export default function ModelWorkspace() {
                     setFormValues({});
                   }}
                 >
-                  {t("web.models.cancel")}
+                  {readOnlyForm ? t("web.models.closeForm") : t("web.models.cancel")}
                 </Button>
-                <Button type="submit" disabled={saving}>
-                  <Save size={15} />
-                  {saving ? t("web.models.saving") : t("web.models.save")}
-                </Button>
+                {!readOnlyForm && (
+                  <Button type="submit" disabled={saving}>
+                    <Save size={15} />
+                    {saving ? t("web.models.saving") : t("web.models.save")}
+                  </Button>
+                )}
               </div>
             </form>
           </SidePanel>

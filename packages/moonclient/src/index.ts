@@ -160,6 +160,7 @@ export interface ModelFieldDto {
   labelKey: string;
   helpKey?: string;
   selectionKeys?: Record<string, string>;
+  options?: readonly string[];
   required?: boolean;
   maxLength?: number;
   computed?: boolean;
@@ -209,6 +210,12 @@ export interface LandingViewItemDto {
 
 export interface LandingCatalogResponseDto {
   items: LandingViewItemDto[];
+}
+
+export interface PublicModelExplorerResponseDto {
+  model: ModelMetadataDto | null;
+  models: ModelMetadataDto[];
+  records: ModelRecordDto[];
 }
 
 export type ModelRecordDto = RecordValues;
@@ -874,6 +881,9 @@ export const apiRoutes = {
   },
   landing: {
     catalog: "/public/landing",
+    models: "/public/models",
+    modelPrefix: "/public/models/",
+    model: (modelName: string) => `/public/models/${segment(modelName)}`,
   },
   admin: {
     users: {
@@ -1246,6 +1256,16 @@ export class MoonClient {
 
   landingCatalog(): Promise<LandingCatalogResponseDto> {
     return this.request(apiRoutes.landing.catalog);
+  }
+
+  publicModelExplorer(
+    modelName?: string,
+  ): Promise<PublicModelExplorerResponseDto> {
+    return this.request(
+      modelName
+        ? apiRoutes.landing.model(modelName)
+        : apiRoutes.landing.models,
+    );
   }
 
   listProjectTasks(): Promise<ProjectTaskListResponseDto> {

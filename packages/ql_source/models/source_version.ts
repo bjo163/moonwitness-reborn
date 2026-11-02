@@ -57,6 +57,7 @@ export const sourceVersion: QlModelDefinition = {
       required: true,
       maxLength: 24,
       default: DEFAULT_LIFECYCLE_STAGE,
+      options: LIFECYCLE_STAGES,
       validator: enumValidator("lifecycle_stage", LIFECYCLE_STAGES),
     },
     owner_id: { type: "char", required: true, private: true },

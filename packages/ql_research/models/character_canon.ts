@@ -34,6 +34,7 @@ export const characterCanon: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: CHARACTER_CANON_STATUSES,
       validator(value) {
         return CHARACTER_CANON_STATUSES.some((s) => s === value)
           ? undefined

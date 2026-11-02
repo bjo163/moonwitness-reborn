@@ -25,6 +25,7 @@ export interface QlFieldDefinition {
   labelKey?: string;
   helpKey?: string;
   selectionKeys?: Record<string, string>;
+  options?: readonly string[];
   required?: boolean;
   unique?: boolean;
   maxLength?: number;
@@ -607,6 +608,16 @@ export class QlModelRegistry {
           }
           if (field.maxLength !== undefined && field.maxLength < 1) {
             throw new Error(`Invalid maxLength for '${model.name}.${fieldName}'.`);
+          }
+          if (field.options !== undefined) {
+            if (
+              field.options.length === 0 ||
+              field.options.some((item) => typeof item !== "string" || !item.trim())
+            ) {
+              throw new Error(
+                `Field '${model.name}.${fieldName}' options must be a non-empty list of strings.`,
+              );
+            }
           }
           if (
             (field.minValue !== undefined || field.maxValue !== undefined) &&

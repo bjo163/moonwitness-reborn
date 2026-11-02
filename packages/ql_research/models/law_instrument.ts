@@ -49,6 +49,7 @@ export const lawInstrument: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: LEGAL_JURISDICTIONS,
       validator(value) {
         return LEGAL_JURISDICTIONS.some((j) => j === value)
           ? undefined
@@ -59,6 +60,7 @@ export const lawInstrument: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: INSTRUMENT_TYPES,
       validator(value) {
         return INSTRUMENT_TYPES.some((t) => t === value)
           ? undefined

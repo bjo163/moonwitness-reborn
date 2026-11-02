@@ -25,6 +25,7 @@ export const researchLexicalReview: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: LEXICAL_REVIEW_DECISIONS,
       validator(value) {
         return LEXICAL_REVIEW_DECISIONS.some((decision) => decision === value)
           ? undefined

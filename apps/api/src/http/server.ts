@@ -30,8 +30,11 @@ import {
   type CorpusVerseResponseDto,
   type LandingCatalogResponseDto,
   type LandingViewItemDto,
+  type ModelMetadataDto,
   type ModelProviderDto,
+  type ModelRecordDto,
   type ModelRecordsResponseDto,
+  type PublicModelExplorerResponseDto,
   type LexicalResearchCandidateDto,
   type LexicalResearchDecisionDto,
   type LexicalResearchReviewDto,
@@ -1789,6 +1792,139 @@ export function createApiServer(
           }),
         );
         sendJson(response, 200, { items } satisfies LandingCatalogResponseDto);
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+    if (
+      request.method === "GET" &&
+      (pathname === apiRoutes.landing.models ||
+        pathname.startsWith(apiRoutes.landing.modelPrefix))
+    ) {
+      try {
+        const requestedModel = pathname.startsWith(apiRoutes.landing.modelPrefix)
+          ? decodeURIComponent(
+              pathname.slice(apiRoutes.landing.modelPrefix.length),
+            )
+          : undefined;
+        const publicEntries = orm.registry
+          .getLandingViews()
+          .flatMap((view) => {
+            if (!view.landing?.publicCountFilter) return [];
+            try {
+              const model = orm.registry.getModel(view.model);
+              if (model.ownerField) return [];
+              return [{ view, model, filter: view.landing.publicCountFilter }];
+            } catch {
+              return [];
+            }
+          });
+
+        const serializePublicModel = (
+          model: ReturnType<typeof orm.registry.getModel>,
+        ): ModelMetadataDto => {
+          const modelKey = model.name.replaceAll(".", "_");
+          const views = orm.registry
+            .getViews(model.name)
+            .filter((view) => view.type === "list" || view.type === "form")
+            .map((view) => ({
+              ...view,
+              labelKey:
+                view.labelKey ??
+                (view.type === "list"
+                  ? "web.models.viewList"
+                  : "web.models.viewForm"),
+              fields: view.fields.filter(
+                (field) => !model.fields[field]?.private,
+              ),
+            }));
+          const allowedFields = new Set(views.flatMap((view) => view.fields));
+          return {
+            kind: "table",
+            name: model.name,
+            addon: orm.registry.getModelAddon(model.name),
+            category: orm.registry.getModelCategory(model.name),
+            labelKey: model.labelKey ?? `web.models.entities.${modelKey}`,
+            description: model.description,
+            descriptionKey:
+              model.descriptionKey ?? `web.models.descriptions.${modelKey}`,
+            fields: Object.fromEntries(
+              Object.entries(model.fields)
+                .filter(
+                  ([fieldName, field]) =>
+                    !field.private && allowedFields.has(fieldName),
+                )
+                .map(([fieldName, field]) => {
+                  const { compute, ...metadata } = field;
+                  return [
+                    fieldName,
+                    {
+                      ...metadata,
+                      ...(compute
+                        ? {
+                            computed: true,
+                            readOnly: true,
+                            dependsOn: [...compute.dependsOn],
+                          }
+                        : {}),
+                      labelKey:
+                        field.labelKey ??
+                        `web.models.field${fieldName
+                          .split("_")
+                          .map(
+                            (part) =>
+                              part.charAt(0).toUpperCase() + part.slice(1),
+                          )
+                          .join("")}`,
+                    },
+                  ];
+                }),
+            ),
+            views,
+            permissions: {
+              create: false,
+              write: false,
+              unlink: false,
+            },
+          };
+        };
+
+        const models = publicEntries.map(({ model }) =>
+          serializePublicModel(model),
+        );
+        const targetEntry = requestedModel
+          ? publicEntries.find(({ model }) => model.name === requestedModel)
+          : publicEntries[0];
+        if (requestedModel && !targetEntry) {
+          sendJson(response, 404, { error: "Public model view not found." });
+          return;
+        }
+        const activeMeta = targetEntry
+          ? (models.find((item) => item.name === targetEntry.model.name) ?? null)
+          : null;
+        let records: ModelRecordDto[] = [];
+        if (targetEntry && activeMeta) {
+          const allowedFieldNames = new Set(Object.keys(activeMeta.fields));
+          const rows = await orm.findManyByService(
+            targetEntry.model.name,
+            targetEntry.filter,
+            { limit: 100 },
+          );
+          records = rows.map((row) =>
+            Object.fromEntries(
+              Object.entries(row).filter(
+                ([key]) => key === "id" || allowedFieldNames.has(key),
+              ),
+            ),
+          );
+        }
+        sendJson(response, 200, {
+          model: activeMeta,
+          models,
+          records,
+        } satisfies PublicModelExplorerResponseDto);
       } catch (error) {
         handleRequestError(response, error);
       }
