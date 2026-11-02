@@ -28,6 +28,7 @@ export const workflowTask: QlModelDefinition = {
       required: true,
       default: "open",
       maxLength: 12,
+      options: TASK_STATUSES,
       validator: enumValidator("status", TASK_STATUSES),
     },
     priority: {

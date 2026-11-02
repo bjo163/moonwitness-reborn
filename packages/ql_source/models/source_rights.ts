@@ -38,6 +38,7 @@ export const sourceRights: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 16,
+      options: RIGHTS_ACTIONS,
       validator: enumValidator("action", RIGHTS_ACTIONS),
     },
     rights_status: {
@@ -45,6 +46,7 @@ export const sourceRights: QlModelDefinition = {
       required: true,
       maxLength: 16,
       default: DEFAULT_RIGHTS_STATUS,
+      options: RIGHTS_STATUSES,
       validator: enumValidator("rights_status", RIGHTS_STATUSES),
     },
     license_id: { type: "char", maxLength: 120 },

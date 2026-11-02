@@ -38,6 +38,7 @@ export const personProfile: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
+      options: HISTORICAL_PERSON_ROLES,
       validator(value) {
         return HISTORICAL_PERSON_ROLES.some((role) => role === value)
           ? undefined

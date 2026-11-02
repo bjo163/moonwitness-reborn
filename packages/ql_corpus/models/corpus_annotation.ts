@@ -42,6 +42,7 @@ export const corpusAnnotation: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 24,
+      options: ANNOTATION_AUTHORITIES,
       // MW-ADR-019 §(b) — the storage-level religious-integrity invariant.
       validator: authorityValidator("authority", ANNOTATION_AUTHORITIES),
     },
@@ -64,6 +65,7 @@ export const corpusAnnotation: QlModelDefinition = {
       required: true,
       maxLength: 16,
       default: DEFAULT_CORPUS_STAGE,
+      options: CORPUS_STAGES,
       validator: authorityValidator("stage", CORPUS_STAGES),
     },
     import_run_id: { type: "char", maxLength: 64 },
