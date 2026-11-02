@@ -198,7 +198,7 @@ export function moonwitnessConfig({
     );
   }
 
-  /** @type {import("typescript-eslint").Config["rules"]} */
+  /** @type {import("typescript-eslint").ConfigWithExtends["rules"]} */
   const cleanCodeRules = {
     "@typescript-eslint/consistent-type-imports": [
       "error",
@@ -248,6 +248,11 @@ export function moonwitnessConfig({
     "prefer-arrow-callback": "warn",
     "prefer-template": "error",
   };
+  // Next's declarations widen each valid rule severity to `string`.
+  const nextRecommendedRules =
+    /** @type {import("typescript-eslint").ConfigWithExtends["rules"]} */ (
+      nextPlugin.configs.recommended.rules
+    );
 
   return tseslint.config(
     js.configs.recommended,
@@ -282,7 +287,7 @@ export function moonwitnessConfig({
       files: [`${webAppDir}/**/*.{js,mjs,ts,tsx}`],
       plugins: { "@next/next": nextPlugin },
       rules: {
-        ...nextPlugin.configs.recommended.rules,
+        ...nextRecommendedRules,
         "@next/next/no-html-link-for-pages": ["error", `${webAppDir}/src/app`],
       },
     },
