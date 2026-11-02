@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "next dev --port 3001",
     "build": "next build && node scripts/record-bundle-budget-build.mjs",
+    "build:app": "next build && node scripts/record-bundle-budget-build.mjs",
     "start": "next start --port 3001",
     "size": "node scripts/check-bundle-budget.mjs",
     "test": "tsx --test src/features/assistant/assistant-evidence.test.ts && node --test scripts/check-bundle-budget.test.mjs",

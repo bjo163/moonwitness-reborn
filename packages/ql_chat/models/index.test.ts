@@ -5,7 +5,7 @@ import { chatCitation } from "./chat_citation.js";
 import { chatMessage } from "./chat_message.js";
 
 void test("chat grounding and citation records are private, deny-by-default models", () => {
-  assert.equal(manifest.models.length, 3);
+  assert.equal(manifest.models.length, 4);
   assert.equal(chatMessage.fields.grounding_status.private, true);
   assert.deepEqual(chatMessage.fields.grounding_status.options, [
     "grounded",

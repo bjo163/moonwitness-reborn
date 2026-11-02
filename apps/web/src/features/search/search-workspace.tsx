@@ -20,6 +20,8 @@ import {
   SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
+  LexicalRootSearch,
+  LocalInferenceToggle,
   type SidebarNavItem,
 } from "@moonwitness/ui";
 import {
@@ -56,6 +58,8 @@ export default function SearchWorkspacePage() {
   const [targetModel, setTargetModel] = useState("");
   const [results, setResults] = useState<SearchResultItemDto[]>([]);
   const [totalFound, setTotalFound] = useState<number | null>(null);
+  const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
+  const [localInferenceEnabled, setLocalInferenceEnabled] = useState(false);
 
   const { locale, changeLocale, saving: localeSaving } =
     useLocalePreference(user ?? null);
@@ -247,9 +251,15 @@ export default function SearchWorkspacePage() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <SearchIcon className="size-4 text-ink-muted" />
-              <span>{locale === "id" ? "Parameter Pencarian" : "Search Parameters"}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <SearchIcon className="size-4 text-ink-muted" />
+                <span>{locale === "id" ? "Parameter Pencarian" : "Search Parameters"}</span>
+              </div>
+              <LocalInferenceToggle
+                isEnabled={localInferenceEnabled}
+                onToggle={(val) => setLocalInferenceEnabled(val)}
+              />
             </div>
           </CardHeader>
           <CardContent>
@@ -295,6 +305,17 @@ export default function SearchWorkspacePage() {
                   </FormField>
                 </div>
               </div>
+
+              <div className="pt-2">
+                <LexicalRootSearch
+                  selectedRoot={selectedRoot}
+                  onSelectRoot={(root) => {
+                    setSelectedRoot(root);
+                    setQuery(root);
+                  }}
+                />
+              </div>
+
               <div className="flex justify-end">
                 <Button type="submit" disabled={searching || !query.trim()}>
                   {searching

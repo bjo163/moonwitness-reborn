@@ -6,6 +6,7 @@ import {
 import {
   runAgent,
   runGroundedAgent,
+  extractScriptureCitations,
   type AgentRequest,
   type ModelProvider,
   type OpenAICompatibleProviderOptions,
@@ -3118,6 +3119,64 @@ export function createApiServer(
             return;
           }
 
+          // Strict Quranic verse verification for all extracted citations
+          const extractedMentions = extractScriptureCitations(groundedResult.reply);
+          const unverifiedCitations: Array<{
+            raw: string;
+            surah: number;
+            ayah: number;
+            reason: "non_existent_verse" | "unverified_in_corpus";
+          }> = [];
+
+          for (const mention of extractedMentions) {
+            // Verify surah range
+            if (mention.surah < 1 || mention.surah > 114) {
+              unverifiedCitations.push({
+                raw: mention.raw,
+                surah: mention.surah,
+                ayah: mention.ayah,
+                reason: "non_existent_verse",
+              });
+              continue;
+            }
+
+            // Check if passage exists in published corpus
+            const passageRows = await orm.findManyByService(
+              "corpus.passage",
+              {
+                surah: mention.surah,
+                ayah: mention.ayah,
+                stage: "published",
+              },
+              { limit: 1 },
+            );
+
+            const isVerified = passageRows.length > 0;
+            if (!isVerified) {
+              unverifiedCitations.push({
+                raw: mention.raw,
+                surah: mention.surah,
+                ayah: mention.ayah,
+                reason: "unverified_in_corpus",
+              });
+            }
+
+            // Log verification audit in chat.citation_verification
+            try {
+              await orm.createRecordForService("chat.citation_verification", {
+                message_id: agentRequest.conversationId,
+                surah: mention.surah,
+                ayah: mention.ayah,
+                claimed_text: mention.raw,
+                verification_status: isVerified ? "verified" : "unverified",
+                owner_id: user.id,
+                created_at: new Date(),
+              });
+            } catch (auditErr) {
+              console.warn("Failed to record citation verification audit", auditErr);
+            }
+          }
+
           await store.addMessage(
             agentRequest.conversationId,
             user.id,
@@ -3132,6 +3191,7 @@ export function createApiServer(
             reply: groundedResult.reply,
             groundingStatus: "grounded",
             citations: citationDtos,
+            ...(unverifiedCitations.length > 0 ? { unverifiedCitations } : {}),
           } satisfies ChatResponseDto);
           return;
         }

@@ -189,6 +189,10 @@ export default function Home() {
             result.groundingStatus === "grounded"
               ? result.citations
               : undefined,
+          unverifiedCitations:
+            "unverifiedCitations" in result
+              ? result.unverifiedCitations
+              : undefined,
         },
       ]);
       await loadConversations();
@@ -557,6 +561,33 @@ export default function Home() {
                                 </ul>
                               </div>
                             ))}
+                          {evidence.unverifiedCitations.length > 0 && (
+                            <div className="ql-unverified-citation mt-3 space-y-2 rounded-lg border border-hairline p-3">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="border-danger text-danger">
+                                  {locale === "id"
+                                    ? "Kutipan Belum Terverifikasi"
+                                    : "Unverified Citations Detected"}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted">
+                                {locale === "id"
+                                  ? "Kutipan berikut tidak ditemukan di korpus resmi dan berpotensi halusinasi model AI:"
+                                  : "The following verse citations could not be verified in canonical corpus and may be AI hallucination:"}
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {evidence.unverifiedCitations.map((unv) => (
+                                  <span
+                                    key={`${unv.surah}:${unv.ayah}`}
+                                    className="inline-flex items-center gap-1.5 rounded border border-hairline bg-panel-edge px-2 py-0.5 font-mono text-xs text-ink-soft"
+                                  >
+                                    <span className="size-1.5 rounded-full bg-danger" />
+                                    {unv.raw} ({locale === "id" ? "Surah" : "Surah"} {unv.surah}:{unv.ayah})
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

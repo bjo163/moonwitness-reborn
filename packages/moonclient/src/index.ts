@@ -170,6 +170,13 @@ export interface CreateConversationRequestDto {
   title?: string;
 }
 
+export interface UnverifiedCitationDto {
+  raw: string;
+  surah: number;
+  ayah: number;
+  reason: "non_existent_verse" | "unverified_in_corpus";
+}
+
 export interface ChatMessageDto {
   id: string;
   role: ChatRole;
@@ -177,6 +184,7 @@ export interface ChatMessageDto {
   createdAt: string;
   groundingStatus?: ChatGroundingStatusDto;
   citations?: ChatCitationDto[];
+  unverifiedCitations?: UnverifiedCitationDto[];
 }
 
 export interface ChatRequestDto {
@@ -217,21 +225,25 @@ export type ChatResponseDto =
       reply: string;
       groundingStatus: "grounded";
       citations: ChatCitationDto[];
+      unverifiedCitations?: UnverifiedCitationDto[];
     }
   | {
       reply: string;
       groundingStatus: "insufficient_evidence";
       citations: [];
+      unverifiedCitations?: UnverifiedCitationDto[];
     }
   | {
       reply: string;
       groundingStatus: "legacy";
       citations?: never;
+      unverifiedCitations?: never;
     }
   | {
       reply: string;
       groundingStatus?: never;
       citations?: never;
+      unverifiedCitations?: never;
     };
 
 export interface ModelFieldDto {

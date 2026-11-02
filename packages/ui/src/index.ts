@@ -159,5 +159,22 @@ export {
   type AudioTimestampSegment,
   type ReciterProfile,
 } from "./composites/audio-tilawah-player.js";
+export {
+  LexicalRootSearch,
+  type LexicalRootSearchProps,
+  type QuranicRootItem,
+} from "./composites/lexical-root-search.js";
+export {
+  QuranicMorphologyVisualizer,
+  type QuranicMorphologyVisualizerProps,
+  type MorphologicalSegmentToken,
+  type ArabicGrammaticalCase,
+  type ArabicPartOfSpeech,
+} from "./composites/morphology-visualizer.js";
+export {
+  LocalInferenceToggle,
+  type LocalInferenceToggleProps,
+  type LocalInferenceModelStatus,
+} from "./composites/local-inference-toggle.js";
 
 

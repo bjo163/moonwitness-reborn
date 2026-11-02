@@ -229,6 +229,42 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+export interface ExtractedScriptureCitation {
+  raw: string;
+  surah: number;
+  ayah: number;
+}
+
+/**
+ * Extracts scripture citations matching formats like [verse:2:255], [QS 2:255], [QS. 2:255],
+ * [Surah 2:255], or 2:255 from AI generated text.
+ */
+export function extractScriptureCitations(text: string): ExtractedScriptureCitation[] {
+  const citations: ExtractedScriptureCitation[] = [];
+  const regex = /(?:\[(?:verse|qs|qs\.|surah|surat)?\s*:?\s*(\d{1,3}):(\d{1,3})\]|\b(?:QS\.?|Surah|Surat)\s+(\d{1,3}):(\d{1,3})\b)/gi;
+  let match: RegExpExecArray | null;
+  const seen = new Set<string>();
+
+  while ((match = regex.exec(text)) !== null) {
+    const surahStr = match[1] ?? match[3];
+    const ayahStr = match[2] ?? match[4];
+    if (surahStr && ayahStr) {
+      const surah = parseInt(surahStr, 10);
+      const ayah = parseInt(ayahStr, 10);
+      const key = `${surah}:${ayah}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        citations.push({
+          raw: match[0],
+          surah,
+          ayah,
+        });
+      }
+    }
+  }
+  return citations;
+}
+
 export { calculateMetrics, judgeResponse } from "./evaluator.js";
 export type {
   ClassificationCounts,

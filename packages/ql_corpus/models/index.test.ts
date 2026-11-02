@@ -902,6 +902,36 @@ void test("UNILEX ontology models corpus.term and corpus.concept are registered 
         updated_at: new Date().toISOString(),
       });
       assert.ok(segmentRecord.id);
+
+      // Test corpus.root_word creation and retrieval (Track 08)
+      const rootRecord = await orm.createRecordForService("corpus.root_word", {
+        root_arabic: "ر-ح-م",
+        root_translit: "r-h-m",
+        total_occurrences: 339,
+        meaning_id: "Kasih sayang, rahmat, kelembutan",
+        meaning_en: "Mercy, compassion, grace",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      assert.ok(rootRecord.id);
+
+      const retrievedRoot = await orm.findOneByService("corpus.root_word", { id: rootRecord.id });
+      assert.equal(retrievedRoot?.["root_arabic"], "ر-ح-م");
+      assert.equal(retrievedRoot?.["total_occurrences"], 339);
+
+      // Test corpus.word_derivation creation (Track 08)
+      const derivationRecord = await orm.createRecordForService("corpus.word_derivation", {
+        root_id: String(rootRecord.id),
+        passage_id: "mw:passage:test:1:1",
+        surah_number: 1,
+        ayah_number: 1,
+        word_index_in_ayah: 3,
+        arabic_lemma: "الرَّحْمَٰنِ",
+        form_pattern: "fa'lan",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      assert.ok(derivationRecord.id);
     },
   );
 });

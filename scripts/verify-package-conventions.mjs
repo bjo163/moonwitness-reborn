@@ -1,207 +1,136 @@
 #!/usr/bin/env node
-// Workspace package script and export conventions validator
+// Workspace package convention check (MW-1264).
 //
-// This script validates that all packages in the workspace follow the
-// role-aware conventions for scripts and exports.
+// Every workspace package owns one role, and each role carries a script and
+// export contract. The contract is what makes `turbo run <task>` and the CI
+// gate sequence meaningful: a package that participates in a task must declare
+// the script, and the script must be reachable through the workspace graph.
 //
-// Package roles:
-//   - apps: dev, build, start, size, typecheck (optionally test)
-//   - addons (ql_*): build, typecheck (optionally test)
-//   - libraries (moonclient, ql-orm, etc.): build, test, typecheck
-//   - config-only (eslint-config): test (if any), typecheck
+// Roles are resolved by package name, not by directory name, so moving a package
+// on disk cannot silently change its contract.
 //
-// Apps must have `size` script (web bundle budget) - only web app has this.
+//   addon    ql_* TypeScript addons: build, typecheck, plus a focused test when
+//            the addon has tests; exports the manifest and models entries.
+//   library  shared runtime libraries: build, test, typecheck; root export.
+//   config   config-only packages: build, test, typecheck, so they prove their
+//            own composition instead of only being consumed; root export.
+//   app      runnable apps: dev, build, typecheck, start; test/size when the app
+//            actually provides a test suite and a bundle budget.
 //
-// Addon packages must export `__manifest__`, `models`, `views` (optional),
-// `services` (optional), `catalogs` (optional) based on their actual content.
-//
-// Config-only packages must not have domain-specific scripts (build, typecheck) if they
-// are pure config, but can have `test` and `typecheck`.
+// Exceptions are listed in PACKAGE_EXCEPTIONS with the reason the generic role
+// contract does not apply. An exception without a reason is a violation.
 
+import { readdir, readFile, stat } from "node:fs/promises";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readFile, readdir, stat } from "node:fs/promises";
-import { join, dirname } from "node:path";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const ROOT = join(__dirname, "..");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-const ROLE_PATTERNS = {
-  apps: {
-    dir: "apps",
-    requiredScripts: ["build", "dev", "typecheck"],
-    optionalScripts: ["test", "start", "size"],
-    // Note: Only web app has "size" script, api has "start"
+const ROLES = {
+  app: {
+    requiredScripts: ["dev", "build", "typecheck", "start"],
+    optionalScripts: ["test", "size"],
+    requiredExports: [],
   },
-  addons: {
-    dir: "packages",
-    prefix: "ql_",
+  addon: {
     requiredScripts: ["build", "typecheck"],
     optionalScripts: ["test"],
-    requiredExports: ["__manifest__", "models"],
-    optionalExports: ["views", "services", "catalogs"],
+    requiredExports: ["./__manifest__", "./models"],
+    optionalExports: ["./views", "./services", "./catalogs"],
   },
-  libraries: {
-    dir: "packages",
-    // Not ql_*, not config-only (eslint-config, types, ui, moonclient, ql-orm)
+  library: {
     requiredScripts: ["build", "test", "typecheck"],
     optionalScripts: [],
-    requiredExports: ["."], // main entry
+    requiredExports: ["."],
+    optionalExports: ["__manifest__", "models", "views", "services", "catalogs"],
   },
   config: {
-    dir: "packages",
-    pattern: ["eslint-config", "types", "ui"],
-    requiredScripts: ["test", "typecheck"],
+    requiredScripts: ["build", "test", "typecheck"],
     optionalScripts: [],
     requiredExports: ["."],
+    optionalExports: [],
   },
 };
 
-// Documented exceptions for packages with unique responsibilities
-const PACKAGE_EXCEPTIONS = {
-  "apps/api": {
-    // API server needs start script for running the server
-    requiredScripts: ["build", "dev", "start", "typecheck"],
-  },
-  "apps/web": {
-    // Web app has size script for bundle budget
-    requiredScripts: ["build", "dev", "start", "typecheck", "size"],
-  },
-  "packages/eslint-config": {
-    // Config package - only needs test and typecheck
-    requiredScripts: ["test", "typecheck"],
-    optionalScripts: [],
-    requiredExports: ["."],
-  },
-  "packages/types": {
-    // Type definitions package - build script is acceptable for type compilation
-    requiredScripts: ["typecheck"],
-    optionalScripts: ["build"],
-    requiredExports: ["."],
-  },
-  "packages/ui": {
-    // UI library - has build for CSS/JS but no test
-    requiredScripts: ["build", "typecheck"],
-    optionalScripts: ["test"],
-    requiredExports: ["."],
-  },
-  "packages/ql_corpus": {
-    // Corpus package has import script for Quran data
-    requiredScripts: ["build", "typecheck"],
-    optionalScripts: ["test", "import:quran"],
-    requiredExports: ["__manifest__", "models"],
-  },
+// Name -> role. Anything under apps/ or packages/ that is missing here fails
+// the check, which is the point: a new package must state what it is.
+const PACKAGE_ROLES = {
+  "@moonwitness/api": "app",
+  "@moonwitness/web": "app",
+
+  "@moonwitness/types": "library",
+  "@moonwitness/ui": "library",
+  "@moonwitness/moonclient": "library",
+  ql_orm: "library",
+
+  "@moonwitness/eslint-config": "config",
+
+  ql_auth: "addon",
+  ql_base: "addon",
+  ql_ai: "addon",
+  ql_chat: "addon",
+  ql_cloudflare: "addon",
+  ql_corpus: "addon",
+  ql_geo: "addon",
+  ql_i18n: "addon",
+  ql_integration: "addon",
+  ql_research: "addon",
+  ql_search: "addon",
+  ql_source: "addon",
+  ql_workflow: "addon",
+  "agent-runtime": "addon",
 };
 
-function isAppsPackage(pkgDir) {
-  return pkgDir.startsWith("apps/");
+// Packages whose responsibilities differ from the generic role contract.
+// Empty list today: every deviation found so far was fixed at the package
+// instead of being documented away. Entries need a non-empty reason.
+const PACKAGE_EXCEPTIONS = {};
+
+// Turbo tasks the workspace graph must declare, and that CI drives in order.
+const TURBO_TASKS = ["build", "dev", "test", "typecheck"];
+
+// Addon and library tests must run a file through the node test runner, either
+// via tsx or directly. A bare placeholder command is rejected.
+const NODE_TEST_RUNNER = /(?:^|&&\s*)(?:tsx\b.*?|node\b.*?)\s--test\s+\S+/;
+
+function roleOf(name) {
+  return PACKAGE_ROLES[name];
 }
 
-function isAddonPackage(pkgDir) {
-  return pkgDir.startsWith("packages/ql_");
+async function readJson(path) {
+  return JSON.parse(await readFile(path, "utf8"));
 }
 
-function isConfigPackage(pkgDir) {
-  const name = pkgDir.split("/").pop();
-  return ROLE_PATTERNS.config.pattern.includes(name);
-}
-
-function isLibraryPackage(pkgDir) {
-  return pkgDir.startsWith("packages/") && !isAddonPackage(pkgDir) && !isConfigPackage(pkgDir);
-}
-
-function getPackageRole(pkgDir) {
-  if (isAppsPackage(pkgDir)) return "apps";
-  if (isAddonPackage(pkgDir)) return "addons";
-  if (isConfigPackage(pkgDir)) return "config";
-  if (isLibraryPackage(pkgDir)) return "libraries";
-  return null;
-}
-
-async function readPackageJson(pkgDir) {
-  const path = join(ROOT, pkgDir, "package.json");
-  const content = await readFile(path, "utf8");
-  return JSON.parse(content);
-}
-
-async function checkPackage(pkgDir) {
-  const pkg = await readPackageJson(pkgDir);
-  const role = getPackageRole(pkgDir);
-  if (!role) {
-    return [`${pkgDir}: unknown package role`];
+async function exists(path selfish) {
+  try {
+    await stat(path);
+    return true;
+  } catch {
+    return false;
   }
-
-  // Apply package-specific exceptions
-  const roleDef = { ...ROLE_PATTERNS[role] };
-  if (PACKAGE_EXCEPTIONS[pkgDir]) {
-    Object.assign(roleDef, PACKAGE_EXCEPTIONS[pkgDir]);
-  }
-
-  const errors = [];
-
-  // Check scripts
-  const scripts = pkg.scripts || {};
-  for (const req of roleDef.requiredScripts) {
-    if (!scripts[req]) {
-      errors.push(`${pkgDir}: missing required script "${req}"`);
-    }
-  }
-  // Warn if there are scripts not in expected lists
-  const allowed = new Set([...roleDef.requiredScripts, ...roleDef.optionalScripts]);
-  for (const script of Object.keys(scripts)) {
-    if (!allowed.has(script)) {
-      errors.push(`${pkgDir}: unexpected script "${script}" (allowed: ${[...allowed].join(", ")})`);
-    }
-  }
-
-  // Check exports
-  if (roleDef.requiredExports) {
-    const exports = pkg.exports || {};
-    for (const exp of roleDef.requiredExports) {
-      // exports keys can be "./__manifest__" or "__manifest__"
-      const found = exp in exports || `./${exp}` in exports;
-      if (!found) {
-        errors.push(`${pkgDir}: missing required export "${exp}"`);
-      }
-    }
-  }
-
-  return errors;
 }
 
-async function main() {
-  const pkgDirs = [];
-
-  // Collect package directories
-  for (const dir of ["apps", "packages"]) {
-    const entries = await readdir(join(ROOT, dir));
+async function collectPackages() {
+  const packages = [];
+  for (const group of ["apps", "packages"]) {
+    const entries = await readdir(join(ROOT, group));
     for (const entry of entries) {
-      pkgDirs.push(join(dir, entry).replace(/\\/g, "/"));
+      const dir = join(ROOT, group, entry);
+      packages.push({
+        dir,
+        rel: `${group}/${entry}`,
+        pkg: await readJson(join(dir, "package.json")),
+      });
     }
   }
-
-  let allErrors = [];
-  for (const pkgDir of pkgDirs) {
-    try {
-      const errors = await checkPackage(pkgDir);
-      allErrors.push(...errors);
-    } catch (err) {
-      allErrors.push(`${pkgDir}: error reading package.json: ${err.message}`);
-    }
-  }
-
-  if (allErrors.length > 0) {
-    console.error("Package convention violations:");
-    for (const err of allErrors) {
-      console.error(`  ${err}`);
-    }
-    process.exit(1);
-  } else {
-    console.log("✅ All packages follow role-aware conventions");
-  }
+  return packages;
 }
 
-main().catch(err => {
-  console.error("Unexpected error:", err);
-  process.exit(1);
-});
+function checkExports(pkg, roleDef) {
+  const errors = [];
+  const exports = pkg.exports ?? {};
+  const required = roleDef.requiredExports;
+  if (required.length ===  hatch0) return errors;
+
+  const headless: {}
+}

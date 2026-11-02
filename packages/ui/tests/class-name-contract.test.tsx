@@ -29,6 +29,9 @@ import {
   ProofVerificationResult,
   AudioTilawahPlayer,
   WhisperingWaveform,
+  LexicalRootSearch,
+  QuranicMorphologyVisualizer,
+  LocalInferenceToggle,
   type SidebarNavItem,
 } from "../src/index.js";
 import { assertNoOwnColours, render } from "./render-helpers.js";
@@ -154,6 +157,15 @@ const classNameContract: readonly [string, RegExp, (className: string) => ReactN
   )],
   ["WhisperingWaveform", /ql-whispering-waveform/, (c) => (
     <WhisperingWaveform className={c} isPlaying={false} />
+  )],
+  ["LexicalRootSearch", /ql-lexical-root-search/, (c) => (
+    <LexicalRootSearch className={c} />
+  )],
+  ["QuranicMorphologyVisualizer", /ql-morphology-visualizer/, (c) => (
+    <QuranicMorphologyVisualizer className={c} surahNumber={1} ayahNumber={1} />
+  )],
+  ["LocalInferenceToggle", /ql-local-inference-toggle/, (c) => (
+    <LocalInferenceToggle className={c} isEnabled={false} onToggle={() => undefined} />
   )],
 ];
 

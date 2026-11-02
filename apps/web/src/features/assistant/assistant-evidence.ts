@@ -1,6 +1,7 @@
 import type {
   ChatCitationDto,
   ChatMessageDto,
+  UnverifiedCitationDto,
 } from "@moonwitness/moonclient";
 
 export type AssistantEvidenceStatus = NonNullable<
@@ -10,15 +11,21 @@ export type AssistantEvidenceStatus = NonNullable<
 export interface AssistantEvidence {
   status: AssistantEvidenceStatus;
   citations: ChatCitationDto[];
+  unverifiedCitations: UnverifiedCitationDto[];
 }
 
 export function assistantEvidenceFor(
-  message: Pick<ChatMessageDto, "groundingStatus" | "citations">,
+  message: {
+    groundingStatus?: ChatMessageDto["groundingStatus"];
+    citations?: ChatCitationDto[];
+    unverifiedCitations?: UnverifiedCitationDto[];
+  },
 ): AssistantEvidence {
   const status = message.groundingStatus ?? "legacy";
   return {
     status,
     citations: status === "grounded" ? (message.citations ?? []) : [],
+    unverifiedCitations: message.unverifiedCitations ?? [],
   };
 }
 

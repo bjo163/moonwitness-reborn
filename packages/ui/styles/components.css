@@ -1227,3 +1227,56 @@
   display: inline-block;
   vertical-align: middle;
 }
+
+
+/* Track 08: Lexical Morphology Search & Root Word Indexer */
+.ql-lexical-root-search {
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel);
+  border-radius: 0.75rem;
+}
+
+.ql-root-chip {
+  cursor: pointer;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel-edge);
+  transition: all 150ms ease;
+}
+
+.ql-root-chip:hover {
+  border-color: var(--color-hairline-strong);
+  background: var(--color-panel-raised);
+}
+
+/* Track 09: Quranic Morphological Visualizer */
+.ql-morphology-visualizer {
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel);
+  border-radius: 0.75rem;
+}
+
+.ql-syntax-node {
+  cursor: pointer;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel-edge);
+  transition: all 150ms ease;
+}
+
+.ql-syntax-node:hover {
+  border-color: var(--color-hairline-strong);
+  background: var(--color-panel-raised);
+}
+
+.ql-irab-drawer {
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel-deep);
+  border-radius: 0.75rem;
+}
+
+/* Track 10: Local-First Private AI Inference Mode */
+.ql-local-inference-toggle {
+  border: 1px solid var(--color-hairline);
+  background: var(--color-panel);
+  border-radius: 0.75rem;
+  transition: all 150ms ease;
+}
