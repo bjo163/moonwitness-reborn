@@ -611,3 +611,34 @@ void test("character.classification is registered in ql_research and validates a
     },
   );
 });
+
+void test("character.appearance is registered in ql_research and tracks narrative prominence", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+      researchManifest,
+    ],
+    async (orm) => {
+      const appearance = await orm.createRecordForService("character.appearance", {
+        canonical_id: "mw:charapp:tariq-battle-guadalete",
+        character_id: "mw:char:tariq-ibn-ziyad",
+        target_work_id: "mw:work:conquest-andalusia",
+        narrative_segment: "Chapter 3: Crossing the Straits",
+        prominence: "focal_lead",
+        arc_milestone: "Pivotal crossing and motivational address to troops",
+        scene_notes: "Depicts arrival at Jabal Tariq and initial tactical deployment.",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      assert.ok(appearance.id);
+
+      const found = await orm.findOneByService("character.appearance", { id: appearance.id });
+      assert.equal(found?.["character_id"], "mw:char:tariq-ibn-ziyad");
+      assert.equal(found?.["prominence"], "focal_lead");
+      assert.equal(found?.["target_work_id"], "mw:work:conquest-andalusia");
+    },
+  );
+});

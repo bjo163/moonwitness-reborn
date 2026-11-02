@@ -1,4 +1,5 @@
 import type { QlModelDefinition } from "ql_orm";
+import { characterAppearance } from "./character_appearance.js";
 import { characterCanon } from "./character_canon.js";
 import { characterClassification } from "./character_classification.js";
 import { eventRecord } from "./event_record.js";
@@ -21,6 +22,7 @@ export const models: QlModelDefinition[] = [
   researchCorrelation,
   characterCanon,
   characterClassification,
+  characterAppearance,
 ];
 
 export { researchLexicalReview } from "./research_lexical_review.js";
@@ -33,3 +35,4 @@ export { mizanAssessment, MIZAN_DIMENSIONS, MIZAN_BALANCE_TIERS } from "./mizan_
 export { researchCorrelation, CORRELATION_TYPES, CORRELATION_CERTAINTIES } from "./research_correlation.js";
 export { characterCanon, CHARACTER_CANON_STATUSES } from "./character_canon.js";
 export { characterClassification, CHARACTER_ARCHETYPES, CHARACTER_ALIGNMENTS } from "./character_classification.js";
+export { characterAppearance, APPEARANCE_PROMINENCES } from "./character_appearance.js";
