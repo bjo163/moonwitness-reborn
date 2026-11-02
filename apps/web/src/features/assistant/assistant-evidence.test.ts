@@ -20,7 +20,7 @@ const citation: ChatCitationDto = {
   ayah: 255,
 };
 
-test("grounded messages expose their citations", () => {
+void test("grounded messages expose their citations", () => {
   assert.deepEqual(
     assistantEvidenceFor({ groundingStatus: "grounded", citations: [citation] }),
     { status: "grounded", citations: [citation] },
@@ -31,7 +31,7 @@ test("grounded messages expose their citations", () => {
   });
 });
 
-test("insufficient and legacy messages never expose citations", () => {
+void test("insufficient and legacy messages never expose citations", () => {
   assert.deepEqual(
     assistantEvidenceFor({
       groundingStatus: "insufficient_evidence",
@@ -49,7 +49,7 @@ test("insufficient and legacy messages never expose citations", () => {
   });
 });
 
-test("citation links target the existing corpus reader route", () => {
+void test("citation links target the existing corpus reader route", () => {
   assert.equal(
     citationReaderHref({ editionKey: "english edition", surah: 2 }),
     "/corpus/english%20edition/2",
