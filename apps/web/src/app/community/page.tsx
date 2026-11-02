@@ -12,13 +12,8 @@ import {
 } from "@moonwitness/ui";
 import {
   ArrowRight,
-  BookOpen,
-  ChevronRight,
-  Compass,
   FileCheck2,
-  Globe,
   HeartHandshake,
-  MessageSquare,
   Shield,
   Sparkles,
   Users,

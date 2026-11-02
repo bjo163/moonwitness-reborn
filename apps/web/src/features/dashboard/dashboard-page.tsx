@@ -19,25 +19,14 @@ import {
   type SidebarNavItem,
 } from "@moonwitness/ui";
 import {
-  Activity,
   ArrowRight,
   Boxes,
-  Database,
   ExternalLink,
-  Eye,
-  Globe,
   KeyRound,
-  LayoutDashboard,
   Languages,
-  Layers,
-  Lock,
   MessageSquare,
   Microscope,
   Plug,
-  Radio,
-  Scroll,
-  Server,
-  Shield,
   ShieldCheck,
   Sparkles,
   Workflow as WorkflowIcon,
@@ -63,8 +52,6 @@ export default function DashboardPage() {
   const [hasResearch, setHasResearch] = useState(false);
   const [projectTracker, setProjectTracker] =
     useState<ProjectTaskListResponseDto | null>(null);
-  const [projectTrackerLoading, setProjectTrackerLoading] = useState(false);
-  const [projectTrackerError, setProjectTrackerError] = useState(false);
   const [activeRegion, setActiveRegion] = useState<string>("all");
   const { locale, changeLocale, saving, error: localeError } =
     useLocalePreference(user);
@@ -83,17 +70,13 @@ export default function DashboardPage() {
             (group) => group === "admin" || group === "operator",
           )
         ) {
-          setProjectTrackerLoading(true);
           void moonClient
             .listProjectTasks()
             .then((tracker) => {
               if (!cancelled) setProjectTracker(tracker);
             })
             .catch(() => {
-              if (!cancelled) setProjectTrackerError(true);
-            })
-            .finally(() => {
-              if (!cancelled) setProjectTrackerLoading(false);
+              if (!cancelled) setProjectTracker(null);
             });
         }
         try {
@@ -345,18 +328,15 @@ export default function DashboardPage() {
           <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-hairline-soft pb-4 text-xs font-semibold uppercase tracking-wider">
             <span className="text-muted mr-2">Region Filter:</span>
             {["all", "01", "02", "03", "04", "05", "06"].map((r) => (
-              <button
+              <Button
                 key={r}
                 type="button"
+                size="sm"
+                variant={activeRegion === r ? "default" : "secondary"}
                 onClick={() => setActiveRegion(r)}
-                className={`px-3 py-1.5 border transition-all ${
-                  activeRegion === r
-                    ? "border-acid bg-panel-raised text-acid"
-                    : "border-hairline text-muted hover:border-hairline-strong hover:text-ink"
-                }`}
               >
                 {r === "all" ? "Tampilkan Semua Region" : `Region ${r}`}
-              </button>
+              </Button>
             ))}
           </div>
 
