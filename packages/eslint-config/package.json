@@ -5,6 +5,9 @@
   "exports": {
     ".": "./index.js"
   },
+  "scripts": {
+    "test": "node --test index.test.js"
+  },
   "peerDependencies": {
     "@eslint/js": "catalog:",
     "@next/eslint-plugin-next": "catalog:",
