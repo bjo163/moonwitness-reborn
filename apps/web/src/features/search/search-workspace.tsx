@@ -244,11 +244,7 @@ export default function SearchWorkspacePage() {
               ? "Telusuri narasi, pernyataan saksi, profil tokoh, instrumen hukum, dan konsep korpus ber-ACL aman."
               : "Search narratives, witness statements, profiles, legal instruments, and corpus concepts securely."
           }
-          actions={
-            <div className="flex items-center gap-2">
-              <SidebarTrigger onClick={() => setSidebarOpen(true)} />
-            </div>
-          }
+          
         />
 
         {error && <Alert variant="error">{error}</Alert>}

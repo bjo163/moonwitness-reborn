@@ -292,11 +292,7 @@ export default function StudioExportPage() {
               ? "Kompilasi artefak draf kreatif studio menjadi dokumen Markdown dengan metadata dan sitasi."
               : "Compile creative studio artifacts into structured Markdown documents with citations."
           }
-          actions={
-            <div className="flex items-center gap-2">
-              <SidebarTrigger onClick={() => setSidebarOpen(true)} />
-            </div>
-          }
+          
         />
 
         {error && <Alert variant="error">{error}</Alert>}

@@ -288,11 +288,7 @@ export default function CorrelationGraphPage() {
               ? "Eksplorasi hubungan semantik antara Tokoh, Peristiwa, Narasi, dan Korpus Al-Qur'an secara visual."
               : "Visually explore semantic relations between Persons, Events, Narratives, and Quranic Corpus."
           }
-          actions={
-            <div className="flex items-center gap-2">
-              <SidebarTrigger onClick={() => setSidebarOpen(true)} />
-            </div>
-          }
+          
         />
 
         {error && <Alert variant="error">{error}</Alert>}
