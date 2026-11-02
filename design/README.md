@@ -23,7 +23,8 @@ This folder is the source of truth for design intent, product boundaries, visual
 | [RESPONSIVE-ACCESSIBILITY-QA.md](./RESPONSIVE-ACCESSIBILITY-QA.md) | Responsive art direction, WCAG review, test matrix and acceptance gates |
 | [HOME-BLUEPRINT.md](./HOME-BLUEPRINT.md) | Full public Home experience and section-by-section behavior |
 | [MOCKUP-SPEC.md](./MOCKUP-SPEC.md) | Nine mockup sequence, frames, responsive coverage and review gates |
-| [HEADQUARTER-SPATIAL-BLUEPRINT.md](./HEADQUARTER-SPATIAL-BLUEPRINT.md) | Headquarter spatial command center |
+| [HEADQUARTER-SPATIAL-BLUEPRINT.md](./HEADQUARTER-SPATIAL-BLUEPRINT.md) | Headquarter spatial command center and six functional regions |
+| [SYSTEM-OBSERVATORY-AUTOMATION-ARCHITECTURE.md](./SYSTEM-OBSERVATORY-AUTOMATION-ARCHITECTURE.md) | System Observatory ownership, monitoring, automation, execution, Playwright, OpenClaw and governance |
 | [IMPLEMENTATION-RECONCILIATION-AUDIT.md](./IMPLEMENTATION-RECONCILIATION-AUDIT.md) | Static review of the latest Home implementation against design, route, content, and trust contracts |
 
 ## Reading order
@@ -35,8 +36,9 @@ This folder is the source of truth for design intent, product boundaries, visual
 5. Design tokens and interaction / motion / sound
 6. Responsive / accessibility QA
 7. Home and Headquarter blueprints
-8. Implementation reconciliation audit
-9. Mockup specification and visual review
+8. System Observatory operational architecture
+9. Implementation reconciliation audit
+10. Mockup specification and visual review
 
 ## Product boundary at a glance
 
