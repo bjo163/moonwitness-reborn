@@ -6,7 +6,8 @@
     ".": "./index.js"
   },
   "scripts": {
-    "test": "node --test index.test.js"
+    "test": "node --test index.test.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "peerDependencies": {
     "@eslint/js": "catalog:",
