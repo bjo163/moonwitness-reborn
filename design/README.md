@@ -24,7 +24,7 @@ This folder is the source of truth for design intent, product boundaries, visual
 | [HOME-BLUEPRINT.md](./HOME-BLUEPRINT.md) | Full public Home experience and section-by-section behavior |
 | [MOCKUP-SPEC.md](./MOCKUP-SPEC.md) | Nine mockup sequence, frames, responsive coverage and review gates |
 | [HEADQUARTER-SPATIAL-BLUEPRINT.md](./HEADQUARTER-SPATIAL-BLUEPRINT.md) | Headquarter spatial command center and six functional regions |
-| [SYSTEM-OBSERVATORY-AUTOMATION-ARCHITECTURE.md](./SYSTEM-OBSERVATORY-AUTOMATION-ARCHITECTURE.md) | System Observatory ownership, monitoring, automation, native ARSY runtime, browser execution and governance |
+| [SYSTEM-OBSERVATORY-AUTOMATION-ARCHITECTURE.md](./SYSTEM-OBSERVATORY-AUTOMATION-ARCHITECTURE.md) | System Observatory ownership, monitoring, automation, native ARSY runtime, browser execution and governance |\n| [ARSY-RESEARCH-AND-IMPLEMENTATION-ROADMAP.md](./ARSY-RESEARCH-AND-IMPLEMENTATION-ROADMAP.md) | Research synthesis, repository audit, native intelligence design, evaluation strategy and implementation sequence |
 | [IMPLEMENTATION-RECONCILIATION-AUDIT.md](./IMPLEMENTATION-RECONCILIATION-AUDIT.md) | Static review of the latest Home implementation against design, route, content, and trust contracts |
 
 ## Reading order
@@ -36,7 +36,7 @@ This folder is the source of truth for design intent, product boundaries, visual
 5. Design tokens and interaction / motion / sound
 6. Responsive / accessibility QA
 7. Home and Headquarter blueprints
-8. System Observatory operational architecture and ARSY direction
+8. System Observatory operational architecture and ARSY direction\n9. ARSY research synthesis and implementation roadmap
 9. Implementation reconciliation audit
 10. Mockup specification and visual review
 
