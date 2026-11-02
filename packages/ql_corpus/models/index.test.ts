@@ -75,6 +75,24 @@ void test("no published view exposes a private field and no passage/annotation f
     );
     assert.equal(formView, undefined, `${model} must not have a form view`);
   }
+  const lexicalCandidate = corpusManifest.computedModels?.find(
+    (model) => model.name === "corpus.lexical_candidate",
+  );
+  assert.ok(lexicalCandidate, "lexical candidate model must be registered");
+  assert.equal(
+    "extraction_confidence_per_mille" in lexicalCandidate.fields,
+    false,
+    "the exploratory frequency model must not expose an unmeasured confidence score",
+  );
+  assert.equal("review_status" in lexicalCandidate.fields, false);
+  assert.equal(
+    corpusManifest.views.some(
+      (view) =>
+        view.model === "corpus.lexical_candidate" && view.type === "form",
+    ),
+    false,
+    "computed candidates must not have an editable form",
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -476,6 +494,157 @@ void test("withdrawEdition reverts a published edition to withdrawn without eras
       });
       assert.ok(after, "withdraw must not erase the row (audit-preserving rollback)");
       assert.equal(after.stage, "withdrawn");
+    },
+  );
+});
+
+void test("lexical candidates are computed only from published editions with cleared transform rights", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+    ],
+    async (orm) => {
+      const { version, edition } = await seedEditionFixture(orm, {
+        authority: "revelation_verbatim",
+        locale: "ar",
+        editionKey: "mw:work:quran|ar|revelation_verbatim",
+        canonicalId: "mw:edition:quran:ar:revelation",
+      });
+      await orm.updateRecordsForService(
+        "source.rights",
+        { version_id: String(version.id), action: "display" },
+        { rights_status: "cleared" },
+      );
+      await orm.createRecordForService("source.rights", {
+        version_id: String(version.id),
+        rights_key: `${String(version.id)}|transform`,
+        action: "transform",
+        rights_status: "cleared",
+        attribution_text: "Fixture transform permission",
+        owner_id: "seed-user",
+      });
+      const createdAt = new Date();
+      for (const passage of [
+        {
+          ayah: 1,
+          text: "الرَّحْمَٰنُ الرَّحِيمُ الرَّحْمَٰنُ ١٢٣،",
+          ordinal: 1,
+        },
+        { ayah: 2, text: "الرحمن الرحيم", ordinal: 2 },
+      ]) {
+        await orm.createRecordForService("corpus.passage", {
+          canonical_id: `mw:passage:fixture:${passage.ayah}`,
+          edition_id: String(edition.id),
+          work_id: String(edition.work_id),
+          authority: "revelation_verbatim",
+          locator: `1:${passage.ayah}`,
+          passage_key: `${String(edition.id)}|1:${passage.ayah}`,
+          surah: 1,
+          ayah: passage.ayah,
+          row_kind: "ayah",
+          text: passage.text,
+          text_checksum: sha256(passage.text),
+          ordinal: passage.ordinal,
+          import_run_id: "lexical-fixture",
+          created_at: createdAt,
+          updated_at: createdAt,
+        });
+      }
+      await publishEdition(
+        orm,
+        { id: "operator-1", groups: ["operator"] },
+        "mw:work:quran|ar|revelation_verbatim",
+      );
+
+      const candidates = await orm.queryComputedModel(
+        "corpus.lexical_candidate",
+        { id: "operator-1", groups: ["operator"] },
+        {
+          filters: { edition_key: "mw:work:quran|ar|revelation_verbatim" },
+          limit: 100,
+        },
+      );
+      const rahman = candidates.find(
+        (candidate) => candidate.normalized_form === "الرحمن",
+      );
+      assert.ok(rahman, "normalization should group vocalized and plain forms");
+      assert.equal(rahman.occurrence_count, 3);
+      assert.equal(rahman.verse_reference_count, 2);
+      assert.equal(rahman.algorithm_version, "arabic-token-frequency-v1");
+      assert.equal(
+        candidates.some((candidate) => "extraction_confidence_per_mille" in candidate),
+        false,
+      );
+      const references = JSON.parse(String(rahman.source_references)) as {
+        surah: number;
+        ayah: number;
+        checksum: string;
+      }[];
+      assert.deepEqual(
+        references.map(({ surah, ayah }) => `${surah}:${ayah}`),
+        ["1:1", "1:2"],
+      );
+      assert.ok(references.every(({ checksum }) => /^[a-f0-9]{64}$/u.test(checksum)));
+      const exact = await orm.queryComputedModel(
+        "corpus.lexical_candidate",
+        { id: "operator-1", groups: ["operator"] },
+        {
+          filters: {
+            edition_key: "mw:work:quran|ar|revelation_verbatim",
+            normalized_form: "الرحمن",
+          },
+          limit: 100,
+        },
+      );
+      assert.equal(exact.length, 1);
+      assert.equal(exact[0].id, rahman.id);
+      assert.equal(
+        candidates.some((candidate) => candidate.normalized_form === "١٢٣"),
+        false,
+        "Arabic numerals and punctuation are not lexical candidates",
+      );
+    },
+  );
+});
+
+void test("lexical candidates deny editions without cleared transform rights", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+    ],
+    async (orm) => {
+      const { version, edition } = await seedEditionFixture(orm, {
+        authority: "revelation_verbatim",
+        locale: "ar",
+        editionKey: "mw:work:quran|ar|unlicensed",
+        canonicalId: "mw:edition:quran:ar:unlicensed",
+      });
+      await orm.updateRecordsForService(
+        "source.rights",
+        { version_id: String(version.id), action: "display" },
+        { rights_status: "cleared" },
+      );
+      await publishEdition(
+        orm,
+        { id: "operator-1", groups: ["operator"] },
+        "mw:work:quran|ar|unlicensed",
+      );
+      assert.ok(edition.id);
+      await assert.rejects(
+        () =>
+          orm.queryComputedModel(
+            "corpus.lexical_candidate",
+            { id: "operator-1", groups: ["operator"] },
+            { filters: { edition_key: "mw:work:quran|ar|unlicensed" } },
+          ),
+        QlAccessError,
+      );
     },
   );
 });

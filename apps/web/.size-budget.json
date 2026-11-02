@@ -1,0 +1,22 @@
+{
+  "maxFirstLoadKb": 150,
+  "maxRouteDeltaKb": 2,
+  "routes": {
+    "/connectors/[connectorId]/dns/page": 143.1,
+    "/command-center/page": 142.1,
+    "/models/page": 141.8,
+    "/research/page": 141.8,
+    "/connectors/page": 141.7,
+    "/command-center/chat/page": 141.7,
+    "/workflow/page": 141.5,
+    "/admin/translations/page": 140.5,
+    "/corpus/page": 140.3,
+    "/admin/users/page": 139.8,
+    "/providers/page": 139.7,
+    "/page": 138.5,
+    "/auth/page": 137.9,
+    "/corpus/[editionKey]/[surah]/page": 136.9,
+    "/layout": 130.5,
+    "/_not-found/page": 101.2
+  }
+}

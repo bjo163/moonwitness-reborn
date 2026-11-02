@@ -19,20 +19,24 @@ import {
   DataTable,
   FormField,
   Input,
+  ListOption,
+  LoadingScreen,
+  NavSectionLabel,
+  OptionNav,
+  PageHeader,
+  SidePanel,
   Textarea,
+  SidebarTrigger,
+  WorkspaceSidebar,
   WorkspaceTemplate,
-  cn,
 } from "@moonwitness/ui";
 import {
   ArrowLeft,
   Boxes,
   KeyRound,
-  LogOut,
-  Menu,
   Plus,
   Save,
   Trash2,
-  X,
 } from "lucide-react";
 import {
   type FormEvent,
@@ -126,7 +130,10 @@ export default function ModelWorkspace() {
   const formFields = useMemo(
     () =>
       (formView?.fields ?? Object.keys(selectedModel?.fields ?? {})).filter(
-        (name) => selectedModel?.fields[name],
+        (name) =>
+          selectedModel?.kind === "table" &&
+          selectedModel.fields[name] &&
+          !selectedModel.fields[name].computed,
       ),
     [formView, selectedModel],
   );
@@ -138,8 +145,11 @@ export default function ModelWorkspace() {
     [formFields, listView, selectedModel],
   );
 
-  const loadRecords = useCallback(async (name: string) => {
-    const result = await moonClient.listRecords(name);
+  const loadRecords = useCallback(async (model: ModelMetadata) => {
+    const result =
+      model.kind === "computed"
+        ? await moonClient.computeModel(model.name)
+        : await moonClient.listRecords(model.name);
     setRecords(result.records);
   }, []);
 
@@ -172,11 +182,16 @@ export default function ModelWorkspace() {
   }, [t]);
 
   useEffect(() => {
-    if (!user || !modelName) return;
+    const model = models.find((item) => item.name === modelName);
+    if (!user || !model) return;
+    const activeModel = model;
     let cancelled = false;
     async function refresh() {
       try {
-        const result = await moonClient.listRecords(modelName);
+        const result =
+          activeModel.kind === "computed"
+            ? await moonClient.computeModel(activeModel.name)
+            : await moonClient.listRecords(activeModel.name);
         if (!cancelled) setRecords(result.records);
       } catch (requestError) {
         if (!cancelled) {
@@ -188,7 +203,7 @@ export default function ModelWorkspace() {
     return () => {
       cancelled = true;
     };
-  }, [modelName, t, user]);
+  }, [modelName, models, t, user]);
 
   function openForm(record?: ModelRecord) {
     setFormOpen(true);
@@ -253,7 +268,7 @@ export default function ModelWorkspace() {
       } else {
         await moonClient.createRecord(selectedModel.name, values);
       }
-      await loadRecords(selectedModel.name);
+      await loadRecords(selectedModel);
       setSelectedRecord(null);
       setFormOpen(false);
     } catch (requestError) {
@@ -278,7 +293,7 @@ export default function ModelWorkspace() {
         selectedModel.name,
         String(record.id),
       );
-      await loadRecords(selectedModel.name);
+      await loadRecords(selectedModel);
       if (selectedRecord?.id === record.id) {
         setSelectedRecord(null);
         setFormOpen(false);
@@ -298,21 +313,17 @@ export default function ModelWorkspace() {
   }
 
   if (loading) {
-    return (
-      <main className="ql-hud-app flex min-h-dvh items-center justify-center">
-        {t("web.models.loading")}
-      </main>
-    );
+    return <LoadingScreen label={t("web.models.loading")} />;
   }
 
   if (!user) {
     return (
       <CenteredAuth>
         <div className="mb-5 flex items-center gap-3">
-          <Boxes className="text-[#d7ff63]" />
+          <Boxes className="text-acid" />
           <h1 className="text-lg font-semibold">{t("web.models.title")}</h1>
         </div>
-        <p className="text-sm leading-6 text-stone-400">
+        <p className="text-sm leading-6 text-muted">
           {t("web.models.signIn")}
         </p>
         {error && <Alert variant="error" className="mt-4">{error}</Alert>}
@@ -330,105 +341,79 @@ export default function ModelWorkspace() {
       onCloseSidebar={() => setSidebarOpen(false)}
       closeLabel={t("web.common.closeMenu")}
       sidebar={
-        <>
-          <div className="flex h-12 items-center justify-between px-2">
-            <a href="/command-center" className="ql-hud-brand flex items-center gap-2.5 font-semibold">
-              <Boxes size={18} className="text-[#d7ff63]" />
-              MoonWitness
-            </a>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              aria-label={t("web.common.closeMenu")}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X size={18} />
-            </Button>
-          </div>
-          <a href="/command-center" className="ql-nav-link mt-4">
-            <ArrowLeft size={16} />
-            {t("web.models.aiWorkspace")}
-          </a>
-          <a href="/providers" className="ql-nav-link mt-2">
-            <KeyRound size={16} />
-            {t("web.models.providers")}
-          </a>
-          <div className="ql-nav-section">{t("web.models.addonModels")}</div>
-          <nav className="flex-1 space-y-1" aria-label={t("web.models.addonModels")}>
+        <WorkspaceSidebar
+          brandIcon={<Boxes aria-hidden="true" size={18} />}
+          closeLabel={t("web.common.closeMenu")}
+          identity={{ name: user.name, subtitle: user.email }}
+          items={[
+            {
+              href: "/command-center",
+              label: t("web.models.aiWorkspace"),
+              icon: <ArrowLeft aria-hidden="true" size={16} />,
+            },
+            {
+              href: "/providers",
+              label: t("web.models.providers"),
+              icon: <KeyRound aria-hidden="true" size={16} />,
+            },
+          ]}
+          logout={{ label: t("web.common.logout"), onLogout: () => void logout() }}
+          navLabel={t("web.models.title")}
+          onCloseSidebar={() => setSidebarOpen(false)}
+        >
+          <NavSectionLabel>{t("web.models.addonModels")}</NavSectionLabel>
+          <OptionNav label={t("web.models.addonModels")}>
             {models.map((model) => (
-              <Button
+              <ListOption
                 key={model.name}
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "ql-nav-link w-full justify-start",
-                  modelName === model.name && "is-active",
-                )}
-                onClick={() => {
+                onSelect={() => {
                   setModelName(model.name);
                   setSelectedRecord(null);
                   setFormOpen(false);
                   setSidebarOpen(false);
                   setError(null);
                 }}
+                selected={modelName === model.name}
+                variant="nav"
               >
-                <Boxes size={15} />
+                <Boxes aria-hidden="true" size={15} />
                 {model.name}
-              </Button>
+              </ListOption>
             ))}
-          </nav>
-          <div className="mt-3 flex items-center gap-2 border-t border-stone-700 px-2 pt-4">
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-xs font-medium">{user.name}</div>
-              <div className="truncate text-[11px] text-stone-500">{user.email}</div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={t("web.common.logout")}
-              onClick={() => void logout()}
-            >
-              <LogOut size={16} />
-            </Button>
-          </div>
-        </>
+          </OptionNav>
+        </WorkspaceSidebar>
       }
       header={
         <>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={t("web.common.openMenu")}
-              className="md:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu size={18} />
-            </Button>
+            <SidebarTrigger
+              label={t("web.common.openMenu")}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
             <div>
               <div className="text-sm font-semibold">{t("web.models.title")}</div>
-              <div className="text-xs text-stone-500">{t("web.models.dataViews")}</div>
+              <div className="text-xs text-muted">{t("web.models.dataViews")}</div>
             </div>
           </div>
           <Badge variant="outline">{selectedModel?.name ?? t("web.models.noModel")}</Badge>
         </>
       }
     >
-      <div className="ql-model-workspace">
-        <div className="ql-model-heading">
-          <div>
-            <div className="ql-eyebrow">{t("web.models.section")}</div>
-            <h1>{modelLabel}</h1>
-            <p>{modelDescription}</p>
-          </div>
-          {selectedModel?.permissions.create && (
-            <Button onClick={() => openForm()}>
-              <Plus size={16} />
-              {t("web.models.addRecord")}
-            </Button>
-          )}
-        </div>
+      <div className="ql-page-body">
+        <PageHeader
+          actions={
+            selectedModel?.permissions.create ? (
+              <Button onClick={() => openForm()}>
+                <Plus size={16} />
+                {t("web.models.addRecord")}
+              </Button>
+            ) : undefined
+          }
+          description={modelDescription}
+          eyebrow={t("web.models.section")}
+          title={modelLabel}
+        />
 
         {error && <Alert variant="error">{error}</Alert>}
 
@@ -440,7 +425,7 @@ export default function ModelWorkspace() {
           </Card>
         ) : (
           <Card className="mt-5">
-            <CardContent className="ql-model-table-content">
+            <CardContent className="ql-card--flush">
               <DataTable
                 columns={listFields.map((name) => ({
                   key: name,
@@ -484,33 +469,33 @@ export default function ModelWorkspace() {
         )}
 
         {formOpen && (
-          <section className="ql-model-editor" aria-label={t("web.models.formRecord")}>
-            <div className="ql-model-editor__header">
-              <div>
-                <div className="ql-eyebrow">{selectedRecord ? t("web.models.editRecord") : t("web.models.newRecord")}</div>
-                <h2>{selectedRecord ? String(selectedRecord.name ?? t("web.models.editData")) : t("web.models.addData")}</h2>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={t("web.models.closeForm")}
-                onClick={() => {
-                  setSelectedRecord(null);
-                  setFormOpen(false);
-                  setFormValues({});
-                }}
-              >
-                <X size={18} />
-              </Button>
-            </div>
-            <form className="ql-model-editor__form" onSubmit={(event) => void saveRecord(event)}>
+          <SidePanel
+            closeLabel={t("web.models.closeForm")}
+            eyebrow={
+              selectedRecord
+                ? t("web.models.editRecord")
+                : t("web.models.newRecord")
+            }
+            label={t("web.models.formRecord")}
+            onClose={() => {
+              setSelectedRecord(null);
+              setFormOpen(false);
+              setFormValues({});
+            }}
+            title={
+              selectedRecord
+                ? String(selectedRecord.name ?? t("web.models.editData"))
+                : t("web.models.addData")
+            }
+          >
+            <form className="ql-side-panel__form" onSubmit={(event) => void saveRecord(event)}>
               {formFields.map((name) => {
                 const field = selectedModel?.fields[name];
                 if (!field) return null;
                 const id = `model-field-${name}`;
                 if (field.type === "boolean") {
                   return (
-                    <label className="ql-model-checkbox" key={name} htmlFor={id}>
+                    <label className="ql-inline-label" key={name} htmlFor={id}>
                       <Checkbox
                         id={id}
                         checked={formValues[name] === true}
@@ -598,7 +583,7 @@ export default function ModelWorkspace() {
                 </Button>
               </div>
             </form>
-          </section>
+          </SidePanel>
         )}
       </div>
     </WorkspaceTemplate>

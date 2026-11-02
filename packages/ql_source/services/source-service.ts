@@ -268,7 +268,7 @@ export async function upsertRights(
  * Read the rights decision for a specific action against a specific version.
  * Returns `null` when no row exists — callers must treat `null` as
  * "block this action" per the deny-by-default rule in
- * `docs/data/DATA_LIFECYCLE_AND_PROVENANCE.md:27`.
+ * `https://github.com/bjo163/moonwitness-reborn/wiki/docs-data-DATA_LIFECYCLE_AND_PROVENANCE`.
  */
 export async function readRights(
   orm: QlOrm,

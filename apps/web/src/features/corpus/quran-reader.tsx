@@ -7,7 +7,7 @@ import {
   type CorpusPassageDto,
   type CorpusSurahDto,
 } from "@moonwitness/moonclient";
-import { Alert, Badge } from "@moonwitness/ui";
+import { Alert, Badge, PageHeader } from "@moonwitness/ui";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -115,24 +115,20 @@ export default function QuranReader() {
 
   const rtl = isArabicVerbatim(reading?.passages[0]);
   return (
-    <main className="ql-hud-app min-h-dvh bg-[#0b110b] px-5 py-8 text-stone-200 md:px-10 md:py-12">
+    <main className="ql-hud-app min-h-dvh bg-panel-deep px-5 py-8 text-ink-soft md:px-10 md:py-12">
       <div className="mx-auto w-full max-w-3xl space-y-6">
-        <header className="border-b border-[#354135] pb-6">
-          <Link href="/corpus" className="text-xs text-[#b8cc91] hover:underline">
-            <ArrowLeft aria-hidden="true" className="mr-1 inline" size={13} />
-            {t("web.corpus.backToShelf")}
-          </Link>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-100">
-            {t("web.corpus.surahTitle", { surah })}
-          </h1>
-          {reading && (
-            <p className="mt-2 text-sm text-stone-400">
-              {headingFor(reading, t)}
-            </p>
-          )}
-        </header>
+        <PageHeader
+          title={t("web.corpus.surahTitle", { surah })}
+          description={reading ? headingFor(reading, t) : undefined}
+          actions={
+            <Link href="/corpus" className="text-xs text-acid-muted hover:underline">
+              <ArrowLeft aria-hidden="true" className="mr-1 inline" size={13} />
+              {t("web.corpus.backToShelf")}
+            </Link>
+          }
+        />
         {loading && (
-          <p role="status" className="text-sm text-stone-400">
+          <p role="status" className="text-sm text-muted">
             {t("web.corpus.loadingSurah")}
           </p>
         )}
@@ -152,9 +148,9 @@ export default function QuranReader() {
                   t,
                 )}
               </Badge>
-              <span className="text-stone-400">{reading.editionLocale}</span>
-              <span className="text-stone-500">·</span>
-              <span className="text-stone-300">
+              <span className="text-muted">{reading.editionLocale}</span>
+              <span className="text-muted">·</span>
+              <span className="text-ink-soft">
                 {reading.passages[0]?.edition_attribution_text}
               </span>
             </div>
@@ -166,10 +162,10 @@ export default function QuranReader() {
               {reading.passages.map((passage) => (
                 <li
                   key={passage.id}
-                  className="rounded-lg border border-[#354135] bg-[#0f1a10] p-4"
+                  className="rounded-lg border border-hairline bg-panel-deep p-4"
                 >
                   <div className="flex items-baseline justify-between gap-4">
-                    <span className="text-[11px] font-mono text-[#b8cc91]">
+                    <span className="text-[11px] font-mono text-acid-muted">
                       {passage.locator}
                     </span>
                     <Badge variant="outline">
@@ -185,13 +181,13 @@ export default function QuranReader() {
                   <p
                     className={
                       rtl
-                        ? "mt-3 text-2xl leading-[2.4] text-stone-100"
-                        : "mt-3 text-base leading-7 text-stone-200"
+                        ? "mt-3 text-2xl leading-[2.4] text-ink"
+                        : "mt-3 text-base leading-7 text-ink-soft"
                     }
                   >
                     {passage.text}
                   </p>
-                  <p className="mt-3 text-[10px] uppercase tracking-wide text-stone-500">
+                  <p className="mt-3 text-[10px] uppercase tracking-wide text-muted">
                     {authorityLabel(
                       passage.authority,
                       passage.edition_locale,
@@ -203,7 +199,7 @@ export default function QuranReader() {
                 </li>
               ))}
             </ol>
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-muted">
               {t("web.corpus.readerDisclaimer")}
             </p>
           </>

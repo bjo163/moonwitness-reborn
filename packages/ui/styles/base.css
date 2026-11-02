@@ -1,0 +1,38 @@
+/*
+ * Browser reset owned by `@moonwitness/ui` (MW-ADR-020).
+ *
+ * Everything a consuming app used to hand-roll in `globals.css` — the
+ * colour-scheme declaration, `box-sizing`, body font, form-element font
+ * inheritance, and `::selection` colour — lives here. Applications that
+ * import `@moonwitness/ui/preset.css` get this reset for free and MUST
+ * NOT redefine it locally; a second copy in `apps/web` or a future
+ * marketing/admin app is a governance violation.
+ */
+:root {
+  color-scheme: dark;
+  background: var(--color-panel-deeper, #0a0e0b);
+  color: var(--color-ink, #e9eee6);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: var(--color-ink-soft, #d6d3d1);
+}

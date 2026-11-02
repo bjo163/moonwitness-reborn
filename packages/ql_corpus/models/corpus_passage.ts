@@ -79,7 +79,7 @@ export const corpusPassage: QlModelDefinition = {
       validator: sha256Validator("text_checksum"),
     },
     // Original upstream identifier — never rewritten by the importer per
-    // `docs/knowledge/CORPUS_INTEGRATION_PLAN.md:105` "Do not rewrite IDs or
+    // `https://github.com/bjo163/moonwitness-reborn/wiki/docs-knowledge-CORPUS_INTEGRATION_PLAN` "Do not rewrite IDs or
     // normalize punctuation silently".
     source_record_id: { type: "char", maxLength: 80 },
     // Denormalized copy of `corpus.edition.authority` so a reader filter by

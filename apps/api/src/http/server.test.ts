@@ -11,8 +11,10 @@ import aiManifest from "ql_ai/__manifest__";
 import authManifest from "ql_auth/__manifest__";
 import baseManifest from "ql_base/__manifest__";
 import chatManifest from "ql_chat/__manifest__";
+import corpusManifest from "ql_corpus/__manifest__";
+import sourceManifest from "ql_source/__manifest__";
 import { createApiServer } from "./server.js";
-import { listProjectTasks } from "../project-progress/tracker.js";
+import { listProjectTasks } from "../project-progress/github-issues.js";
 
 let server: ReturnType<typeof createApiServer>;
 let address: string;
@@ -22,6 +24,48 @@ let closeOrm: () => void;
 let receivedMessages: readonly AgentMessage[] = [];
 let receivedProviderConfig: { apiKey: string; model: string } | undefined;
 const providerEncryptionKey = Buffer.alloc(32, 7);
+const projectTaskIssues = [
+  {
+    title: "[MW-0001] Build foundation",
+    body: `<!-- mw-task-record-start -->
+\`\`\`json
+${JSON.stringify({
+  id: "MW-0001",
+  title: "Build foundation",
+  section: "Phase 0",
+  owner: "Owner",
+  depends_on: [],
+  acceptance_criteria: "The foundation is available.",
+})}
+\`\`\`
+<!-- mw-task-record-end -->`,
+    state: "closed",
+    closed_at: "2026-01-01T00:00:00Z",
+    labels: [{ name: "type:task" }],
+  },
+  {
+    title: "[MW-0002] Build next",
+    body: `<!-- mw-task-record-start -->
+\`\`\`json
+${JSON.stringify({
+  id: "MW-0002",
+  title: "Build next",
+  section: "Phase 0",
+  owner: "Owner",
+  depends_on: ["MW-0001"],
+  acceptance_criteria: "The next task can start.",
+})}
+\`\`\`
+<!-- mw-task-record-end -->`,
+    state: "open",
+    closed_at: null,
+    labels: [{ name: "type:task" }, { name: "status:pending" }],
+  },
+];
+const projectTasksFetcher: typeof fetch = () =>
+  Promise.resolve(
+    new Response(JSON.stringify(projectTaskIssues), { status: 200 }),
+  );
 
 before(async () => {
   const ormRuntime = await createQlOrm("file::memory:", [
@@ -29,6 +73,8 @@ before(async () => {
     baseManifest,
     aiManifest,
     chatManifest,
+    sourceManifest,
+    corpusManifest,
   ]);
   orm = ormRuntime.orm;
   closeOrm = ormRuntime.close;
@@ -41,6 +87,7 @@ before(async () => {
   };
   server = createApiServer(provider, store, orm, {
     encryptionKey: providerEncryptionKey,
+    projectTasksFetcher,
     providerFactory(config) {
       receivedProviderConfig = config;
       return {
@@ -100,7 +147,9 @@ void test("first-use onboarding grants exactly one super admin", async () => {
     chatManifest,
   ]);
   const setupStore = createConversationStore(runtime.orm);
-  const setupServer = createApiServer(undefined, setupStore, runtime.orm);
+  const setupServer = createApiServer(undefined, setupStore, runtime.orm, {
+    projectTasksFetcher,
+  });
   await new Promise<void>((resolve) => {
     setupServer.listen(0, "127.0.0.1", resolve);
   });
@@ -147,6 +196,26 @@ void test("first-use onboarding grants exactly one super admin", async () => {
     assert.equal(ownerBody.user.role, "super_admin");
     assert.equal("setup_claim" in ownerBody.user, false);
 
+    const roleCatalog = await fetch(
+      `${setupBaseUrl}${apiRoutes.admin.roles.collection}`,
+      { headers: { cookie: ownerCookie.split(";", 1)[0] } },
+    );
+    assert.equal(roleCatalog.status, 200);
+    const roleCatalogBody = await roleCatalog.json() as {
+      roles: Array<{
+        code: string;
+        nameKey: string;
+        descriptionKey: string;
+      }>;
+    };
+    const adminRole = roleCatalogBody.roles.find((role) => role.code === "admin");
+    assert.ok(adminRole);
+    assert.equal(adminRole.nameKey, "web.adminUsers.roles.admin.name");
+    assert.equal(
+      adminRole.descriptionKey,
+      "web.adminUsers.roles.admin.description",
+    );
+
     const publicSummary = await fetch(
       `${setupBaseUrl}${apiRoutes.projectProgress.summary}`,
     );
@@ -156,8 +225,11 @@ void test("first-use onboarding grants exactly one super admin", async () => {
       readyCount: number;
       states: Record<string, number>;
     };
-    const projectTasks = await listProjectTasks();
+    const projectTasks = await listProjectTasks(projectTasksFetcher);
     assert.equal(summaryBody.total, projectTasks.length);
+    assert.equal(summaryBody.states.done, 1);
+    assert.equal(summaryBody.states.pending, 1);
+    assert.equal(summaryBody.readyCount, 1);
     assert.equal(
       Object.values(summaryBody.states).reduce((sum, count) => sum + count, 0),
       projectTasks.length,
@@ -180,6 +252,7 @@ void test("first-use onboarding grants exactly one super admin", async () => {
     };
     assert.equal(ownerDetailsBody.tasks.length, projectTasks.length);
     assert.equal(ownerDetailsBody.readyTaskIds.length, summaryBody.readyCount);
+    assert.deepEqual(ownerDetailsBody.readyTaskIds, ["MW-0002"]);
 
     const closedSetup = await fetch(`${setupBaseUrl}/auth/setup`);
     assert.deepEqual(await closedSetup.json(), { required: false });
@@ -620,6 +693,54 @@ void test("authenticated model metadata exposes addon views without private fiel
     unlink: true,
   });
   assert.equal(models.some((model) => model.name === "res.users"), false);
+});
+
+void test("computed model metadata and query route are read-only and validated", async () => {
+  const cookie = await register("computed-model@example.com");
+  const user = await store.getUserByEmail("computed-model@example.com");
+  assert.ok(user);
+  await orm.updateRecordsForService(
+    "res.users",
+    { id: user.id },
+    { role: "admin" },
+  );
+
+  const metadataResponse = await fetch(`${address}/models`, {
+    headers: { cookie },
+  });
+  assert.equal(metadataResponse.status, 200);
+  const metadata = (await metadataResponse.json()) as {
+    models: Array<{
+      kind: string;
+      name: string;
+      permissions: { create: boolean; write: boolean; unlink: boolean };
+    }>;
+  };
+  const lexicalCandidate = metadata.models.find(
+    (model) => model.name === "corpus.lexical_candidate",
+  );
+  assert.ok(lexicalCandidate);
+  assert.equal(lexicalCandidate.kind, "computed");
+  assert.deepEqual(lexicalCandidate.permissions, {
+    create: false,
+    write: false,
+    unlink: false,
+  });
+
+  const route = apiRoutes.models.compute("corpus.lexical_candidate");
+  const invalid = await fetch(`${address}${route}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", cookie },
+    body: JSON.stringify({ unexpected: true }),
+  });
+  assert.equal(invalid.status, 400);
+
+  const denied = await fetch(`${address}${route}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", cookie },
+    body: JSON.stringify({ filters: {} }),
+  });
+  assert.equal(denied.status, 403);
 });
 
 void test("provider gateway stores encrypted keys in the ql_ai addon and routes chat", async () => {

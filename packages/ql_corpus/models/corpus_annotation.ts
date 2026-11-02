@@ -19,13 +19,13 @@ import {
  * table as canonical text — even from the importer's service path — because
  * QlOrm runs field validators on service writes
  * (`packages/ql-orm/src/index.ts:319-322`). This is the *structural* form
- * of `docs/vision/ALLAH_COM_OFFICIAL_CANON.md:106` "A translation is not
+ * of `https://github.com/bjo163/moonwitness-reborn/wiki/docs-vision-ALLAH_COM_OFFICIAL_CANON` "A translation is not
  * the original text. Commentary is not the source."
  *
  * `quoted_passage_id` is required: a tafsir row without a target verse is a
  * data-model bug, not a legitimate record. The table ships with the MVP so
  * the invariant is regression-tested on day one; the corpus plan
- * (`docs/knowledge/CORPUS_INTEGRATION_PLAN.md`) explicitly defers the tafsir
+ * (`https://github.com/bjo163/moonwitness-reborn/wiki/docs-knowledge-CORPUS_INTEGRATION_PLAN`) explicitly defers the tafsir
  * import until its per-edition rights are recorded — the table stays empty
  * until then.
  */

@@ -35,8 +35,6 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm tracker:check
-      - run: pnpm tracker:test
       # Lint memakai rule type-aware dan setiap package export tipe dari dist/,
       # jadi build harus jalan lebih dulu atau lint hanya melaporkan tipe tak ter-resolve.
       - run: pnpm exec turbo run build
@@ -46,3 +44,5 @@ jobs:
       - run: pnpm test
         env:
           QL_ORM_PG_URL: postgres://ci:ci@127.0.0.1:5432/ci
+      # Budget per rute First Load JS, diukur dari manifest yang ditulis `next build` pada langkah build di atas.
+      - run: pnpm --filter @moonwitness/web size

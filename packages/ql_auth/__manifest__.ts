@@ -1,4 +1,5 @@
 import type { QlAddonManifest } from "ql_orm";
+import { ROLE_CATALOG } from "./services/rbac.js";
 import { models } from "./models/index.js";
 
 const manifest: QlAddonManifest = {
@@ -61,6 +62,19 @@ const manifest: QlAddonManifest = {
       fields: ["code", "name", "description", "groups", "assignable"],
     },
   ],
+  data: ROLE_CATALOG.map((role) => ({
+    id: `role_${role.code}`,
+    model: "res.role",
+    key: { field: "code", value: role.code },
+    values: {
+      code: role.code,
+      name: role.name,
+      description: role.description,
+      groups: role.groups.join(","),
+      assignable: role.assignable,
+    },
+    updatePolicy: "reconcile",
+  })),
 };
 
 export default manifest;

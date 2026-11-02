@@ -39,7 +39,8 @@ void test("the addon is accepted by loadAddons and ordered behind its deps", () 
 });
 
 void test("the state machine matches the spec verbatim", () => {
-  // Every legal edge from docs/workflows/WORKFLOW_AND_PUBLISHING_SPECIFICATION.md:8-12.
+  // Every legal edge from the canonical workflow spec:
+  // https://github.com/bjo163/moonwitness-reborn/wiki/docs-workflows-WORKFLOW_AND_PUBLISHING_SPECIFICATION
   assert.equal(canTransition("draft", "submit"), "submitted");
   assert.equal(canTransition("submitted", "start_review"), "in_review");
   assert.equal(canTransition("in_review", "approve"), "approved");

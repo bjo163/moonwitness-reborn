@@ -34,6 +34,7 @@ export function WorkspaceTemplate({
           "ql-hud-sidebar ql-workspace__sidebar",
           sidebarOpen && "is-open",
         )}
+        id="ql-workspace-sidebar"
       >
         {sidebar}
       </aside>

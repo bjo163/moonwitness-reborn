@@ -4,10 +4,9 @@ name: moonwitness-reborn
 # Semua port diikat ke loopback.
 #
 # Catatan database: QlOrm (packages/ql-orm) memilih driver dari skema DATABASE_URL —
-# `file:` / `libsql:` memakai @libsql/client, `postgres://` memakai pg. Bawaannya tetap
-# file LibSQL di volume `api_data`. Service `postgres` di bawah sudah siap dipakai lewat
-# override, tanpa edit file: DATABASE_URL=postgres://moonwitness:moonwitness@postgres:5432/moonwitness
-# (dari host: port 127.0.0.1:5434).
+# `file:` / `libsql:` memakai @libsql/client, `postgres://` memakai pg. API di host
+# memakai DATABASE_URL dari root .env ke 127.0.0.1:5434; API dalam Compose memakai
+# DATABASE_URL_CONTAINER ke service `postgres:5432`.
 
 services:
   postgres:
@@ -34,7 +33,7 @@ services:
     restart: unless-stopped
     environment:
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL:-file:/app/data/moonwitness.db}
+      DATABASE_URL: ${DATABASE_URL_CONTAINER:-postgresql://moonwitness:moonwitness@postgres:5432/moonwitness}
       # Kunci enkripsi credential provider untuk development lokal. Ganti di produksi.
       PROVIDER_ENCRYPTION_KEY: ${PROVIDER_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
       # Opsional: keduanya wajib terisi agar klaim super_admin saat registrasi berlaku. Cabut setelah dipakai.

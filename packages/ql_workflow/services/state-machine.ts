@@ -2,7 +2,7 @@ import type { ReviewState, TransitionAction } from "./workflow-vocabulary.js";
 
 /**
  * The `ql_workflow` state machine, transcribed 1:1 from
- * `docs/workflows/WORKFLOW_AND_PUBLISHING_SPECIFICATION.md:8-12`:
+ * `https://github.com/bjo163/moonwitness-reborn/wiki/docs-workflows-WORKFLOW_AND_PUBLISHING_SPECIFICATION`:
  *
  * ```
  * DRAFT → SUBMITTED → IN_REVIEW → APPROVED → PUBLISHED

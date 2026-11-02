@@ -6,7 +6,7 @@ import { views } from "./views/index.js";
  * `ql_workflow` — CAB (Change Advisory Board) approval workflow and PM
  * (Project Management) tracker.
  *
- * Ownership boundary (see `docs/architecture/DOMAIN_OWNERSHIP_AND_DEPENDENCIES.md:26`
+ * Ownership boundary (see `https://github.com/bjo163/moonwitness-reborn/wiki/docs-architecture-DOMAIN_OWNERSHIP_AND_DEPENDENCIES`
  * and MW-ADR-017): this addon owns process definitions, review tasks, states,
  * and transitions. It does **not** own domain content (research/publication
  * records live elsewhere) and it is **not** a rights store — `APPROVED` here
@@ -19,7 +19,7 @@ import { views } from "./views/index.js";
  * `ql_workflow/services/workflow-service.ts`, which uses
  * `orm.updateRecordsForService`/`orm.createRecordForService` (bypasses ACL
  * but not the guard rules — see
- * `docs/workflows/WORKFLOW_AND_PUBLISHING_SPECIFICATION.md:29`).
+ * `https://github.com/bjo163/moonwitness-reborn/wiki/docs-workflows-WORKFLOW_AND_PUBLISHING_SPECIFICATION`).
  */
 const manifest: QlAddonManifest = {
   name: "ql_workflow",
@@ -116,6 +116,7 @@ const manifest: QlAddonManifest = {
     },
   ],
   views,
+  data: [],
 };
 
 export default manifest;

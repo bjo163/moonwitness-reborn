@@ -9,7 +9,7 @@
  * consumers (`ql_workflow` itself + `@moonwitness/moonclient` DTO). Promote
  * when a second review-bearing addon (e.g. `source.review`) appears.
  *
- * The state set mirrors `docs/workflows/WORKFLOW_AND_PUBLISHING_SPECIFICATION.md:8-12`
+ * The state set mirrors `https://github.com/bjo163/moonwitness-reborn/wiki/docs-workflows-WORKFLOW_AND_PUBLISHING_SPECIFICATION`
  * verbatim; adding or renaming a state requires updating that spec first.
  */
 

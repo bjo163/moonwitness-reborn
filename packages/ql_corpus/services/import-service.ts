@@ -37,7 +37,7 @@ import {
  * - **Reconciliation is a hard gate**: before any row is written, the
  *   importer streams the JSONL once to count lines and compares against
  *   the `rows_expected` value the owner records in
- *   `docs/knowledge/CORPUS_INTEGRATION_PLAN.md` §*Al-Qur'an first-slice
+ *   `https://github.com/bjo163/moonwitness-reborn/wiki/docs-knowledge-CORPUS_INTEGRATION_PLAN` §*Al-Qur'an first-slice
  *   datasets*. A mismatch aborts with a diff report and exit code 1. This
  *   is what prevents the 12.594-vs-6.240 discrepancy from silently
  *   corrupting the corpus (see plan MW-0561/MW-0565).
@@ -472,7 +472,7 @@ export async function importQuranSlice(
     const observed = await countLines(dataset.path);
     if (observed !== dataset.rows_expected) {
       throw new QlValidationError(
-        `Row count mismatch for '${dataset.id}': observed=${observed}, expected=${dataset.rows_expected}. No rows written. Update rows_expected in the manifest (or the frozen snapshot) before retrying — see docs/knowledge/CORPUS_INTEGRATION_PLAN.md §Al-Qur'an first-slice datasets.`,
+        `Row count mismatch for '${dataset.id}': observed=${observed}, expected=${dataset.rows_expected}. No rows written. Update rows_expected in the manifest (or the frozen snapshot) before retrying — see https://github.com/bjo163/moonwitness-reborn/wiki/docs-knowledge-CORPUS_INTEGRATION_PLAN §Al-Qur'an first-slice datasets.`,
       );
     }
     const { versionId } = await upsertArtifactAndVersion(

@@ -2,6 +2,7 @@ import { cp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { po as gettextPo } from "gettext-parser";
+import { validatePoMessage } from "./catalog-validation.mjs";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const source = join(packageRoot, "i18n");
@@ -11,6 +12,7 @@ const entries = await readdir(source, { withFileTypes: true });
 
 await mkdir(target, { recursive: true });
 const catalogues = {};
+const sourceTexts = {};
 const allKeys = new Set();
 const pluralCategories = {
   id: ["other"],
@@ -39,21 +41,20 @@ for (const entry of entries) {
           if (!categories) {
             throw new Error(`Plural PO rules are missing for '${locale}'.`);
           }
-          const forms = Object.fromEntries(
-            categories.map((category, index) => [
-              category,
-              message.msgstr[index] ?? "",
-            ]),
+          catalog[key] = validatePoMessage(
+            locale,
+            context,
+            message,
+            categories,
           );
-          if (categories.some((category) => !forms[category])) {
-            throw new Error(
-              `Plural PO entry '${context}' has missing forms in '${locale}'.`,
-            );
-          }
-          catalog[key] = { plural: forms };
         } else {
-          catalog[key] = message.msgstr[0] ?? "";
+          catalog[key] = validatePoMessage(locale, context, message, []);
         }
+        sourceTexts[locale] ??= {};
+        sourceTexts[locale][key] = [
+          message.msgid,
+          message.msgid_plural ?? null,
+        ];
         allKeys.add(key);
       }
     }
@@ -69,6 +70,14 @@ const referenceKeys = Object.keys(catalogues.id).sort();
 const englishKeys = Object.keys(catalogues.en).sort();
 if (JSON.stringify(referenceKeys) !== JSON.stringify(englishKeys)) {
   throw new Error("The Indonesian and English PO catalogs must have identical keys.");
+}
+for (const key of referenceKeys) {
+  if (
+    JSON.stringify(sourceTexts.id[key]) !==
+    JSON.stringify(sourceTexts.en[key])
+  ) {
+    throw new Error(`PO source text for '${key}' must match between locales.`);
+  }
 }
 
 await writeFile(

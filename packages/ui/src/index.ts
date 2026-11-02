@@ -21,4 +21,60 @@ export {
   WorkspaceTemplate,
   type WorkspaceTemplateProps,
 } from "./templates/workspace.js";
+export { NavLink, type NavLinkProps } from "./composites/nav-link.js";
+export {
+  SidebarBrand,
+  type SidebarBrandProps,
+} from "./composites/sidebar-brand.js";
+export {
+  SidebarFooter,
+  type SidebarFooterProps,
+} from "./composites/sidebar-footer.js";
+export {
+  SidebarTrigger,
+  type SidebarTriggerProps,
+} from "./composites/sidebar-trigger.js";
+export {
+  PageHeader,
+  type PageHeaderProps,
+} from "./composites/page-header.js";
+export {
+  LoadingScreen,
+  type LoadingScreenProps,
+} from "./composites/loading-screen.js";
+export {
+  EmptyState,
+  type EmptyStateProps,
+} from "./composites/empty-state.js";
+export {
+  SectionGrid,
+  type SectionGridProps,
+} from "./composites/section-grid.js";
+export { IconTile, type IconTileProps } from "./composites/icon-tile.js";
+export {
+  NavSectionLabel,
+  OptionNav,
+  SidebarNav,
+  type NavSectionLabelProps,
+  type OptionNavProps,
+  type SidebarNavItem,
+  type SidebarNavProps,
+} from "./composites/sidebar-nav.js";
+export {
+  MetricList,
+  MetricRow,
+  type MetricListProps,
+  type MetricRowProps,
+} from "./composites/metric-row.js";
+export { SidePanel, type SidePanelProps } from "./composites/side-panel.js";
+export {
+  ListOption,
+  type ListOptionProps,
+} from "./composites/list-option.js";
+export {
+  WorkspaceSidebar,
+  type SidebarIdentity,
+  type SidebarLogout,
+  type WorkspaceSidebarProps,
+} from "./composites/workspace-sidebar.js";
 export { cn } from "./lib/utils.js";

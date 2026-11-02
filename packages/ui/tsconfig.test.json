@@ -1,0 +1,9 @@
+{
+  // Pointer kept for callers that ask for the package's test project by the
+  // conventional name. The real definition is `tests/tsconfig.json`, which is
+  // also named `tsconfig.json` on purpose: the type-aware ESLint `projectService`
+  // discovers a file's project by walking up from it, so a `tsconfig.test.json`
+  // two levels up is never found and the tests fail to lint with
+  // "was not found by the project service".
+  "extends": "./tests/tsconfig.json"
+}

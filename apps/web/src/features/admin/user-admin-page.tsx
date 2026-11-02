@@ -10,12 +10,21 @@ import {
   Alert,
   Badge,
   Button,
+  Card,
+  CardContent,
+  CardHeader,
   CenteredAuth,
   DataTable,
+  LoadingScreen,
+  PageHeader,
+  Select,
+  SidebarTrigger,
+  WorkspaceSidebar,
   WorkspaceTemplate,
   type DataTableColumn,
 } from "@moonwitness/ui";
 import { ArrowLeft, ShieldCheck, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
 import { translateMetadata } from "../locale/translate-metadata";
@@ -51,6 +60,7 @@ export default function UserAdminPage() {
   const [user, setUser] = useState<AuthUserDto | null>(null);
   useLocalePreference(user);
   const { t, tm, locale } = useTranslationCatalog();
+  const router = useRouter();
   const [users, setUsers] = useState<AdminUserDto[]>([]);
   const [roles, setRoles] = useState<RoleDto[]>([]);
   const [pendingRole, setPendingRole] = useState<Record<string, string>>({});
@@ -59,6 +69,17 @@ export default function UserAdminPage() {
   const [workingId, setWorkingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  async function logout() {
+    setError(null);
+    try {
+      await moonClient.logout();
+      router.replace("/auth");
+    } catch (logoutError) {
+      setError(apiErrorMessage(logoutError, t));
+    }
+  }
 
   const loadDirectory = useCallback(async () => {
     const [userResult, roleResult] = await Promise.all([
@@ -139,18 +160,14 @@ export default function UserAdminPage() {
   }
 
   if (busy) {
-    return (
-      <main className="ql-hud-app flex min-h-dvh items-center justify-center text-sm text-stone-500">
-        {t("web.adminUsers.loading")}
-      </main>
-    );
+    return <LoadingScreen label={t("web.adminUsers.loading")} className="text-muted" />;
   }
 
   if (!user) {
     return (
       <CenteredAuth>
         <h1 className="text-xl font-semibold">{t("web.adminUsers.signIn")}</h1>
-        <p className="mt-2 text-sm text-stone-500">
+        <p className="mt-2 text-sm text-muted">
           {t("web.adminUsers.signInDescription")}
         </p>
         <Button
@@ -181,38 +198,37 @@ export default function UserAdminPage() {
 
   return (
     <WorkspaceTemplate
-      sidebarOpen={false}
-      onCloseSidebar={() => undefined}
+      sidebarOpen={sidebarOpen}
+      onCloseSidebar={() => setSidebarOpen(false)}
       closeLabel={t("web.common.closeMenu")}
       sidebar={
-        <div className="space-y-5">
-          <a
-            href="/command-center"
-            className="flex h-12 items-center gap-2.5 px-2 font-semibold tracking-tight"
-          >
-            <span className="flex size-8 items-center justify-center rounded-xl bg-stone-900 text-white">
-              <ShieldCheck size={16} />
-            </span>
-            MoonWitness
-          </a>
-          <a href="/command-center/chat" className="ql-nav-link">
-            <ArrowLeft size={16} />
-            {t("web.adminUsers.backToChat")}
-          </a>
-          <div className="border-t border-stone-200 px-2 pt-4">
-            <p className="truncate text-xs font-medium text-stone-700">
-              {user.name}
-            </p>
-            <p className="truncate text-[11px] text-stone-500">
-              {roleName(user.role)}
-            </p>
-          </div>
-        </div>
+        <WorkspaceSidebar
+          brandIcon={<ShieldCheck aria-hidden="true" size={16} />}
+          closeLabel={t("web.common.closeMenu")}
+          identity={{ name: user.name, subtitle: roleName(user.role) }}
+          items={[
+            {
+              href: "/command-center/chat",
+              label: t("web.adminUsers.backToChat"),
+              icon: <ArrowLeft aria-hidden="true" size={16} />,
+            },
+          ]}
+          logout={{ label: t("web.common.logout"), onLogout: () => void logout() }}
+          navLabel={t("web.adminUsers.title")}
+          onCloseSidebar={() => setSidebarOpen(false)}
+        />
       }
       header={
         <>
-          <div className="text-sm font-medium text-stone-700">
-            {t("web.adminUsers.title")}
+          <div className="flex items-center gap-2">
+            <SidebarTrigger
+              label={t("web.common.openMenu")}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
+            <div className="text-sm font-medium text-ink-soft">
+              {t("web.adminUsers.title")}
+            </div>
           </div>
           <Badge variant="live">{t("web.adminUsers.accountCount", { count: users.length })}</Badge>
         </>
@@ -220,17 +236,11 @@ export default function UserAdminPage() {
     >
       <div className="flex-1 overflow-y-auto px-4 py-8 md:px-8">
         <div className="mx-auto max-w-5xl space-y-7">
-          <header>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">
-              {t("web.adminUsers.eyebrow")}
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-950">
-              {t("web.adminUsers.heading")}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-500">
-              {t("web.adminUsers.description")}
-            </p>
-          </header>
+          <PageHeader
+            description={t("web.adminUsers.description")}
+            eyebrow={t("web.adminUsers.eyebrow")}
+            title={t("web.adminUsers.heading")}
+          />
 
           {error && <Alert variant="error">{error}</Alert>}
           {notice && <Alert>{notice}</Alert>}
@@ -258,9 +268,9 @@ export default function UserAdminPage() {
                         <label className="sr-only" htmlFor={`role-${target.id}`}>
                           {t("web.adminUsers.roleFor", { name: target.name })}
                         </label>
-                        <select
+                        <Select
                           id={`role-${target.id}`}
-                          className="h-9 rounded-lg border border-stone-200 bg-white px-2 text-sm text-stone-700"
+                          className="h-9 min-h-0 px-2 text-sm"
                           value={selected}
                           disabled={workingId === target.id}
                           onChange={(event) =>
@@ -282,7 +292,7 @@ export default function UserAdminPage() {
                                 {translateMetadata(role.nameKey, role.name, tm)}
                               </option>
                             ))}
-                        </select>
+                        </Select>
                         <Button
                           size="sm"
                           variant="secondary"
@@ -317,41 +327,45 @@ export default function UserAdminPage() {
             />
           </section>
 
-          <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center gap-2 text-stone-900">
-              <Users size={17} />
-              <h2 className="text-lg font-semibold">{t("web.adminUsers.roleCatalog")}</h2>
-            </div>
-            <ul className="space-y-3">
-              {roles.map((role) => (
-                <li key={role.code} className="text-sm">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-stone-900">
-                      {translateMetadata(role.nameKey, role.name, tm)}
-                    </span>
-                    <code className="rounded bg-stone-100 px-1.5 py-0.5 text-[11px] text-stone-600">
-                      {role.code}
-                    </code>
-                    {!role.assignable && (
-                      <Badge variant="default">{t("web.adminUsers.rootOnly")}</Badge>
-                    )}
-                  </div>
-                  <p className="mt-1 text-stone-500">
-                    {translateMetadata(
-                      role.descriptionKey,
-                      role.description,
-                      tm,
-                    )}
-                  </p>
-                  <p className="mt-1 text-[11px] text-stone-400">
-                    {t("web.adminUsers.groups", {
-                      groups: role.groups.join(", "),
-                    })}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2 text-ink">
+                <Users aria-hidden="true" size={17} />
+                <h2 className="text-lg font-semibold">{t("web.adminUsers.roleCatalog")}</h2>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                {roles.map((role) => (
+                  <li key={role.code} className="text-sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium text-ink">
+                        {translateMetadata(role.nameKey, role.name, tm)}
+                      </span>
+                      <code className="rounded bg-panel-edge px-1.5 py-0.5 text-[11px] text-ink-soft">
+                        {role.code}
+                      </code>
+                      {!role.assignable && (
+                        <Badge variant="default">{t("web.adminUsers.rootOnly")}</Badge>
+                      )}
+                    </div>
+                    <p className="mt-1 text-muted">
+                      {translateMetadata(
+                        role.descriptionKey,
+                        role.description,
+                        tm,
+                      )}
+                    </p>
+                    <p className="mt-1 text-[11px] text-muted-dim">
+                      {t("web.adminUsers.groups", {
+                        groups: role.groups.join(", "),
+                      })}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </WorkspaceTemplate>

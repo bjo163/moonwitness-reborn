@@ -16,16 +16,21 @@ import {
   CardContent,
   CardHeader,
   DataTable,
+  LoadingScreen,
+  PageHeader,
   Textarea,
+  SidebarTrigger,
+  WorkspaceSidebar,
   WorkspaceTemplate,
 } from "@moonwitness/ui";
-import { Boxes, LogOut, Menu, ShieldCheck, X } from "lucide-react";
-import Link from "next/link";
+import { Boxes, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { LocaleSwitcher } from "../locale/locale-switcher";
 import { useMessages } from "../locale/messages";
+import { useTranslationCatalog } from "../locale/translation-catalog";
 import { useLocalePreference } from "../locale/use-locale-preference";
+import { apiErrorMessage } from "../locale/api-error-message";
 
 /**
  * Actions the reviewer groups (admin/operator) may invoke on a change.
@@ -82,9 +87,12 @@ function reviewStateTone(state: string): BadgeTone {
   }
 }
 
-function formatDate(value: number): string {
+function formatDate(value: number, locale: "id" | "en"): string {
   if (!Number.isFinite(value) || value <= 0) return "—";
-  return new Date(value).toISOString().slice(0, 16).replace("T", " ");
+  return new Intl.DateTimeFormat(locale === "id" ? "id-ID" : "en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
 }
 
 // `interface` is used here per the clean-code ruleset; `DataTable<Row>`
@@ -124,6 +132,7 @@ export default function ReviewQueue() {
   const [reason, setReason] = useState("");
   const { locale, changeLocale, saving: localeSaving } =
     useLocalePreference(user ?? null);
+  const { t } = useTranslationCatalog();
   const copy = useMessages();
   const wf = copy.workflow;
 
@@ -158,15 +167,11 @@ export default function ReviewQueue() {
         );
       }
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : wf.errorQueue,
-      );
+      setError(apiErrorMessage(requestError, t));
     } finally {
       setQueueLoading(false);
     }
-  }, [isReviewer, wf.errorQueue]);
+  }, [isReviewer, t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -184,11 +189,7 @@ export default function ReviewQueue() {
           router.replace("/auth");
           return;
         }
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : wf.errorQueue,
-        );
+        setError(apiErrorMessage(requestError, t));
         setUser(null);
       })
       .finally(() => {
@@ -197,7 +198,7 @@ export default function ReviewQueue() {
     return () => {
       cancelled = true;
     };
-  }, [router, wf.errorQueue]);
+  }, [router, t]);
 
   useEffect(() => {
     if (!user) return;
@@ -213,9 +214,7 @@ export default function ReviewQueue() {
       const reply = await moonClient.listWorkflowTransitions(change.id);
       setTransitions(reply.transitions);
     } catch (requestError) {
-      setError(
-        requestError instanceof Error ? requestError.message : wf.errorQueue,
-      );
+      setError(apiErrorMessage(requestError, t));
       setTransitions([]);
     }
   }
@@ -239,11 +238,7 @@ export default function ReviewQueue() {
         current.map((row) => (row.id === reply.change.id ? reply.change : row)),
       );
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : wf.errorTransition,
-      );
+      setError(apiErrorMessage(requestError, t));
     } finally {
       setSaving(false);
     }
@@ -258,22 +253,14 @@ export default function ReviewQueue() {
     : [];
 
   if (loading || user === undefined) {
-    return (
-      <main className="ql-hud-app flex min-h-dvh items-center justify-center px-6 text-sm text-stone-300">
-        <p role="status">{wf.loading}</p>
-      </main>
-    );
+    return <LoadingScreen label={wf.loading} />;
   }
 
   if (!user) {
     // The 401 branch above already redirects; reaching this state means an
     // unexpected auth failure. Render the error and let the dashboard
     // sidebar recover.
-    return (
-      <main className="ql-hud-app flex min-h-dvh items-center justify-center px-6 text-sm text-stone-300">
-        <Alert variant="error">{error ?? wf.errorQueue}</Alert>
-      </main>
-    );
+    return <LoadingScreen error={error ?? wf.errorQueue} />;
   }
 
   const tableRows: TableRow[] = changes.map((change) => ({
@@ -282,7 +269,7 @@ export default function ReviewQueue() {
     state: wf.stateLabels[change.state] ?? change.state,
     urgency: change.urgency,
     revision: change.revision,
-    updated_at: formatDate(change.updated_at),
+    updated_at: formatDate(change.updated_at, locale),
   }));
 
   return (
@@ -291,90 +278,50 @@ export default function ReviewQueue() {
       onCloseSidebar={() => setSidebarOpen(false)}
       closeLabel={copy.common.closeMenu}
       sidebar={
-        <>
-          <div className="flex h-12 items-center justify-between px-2">
-            <Link
-              href="/command-center"
-              className="ql-hud-brand flex items-center gap-2.5 font-semibold tracking-tight"
-            >
-              <span className="flex size-8 items-center justify-center rounded-xl border border-[#354135] bg-[#121a13] text-[#d7ff63]">
-                <ShieldCheck aria-hidden="true" size={16} />
-              </span>
-              MoonWitness
-            </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              aria-label={copy.common.closeMenu}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X aria-hidden="true" size={18} />
-            </Button>
-          </div>
-          <nav className="mt-6 flex-1 space-y-1" aria-label={copy.common.mainNavigation}>
-            <Link
-              href="/command-center"
-              className="ql-nav-link"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <ShieldCheck aria-hidden="true" size={16} />
-              {copy.common.dashboard}
-            </Link>
-            <Link
-              href="/models"
-              className="ql-nav-link"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <Boxes aria-hidden="true" size={16} />
-              {copy.common.models}
-            </Link>
-            <Link
-              href="/workflow"
-              className="ql-nav-link is-active"
-              aria-current="page"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <ShieldCheck aria-hidden="true" size={16} />
-              {wf.navLabel}
-            </Link>
-          </nav>
-          <div className="mt-4 flex items-center gap-2 border-t border-[#354135] px-2 pt-4">
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-xs font-medium text-stone-200">
-                {user.name}
-              </div>
-              <div className="truncate text-[11px] text-stone-400">
-                {user.email}
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={copy.common.logout}
-              title={copy.common.logout}
-              onClick={() => {
-                void moonClient.logout().then(() => router.replace("/auth"));
-              }}
-            >
-              <LogOut aria-hidden="true" size={16} />
-            </Button>
-          </div>
-        </>
+        <WorkspaceSidebar
+          brandIcon={<ShieldCheck aria-hidden="true" size={16} />}
+          closeLabel={copy.common.closeMenu}
+          identity={{ name: user.name, subtitle: user.email }}
+          items={[
+            {
+              href: "/command-center",
+              label: copy.common.dashboard,
+              icon: <ShieldCheck aria-hidden="true" size={16} />,
+              onSelect: () => setSidebarOpen(false),
+            },
+            {
+              href: "/models",
+              label: copy.common.models,
+              icon: <Boxes aria-hidden="true" size={16} />,
+              onSelect: () => setSidebarOpen(false),
+            },
+            {
+              href: "/workflow",
+              label: wf.navLabel,
+              icon: <ShieldCheck aria-hidden="true" size={16} />,
+              active: true,
+              onSelect: () => setSidebarOpen(false),
+            },
+          ]}
+          logout={{
+            label: copy.common.logout,
+            onLogout: () => {
+              void moonClient.logout().then(() => router.replace("/auth"));
+            },
+          }}
+          navLabel={copy.common.mainNavigation}
+          onCloseSidebar={() => setSidebarOpen(false)}
+        />
       }
       header={
         <>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={copy.common.openMenu}
-              className="md:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu aria-hidden="true" size={19} />
-            </Button>
-            <span className="text-sm font-medium text-stone-200">
+            <SidebarTrigger
+              label={copy.common.openMenu}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
+            <span className="text-sm font-medium text-ink-soft">
               {wf.queueTitle}
             </span>
           </div>
@@ -389,14 +336,10 @@ export default function ReviewQueue() {
     >
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-12">
-          <header className="border-b border-[#354135] pb-6">
-            <h1 className="text-3xl font-semibold tracking-[-0.04em] text-stone-100 md:text-4xl">
-              {wf.queueTitle}
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-300">
-              {wf.queueSubtitle}
-            </p>
-          </header>
+          <PageHeader
+            description={wf.queueSubtitle}
+            title={wf.queueTitle}
+          />
 
           {error && (
             <Alert variant="error" className="mt-6">
@@ -439,14 +382,14 @@ export default function ReviewQueue() {
                 <CardHeader>{wf.detailTitle}</CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-stone-100">
+                    <h3 className="text-lg font-semibold text-ink">
                       {selected.title}
                     </h3>
-                    <p className="mt-1 text-sm text-stone-300">
+                    <p className="mt-1 text-sm text-ink-soft">
                       {selected.body || "—"}
                     </p>
                   </div>
-                  <dl className="grid grid-cols-2 gap-2 text-xs text-stone-400">
+                  <dl className="grid grid-cols-2 gap-2 text-xs text-muted">
                     <div>
                       <dt>{wf.columnState}</dt>
                       <dd className="mt-1">
@@ -457,22 +400,22 @@ export default function ReviewQueue() {
                     </div>
                     <div>
                       <dt>{wf.detailSubject}</dt>
-                      <dd className="mt-1 truncate text-stone-200">
+                      <dd className="mt-1 truncate text-ink-soft">
                         {selected.subject_type}
                         {selected.subject_id ? ` · ${selected.subject_id}` : ""}
                       </dd>
                     </div>
                     <div>
                       <dt>{wf.columnUrgency}</dt>
-                      <dd className="mt-1 text-stone-200">{selected.urgency}</dd>
+                      <dd className="mt-1 text-ink-soft">{selected.urgency}</dd>
                     </div>
                     <div>
                       <dt>{wf.columnRevision}</dt>
-                      <dd className="mt-1 text-stone-200">{selected.revision}</dd>
+                      <dd className="mt-1 text-ink-soft">{selected.revision}</dd>
                     </div>
                   </dl>
                   <div>
-                    <label className="text-xs text-stone-400" htmlFor="workflow-reason">
+                    <label className="text-xs text-muted" htmlFor="workflow-reason">
                       {wf.reasonLabel}
                     </label>
                     <Textarea
@@ -495,10 +438,10 @@ export default function ReviewQueue() {
                       </Button>
                     ))}
                     {allowedActions.length === 0 && (
-                      <p className="text-xs text-stone-400">
+                      <p className="text-xs text-muted">
                         {isReviewer
-                          ? "Tidak ada aksi reviewer yang tersedia untuk state ini."
-                          : "Tidak ada aksi submitter yang tersedia untuk state ini."}
+                          ? wf.noReviewerActions
+                          : wf.noSubmitterActions}
                       </p>
                     )}
                   </div>
@@ -509,27 +452,27 @@ export default function ReviewQueue() {
                 <CardHeader>{wf.auditTitle}</CardHeader>
                 <CardContent>
                   {transitions.length === 0 ? (
-                    <p className="text-sm text-stone-400">{wf.auditEmpty}</p>
+                    <p className="text-sm text-muted">{wf.auditEmpty}</p>
                   ) : (
-                    <ul className="divide-y divide-[#354135] text-xs text-stone-300">
+                    <ul className="divide-y divide-hairline text-xs text-ink-soft">
                       {transitions.map((entry) => (
                         <li key={entry.id} className="py-3">
                           <div className="flex flex-wrap items-center gap-2">
                             <Badge variant="outline">
                               {wf.actionLabels[entry.action] ?? entry.action}
                             </Badge>
-                            <span className="text-stone-400">
+                            <span className="text-muted">
                               {wf.auditFrom}{" "}
                               {wf.stateLabels[entry.from_state] ?? entry.from_state}{" "}
                               → {wf.auditTo}{" "}
                               {wf.stateLabels[entry.to_state] ?? entry.to_state}
                             </span>
-                            <span className="ml-auto text-stone-500">
-                              {formatDate(entry.created_at)}
+                            <span className="ml-auto text-muted">
+                              {formatDate(entry.created_at, locale)}
                             </span>
                           </div>
                           {entry.reason && (
-                            <p className="mt-1 text-stone-400">
+                            <p className="mt-1 text-muted">
                               {wf.auditReason}: {entry.reason}
                             </p>
                           )}

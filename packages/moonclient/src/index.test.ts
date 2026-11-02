@@ -185,6 +185,64 @@ void test("MoonClient centralizes the first-use setup contract", async () => {
   });
 });
 
+void test("MoonClient uses the shared read-only computed-model route", async () => {
+  const { client, requests } = recorder({ records: [] });
+  await client.computeModel("corpus.lexical_candidate", {
+    filters: { edition_key: "edition/ar" },
+    limit: 25,
+  });
+
+  assert.equal(
+    apiRoutes.models.compute("corpus.lexical_candidate"),
+    "/models/corpus.lexical_candidate/compute",
+  );
+  assert.equal(requests[0].url, "/api/models/corpus.lexical_candidate/compute");
+  assert.equal(requests[0].method, "POST");
+  assert.deepEqual(JSON.parse(requests[0].body), {
+    filters: { edition_key: "edition/ar" },
+    limit: 25,
+  });
+});
+
+void test("MoonClient uses the shared lexical research review contract", async () => {
+  const { client, requests } = recorder({
+    candidates: [],
+    review: { id: "review-1" },
+  });
+  await client.listLexicalResearchCandidates("edition/ar");
+  await client.createLexicalResearchReview("candidate/1", {
+    edition_key: "edition/ar",
+    normalized_form: "الرحمن",
+    decision: "retain_for_research",
+    rationale: "Keep for separate linguistic review.",
+  });
+
+  assert.equal(
+    apiRoutes.research.lexicalCandidateQueue("edition/ar"),
+    "/research/lexical-candidates?edition_key=edition%2Far",
+  );
+  assert.equal(
+    apiRoutes.research.lexicalCandidateReview("candidate/1"),
+    "/research/lexical-candidates/candidate%2F1/reviews",
+  );
+  assert.equal(
+    requests[0].url,
+    "/api/research/lexical-candidates?edition_key=edition%2Far",
+  );
+  assert.equal(requests[0].method, "GET");
+  assert.equal(
+    requests[1].url,
+    "/api/research/lexical-candidates/candidate%2F1/reviews",
+  );
+  assert.equal(requests[1].method, "POST");
+  assert.deepEqual(JSON.parse(requests[1].body), {
+    edition_key: "edition/ar",
+    normalized_form: "الرحمن",
+    decision: "retain_for_research",
+    rationale: "Keep for separate linguistic review.",
+  });
+});
+
 void test("connector routes stay under one prefix and encode every id", async () => {
   const { client, requests } = recorder();
 
