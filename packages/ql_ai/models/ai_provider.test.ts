@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { QlAccessError, createQlOrm } from "ql_orm";
-import baseManifest from "../../ql_base/__manifest__.js";
+import baseManifest from "ql_base/__manifest__";
 import aiManifest from "../__manifest__.js";
 
 const user = { id: "user-1", groups: ["user"] };
@@ -34,7 +34,7 @@ void test("ai.provider model is registered with owner scope and read-only user A
       false,
     );
 
-    // Admins manage provider config end to end.
+    // Admins manage provider config.
     assert.equal(
       runtime.orm.registry.can("ai.provider", ["admin"], "read"),
       true,
@@ -63,6 +63,7 @@ void test("ai.provider denies user writes and never exposes the private key", as
     await runtime.orm.createForService("ai.provider", owner, {
       name: "Primary",
       base_url: "https://provider.example/v1",
+      model: "gpt-4",
       encrypted_api_key: "encrypted-secret",
     });
 
