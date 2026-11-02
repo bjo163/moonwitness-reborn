@@ -18,7 +18,9 @@ Automation, monitoring, browser operations, and agent-assisted execution belong 
 
 System Observatory is the operational control and evidence surface for the wider MoonWitness ecosystem. It observes services and integrations, coordinates approved automation, exposes execution status, and preserves evidence and audit history. It does not take ownership of the business or content domains whose work it operates.
 
-**Architecture decision:** build a native MoonWitness operations domain and runtime in the existing TypeScript workspace. Use Playwright as an isolated browser executor. Treat OpenClaw as an optional external agent/runtime adapter, not as the platform foundation. Keep AI provider access behind the existing AI provider/model contracts.
+**Architecture decision:** build the intelligence, cognition, memory, planning, policy, orchestration, and execution layers as MoonWitness-owned capabilities in the existing TypeScript workspace. OpenClaw and third-party agent frameworks are excluded from the target architecture. Playwright may remain only as an isolated, replaceable browser-control library; it is not an intelligence or agent framework. Keep model inference behind replaceable provider contracts.
+
+**Strategic target:** **ARSY — AGI Reality System Yard** is the working name for the long-term general-intelligence research and engineering direction inside MoonWitness. ARSY is a target architecture and evaluation program, not a claim that the current or planned system is already AGI.
 
 ## 2. Product placement and boundaries
 
@@ -44,7 +46,7 @@ The implementation must reconcile against the current `dev` branch before creati
 | `ql_workflow` | CAB/change review workflow and project/PM tracking | Reuse for governed change/project work; do not turn it into a scheduler or job queue |
 | `ql_integration` | External connector registry and integration audit | Extend only for connector lifecycle/capabilities that fit its ownership |
 | `ql_ai` | AI provider configuration and related domain records | Reuse as the model/provider configuration authority |
-| `@moonwitness/agent-runtime` | Existing model-provider and agent invocation runtime | Extend behind stable contracts; do not assume it already provides a durable automation executor |
+| `@moonwitness/agent-runtime` | Existing MoonWitness-owned model-provider and agent invocation runtime | Audit and evolve it into the native runtime boundary; keep provider inference separate from cognition, planning, memory and execution lifecycle |
 | `@moonwitness/moonclient` | Shared API contracts, DTOs, routes and web communication SDK | All new web/API contracts must be defined here |
 | QlOrm / `ql_*` addons | Domain models, persistence, ACL, ownership and views | Remain the only application-domain data authority |
 
@@ -108,7 +110,7 @@ HEADQUARTER
     ├── Automation
     ├── Executions & Evidence
     ├── Browser Operations
-    ├── Agents & Integrations
+    ├── Intelligence Runtime & Integrations
     └── Audit
 
 MOONWITNESS APPLICATION
@@ -125,14 +127,14 @@ MOONWITNESS APPLICATION
     ├── Automation scheduler / dispatcher
     ├── Execution worker
     ├── Browser runtime adapter (Playwright)
-    └── Optional agent runtime adapter (OpenClaw / MoonWitness agent runtime)
+    └── Native ARSY cognitive / agent runtime (MoonWitness-owned)
 
 EXTERNAL SYSTEMS
 ├── HTTP / TCP / DNS / SNMP endpoints
 ├── YouTube and other authorized platform APIs
 ├── WhatsApp provider (official API or separately approved Web session engine)
 ├── Playwright-managed browser contexts
-└── Optional OpenClaw Gateway
+└── (No external agent gateway dependency)
 ```
 
 This is a logical ownership map, not a requirement to deploy every worker as a separate microservice. Start with the smallest independently restartable processes that satisfy isolation and reliability requirements.
@@ -175,7 +177,7 @@ The first implementation must define and test:
 
 If QlOrm cannot safely provide atomic claim/lease semantics, resolve that capability in the existing ORM/runtime architecture before choosing an external queue. Do not bypass the repository's data-access rules with ad-hoc SQL.
 
-## 7. Executor strategy: Playwright and OpenClaw are not alternatives
+## 7. Native intelligence boundary and replaceable executors
 
 ### 7.1 Playwright — deterministic browser executor
 
@@ -197,23 +199,30 @@ Required isolation:
 
 Prefer official APIs over browser automation when they provide the required capability and authorization.
 
-### 7.2 OpenClaw — optional external agent/runtime adapter
+### 7.2 ARSY — native intelligence and agent runtime
 
-OpenClaw may be connected as an external agent execution provider for agent-oriented tasks. It must remain replaceable and must not become a required dependency for core monitoring, scheduling, persistence, or deterministic automation.
+MoonWitness owns the complete agent lifecycle. Do not add OpenClaw, LangChain, LangGraph, CrewAI, AutoGen, smolagents, browser-use, or another third-party agent framework as a runtime dependency or source of orchestration authority.
 
-Integration requirements:
-- use a documented and versioned integration contract;
-- treat OpenClaw as an untrusted executor boundary;
-- pass only scoped task context and explicitly granted tools;
-- receive results through authenticated callbacks or a controlled polling adapter;
-- persist request, response summary, status and evidence references in MoonWitness;
-- enforce MoonWitness ACL, policy and approval checks before any consequential action;
-- support timeout, cancellation, retry and provider-unavailable states;
-- never expose MoonWitness database credentials or unrestricted internal APIs to the agent.
+The native runtime is responsible for:
+- goal and task interpretation;
+- context assembly and permission-scoped memory retrieval;
+- planning, decomposition and plan revision;
+- model selection through the existing provider contracts;
+- tool selection and schema validation;
+- policy evaluation and approval gates;
+- bounded tool execution and result normalization;
+- reflection, outcome evaluation and memory-write proposals;
+- durable run state, cancellation, retries and audit evidence.
 
-### 7.3 Model provider versus agent executor
+The runtime must not equate a successful model response with a successful task. Tool execution, external side effects, verification and memory updates are separate, explicit lifecycle steps.
 
-An OpenAI-compatible endpoint supplies model inference; it does not automatically supply browser control, durable jobs, tool permissions, or an agent orchestration lifecycle. Keep model-provider selection separate from executor selection.
+The existing `@moonwitness/agent-runtime` is MoonWitness-owned code and may be reused after source audit. It must not be assumed to already provide the full cognitive architecture. Refactor or extend it incrementally behind stable contracts rather than replacing it with an external agent framework.
+
+### 7.3 Model provider versus intelligence runtime
+
+An OpenAI-compatible endpoint supplies model inference; it does not supply MoonWitness cognition, memory, planning, tool governance, durable execution or evaluation. Model providers remain replaceable inference dependencies. ARSY owns the reasoning loop, context policy, tools, state transitions, evaluation and provenance.
+
+**Important boundary:** “pure own” means MoonWitness owns the intelligence architecture and decision lifecycle. It does not mean rewriting Node.js, SQLite, browser engines, network protocols or training a frontier foundation model from scratch as an initial prerequisite. Foundation-model training is a separate research and compute program, not a hidden dependency of the first implementation.
 
 ## 8. Event and automation lifecycle
 
@@ -239,7 +248,7 @@ MONITOR / WEBHOOK / SCHEDULE / OPERATOR
                DISPATCH ALLOWED STEPS
                  /       |        \
                 v        v         v
-             API      PLAYWRIGHT  AGENT
+             API      PLAYWRIGHT  ARSY RUNTIME
                  \       |        /
                   v      v       v
                   STEP RESULTS + EVIDENCE
@@ -286,7 +295,7 @@ The endpoint names below are illustrative capability groups, not frozen route st
 | Approval | pending approval list, approve/reject with reason and audit |
 | Evidence | authorized screenshot, trace, log excerpt and artifact metadata |
 | Integrations | connector status and permitted test action |
-| Agent operations | provider/executor status and bounded run summaries |
+| Intelligence runtime | cognitive run summaries, model/provider status, tool permissions and bounded execution traces |
 
 The web application must communicate through the existing `moonClient` instance. Server-side ACL and ownership checks are mandatory; hiding controls in the UI is not authorization.
 
@@ -301,7 +310,7 @@ Suggested direct-navigation destinations:
 4. **Automation** — definitions, triggers, schedules, enablement and policy summary.
 5. **Executions** — run timeline, steps, retries, actor, result and evidence.
 6. **Browser Operations** — isolated browser runs, screenshots/traces and resource status.
-7. **Agents & Integrations** — connector health, configured executor providers and capability status.
+7. **Intelligence & Integrations** — native runtime health, model/provider status, tool permissions and connector capability status.
 8. **Audit** — immutable or append-only operational action history according to the existing audit contract.
 
 Command Deck may surface high-priority incidents and pending approvals, but detailed configuration and execution remain in System Observatory.
@@ -316,7 +325,7 @@ Every view must support truthful loading, empty, error, restricted, offline and 
 - Redact credentials, tokens, cookies, authorization headers, private message content and sensitive payloads from logs and artifacts.
 - Require explicit approval for destructive, external-facing, financial, publication, account, infrastructure, or otherwise consequential actions according to policy.
 - Provide dry-run/preview where practical.
-- Scope agents to named tools and resources; no unrestricted shell, database, or internal-network access.
+- Scope native agents to named tools and resources; no unrestricted shell, database, or internal-network access.
 - Apply SSRF protections to URL monitors and browser navigation: origin allowlists, private/link-local address blocking, DNS rebinding defenses, redirect revalidation and egress controls.
 - Isolate browser processes and enforce resource/time limits.
 - Record actor, trigger, policy decision, approval, executor, result and evidence references for every consequential action.
@@ -366,12 +375,13 @@ Every view must support truthful loading, empty, error, restricted, offline and 
 
 **Exit gate:** browser worker cannot access prohibited local resources or unapproved network targets; failure evidence is access-controlled.
 
-### Phase 4 — Agent and external executor adapters
-- Reuse existing agent-runtime and AI provider contracts.
-- Add optional OpenClaw adapter only after its API, trust boundary and failure semantics are documented.
-- MCP/tool exposure through explicit permission grants.
+### Phase 4 — Native ARSY cognitive and agent runtime
+- Audit and evolve the existing MoonWitness-owned agent-runtime package.
+- Implement native goal interpretation, context assembly, planning, tool selection, policy checks, execution lifecycle and outcome evaluation.
+- Keep model inference behind replaceable provider contracts; no external agent-framework dependency.
+- Expose tools only through explicit, schema-validated permission grants.
 
-**Exit gate:** AI/executor outage does not affect monitoring or scheduler; agent cannot bypass MoonWitness ACL or approval.
+**Exit gate:** the native runtime can complete a bounded multi-step task, persist every state transition, verify tool outcomes, recover safely after interruption, and cannot bypass MoonWitness ACL or approval. Monitoring and scheduling remain operational when every model provider is unavailable.
 
 ### Phase 5 — Platform and media connectors
 - YouTube API integration and authorized live monitoring.
@@ -394,7 +404,7 @@ This architecture does not authorize:
 - replacing Headquarter's six-region information architecture;
 - replacing QlOrm or introducing Drizzle;
 - a second API server or identity provider;
-- making OpenClaw mandatory;
+- depending on OpenClaw or another third-party agent framework;
 - running Playwright inside the API process;
 - using AI for deterministic health checks or job scheduling;
 - unrestricted agent shell/browser/database access;
@@ -419,6 +429,6 @@ This architecture does not authorize:
 
 ## 17. Source and status
 
-Prepared against the `dev` branch on 2026-11-02. This document records architecture direction for planning. It is not evidence that any proposed addon, runtime, UI, connector, API, or monitoring capability exists.
+Prepared against the `dev` branch on 2026-11-02. This document records architecture direction for planning. ARSY (AGI Reality System Yard) is a long-term target and must be evaluated through measurable generalization, reliability, safety and task-performance benchmarks; it is not a present capability claim. It is not evidence that any proposed addon, runtime, UI, connector, API, or monitoring capability exists.
 
 Re-check the current branch, `AGENTS.md`, manifests, models, services, QlOrm capabilities and GitHub Actions before implementation. The GitHub Wiki remains the canonical project documentation location where applicable; this repository design document provides the detailed design/implementation contract for the System Observatory experience.
