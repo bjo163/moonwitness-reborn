@@ -1,6 +1,12 @@
 import Image from "next/image";
-import type { ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 import { cn } from "../lib/utils.js";
+
+// Handle CJS/ESM interop across different module loaders where default may be nested
+const NextImage: ElementType =
+  typeof Image === "function" || (Image != null && typeof (Image as unknown as { $$typeof: unknown }).$$typeof === "symbol")
+    ? (Image as unknown as ElementType)
+    : ((Image as unknown as { default?: ElementType })?.default ?? (Image as unknown as ElementType));
 
 export interface HeroStageProps {
   /** Background artwork. It is decorative, so it is hidden from assistive tech. */
@@ -18,7 +24,7 @@ export interface HeroStageProps {
 export function HeroStage({ imageSrc, children, className }: HeroStageProps) {
   return (
     <section className={cn("ql-hero", className)}>
-      <Image
+      <NextImage
         alt=""
         aria-hidden="true"
         className="ql-hero__media"
