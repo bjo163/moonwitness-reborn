@@ -559,3 +559,54 @@ void test("MoonClient preserves legacy and supports grounded chat contracts", as
     explicitLegacyResponse,
   );
 });
+
+void test("MoonClient supports Batch 3 contracts: searchGraph, corpusProofs, and corpusAudio", async () => {
+  const { client, requests } = recorder({
+    conceptSlug: "nur",
+    nodes: [],
+    edges: [],
+    totalEdges: 0,
+  });
+
+  await client.getSemanticGraph("nur");
+  assert.equal(requests[0].url, "/api/search/graph/concepts/nur");
+  assert.equal(requests[0].method, "GET");
+
+  const proofRecorder = recorder({
+    status: "verified",
+    isValid: true,
+    surahNumber: 1,
+    ayahNumber: 1,
+    canonicalText: "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+    authoritativeHash: "abcdef",
+    editionTitle: "Mushaf",
+  });
+  await proofRecorder.client.verifyAyahProof({
+    surahNumber: 1,
+    ayahNumber: 1,
+    editionCode: "uthmani",
+    claimedHash: "abcdef",
+  });
+  assert.equal(proofRecorder.requests[0].url, "/api/corpus/proofs/verify");
+  assert.equal(proofRecorder.requests[0].method, "POST");
+
+  const audioRecorder = recorder([]);
+  await audioRecorder.client.getReciters();
+  assert.equal(audioRecorder.requests[0].url, "/api/corpus/audio/reciters");
+  assert.equal(audioRecorder.requests[0].method, "GET");
+
+  const manifestRecorder = recorder({
+    surahNumber: 1,
+    reciterSlug: "al-husary",
+    audioStreamUrl: "https://audio.moonwitness.com/husary/001.mp3",
+    durationMs: 45000,
+    segments: [],
+  });
+  await manifestRecorder.client.getSurahAudioManifest("al-husary", 1);
+  assert.equal(
+    manifestRecorder.requests[0].url,
+    "/api/corpus/audio/manifest/al-husary/surah/1",
+  );
+  assert.equal(manifestRecorder.requests[0].method, "GET");
+});
+

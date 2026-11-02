@@ -16,8 +16,10 @@ import {
   ChimeToggle,
   SanctuaryZenStage,
   microChimeEngine,
+  AudioTilawahPlayer,
+  AyahProofCard,
 } from "@moonwitness/ui";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, Sparkles, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -75,6 +77,9 @@ export default function QuranReader() {
   const [reading, setReading] = useState<CorpusSurahDto | null>(null);
   const [zenActive, setZenActive] = useState(false);
   const [chimeEnabled, setChimeEnabled] = useState(false);
+  const [activeAyah, setActiveAyah] = useState<number>(1);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [proofAyah, setProofAyah] = useState<CorpusPassageDto | null>(null);
 
   useEffect(() => {
     setChimeEnabled(microChimeEngine.isEnabled());
@@ -95,6 +100,10 @@ export default function QuranReader() {
 
   const handleExitZen = useCallback(() => {
     setZenActive(false);
+  }, []);
+
+  const handleAyahChange = useCallback((newAyah: number) => {
+    setActiveAyah(newAyah);
   }, []);
 
   useEffect(() => {
@@ -222,6 +231,51 @@ export default function QuranReader() {
               </div>
             </div>
 
+            <div className="space-y-4">
+              <AudioTilawahPlayer
+                surahNumber={surah}
+                activeAyahNumber={activeAyah}
+                reciterName="Sheikh Mahmoud Khalil Al-Husary"
+                reciterStyle="Murattal"
+                isPlaying={isPlayingAudio}
+                onPlayStateChange={(playing) => setIsPlayingAudio(playing)}
+                onAyahChange={handleAyahChange}
+                playLabel={t("web.corpus.playTilawah")}
+                pauseLabel={t("web.corpus.pauseTilawah")}
+              />
+
+              {proofAyah && (
+                <div className="relative">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs text-acid font-mono font-medium">
+                      {t("web.corpus.verifiedAuthenticity")}
+                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setProofAyah(null)}
+                      className="text-xs text-muted hover:text-ink"
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                  <AyahProofCard
+                    surahNumber={surah}
+                    ayahNumber={proofAyah.ayah}
+                    text={proofAyah.text}
+                    editionCode={reading.editionKey}
+                    editionName={reading.passages[0]?.edition_attribution_text || reading.editionKey}
+                    proofHash={proofAyah.text_checksum}
+                    isVerified={true}
+                    copyLabel={t("web.corpus.copyProofButton")}
+                    copiedLabel={t("web.corpus.proofCopiedNotice")}
+                    proofBadgeLabel={t("web.corpus.sha256ProofBadge")}
+                  />
+                </div>
+              )}
+            </div>
+
             <ol
               className="space-y-6"
               dir={rtl ? "rtl" : "ltr"}
@@ -230,7 +284,11 @@ export default function QuranReader() {
               {reading.passages.map((passage) => (
                 <li
                   key={passage.id}
-                  className="group relative rounded-xl border border-hairline-strong bg-panel/70 p-6 md:p-8 backdrop-blur transition-all hover:border-acid/60 hover:shadow-[0_0_20px_var(--ql-glow-gold)]"
+                  className={`group relative rounded-xl border p-6 md:p-8 backdrop-blur transition-all ${
+                    passage.ayah === activeAyah
+                      ? "border-acid bg-panel shadow-[0_0_24px_var(--ql-glow-gold)]"
+                      : "border-hairline-strong bg-panel/70 hover:border-acid/60 hover:shadow-[0_0_20px_var(--ql-glow-gold)]"
+                  }`}
                 >
                   <div className="flex items-center justify-between gap-4 border-b border-hairline pb-3">
                     <span className="text-xs font-mono font-semibold tracking-wider text-acid">
@@ -264,9 +322,19 @@ export default function QuranReader() {
                       )}{" "}
                       · {passage.edition_publisher}
                     </span>
-                    <span className="font-mono text-[10px]">
-                      {t("web.corpus.checksum")} {passage.text_checksum.slice(0, 8)}…
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setProofAyah(passage)}
+                        className="text-[10px] h-6 px-1.5 font-mono text-muted hover:text-acid gap-1"
+                        aria-label={t("web.corpus.sha256ProofBadge")}
+                      >
+                        <ShieldCheck size={12} aria-hidden="true" />
+                        <span>{t("web.corpus.checksum")} {passage.text_checksum.slice(0, 8)}…</span>
+                      </Button>
+                    </div>
                   </div>
                 </li>
               ))}

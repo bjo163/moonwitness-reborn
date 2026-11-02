@@ -8,7 +8,6 @@ import {
 import {
   Alert,
   Badge,
-  ListOption,
   Card,
   CardContent,
   CardHeader,
@@ -17,6 +16,7 @@ import {
   SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
+  SemanticCrossSurahGraph,
   type SidebarNavItem,
 } from "@moonwitness/ui";
 import {
@@ -312,24 +312,31 @@ export default function CorrelationGraphPage() {
                       : "No entities registered yet to visualize. Populate models via the Models workspace."}
                   </div>
                 ) : (
-                  <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-                    {nodes.map((node) => (
-                      <ListOption
-                        key={node.id}
-                        selected={selectedNode?.id === node.id}
-                        onSelect={() => setSelectedNode(node)}
-                        ariaLabel={node.label}
-                        className="w-full text-left"
-                      >
-                        <div className="flex w-full items-center justify-between">
-                          <span className="font-medium text-ink">{node.label}</span>
-                          <Badge variant="outline">{node.kind}</Badge>
-                        </div>
-                        <div className="mt-1 font-mono text-xs text-muted">
-                          {node.id}
-                        </div>
-                      </ListOption>
-                    ))}
+                  <div className="space-y-4">
+                    <SemanticCrossSurahGraph
+                      nodes={nodes.map((n, i) => ({
+                        id: n.id,
+                        label: n.label,
+                        category: n.kind === "concept" ? "concept" : n.kind === "person" ? "prophet_narrative" : "surah",
+                        weight: Math.min(10, 3 + (i % 5) * 2),
+                        x: 100 + ((i * 180) % 600),
+                        y: 80 + Math.floor(i / 3) * 120,
+                      }))}
+                      edges={edges.map((e, idx) => ({
+                        id: `edge-${idx}`,
+                        sourceId: e.from,
+                        targetId: e.to,
+                        relationType: "thematic_echo",
+                        weight: 3,
+                        evidencePassages: [],
+                      }))}
+                      graphLabel={t("web.corpus.graphViewTab")}
+                      tableLabel={t("web.corpus.tableViewTab")}
+                      onNodeClick={(node) => {
+                        const matched = nodes.find((n) => n.id === node.id);
+                        if (matched) setSelectedNode(matched);
+                      }}
+                    />
                   </div>
                 )}
               </CardContent>

@@ -24,6 +24,11 @@ import {
   AdaptiveHudShell,
   AmbientAtmosphere,
   SanctuaryZenStage,
+  SemanticCrossSurahGraph,
+  AyahProofCard,
+  ProofVerificationResult,
+  AudioTilawahPlayer,
+  WhisperingWaveform,
   type SidebarNavItem,
 } from "../src/index.js";
 import { assertNoOwnColours, render } from "./render-helpers.js";
@@ -119,6 +124,36 @@ const classNameContract: readonly [string, RegExp, (className: string) => ReactN
       ayahNumber={1}
       onExit={() => undefined}
     />
+  )],
+  ["SemanticCrossSurahGraph", /ql-semantic-graph/, (c) => (
+    <SemanticCrossSurahGraph className={c} nodes={[]} edges={[]} />
+  )],
+  ["AyahProofCard", /ql-ayah-proof-card/, (c) => (
+    <AyahProofCard
+      className={c}
+      surahNumber={1}
+      ayahNumber={1}
+      text="Bismillah"
+      editionCode="uthmani"
+      proofHash="abc1234567890def"
+    />
+  )],
+  ["ProofVerificationResult", /ql-proof-verification-result/, (c) => (
+    <ProofVerificationResult
+      className={c}
+      status="verified"
+      expectedHash="hash"
+      providedHash="hash"
+      canonicalText="Bismillah"
+      surahNumber={1}
+      ayahNumber={1}
+    />
+  )],
+  ["AudioTilawahPlayer", /ql-audio-bar/, (c) => (
+    <AudioTilawahPlayer className={c} surahNumber={1} activeAyahNumber={1} />
+  )],
+  ["WhisperingWaveform", /ql-whispering-waveform/, (c) => (
+    <WhisperingWaveform className={c} isPlaying={false} />
   )],
 ];
 
