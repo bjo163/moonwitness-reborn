@@ -268,6 +268,60 @@ function citationReferenceFromRecord(record: QlRecord): CitationReference {
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isNonEmptyBoundedString(
+  value: unknown,
+  maximumLength: number,
+): value is string {
+  return (
+    typeof value === "string" &&
+    value.trim().length > 0 &&
+    value.length <= maximumLength
+  );
+}
+
+function isCoordinate(value: unknown, maximum: number): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= maximum
+  );
+}
+
+function isCitationReference(value: unknown): value is CitationReference {
+  return (
+    isRecord(value) &&
+    isNonEmptyBoundedString(value.evidenceId, 64) &&
+    isNonEmptyBoundedString(value.editionId, 64) &&
+    isNonEmptyBoundedString(value.editionKey, 160) &&
+    isCoordinate(value.surah, 114) &&
+    isCoordinate(value.ayah, 286)
+  );
+}
+
+function isCitationReferenceArray(
+  value: unknown,
+): value is readonly CitationReference[] {
+  return (
+    Array.isArray(value) &&
+    (value as unknown[]).every(isCitationReference)
+  );
+}
+
+function isMessageGroundingStatus(
+  value: unknown,
+): value is MessageGroundingStatus {
+  return (
+    value === "grounded" ||
+    value === "insufficient_evidence" ||
+    value === "legacy"
+  );
+}
+
 function validateGroundingInput(
   role: "user" | "assistant",
   grounding: MessageGroundingInput | undefined,
@@ -275,13 +329,24 @@ function validateGroundingInput(
   groundingStatus?: MessageGroundingStatus;
   citations: readonly CitationReference[];
 } {
-  if (role === "user" && grounding) {
+  if (role === "user" && grounding !== undefined) {
     throw new Error("User messages cannot include grounding metadata.");
   }
-  const groundingStatus =
+  const rawGroundingStatus: unknown =
     role === "assistant" ? grounding?.groundingStatus ?? "legacy" : undefined;
-  const citations = grounding?.citations ?? [];
-  if (!Array.isArray(citations) || citations.length > MAX_CITATIONS_PER_MESSAGE) {
+  if (
+    rawGroundingStatus !== undefined &&
+    !isMessageGroundingStatus(rawGroundingStatus)
+  ) {
+    throw new Error("Message grounding status is invalid.");
+  }
+  const groundingStatus = rawGroundingStatus;
+  const rawCitations: unknown = grounding?.citations ?? [];
+  if (!isCitationReferenceArray(rawCitations)) {
+    throw new Error("Message citations must be valid citation references.");
+  }
+  const citations = rawCitations;
+  if (citations.length > MAX_CITATIONS_PER_MESSAGE) {
     throw new Error(
       `A message may include at most ${MAX_CITATIONS_PER_MESSAGE} citations.`,
     );
@@ -292,37 +357,8 @@ function validateGroundingInput(
   if (groundingStatus !== "grounded" && citations.length > 0) {
     throw new Error("Only grounded messages may include citations.");
   }
-  if (
-    groundingStatus !== undefined &&
-    groundingStatus !== "grounded" &&
-    groundingStatus !== "insufficient_evidence" &&
-    groundingStatus !== "legacy"
-  ) {
-    throw new Error("Message grounding status is invalid.");
-  }
   const evidenceIds = new Set<string>();
   for (const citation of citations) {
-    if (
-      typeof citation !== "object" ||
-      citation === null ||
-      typeof citation.evidenceId !== "string" ||
-      !citation.evidenceId.trim() ||
-      citation.evidenceId.length > 64 ||
-      typeof citation.editionId !== "string" ||
-      !citation.editionId.trim() ||
-      citation.editionId.length > 64 ||
-      typeof citation.editionKey !== "string" ||
-      !citation.editionKey.trim() ||
-      citation.editionKey.length > 160 ||
-      !Number.isInteger(citation.surah) ||
-      citation.surah < 1 ||
-      citation.surah > 114 ||
-      !Number.isInteger(citation.ayah) ||
-      citation.ayah < 1 ||
-      citation.ayah > 286
-    ) {
-      throw new Error("Citation reference is invalid.");
-    }
     if (evidenceIds.has(citation.evidenceId)) {
       throw new Error("Message citations must reference unique evidence IDs.");
     }
