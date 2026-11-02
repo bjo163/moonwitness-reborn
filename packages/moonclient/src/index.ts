@@ -1,16 +1,20 @@
 import type {
+  AddonCategory,
   ChatRole,
   ConnectorTokenSource,
   ConnectorVerifyStatus,
   FieldType,
+  LandingViewSection,
   RecordValues,
   UiLocale,
   ViewType,
 } from "@moonwitness/types";
 
 export type {
+  AddonCategory,
   ConnectorTokenSource,
   ConnectorVerifyStatus,
+  LandingViewSection,
   UiLocale,
 } from "@moonwitness/types";
 
@@ -175,6 +179,8 @@ export interface ModelViewDto {
 export interface ModelMetadataDto {
   kind: "table" | "computed";
   name: string;
+  addon?: string;
+  category?: AddonCategory;
   labelKey: string;
   description: string;
   descriptionKey: string;
@@ -185,6 +191,24 @@ export interface ModelMetadataDto {
     write: boolean;
     unlink: boolean;
   };
+}
+
+export interface LandingViewItemDto {
+  name: string;
+  model: string;
+  addon: string;
+  category: AddonCategory;
+  section: LandingViewSection;
+  sequence: number;
+  href: string;
+  status: "available" | "proposed";
+  titleKey: string;
+  descriptionKey: string;
+  recordCount: number | null;
+}
+
+export interface LandingCatalogResponseDto {
+  items: LandingViewItemDto[];
 }
 
 export type ModelRecordDto = RecordValues;
@@ -848,6 +872,9 @@ export const apiRoutes = {
     summary: "/project/progress/summary",
     tasks: "/project/progress/tasks",
   },
+  landing: {
+    catalog: "/public/landing",
+  },
   admin: {
     users: {
       collection: "/admin/users",
@@ -1215,6 +1242,10 @@ export class MoonClient {
 
   projectProgressSummary(): Promise<ProjectProgressSummaryDto> {
     return this.request(apiRoutes.projectProgress.summary);
+  }
+
+  landingCatalog(): Promise<LandingCatalogResponseDto> {
+    return this.request(apiRoutes.landing.catalog);
   }
 
   listProjectTasks(): Promise<ProjectTaskListResponseDto> {

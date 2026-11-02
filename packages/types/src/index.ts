@@ -16,7 +16,19 @@
 export type FieldType = "char" | "text" | "integer" | "boolean" | "datetime";
 
 /** View shape understood by the view-driven UI layer. */
-export type ViewType = "list" | "form";
+export type ViewType = "list" | "form" | "landing";
+
+/** Functional domain category of a `ql_*` addon and its models. */
+export type AddonCategory =
+  | "knowledge"
+  | "research"
+  | "intelligence"
+  | "workflow"
+  | "integration"
+  | "system";
+
+/** Public landing page section where a declarative landing view is surfaced. */
+export type LandingViewSection = "knowledge" | "research" | "foundation";
 
 /** CRUD operation names used by ACL rules and capability maps. */
 export type Operation = "read" | "create" | "write" | "unlink";

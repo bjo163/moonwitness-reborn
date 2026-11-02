@@ -4,6 +4,8 @@ import {
   moonClient,
   MoonClientError,
   type AuthUserDto,
+  type LandingViewItemDto,
+  type LandingViewSection,
   type ProjectProgressSummaryDto,
 } from "@moonwitness/moonclient";
 import {
@@ -24,16 +26,43 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LocaleSwitcher } from "../features/locale/locale-switcher";
 import { apiErrorMessage } from "../features/locale/api-error-message";
 import { useMessages } from "../features/locale/messages";
-import { useTranslationCatalog } from "../features/locale/translation-catalog";
+import { translateMetadata } from "../features/locale/translate-metadata";
+import {
+  type UiMessageKey,
+  useTranslationCatalog,
+} from "../features/locale/translation-catalog";
 import { useLocalePreference } from "../features/locale/use-locale-preference";
+
+const LANDING_SECTIONS: readonly {
+  section: LandingViewSection;
+  titleKey: UiMessageKey;
+  descriptionKey: UiMessageKey;
+}[] = [
+  {
+    section: "knowledge",
+    titleKey: "web.landing.sections.knowledge.title",
+    descriptionKey: "web.landing.sections.knowledge.description",
+  },
+  {
+    section: "research",
+    titleKey: "web.landing.sections.research.title",
+    descriptionKey: "web.landing.sections.research.description",
+  },
+  {
+    section: "foundation",
+    titleKey: "web.landing.sections.foundation.title",
+    descriptionKey: "web.landing.sections.foundation.description",
+  },
+];
 
 export default function LandingPage() {
   const [user, setUser] = useState<AuthUserDto | null | undefined>(undefined);
   const [loadError, setLoadError] = useState<unknown>(null);
+  const [landingItems, setLandingItems] = useState<LandingViewItemDto[]>([]);
   const [progressSummary, setProgressSummary] =
     useState<ProjectProgressSummaryDto | null>(null);
   const [progressError, setProgressError] = useState(false);
@@ -41,7 +70,7 @@ export default function LandingPage() {
   const { locale, changeLocale, saving, error: localeError } =
     useLocalePreference(user);
   const copy = useMessages();
-  const { t } = useTranslationCatalog();
+  const { t, tm } = useTranslationCatalog();
 
   useEffect(() => {
     let cancelled = false;
@@ -67,6 +96,14 @@ export default function LandingPage() {
   useEffect(() => {
     let cancelled = false;
     void moonClient
+      .landingCatalog()
+      .then((catalog) => {
+        if (!cancelled) setLandingItems(catalog.items);
+      })
+      .catch(() => {
+        if (!cancelled) setLandingItems([]);
+      });
+    void moonClient
       .projectProgressSummary()
       .then((summary) => {
         if (!cancelled) setProgressSummary(summary);
@@ -81,6 +118,15 @@ export default function LandingPage() {
       cancelled = true;
     };
   }, []);
+
+  const groupedSections = useMemo(
+    () =>
+      LANDING_SECTIONS.map((meta) => ({
+        ...meta,
+        items: landingItems.filter((item) => item.section === meta.section),
+      })).filter((group) => group.items.length > 0),
+    [landingItems],
+  );
 
   const dashboardHref = user
     ? "/command-center"
@@ -213,42 +259,111 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section
-        className="mx-auto w-full max-w-7xl border-t border-hairline px-5 py-12 md:px-10 md:py-16"
-        aria-labelledby="current-foundation-title"
-      >
-        <div className="grid gap-8 md:grid-cols-[0.85fr_1.15fr]">
-          <div>
-            <h2
-              id="current-foundation-title"
-              className="max-w-md text-2xl font-semibold leading-tight tracking-tight text-ink md:text-3xl"
-            >
-              {copy.landing.currentFoundation}
-            </h2>
-            <p className="mt-4 max-w-md text-sm leading-6 text-muted">
-              {copy.landing.currentFoundationDescription}
-            </p>
+      {groupedSections.length > 0 ? (
+        groupedSections.map((group) => (
+          <section
+            key={group.section}
+            className="mx-auto w-full max-w-7xl border-t border-hairline px-5 py-12 md:px-10 md:py-16"
+            aria-labelledby={`landing-section-${group.section}`}
+          >
+            <div className="grid gap-8 md:grid-cols-[0.85fr_1.15fr]">
+              <div>
+                <h2
+                  id={`landing-section-${group.section}`}
+                  className="max-w-md text-2xl font-semibold leading-tight tracking-tight text-ink md:text-3xl"
+                >
+                  {t(group.titleKey)}
+                </h2>
+                <p className="mt-4 max-w-md text-sm leading-6 text-muted">
+                  {t(group.descriptionKey)}
+                </p>
+              </div>
+              <ul className="divide-y divide-hairline border-y border-hairline">
+                {group.items.map((item) => (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      className="group flex items-start justify-between gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-2">
+                          <Boxes
+                            aria-hidden="true"
+                            size={16}
+                            className="shrink-0 text-acid"
+                          />
+                          <span className="text-sm font-medium text-ink group-hover:text-acid">
+                            {translateMetadata(item.titleKey, item.model, tm)}
+                          </span>
+                          <Badge variant="outline">{item.addon}</Badge>
+                        </span>
+                        <span className="mt-1.5 block text-sm leading-6 text-muted">
+                          {translateMetadata(item.descriptionKey, "", tm)}
+                        </span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        {item.recordCount !== null && item.recordCount > 0 && (
+                          <Badge variant="outline">
+                            {t("web.landing.recordCount", {
+                              count: item.recordCount,
+                            })}
+                          </Badge>
+                        )}
+                        <Badge
+                          variant={
+                            item.status === "available" ? "live" : "outline"
+                          }
+                        >
+                          {item.status === "available"
+                            ? copy.common.statusAvailable
+                            : copy.common.statusProposed}
+                        </Badge>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        ))
+      ) : (
+        <section
+          className="mx-auto w-full max-w-7xl border-t border-hairline px-5 py-12 md:px-10 md:py-16"
+          aria-labelledby="current-foundation-title"
+        >
+          <div className="grid gap-8 md:grid-cols-[0.85fr_1.15fr]">
+            <div>
+              <h2
+                id="current-foundation-title"
+                className="max-w-md text-2xl font-semibold leading-tight tracking-tight text-ink md:text-3xl"
+              >
+                {copy.landing.currentFoundation}
+              </h2>
+              <p className="mt-4 max-w-md text-sm leading-6 text-muted">
+                {copy.landing.currentFoundationDescription}
+              </p>
+            </div>
+            <ul className="grid content-start gap-x-8 sm:grid-cols-2">
+              <li className="flex items-center gap-3 border-t border-hairline py-4 text-sm text-ink-soft">
+                <Sparkles aria-hidden="true" size={17} className="text-acid" />
+                {copy.landing.foundationChat}
+              </li>
+              <li className="flex items-center gap-3 border-t border-hairline py-4 text-sm text-ink-soft">
+                <Boxes aria-hidden="true" size={17} className="text-acid" />
+                {copy.landing.foundationModels}
+              </li>
+              <li className="flex items-center gap-3 border-t border-hairline py-4 text-sm text-ink-soft">
+                <KeyRound aria-hidden="true" size={17} className="text-acid" />
+                {copy.landing.foundationProviders}
+              </li>
+              <li className="flex items-center gap-3 border-t border-hairline py-4 text-sm text-ink-soft">
+                <Plug aria-hidden="true" size={17} className="text-acid" />
+                {copy.landing.foundationConnectors}
+              </li>
+            </ul>
           </div>
-          <ul className="grid content-start gap-x-8 sm:grid-cols-2">
-            <li className="flex items-center gap-3 border-t border-hairline py-4 text-sm text-ink-soft">
-              <Sparkles aria-hidden="true" size={17} className="text-acid" />
-              {copy.landing.foundationChat}
-            </li>
-            <li className="flex items-center gap-3 border-t border-hairline py-4 text-sm text-ink-soft">
-              <Boxes aria-hidden="true" size={17} className="text-acid" />
-              {copy.landing.foundationModels}
-            </li>
-            <li className="flex items-center gap-3 border-t border-hairline py-4 text-sm text-ink-soft">
-              <KeyRound aria-hidden="true" size={17} className="text-acid" />
-              {copy.landing.foundationProviders}
-            </li>
-            <li className="flex items-center gap-3 border-t border-hairline py-4 text-sm text-ink-soft">
-              <Plug aria-hidden="true" size={17} className="text-acid" />
-              {copy.landing.foundationConnectors}
-            </li>
-          </ul>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section
         className="mx-auto w-full max-w-7xl border-t border-hairline px-5 py-10 md:px-10 md:py-12"

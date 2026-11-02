@@ -41,6 +41,20 @@ export const views: QlViewDefinition[] = [
     fields: ["title", "body", "subject_type", "subject_id", "urgency"],
   },
   {
+    name: "workflow.change.landing",
+    model: "workflow.change",
+    type: "landing",
+    fields: ["title", "state", "urgency", "revision"],
+    landing: {
+      section: "foundation",
+      sequence: 30,
+      href: "/workflow",
+      status: "available",
+      titleKey: "web.landing.views.workflow_change.title",
+      descriptionKey: "web.landing.views.workflow_change.description",
+    },
+  },
+  {
     name: "workflow.transition.list",
     model: "workflow.transition",
     type: "list",

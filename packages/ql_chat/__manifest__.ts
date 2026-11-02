@@ -5,6 +5,7 @@ import { views } from "./views/index.js";
 const manifest: QlAddonManifest = {
   name: "ql_chat",
   version: "1.0.0",
+  category: "intelligence",
   description: "Percakapan dan pesan pengguna.",
   depends: ["ql_auth"],
   models,

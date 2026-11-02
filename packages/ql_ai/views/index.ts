@@ -13,4 +13,18 @@ export const views: QlViewDefinition[] = [
     type: "form",
     fields: ["name", "base_url", "model", "priority", "enabled"],
   },
+  {
+    name: "ai.provider.landing",
+    model: "ai.provider",
+    type: "landing",
+    fields: ["name", "model", "enabled"],
+    landing: {
+      section: "foundation",
+      sequence: 20,
+      href: "/providers",
+      status: "available",
+      titleKey: "web.landing.views.ai_provider.title",
+      descriptionKey: "web.landing.views.ai_provider.description",
+    },
+  },
 ];

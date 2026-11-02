@@ -34,6 +34,7 @@ import { views } from "./views/index.js";
 const manifest: QlAddonManifest = {
   name: "ql_source",
   version: "1.0.0",
+  category: "knowledge",
   description:
     "Registry sumber eksternal: artifact, versi beku, keputusan rights per aksi, dan provenance append-only.",
   depends: ["ql_base", "ql_auth"],

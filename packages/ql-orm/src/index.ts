@@ -4,7 +4,9 @@ import { randomUUID } from "node:crypto";
 import { createClient, type Client, type InValue } from "@libsql/client";
 import { Pool, types as pgTypes } from "pg";
 import type {
+  AddonCategory,
   FieldType as QlFieldType,
+  LandingViewSection,
   Operation as QlOperation,
   RecordValue,
   RecordValues,
@@ -12,7 +14,9 @@ import type {
 } from "@moonwitness/types";
 
 export type {
+  AddonCategory,
   FieldType as QlFieldType,
+  LandingViewSection,
   Operation as QlOperation,
 } from "@moonwitness/types";
 
@@ -78,6 +82,16 @@ export interface QlAccessRule {
   unlink: boolean;
 }
 
+export interface QlLandingViewConfig {
+  section: LandingViewSection;
+  sequence?: number;
+  href: string;
+  status?: "available" | "proposed";
+  titleKey?: string;
+  descriptionKey?: string;
+  publicCountFilter?: Record<string, RecordValue>;
+}
+
 export interface QlViewDefinition {
   name: string;
   labelKey?: string;
@@ -85,6 +99,7 @@ export interface QlViewDefinition {
   model: string;
   type: ViewType;
   fields: string[];
+  landing?: QlLandingViewConfig;
 }
 
 export interface QlSeedDataRecord {
@@ -99,6 +114,7 @@ export interface QlAddonManifest {
   name: string;
   version: string;
   description: string;
+  category?: AddonCategory;
   depends: string[];
   models: QlModelDefinition[];
   computedModels?: QlComputedModelDefinition[];
@@ -521,6 +537,51 @@ export function loadAddons(
   return sorted;
 }
 
+function inferAddonCategory(addonName: string, modelName: string): AddonCategory {
+  if (
+    addonName === "ql_corpus" ||
+    addonName === "ql_source" ||
+    modelName.startsWith("corpus.") ||
+    modelName.startsWith("source.")
+  ) {
+    return "knowledge";
+  }
+  if (
+    addonName === "ql_research" ||
+    modelName.startsWith("research.") ||
+    modelName.startsWith("witness.") ||
+    modelName.startsWith("story.") ||
+    modelName.startsWith("event.") ||
+    modelName.startsWith("person.") ||
+    modelName.startsWith("law.") ||
+    modelName.startsWith("mizan.") ||
+    modelName.startsWith("character.") ||
+    modelName.startsWith("studio.")
+  ) {
+    return "research";
+  }
+  if (
+    addonName === "ql_ai" ||
+    addonName === "ql_chat" ||
+    modelName.startsWith("ai.") ||
+    modelName.startsWith("chat.")
+  ) {
+    return "intelligence";
+  }
+  if (addonName === "ql_workflow" || modelName.startsWith("workflow.")) {
+    return "workflow";
+  }
+  if (
+    addonName === "ql_integration" ||
+    addonName === "ql_cloudflare" ||
+    modelName.startsWith("integration.") ||
+    modelName.startsWith("cloudflare.")
+  ) {
+    return "integration";
+  }
+  return "system";
+}
+
 export class QlModelRegistry {
   private readonly models = new Map<string, QlModelDefinition>();
   private readonly modelAddons = new Map<string, string>();
@@ -668,6 +729,7 @@ export class QlModelRegistry {
           }
         }
         this.computedModels.set(model.name, model);
+        this.modelAddons.set(model.name, addon.name);
       }
       for (const rule of addon.access) {
         if (!this.models.has(rule.model) && !this.computedModels.has(rule.model)) {
@@ -692,6 +754,34 @@ export class QlModelRegistry {
             throw new Error(
               `View '${view.name}' references unknown field '${field}'.`,
             );
+          }
+        }
+        if (view.type === "landing") {
+          if (!view.landing || !view.landing.href.startsWith("/")) {
+            throw new Error(
+              `Landing view '${view.name}' must define a landing config with an internal href starting with '/'.`,
+            );
+          }
+          for (const field of view.fields) {
+            if (model.fields[field]?.private) {
+              throw new Error(
+                `Landing view '${view.name}' cannot reference private field '${field}'.`,
+              );
+            }
+          }
+          if (view.landing.publicCountFilter) {
+            if ("ownerField" in model && model.ownerField) {
+              throw new Error(
+                `Landing view '${view.name}' cannot declare publicCountFilter on owner-scoped model '${view.model}'.`,
+              );
+            }
+            for (const filterField of Object.keys(view.landing.publicCountFilter)) {
+              if (!model.fields[filterField] || model.fields[filterField].private) {
+                throw new Error(
+                  `Landing view '${view.name}' references invalid or private publicCountFilter field '${filterField}'.`,
+                );
+              }
+            }
           }
         }
       }
@@ -778,6 +868,29 @@ export class QlModelRegistry {
     return this.addons.flatMap((addon) =>
       addon.views.filter((view) => view.model === modelName),
     );
+  }
+
+  getModelAddon(modelName: string): string {
+    if (!this.models.has(modelName) && !this.computedModels.has(modelName)) {
+      throw new QlNotFoundError(`Unknown model '${modelName}'.`);
+    }
+    return this.modelAddons.get(modelName) ?? "ql_base";
+  }
+
+  getModelCategory(modelName: string): AddonCategory {
+    const addonName = this.getModelAddon(modelName);
+    const addon = this.addons.find((item) => item.name === addonName);
+    return addon?.category ?? inferAddonCategory(addonName, modelName);
+  }
+
+  getLandingViews(): readonly QlViewDefinition[] {
+    return this.addons
+      .flatMap((addon) => addon.views.filter((view) => view.type === "landing"))
+      .sort(
+        (left, right) =>
+          (left.landing?.sequence ?? 100) - (right.landing?.sequence ?? 100) ||
+          left.name.localeCompare(right.name),
+      );
   }
 
   can(

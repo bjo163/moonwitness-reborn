@@ -2663,3 +2663,263 @@ msgstr "Perlu tinjauan ahli"
 msgctxt "web.research:researchDisclaimer"
 msgid "Frekuensi token dan keputusan review ini bukan kesimpulan agama atau verifikasi nama ilahi. Penilaian baru menandai jalur riset dan selalu menyimpan provenance sumber/metode."
 msgstr "Frekuensi token dan keputusan review ini bukan kesimpulan agama atau verifikasi nama ilahi. Penilaian baru menandai jalur riset dan selalu menyimpan provenance sumber/metode."
+
+msgctxt "web.models:categories.knowledge"
+msgid "KITAB, SUMBER & LEKSIKON"
+msgstr "KITAB, SUMBER & LEKSIKON"
+
+msgctxt "web.models:categories.research"
+msgid "RISET, SAKSI & MIZAN"
+msgstr "RISET, SAKSI & MIZAN"
+
+msgctxt "web.models:categories.intelligence"
+msgid "KECERDASAN & PERCAKAPAN"
+msgstr "KECERDASAN & PERCAKAPAN"
+
+msgctxt "web.models:categories.workflow"
+msgid "ALUR KERJA & TATA KELOLA"
+msgstr "ALUR KERJA & TATA KELOLA"
+
+msgctxt "web.models:categories.integration"
+msgid "INTEGRASI & INFRASTRUKTUR"
+msgstr "INTEGRASI & INFRASTRUKTUR"
+
+msgctxt "web.models:categories.system"
+msgid "SISTEM, AKSES & REFERENSI"
+msgstr "SISTEM, AKSES & REFERENSI"
+
+msgctxt "web.models:codeMode"
+msgid "Mode kode"
+msgstr "Mode kode"
+
+msgctxt "web.models:humanMode"
+msgid "Mode nama"
+msgstr "Mode nama"
+
+msgctxt "web.models:entities.res_country"
+msgid "Negara"
+msgstr "Negara"
+
+msgctxt "web.models:descriptions.res_country"
+msgid "Katalog referensi kode dan nama negara ISO."
+msgstr "Katalog referensi kode dan nama negara ISO."
+
+msgctxt "web.models:entities.corpus_term"
+msgid "Istilah Leksikon (UNILEX)"
+msgstr "Istilah Leksikon (UNILEX)"
+
+msgctxt "web.models:descriptions.corpus_term"
+msgid "Entitas istilah kanonis, akar kata, lemma, dan kelas kata dalam ontologi UNILEX."
+msgstr "Entitas istilah kanonis, akar kata, lemma, dan kelas kata dalam ontologi UNILEX."
+
+msgctxt "web.models:entities.corpus_concept"
+msgid "Konsep Semantik (UNILEX)"
+msgstr "Konsep Semantik (UNILEX)"
+
+msgctxt "web.models:descriptions.corpus_concept"
+msgid "Kategori konseptual dan definisi lintas disiplin dalam ontologi UNILEX."
+msgstr "Kategori konseptual dan definisi lintas disiplin dalam ontologi UNILEX."
+
+msgctxt "web.models:entities.witness_statement"
+msgid "Pernyataan Saksi"
+msgstr "Pernyataan Saksi"
+
+msgctxt "web.models:descriptions.witness_statement"
+msgid "Kesaksian beratribusi lengkap dengan rantai transmisi dan penilaian reliabilitas."
+msgstr "Kesaksian beratribusi lengkap dengan rantai transmisi dan penilaian reliabilitas."
+
+msgctxt "web.models:entities.story_narrative"
+msgid "Karya & Tradisi Naratif"
+msgstr "Karya & Tradisi Naratif"
+
+msgctxt "web.models:descriptions.story_narrative"
+msgid "Karya naratif, tradisi lisan, dan motif cerita dengan pemisahan tegas fiksi vs laporan historis."
+msgstr "Karya naratif, tradisi lisan, dan motif cerita dengan pemisahan tegas fiksi vs laporan historis."
+
+msgctxt "web.models:entities.event_record"
+msgid "Rekaman Peristiwa"
+msgstr "Rekaman Peristiwa"
+
+msgctxt "web.models:descriptions.event_record"
+msgid "Catatan peristiwa historis beserta konteks waktu, lokasi, dan status epistemiknya."
+msgstr "Catatan peristiwa historis beserta konteks waktu, lokasi, dan status epistemiknya."
+
+msgctxt "web.models:entities.person_profile"
+msgid "Profil Tokoh Historis"
+msgstr "Profil Tokoh Historis"
+
+msgctxt "web.models:descriptions.person_profile"
+msgid "Identitas tokoh historis, perawi, ulama, atau penulis yang didukung rujukan sumber."
+msgstr "Identitas tokoh historis, perawi, ulama, atau penulis yang didukung rujukan sumber."
+
+msgctxt "web.models:entities.law_instrument"
+msgid "Instrumen Hukum & Yurisdiksi"
+msgstr "Instrumen Hukum & Yurisdiksi"
+
+msgctxt "web.models:descriptions.law_instrument"
+msgid "Instrumen hukum, fatwa, undang-undang, dan kanon yurisdiksi komparatif."
+msgstr "Instrumen hukum, fatwa, undang-undang, dan kanon yurisdiksi komparatif."
+
+msgctxt "web.models:entities.mizan_assessment"
+msgid "Asesmen Neraca Mizan"
+msgstr "Asesmen Neraca Mizan"
+
+msgctxt "web.models:descriptions.mizan_assessment"
+msgid "Evaluasi multidimensi berversi berdasarkan rubrik keseimbangan dan akuntabilitas epistemik Mizan."
+msgstr "Evaluasi multidimensi berversi berdasarkan rubrik keseimbangan dan akuntabilitas epistemik Mizan."
+
+msgctxt "web.models:entities.research_correlation"
+msgid "Korelasi Entitas Riset"
+msgstr "Korelasi Entitas Riset"
+
+msgctxt "web.models:descriptions.research_correlation"
+msgid "Tautan semantik terketik lintas karya, ayat, tokoh, peristiwa, kesaksian, dan instrumen hukum."
+msgstr "Tautan semantik terketik lintas karya, ayat, tokoh, peristiwa, kesaksian, dan instrumen hukum."
+
+msgctxt "web.models:entities.character_canon"
+msgid "Kanon Karakter (Character Bible)"
+msgstr "Kanon Karakter (Character Bible)"
+
+msgctxt "web.models:descriptions.character_canon"
+msgid "Entri karakter terkendali yang memisahkan tokoh sejarah dari arketipe kreatif."
+msgstr "Entri karakter terkendali yang memisahkan tokoh sejarah dari arketipe kreatif."
+
+msgctxt "web.models:entities.character_classification"
+msgid "Klasifikasi & Arketipe Karakter"
+msgstr "Klasifikasi & Arketipe Karakter"
+
+msgctxt "web.models:descriptions.character_classification"
+msgid "Pemetaan arketipe, orientasi moral, dan fungsi naratif untuk karakter kanonis."
+msgstr "Pemetaan arketipe, orientasi moral, dan fungsi naratif untuk karakter kanonis."
+
+msgctxt "web.models:entities.character_appearance"
+msgid "Kemunculan Karakter"
+msgstr "Kemunculan Karakter"
+
+msgctxt "web.models:descriptions.character_appearance"
+msgid "Pelacakan kemunculan dan perkembangan karakter di berbagai segmen karya naratif."
+msgstr "Pelacakan kemunculan dan perkembangan karakter di berbagai segmen karya naratif."
+
+msgctxt "web.models:entities.studio_artifact"
+msgid "Artefak Studio Kreatif"
+msgstr "Artefak Studio Kreatif"
+
+msgctxt "web.models:descriptions.studio_artifact"
+msgid "Ruang draf naskah, skenario, dan adaptasi kreatif yang terpisah dari korpus kanonis."
+msgstr "Ruang draf naskah, skenario, dan adaptasi kreatif yang terpisah dari korpus kanonis."
+
+msgctxt "web:landing.sections.knowledge.title"
+msgid "Kitab, Sumber & Pengetahuan"
+msgstr "Kitab, Sumber & Pengetahuan"
+
+msgctxt "web:landing.sections.knowledge.description"
+msgid "Modul pengetahuan yang dideklarasikan langsung dari addon korpus, leksikon, dan registri sumber."
+msgstr "Modul pengetahuan yang dideklarasikan langsung dari addon korpus, leksikon, dan registri sumber."
+
+msgctxt "web:landing.sections.research.title"
+msgid "Riset, Kesaksian & Neraca Mizan"
+msgstr "Riset, Kesaksian & Neraca Mizan"
+
+msgctxt "web:landing.sections.research.description"
+msgid "Instrumen penelusuran ilmiah, kesaksian beratribusi, yurisdiksi hukum, dan evaluasi multidimensi."
+msgstr "Instrumen penelusuran ilmiah, kesaksian beratribusi, yurisdiksi hukum, dan evaluasi multidimensi."
+
+msgctxt "web:landing.sections.foundation.title"
+msgid "Fondasi Sistem & Ruang Kerja"
+msgstr "Fondasi Sistem & Ruang Kerja"
+
+msgctxt "web:landing.sections.foundation.description"
+msgid "Layanan inti percakapan AI, gateway model, alur persetujuan CAB, dan integrasi eksternal."
+msgstr "Layanan inti percakapan AI, gateway model, alur persetujuan CAB, dan integrasi eksternal."
+
+msgctxt "web:landing.recordCount"
+msgid "{count} entri"
+msgstr "{count} entri"
+
+msgctxt "web:landing.views.corpus_edition.title"
+msgid "Kitab & Edisi Korpus"
+msgstr "Kitab & Edisi Korpus"
+
+msgctxt "web:landing.views.corpus_edition.description"
+msgid "Baca mushaf Al-Qur'an dan terjemahan beratribusi yang telah melewati verifikasi hak tayang."
+msgstr "Baca mushaf Al-Qur'an dan terjemahan beratribusi yang telah melewati verifikasi hak tayang."
+
+msgctxt "web:landing.views.corpus_term.title"
+msgid "Ontologi Leksikon UNILEX"
+msgstr "Ontologi Leksikon UNILEX"
+
+msgctxt "web:landing.views.corpus_term.description"
+msgid "Telusuri istilah kanonis, akar kata, lemma, dan pemetaan konsep lintas bahasa."
+msgstr "Telusuri istilah kanonis, akar kata, lemma, dan pemetaan konsep lintas bahasa."
+
+msgctxt "web:landing.views.source_artifact.title"
+msgid "Registri Artefak & Hak Sumber"
+msgstr "Registri Artefak & Hak Sumber"
+
+msgctxt "web:landing.views.source_artifact.description"
+msgid "Verifikasi asal-usul repositori, versi snapshot beku, dan status lisensi setiap sumber."
+msgstr "Verifikasi asal-usul repositori, versi snapshot beku, dan status lisensi setiap sumber."
+
+msgctxt "web:landing.views.research_lexical_review.title"
+msgid "Peninjauan Leksikal Berversi"
+msgstr "Peninjauan Leksikal Berversi"
+
+msgctxt "web:landing.views.research_lexical_review.description"
+msgid "Tinjau kandidat frekuensi token Arab dengan rujukan ayat dan checksum sumber yang dapat diaudit."
+msgstr "Tinjau kandidat frekuensi token Arab dengan rujukan ayat dan checksum sumber yang dapat diaudit."
+
+msgctxt "web:landing.views.witness_statement.title"
+msgid "Pernyataan Saksi & Rantai Transmisi"
+msgstr "Pernyataan Saksi & Rantai Transmisi"
+
+msgctxt "web:landing.views.witness_statement.description"
+msgid "Catat dan evaluasi kesaksian beserta rantai periwayatan serta status reliabilitasnya."
+msgstr "Catat dan evaluasi kesaksian beserta rantai periwayatan serta status reliabilitasnya."
+
+msgctxt "web:landing.views.law_instrument.title"
+msgid "Instrumen Hukum & Yurisdiksi"
+msgstr "Instrumen Hukum & Yurisdiksi"
+
+msgctxt "web:landing.views.law_instrument.description"
+msgid "Bandingkan kanon hukum klasik, kontemporer, dan instrumen yurisdiksi lintas tradisi."
+msgstr "Bandingkan kanon hukum klasik, kontemporer, dan instrumen yurisdiksi lintas tradisi."
+
+msgctxt "web:landing.views.mizan_assessment.title"
+msgid "Neraca Evaluasi Mizan"
+msgstr "Neraca Evaluasi Mizan"
+
+msgctxt "web:landing.views.mizan_assessment.description"
+msgid "Asesmen multidimensi berbasis rubrik bobot bukti, koherensi matan, dan keautentikan sanad."
+msgstr "Asesmen multidimensi berbasis rubrik bobot bukti, koherensi matan, dan keautentikan sanad."
+
+msgctxt "web:landing.views.chat_conversation.title"
+msgid "Percakapan & Asisten AI"
+msgstr "Percakapan & Asisten AI"
+
+msgctxt "web:landing.views.chat_conversation.description"
+msgid "Ruang diskusi dengan provider model pilihan untuk membantu penelusuran dan analisis."
+msgstr "Ruang diskusi dengan provider model pilihan untuk membantu penelusuran dan analisis."
+
+msgctxt "web:landing.views.ai_provider.title"
+msgid "Gateway & Provider Model"
+msgstr "Gateway & Provider Model"
+
+msgctxt "web:landing.views.ai_provider.description"
+msgid "Atur endpoint OpenAI-compatible dan urutan prioritas fallback terenkripsi."
+msgstr "Atur endpoint OpenAI-compatible dan urutan prioritas fallback terenkripsi."
+
+msgctxt "web:landing.views.workflow_change.title"
+msgid "Antrean Review & Tata Kelola CAB"
+msgstr "Antrean Review & Tata Kelola CAB"
+
+msgctxt "web:landing.views.workflow_change.description"
+msgid "Kelola usulan perubahan, persetujuan berjenjang, dan jejak transisi audit."
+msgstr "Kelola usulan perubahan, persetujuan berjenjang, dan jejak transisi audit."
+
+msgctxt "web:landing.views.integration_connector.title"
+msgid "Konektor & Integrasi Eksternal"
+msgstr "Konektor & Integrasi Eksternal"
+
+msgctxt "web:landing.views.integration_connector.description"
+msgid "Hubungkan layanan infrastruktur dan DNS melalui kredensial OS tanpa menyimpan token mentah."
+msgstr "Hubungkan layanan infrastruktur dan DNS melalui kredensial OS tanpa menyimpan token mentah."
