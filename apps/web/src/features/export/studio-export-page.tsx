@@ -77,7 +77,7 @@ export default function StudioExportPage() {
         setUser(currentUserData.user);
 
         const res = await moonClient
-          .listModelRecords("studio.artifact")
+          .listRecords("studio.artifact")
           .catch(() => ({ records: [] }));
 
         if (!active) return;

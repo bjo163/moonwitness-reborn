@@ -86,10 +86,10 @@ export default function CorrelationGraphPage() {
 
         // Fetch correlations, characters, stories, events
         const [corrRes, personRes, storyRes, eventRes] = await Promise.all([
-          moonClient.listModelRecords("research.correlation").catch(() => ({ records: [] })),
-          moonClient.listModelRecords("person.profile").catch(() => ({ records: [] })),
-          moonClient.listModelRecords("story.narrative").catch(() => ({ records: [] })),
-          moonClient.listModelRecords("event.record").catch(() => ({ records: [] })),
+          moonClient.listRecords("research.correlation").catch(() => ({ records: [] })),
+          moonClient.listRecords("person.profile").catch(() => ({ records: [] })),
+          moonClient.listRecords("story.narrative").catch(() => ({ records: [] })),
+          moonClient.listRecords("event.record").catch(() => ({ records: [] })),
         ]);
 
         if (!active) return;
