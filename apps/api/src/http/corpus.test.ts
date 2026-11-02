@@ -5,9 +5,11 @@ import { createConversationStore, type ConversationStore } from "@moonwitness/da
 import {
   apiRoutes,
   type AuthResponseDto,
+  type AyahProofResponseDto,
   type ConversationMessagesResponseDto,
   type CorpusEditionListResponseDto,
   type CorpusSurahResponseDto,
+  type VerifyAyahProofResponseDto,
 } from "@moonwitness/moonclient";
 import { createQlOrm, type QlOrm } from "ql_orm";
 import authManifest from "ql_auth/__manifest__";
@@ -16,12 +18,17 @@ import chatManifest from "ql_chat/__manifest__";
 import corpusManifest from "ql_corpus/__manifest__";
 import sourceManifest from "ql_source/__manifest__";
 import { publishEdition } from "ql_corpus/services/corpus-service";
+import {
+  anchorDigest,
+  canonicalPayload,
+} from "ql_corpus/services/proof-service";
 import { _resetRightsCacheForTests } from "ql_corpus/services/reader-service";
 import { createApiServer } from "./server.js";
 
 const testPassword = "correct horse battery staple";
 const ownerEmail = "corpus-owner@example.com";
 const memberEmail = "corpus-member@example.com";
+const proofPassageText = "proof-fixture-verse";
 
 function sha256(text: string): string {
   return createHash("sha256").update(text, "utf8").digest("hex");
@@ -37,6 +44,7 @@ let memberCookie: string;
 let publishedEditionKey = "";
 let stagedEditionKey = "";
 let publishableEditionKey = "";
+let proofEditionKey = "";
 
 async function register(email: string, name = "Tester"): Promise<string> {
   const response = await fetch(`${address}${apiRoutes.auth.register}`, {
@@ -76,6 +84,7 @@ async function seedEdition(
   cleared: boolean,
   stageFlip: "none" | "publish",
   workId: string,
+  text = `sample-${authority}`,
 ): Promise<string> {
   const artifact = await orm.createRecordForService("source.artifact", {
     canonical_id: `mw:dataset:test:${locale}-${authority}`,
@@ -124,8 +133,8 @@ async function seedEdition(
     surah: 1,
     ayah: 1,
     row_kind: "basmalah",
-    text: `sample-${authority}`,
-    text_checksum: sha256(`sample-${authority}`),
+    text,
+    text_checksum: sha256(text),
     ordinal: 1,
     import_run_id: "corpus-test-run",
   });
@@ -197,6 +206,18 @@ before(async () => {
     /* cleared */ true,
     /* publish */ "none",
     workId,
+  );
+  // The proof fixtures need their own published, rights-cleared edition:
+  // the conversation-history test below deliberately revokes rights on
+  // `publishedEditionKey` to revalidate citations, and a proof test that
+  // shares that edition would inherit an unrelated 403.
+  proofEditionKey = await seedEdition(
+    "revelation_verbatim",
+    "ar-uos",
+    /* cleared */ true,
+    /* publish */ "publish",
+    workId,
+    proofPassageText,
   );
 });
 
@@ -391,4 +412,211 @@ void test("publish and withdraw over HTTP require an admin/operator/root group",
   );
   assert.equal(withdrawn.status, 200, withdrawn.text);
   assert.equal(withdrawn.body.edition.stage, "withdrawn");
+});
+
+void test("ayah proof routes require authentication", async () => {
+  const unauthenticatedGet = await fetch(
+    `${address}${apiRoutes.corpusProofs.getProof(proofEditionKey, 1, 1)}`,
+  );
+  assert.equal(unauthenticatedGet.status, 401);
+  const unauthenticatedVerify = await fetch(
+    `${address}${apiRoutes.corpusProofs.verify}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        surahNumber: 1,
+        ayahNumber: 1,
+        editionCode: proofEditionKey,
+        claimedHash: sha256(proofPassageText),
+      }),
+    },
+  );
+  assert.equal(unauthenticatedVerify.status, 401);
+});
+
+void test("the proof read endpoint recomputes the digest instead of trusting a column", async () => {
+  const reply = await api<AyahProofResponseDto>(
+    apiRoutes.corpusProofs.getProof(proofEditionKey, 1, 1),
+    { cookie: memberCookie },
+  );
+  assert.equal(reply.status, 200, reply.text);
+  assert.equal(reply.body.canonicalText, proofPassageText);
+  assert.equal(reply.body.authoritativeHash, sha256(proofPassageText));
+  assert.equal(reply.body.editionCode, proofEditionKey);
+  assert.equal(reply.body.anchored, false);
+  assert.equal(reply.body.anchorHash, null);
+  assert.equal(reply.body.verificationCount, 0);
+});
+
+void test("verify separates a matching digest from a wrong one and from a bad request", async () => {
+  const verified = await api<VerifyAyahProofResponseDto>(
+    apiRoutes.corpusProofs.verify,
+    {
+      method: "POST",
+      cookie: memberCookie,
+      body: {
+        surahNumber: 1,
+        ayahNumber: 1,
+        editionCode: proofEditionKey,
+        claimedHash: sha256(proofPassageText),
+      },
+    },
+  );
+  assert.equal(verified.status, 200, verified.text);
+  assert.equal(verified.body.status, "verified");
+  assert.equal(verified.body.isValid, true);
+  assert.equal(verified.body.canonicalText, proofPassageText);
+
+  const tampered = await api<VerifyAyahProofResponseDto>(
+    apiRoutes.corpusProofs.verify,
+    {
+      method: "POST",
+      cookie: memberCookie,
+      body: {
+        surahNumber: 1,
+        ayahNumber: 1,
+        editionCode: proofEditionKey,
+        claimedHash: sha256("an edited line"),
+      },
+    },
+  );
+  assert.equal(tampered.status, 200, tampered.text);
+  assert.equal(tampered.body.status, "tampered");
+  assert.equal(tampered.body.isValid, false);
+  assert.ok(tampered.body.diffExplanation);
+
+  const notFound = await api<VerifyAyahProofResponseDto>(
+    apiRoutes.corpusProofs.verify,
+    {
+      method: "POST",
+      cookie: memberCookie,
+      body: {
+        surahNumber: 2,
+        ayahNumber: 255,
+        editionCode: proofEditionKey,
+        claimedHash: sha256(proofPassageText),
+      },
+    },
+  );
+  assert.equal(notFound.status, 200, notFound.text);
+  assert.equal(notFound.body.status, "not_found");
+  assert.equal(notFound.body.isValid, false);
+
+  const malformed = await api<{ error?: string }>(
+    apiRoutes.corpusProofs.verify,
+    {
+      method: "POST",
+      cookie: memberCookie,
+      body: {
+        surahNumber: 1,
+        ayahNumber: 1,
+        editionCode: proofEditionKey,
+        claimedHash: "nothex",
+      },
+    },
+  );
+  assert.equal(malformed.status, 400, malformed.text);
+
+  // 114 has six verses: the coarse column bound (286) must not be the only gate.
+  const impossibleLocator = await api<{ error?: string }>(
+    apiRoutes.corpusProofs.verify,
+    {
+      method: "POST",
+      cookie: memberCookie,
+      body: {
+        surahNumber: 114,
+        ayahNumber: 286,
+        editionCode: proofEditionKey,
+        claimedHash: sha256(proofPassageText),
+      },
+    },
+  );
+  assert.equal(impossibleLocator.status, 400, impossibleLocator.text);
+
+  const impossibleGet = await api<{ error?: string }>(
+    apiRoutes.corpusProofs.getProof(proofEditionKey, 114, 286),
+    { cookie: memberCookie },
+  );
+  assert.equal(impossibleGet.status, 400, impossibleGet.text);
+});
+
+void test("a silently edited proof row is reported as tampered even when the verse still matches", async () => {
+  const edition = await orm.findOneByService("corpus.edition", {
+    edition_key: proofEditionKey,
+  });
+  assert.ok(edition);
+  const passage = await orm.findOneByService("corpus.passage", {
+    passage_key: `${String(edition.id)}|1:1`,
+  });
+  assert.ok(passage);
+  const anchorFields = {
+    editionCode: proofEditionKey,
+    surahNumber: 1,
+    ayahNumber: 1,
+    text: proofPassageText,
+  };
+  const created = await orm.createRecordForService("corpus.ayah_proof", {
+    passage_id: String(passage.id),
+    surah_number: 1,
+    ayah_number: 1,
+    edition_code: proofEditionKey,
+    content_hash_sha256: anchorDigest(anchorFields),
+    canonical_payload: canonicalPayload(anchorFields),
+    verification_count: 0,
+    created_at: new Date(),
+    updated_at: new Date(),
+  });
+
+  const stillVerified = await api<VerifyAyahProofResponseDto>(
+    apiRoutes.corpusProofs.verify,
+    {
+      method: "POST",
+      cookie: memberCookie,
+      body: {
+        surahNumber: 1,
+        ayahNumber: 1,
+        editionCode: proofEditionKey,
+        claimedHash: sha256(proofPassageText),
+      },
+    },
+  );
+  assert.equal(stillVerified.status, 200, stillVerified.text);
+  assert.equal(stillVerified.body.status, "verified");
+
+  const summary = await api<AyahProofResponseDto>(
+    apiRoutes.corpusProofs.getProof(proofEditionKey, 1, 1),
+    { cookie: memberCookie },
+  );
+  assert.equal(summary.body.anchored, true);
+  assert.equal(summary.body.anchorHash, anchorDigest(anchorFields));
+
+  // Simulate a DB-level edit of the anchor that left its own digest stale.
+  await orm.updateRecordsForService(
+    "corpus.ayah_proof",
+    { id: String(created.id) },
+    { canonical_payload: canonicalPayload({ ...anchorFields, text: "quietly rewritten" }) },
+  );
+
+  const drifted = await api<VerifyAyahProofResponseDto>(
+    apiRoutes.corpusProofs.verify,
+    {
+      method: "POST",
+      cookie: memberCookie,
+      body: {
+        surahNumber: 1,
+        ayahNumber: 1,
+        editionCode: proofEditionKey,
+        claimedHash: sha256(proofPassageText),
+      },
+    },
+  );
+  assert.equal(drifted.status, 200, drifted.text);
+  assert.equal(drifted.body.status, "tampered");
+  assert.equal(drifted.body.isValid, false);
+  assert.match(
+    drifted.body.diffExplanation ?? "",
+    /proof record is not/,
+    drifted.text,
+  );
 });

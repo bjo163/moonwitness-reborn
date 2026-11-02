@@ -1,4 +1,9 @@
-import { QlNotFoundError, type QlOrm, type QlRecord } from "ql_orm";
+import {
+  QlAccessError,
+  QlNotFoundError,
+  type QlOrm,
+  type QlRecord,
+} from "ql_orm";
 import { sha256 } from "./import-service.js";
 import { readVerse, type PassageReadDto } from "./reader-service.js";
 
@@ -146,9 +151,14 @@ async function findMatchingPublishedEdition(
         return readString(edition, "attribution_text") || editionKey;
       }
     } catch (error) {
-      // Not every published edition carries every locator, and rights may
-      // block another edition; both simply mean "this edition is not a match".
-      if (error instanceof QlNotFoundError) continue;
+      // A published edition that lacks this locator, or whose display rights
+      // are not cleared, is simply not a match candidate. Rights-blocked rows
+      // are skipped rather than named: reporting "your digest belongs to
+      // edition X" for an edition the caller may not read would leak it.
+      // Neither case may abort the verification of the requested edition.
+      if (error instanceof QlNotFoundError || error instanceof QlAccessError) {
+        continue;
+      }
       throw error;
     }
   }
@@ -250,7 +260,7 @@ export async function verifyAyahProof(
       claimedHash,
       excludeEditionKey: input.editionCode,
     });
-    if (otherEdition) {
+    if (otherEdition !== null) {
       return {
         ...result,
         status: "edition_mismatch",
@@ -262,9 +272,9 @@ export async function verifyAyahProof(
       ...result,
       status: "tampered",
       isValid: false,
-      diffExplanation: anchorDrift
-        ? `The claimed digest does not match the digest recomputed from the published text, and ${anchorDrift.toLowerCase()}`
-        : "The claimed digest does not match the digest recomputed from the published text.",
+      diffExplanation: anchorDrift === null
+        ? "The claimed digest does not match the digest recomputed from the published text."
+        : `The claimed digest does not match the digest recomputed from the published text, and ${anchorDrift.toLowerCase()}`,
     };
   }
 
@@ -278,7 +288,7 @@ export async function verifyAyahProof(
     };
   }
 
-  if (anchorDrift) {
+  if (anchorDrift !== null) {
     return {
       ...result,
       status: "tampered",

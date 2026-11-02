@@ -2,7 +2,7 @@ import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { createClient, type Client, type InValue } from "@libsql/client";
-import { Pool, types as pgTypes } from "pg";
+import { Pool, types as pgTypes, type PoolClient } from "pg";
 import type {
   AddonCategory,
   FieldType as QlFieldType,
@@ -198,11 +198,23 @@ export interface QlConnection {
   readonly driver: "libsql" | "postgres";
   execute(sql: string, values: readonly QlSqlValue[]): Promise<QlQueryResult>;
   columnNames(table: string): Promise<Set<string>>;
+  /**
+   * Runs `work` inside one database transaction and hands back a connection
+   * view bound to it. A call made through that view joins the open transaction.
+   * Only statements issued through the given session are covered by it.
+   */
+  transaction<T>(work: (session: QlConnection) => Promise<T>): Promise<T>;
   close(): void;
 }
 
 class LibSqlConnection implements QlConnection {
   readonly driver = "libsql" as const;
+  // The libsql client is a single connection, so transactions are serialized
+  // instead of interleaving BEGIN/COMMIT from concurrent callers.
+  private queue: Promise<unknown> = Promise.resolve();
+  // One libsql connection means one open transaction. Without this flag a
+  // nested call would queue behind the turn that is waiting for it.
+  private inTransaction = false;
 
   constructor(private readonly client: Client) {}
 
@@ -226,6 +238,26 @@ class LibSqlConnection implements QlConnection {
     );
   }
 
+  async transaction<T>(work: (session: QlConnection) => Promise<T>): Promise<T> {
+    if (this.inTransaction) return work(this);
+    const turn = this.queue.then(async () => {
+      await this.execute("BEGIN", []);
+      this.inTransaction = true;
+      try {
+        const result = await work(this);
+        await this.execute("COMMIT", []);
+        return result;
+      } catch (error) {
+        await this.execute("ROLLBACK", []).catch(() => undefined);
+        throw error;
+      } finally {
+        this.inTransaction = false;
+      }
+    });
+    this.queue = turn.catch(() => undefined);
+    return turn;
+  }
+
   close(): void {
     this.client.close();
   }
@@ -237,35 +269,92 @@ pgTypes.setTypeParser(20, (value: string | null) =>
   value === null ? null : Number(value),
 );
 
+async function pgExecute(
+  client: Pool | PoolClient,
+  sql: string,
+  values: readonly QlSqlValue[],
+): Promise<QlQueryResult> {
+  const result = await client.query<Record<string, unknown>>(sql, [...values]);
+  return {
+    rows: result.rows,
+    rowsAffected: result.rowCount ?? 0,
+  };
+}
+
+async function pgColumnNames(
+  client: Pool | PoolClient,
+  table: string,
+): Promise<Set<string>> {
+  const result = await client.query<{ column_name: string }>(
+    `SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = $1`,
+    [table.replaceAll('"', "")],
+  );
+  return new Set(
+    result.rows.flatMap((row) =>
+      typeof row.column_name === "string" ? [row.column_name] : [],
+    ),
+  );
+}
+
+/** Connection view bound to one checked-out pool client, i.e. one transaction. */
+class PostgresSession implements QlConnection {
+  readonly driver = "postgres" as const;
+
+  constructor(private readonly client: PoolClient) {}
+
+  execute(sql: string, values: readonly QlSqlValue[]): Promise<QlQueryResult> {
+    return pgExecute(this.client, sql, values);
+  }
+
+  columnNames(table: string): Promise<Set<string>> {
+    return pgColumnNames(this.client, table);
+  }
+
+  // Already inside a transaction, so a nested call joins it.
+  async transaction<T>(work: (session: QlConnection) => Promise<T>): Promise<T> {
+    return work(this);
+  }
+
+  close(): void {
+    // The owning connection releases the client when the transaction ends.
+  }
+}
+
 class PostgresConnection implements QlConnection {
   readonly driver = "postgres" as const;
 
   constructor(private readonly pool: Pool) {}
 
-  async execute(
+  execute(
     sql: string,
     values: readonly QlSqlValue[],
   ): Promise<QlQueryResult> {
-    const result = await this.pool.query<Record<string, unknown>>(
-      sql,
-      [...values],
-    );
-    return {
-      rows: result.rows,
-      rowsAffected: result.rowCount ?? 0,
-    };
+    return pgExecute(this.pool, sql, values);
   }
 
-  async columnNames(table: string): Promise<Set<string>> {
-    const result = await this.pool.query<{ column_name: string }>(
-      `SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = $1`,
-      [table.replaceAll('"', "")],
-    );
-    return new Set(
-      result.rows.flatMap((row) =>
-        typeof row.column_name === "string" ? [row.column_name] : [],
-      ),
-    );
+  columnNames(table: string): Promise<Set<string>> {
+    return pgColumnNames(this.pool, table);
+  }
+
+  async transaction<T>(work: (session: QlConnection) => Promise<T>): Promise<T> {
+    // A nested call here checks out its own client, so on postgres it becomes a
+    // second concurrent transaction rather than joining. Prefer the session
+    // passed to `work` for everything that must share one transaction.
+    const client = await this.pool.connect();
+    const session = new PostgresSession(client);
+    try {
+      await client.query("BEGIN");
+      try {
+        const result = await work(session);
+        await client.query("COMMIT");
+        return result;
+      } catch (error) {
+        await client.query("ROLLBACK").catch(() => undefined);
+        throw error;
+      }
+    } finally {
+      client.release();
+    }
   }
 
   close(): void {
@@ -975,6 +1064,18 @@ export class QlOrm {
       );
     }
     return this.options.storage;
+  }
+
+  /**
+   * Gives `work` an ORM whose writes form one database transaction, rolled back
+   * when it throws. It cannot cover a storage driver: bytes written outside the
+   * database are not part of it, which is why attachments use a state machine
+   * and a reaper rather than a transaction.
+   */
+  async transaction<T>(work: (tx: QlOrm) => Promise<T>): Promise<T> {
+    return this.connection.transaction<T>(async (session) =>
+      await work(new QlOrm(session, this.registry, this.options)),
+    );
   }
 
   async syncSchema(): Promise<void> {

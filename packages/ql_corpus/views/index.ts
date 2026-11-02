@@ -115,6 +115,24 @@ export const views: QlViewDefinition[] = [
     ],
   },
   {
+    // No form view on purpose: `content_hash_sha256` has to equal
+    // `sha256(canonical_payload)` and both have to derive from the published
+    // text. A hand-typed row is exactly the drift `verifyAyahProof` reports as
+    // `tampered`, so anchors are written only by a path that computes both.
+    name: "corpus.ayah_proof.list",
+    model: "corpus.ayah_proof",
+    type: "list",
+    fields: [
+      "passage_id",
+      "edition_code",
+      "surah_number",
+      "ayah_number",
+      "content_hash_sha256",
+      "verification_count",
+      "created_at",
+    ],
+  },
+  {
     name: "corpus.term.list",
     model: "corpus.term",
     type: "list",

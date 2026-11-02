@@ -79,6 +79,17 @@ export default function QuranReader() {
   const [chimeEnabled, setChimeEnabled] = useState(false);
   const [activeAyah, setActiveAyah] = useState<number>(1);
   const [proofAyah, setProofAyah] = useState<CorpusPassageDto | null>(null);
+  /**
+   * The verification deep link is copied as an absolute URL, so it is built
+   * only once the browser origin is known. The server render omits it instead
+   * of guessing a host — a proof link pointing at the wrong domain is worse
+   * than no link.
+   */
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   useEffect(() => {
     setChimeEnabled(microChimeEngine.isEnabled());
@@ -138,6 +149,25 @@ export default function QuranReader() {
 
   const rtl = isArabicVerbatim(reading?.passages[0]);
   const primaryPassage = reading?.passages[0];
+  const proofTarget =
+    reading && proofAyah
+      ? {
+          editionKey: reading.editionKey,
+          surah: proofAyah.surah || surah,
+          ayah: proofAyah.ayah,
+          hash: proofAyah.text_checksum,
+        }
+      : null;
+  const verificationQuery = proofTarget
+    ? `/corpus/verify?${new URLSearchParams({
+        edition: proofTarget.editionKey,
+        surah: String(proofTarget.surah),
+        ayah: String(proofTarget.ayah),
+        hash: proofTarget.hash,
+      }).toString()}`
+    : "";
+  const verificationUri =
+    origin && verificationQuery ? `${origin}${verificationQuery}` : undefined;
 
   return (
     <main className="ql-hud-app relative min-h-dvh bg-panel-deep text-ink-soft">
@@ -237,27 +267,40 @@ export default function QuranReader() {
 
               {proofAyah && (
                 <div className="relative">
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="flex justify-between items-center mb-2 gap-3">
                     <span className="text-xs text-acid font-mono font-medium">
                       {t("web.corpus.proofPanelTitle")}
                     </span>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setProofAyah(null)}
-                      className="text-xs text-muted hover:text-ink"
-                    >
-                      ✕
-                    </Button>
+                    <div className="flex items-center gap-1.5">
+                      {verificationQuery ? (
+                        <Link
+                          href={verificationQuery}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium border border-hairline bg-panel hover:border-acid hover:text-acid transition-colors"
+                        >
+                          <ShieldCheck size={12} aria-hidden="true" />
+                          <span>{t("web.corpus.verifyAction")}</span>
+                        </Link>
+                      ) : null}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setProofAyah(null)}
+                        className="text-xs text-muted hover:text-ink"
+                        aria-label={t("web.corpus.closeProofPanel")}
+                      >
+                        ✕
+                      </Button>
+                    </div>
                   </div>
                   <AyahProofCard
-                    surahNumber={surah}
+                    surahNumber={proofTarget?.surah ?? surah}
                     ayahNumber={proofAyah.ayah}
                     text={proofAyah.text}
                     editionCode={reading.editionKey}
                     editionName={reading.passages[0]?.edition_attribution_text || reading.editionKey}
                     proofHash={proofAyah.text_checksum}
+                    verificationUri={verificationUri}
                     proofBadgeLabel={t("web.corpus.sha256ProofBadge")}
                     digestLabel={t("web.corpus.proofDigest")}
                     copyLabel={t("web.corpus.copyProofButton")}

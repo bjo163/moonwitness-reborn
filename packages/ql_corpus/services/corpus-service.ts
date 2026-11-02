@@ -10,6 +10,9 @@ import {
 import {
   ANNOTATION_AUTHORITIES,
   CORPUS_STAGES,
+  SURAH_MAX,
+  SURAH_MIN,
+  SURAHS,
   TEXT_AUTHORITIES,
   type CorpusStage,
 } from "./corpus-vocabulary.js";
@@ -93,6 +96,34 @@ export function assertAnnotationAuthority(kind: string): void {
   if (!(ANNOTATION_AUTHORITIES as readonly string[]).includes(String(kind))) {
     throw new QlValidationError(
       `corpus.annotation.authority must be one of [${ANNOTATION_AUTHORITIES.join(", ")}]; got '${String(kind)}'. Revelation text may never live in the annotation table (MW-ADR-019).`,
+    );
+  }
+}
+
+/**
+ * Locator bound that `maxValue: AYAH_MAX_BOUND` alone cannot express: that
+ * column says "no verse is numbered above 286 anywhere", while the canonical
+ * `SURAHS` table says An-Nas has exactly 6. A proof or audio row pointing at
+ * 114:286 names a locator that does not exist, so it is refused before it can
+ * be written and before it can be offered as a verification target.
+ */
+export function assertAyahWithinSurah(
+  surahNumber: number,
+  ayahNumber: number,
+): void {
+  const surah = SURAHS.find((entry) => entry.number === surahNumber);
+  if (!surah) {
+    throw new QlValidationError(
+      `Surah number must be one of ${SURAH_MIN}..${SURAH_MAX}; got ${surahNumber}.`,
+    );
+  }
+  if (
+    !Number.isInteger(ayahNumber)
+    || ayahNumber < 1
+    || ayahNumber > surah.ayahCount
+  ) {
+    throw new QlValidationError(
+      `Surah ${surahNumber} has ${surah.ayahCount} verses, so verse ${ayahNumber} is not an addressable locator.`,
     );
   }
 }
