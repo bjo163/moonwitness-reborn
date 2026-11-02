@@ -24,7 +24,7 @@
 
 - Aturan UI berikut berlaku untuk semua coding agent saat mengubah antarmuka:
   - Baca `.agents/skills/antislop/SKILL.md` dan instruksi antislop yang relevan; pilih mode sesuai preferensi sesi/global, jangan mengubah preferensi global tanpa diminta.
-  - Untuk pekerjaan visual baru, baca arah desain yang ada. Jika arahnya belum jelas, minta klarifikasi; jangan mengarang aset merek, orang, statistik, atau klaim.
+  - Untuk pekerjaan visual baru, ikuti arah desain kanonis atau referensi yang diberikan. Agent diperbolehkan membuat atau men-generate aset visual/ilustrasi yang relevan untuk kebutuhan desain antarmuka. Jangan membuat klaim faktual atau statistik palsu.
   - Di `apps/web`, gunakan `moonClient` untuk HTTP dan komponen dari `@moonwitness/ui`. Jangan membuat ulang komponen yang sudah tersedia.
   - Primitive/composite bersama yang dipakai dua layar atau lebih berada di `packages/ui/src/composites/`; periksa ekspor yang ada sebelum menambahkan komponen baru.
   - Copy antarmuka harus tersedia pada katalog `id` dan `en`. Komponen UI bersama tidak berisi copy yang ditujukan ke pengguna; teruskan teks melalui props.
