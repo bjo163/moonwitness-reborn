@@ -338,6 +338,10 @@ importers:
       ql_source:
         specifier: workspace:*
         version: link:../ql_source
+    devDependencies:
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
 
   packages/ql_geo:
     dependencies:
@@ -437,7 +441,11 @@ importers:
         specifier: workspace:*
         version: link:../ql-orm
 
-  packages/types: {}
+  packages/types:
+    devDependencies:
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
 
   packages/ui:
     dependencies:
