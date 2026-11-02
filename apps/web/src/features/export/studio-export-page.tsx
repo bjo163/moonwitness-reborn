@@ -249,32 +249,39 @@ export default function StudioExportPage() {
 
   return (
     <WorkspaceTemplate
+      sidebarOpen={sidebarOpen}
+      onCloseSidebar={() => setSidebarOpen(false)}
+      closeLabel={copy.common.closeMenu}
       sidebar={
         <WorkspaceSidebar
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          brandTitle="MoonWitness"
-          brandSubtitle="Studio Exporter"
-          brandBadge="v0.3.0"
+          brandIcon={<Sparkles aria-hidden="true" size={16} />}
+          closeLabel={copy.common.closeMenu}
+          identity={{ name: user?.name ?? "User", subtitle: user?.email ?? "Member" }}
           items={sidebarNavItems}
-          accountSection={{
-            userName: user?.name ?? "User",
-            userRole: user?.role ?? "Member",
-            accountLabel: copy.common.account,
-            logoutLabel: copy.common.logout,
-            onLogout: () => void logout(),
-          }}
-          footerSection={
-            <div className="space-y-2 border-t border-hairline p-3">
-              <LocaleSwitcher
-                locale={locale}
-                label={copy.common.localeLabel}
-                saving={localeSaving}
-                onChange={changeLocale}
-              />
-            </div>
-          }
+          logout={{ label: copy.common.logout, onLogout: () => void logout() }}
+          navLabel="Studio Exporter"
+          onCloseSidebar={() => setSidebarOpen(false)}
         />
+      }
+      header={
+        <div className="flex w-full items-center justify-between">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger
+              label={copy.common.openMenu}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
+            <span className="text-sm font-medium text-ink-soft">
+              Studio Exporter
+            </span>
+          </div>
+          <LocaleSwitcher
+            locale={locale}
+            label={copy.common.localeLabel}
+            saving={localeSaving}
+            onChange={changeLocale}
+          />
+        </div>
       }
     >
       <div className="space-y-6 p-6">
