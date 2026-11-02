@@ -1,4 +1,4 @@
-import SearchWorkspacePage from "../../features/search/search-workspace";
+import SearchWorkspacePage from "../../../features/search/search-workspace";
 
 export const metadata = {
   title: "Search Intelligence",

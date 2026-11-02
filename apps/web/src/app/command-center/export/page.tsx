@@ -1,4 +1,4 @@
-import StudioExportPage from "../../features/export/studio-export-page";
+import StudioExportPage from "../../../features/export/studio-export-page";
 
 export const metadata = {
   title: "Studio Exporter",

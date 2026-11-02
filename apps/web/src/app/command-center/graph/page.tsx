@@ -1,4 +1,4 @@
-import CorrelationGraphPage from "../../features/graph/correlation-graph-page";
+import CorrelationGraphPage from "../../../features/graph/correlation-graph-page";
 
 export const metadata = {
   title: "Correlation Graph",
