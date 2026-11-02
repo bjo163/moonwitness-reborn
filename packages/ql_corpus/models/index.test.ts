@@ -814,3 +814,53 @@ void test("importer is idempotent: a second real run skips via passage_key UNIQU
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+void test("UNILEX ontology models corpus.term and corpus.concept are registered and validated", async () => {
+  await withTestDb(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+    ],
+    async (orm) => {
+      // Test corpus.term creation
+      const termId = await orm.createByService("corpus.term", {
+        canonical_id: "mw:term:rahmah",
+        term: "رَحْمَة",
+        lemma: "ر ح م",
+        root: "ر-ح-م",
+        part_of_speech: "noun",
+        primary_locale: "ar",
+        transliteration: "rahmah",
+        description: "Divine mercy and encompassing grace",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      assert.ok(termId);
+
+      const retrievedTerm = await orm.findByIdByService("corpus.term", termId);
+      assert.equal(retrievedTerm?.["term"], "رَحْمَة");
+      assert.equal(retrievedTerm?.["primary_locale"], "ar");
+
+      // Test corpus.concept creation
+      const conceptId = await orm.createByService("corpus.concept", {
+        canonical_id: "mw:concept:divine_mercy",
+        name: "Divine Mercy",
+        category: "theology",
+        domain: "quranic_ontology",
+        definition: "The all-encompassing attribute of grace and benevolence in Quranic worldview",
+        primary_locale: "en",
+        version: "1.0.0",
+        is_deprecated: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      assert.ok(conceptId);
+
+      const retrievedConcept = await orm.findByIdByService("corpus.concept", conceptId);
+      assert.equal(retrievedConcept?.["name"], "Divine Mercy");
+      assert.equal(retrievedConcept?.["is_deprecated"], false);
+    },
+  );
+});
