@@ -411,7 +411,11 @@ This architecture does not authorize:
 - automatic publication or infrastructure remediation without policy and approval;
 - claiming any capability is implemented, tested, verified or deployed before evidence exists.
 
-## 16. Acceptance criteria for implementation planning
+## 16. Research and implementation roadmap
+
+The research synthesis, repository audit, paper/repository references, evaluation plan, and phased native ARSY backlog are maintained in [ARSY — Research Synthesis & Native Intelligence Implementation Roadmap](./ARSY-RESEARCH-AND-IMPLEMENTATION-ROADMAP.md). That document is a research and architecture reference, not a second task tracker; GitHub Issues remain the canonical task register.
+
+## 17. Acceptance criteria for implementation planning
 
 - [ ] System Observatory remains region 06 inside Headquarter.
 - [ ] No new top-level product or parallel backend is introduced.
