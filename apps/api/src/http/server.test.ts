@@ -945,8 +945,10 @@ void test("GET /models exposes addon and category metadata and GET /public/landi
 
 void test("GET /search queries search.index_entry securely with owner isolation", async () => {
   const cookie = await register("searcher@example.com");
+  const user = await store.getUserByEmail("searcher@example.com");
+  assert.ok(user);
 
-  // Create an index entry in orm via createRecordForService (public or owned)
+  // Create an index entry in orm via createRecordForService (owned by user)
   await orm.createRecordForService("search.index_entry", {
     id: "entry_musa_01",
     target_model: "story.narrative",
@@ -954,6 +956,7 @@ void test("GET /search queries search.index_entry securely with owner isolation"
     token: "musa",
     weight: 3,
     snippet: "Kisah Nabi Musa dan perjalanan di padang pasir",
+    owner_id: user.id,
     created_at: Date.now(),
     updated_at: Date.now(),
   });

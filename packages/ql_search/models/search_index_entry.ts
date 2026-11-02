@@ -43,7 +43,7 @@ export const searchIndexEntryModel: QlModelDefinition = {
     },
     owner_id: {
       type: "char",
-      required: false,
+      required: true,
       maxLength: 64,
     },
     created_at: {
