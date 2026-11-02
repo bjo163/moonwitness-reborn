@@ -79,6 +79,7 @@ void test("admin may manage ai.provider records", async () => {
       String(created.id),
       { name: "Renamed" },
     );
+    assert.ok(updated, "update must return the modified record");
     assert.equal(updated.name, "Renamed");
 
     const deleted = await runtime.orm.delete("ai.provider", admin, String(created.id));
