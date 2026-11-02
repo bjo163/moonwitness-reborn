@@ -6,7 +6,7 @@ const manifest: QlAddonManifest = {
   name: "ql_research",
   version: "1.0.0",
   description:
-    "Versioned research assessments and human review, separate from corpus source text and computed candidates.",
+    "Versioned research assessments, witness statements, and human review, separate from corpus source text.",
   depends: ["ql_base", "ql_auth", "ql_source", "ql_corpus"],
   models,
   access: [
@@ -25,6 +25,31 @@ const manifest: QlAddonManifest = {
       write: false,
       create: false,
       unlink: false,
+    },
+    // witness.statement — MW-1224
+    {
+      model: "witness.statement",
+      group: "user",
+      read: true,
+      write: false,
+      create: false,
+      unlink: false,
+    },
+    {
+      model: "witness.statement",
+      group: "operator",
+      read: true,
+      write: true,
+      create: true,
+      unlink: false,
+    },
+    {
+      model: "witness.statement",
+      group: "admin",
+      read: true,
+      write: true,
+      create: true,
+      unlink: true,
     },
   ],
   views,
