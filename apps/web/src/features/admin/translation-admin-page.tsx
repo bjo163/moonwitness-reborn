@@ -354,7 +354,7 @@ export default function TranslationAdminPage() {
             {
               href: "/command-center",
               label: t("web.translationAdmin.back"),
-              icon: <ArrowLeft aria-hidden="true" size={16} />,,
+              icon: <ArrowLeft aria-hidden="true" size={16} />,
             onSelect: () => setSidebarOpen(false),
             },
           ]}

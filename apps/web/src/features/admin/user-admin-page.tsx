@@ -210,7 +210,7 @@ export default function UserAdminPage() {
             {
               href: "/command-center/chat",
               label: t("web.adminUsers.backToChat"),
-              icon: <ArrowLeft aria-hidden="true" size={16} />,,
+              icon: <ArrowLeft aria-hidden="true" size={16} />,
             onSelect: () => setSidebarOpen(false),
             },
           ]}

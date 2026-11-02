@@ -322,20 +322,20 @@ export default function ConnectorWorkspace() {
             {
               href: "/models",
               label: t("web.connectors.models"),
-              icon: <Boxes aria-hidden="true" size={16} />,,
+              icon: <Boxes aria-hidden="true" size={16} />,
             onSelect: () => setSidebarOpen(false),
             },
             {
               href: "/providers",
               label: t("web.connectors.providers"),
-              icon: <KeyRound aria-hidden="true" size={16} />,,
+              icon: <KeyRound aria-hidden="true" size={16} />,
             onSelect: () => setSidebarOpen(false),
             },
             {
               href: "/connectors",
               label: t("web.common.integrations"),
               icon: <Plug aria-hidden="true" size={16} />,
-              active: true,,
+              active: true,
             onSelect: () => setSidebarOpen(false),
             },
             ...(user.groups.includes("admin")
@@ -343,7 +343,7 @@ export default function ConnectorWorkspace() {
                   {
                     href: "/admin/users",
                     label: t("web.connectors.users"),
-                    icon: <ShieldCheck aria-hidden="true" size={16} />,,
+                    icon: <ShieldCheck aria-hidden="true" size={16} />,
                   onSelect: () => setSidebarOpen(false),
                   },
                 ]

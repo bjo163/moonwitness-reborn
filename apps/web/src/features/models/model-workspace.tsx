@@ -351,13 +351,13 @@ export default function ModelWorkspace() {
             {
               href: "/command-center",
               label: t("web.models.aiWorkspace"),
-              icon: <ArrowLeft aria-hidden="true" size={16} />,,
+              icon: <ArrowLeft aria-hidden="true" size={16} />,
             onSelect: () => setSidebarOpen(false),
             },
             {
               href: "/providers",
               label: t("web.models.providers"),
-              icon: <KeyRound aria-hidden="true" size={16} />,,
+              icon: <KeyRound aria-hidden="true" size={16} />,
             onSelect: () => setSidebarOpen(false),
             },
           ]}

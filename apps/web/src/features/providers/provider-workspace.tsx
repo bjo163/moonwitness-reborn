@@ -199,7 +199,7 @@ export default function ProviderWorkspace() {
             {
               href: "/command-center/chat",
               label: t("web.providers.back"),
-              icon: <ArrowLeft aria-hidden="true" size={16} />,,
+              icon: <ArrowLeft aria-hidden="true" size={16} />,
             onSelect: () => setSidebarOpen(false),
             },
           ]}
