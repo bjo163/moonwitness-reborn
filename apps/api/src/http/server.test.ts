@@ -13,6 +13,7 @@ import baseManifest from "ql_base/__manifest__";
 import chatManifest from "ql_chat/__manifest__";
 import corpusManifest from "ql_corpus/__manifest__";
 import sourceManifest from "ql_source/__manifest__";
+import researchManifest from "ql_research/__manifest__";
 import searchManifest from "ql_search/__manifest__";
 import { createApiServer } from "./server.js";
 import { listProjectTasks } from "../project-progress/github-issues.js";
@@ -76,7 +77,8 @@ before(async () => {
     chatManifest,
     sourceManifest,
     corpusManifest,
-  searchManifest,
+    researchManifest,
+    searchManifest,
   ]);
   orm = ormRuntime.orm;
   closeOrm = ormRuntime.close;
