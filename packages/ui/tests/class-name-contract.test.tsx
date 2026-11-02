@@ -17,6 +17,7 @@ import {
   SidebarBrand,
   SidebarFooter,
   SidebarNav,
+  SidebarTrigger,
   WorkspaceSidebar,
   type SidebarNavItem,
 } from "../src/index.js";
@@ -77,6 +78,14 @@ const classNameContract: readonly [string, RegExp, (className: string) => ReactN
       items={items}
       navLabel="Main navigation"
       onCloseSidebar={() => undefined}
+    />
+  )],
+  ["SidebarTrigger", /ql-sidebar-trigger/, (c) => (
+    <SidebarTrigger
+      className={c}
+      label="Open menu"
+      onOpenSidebar={() => undefined}
+      sidebarOpen={false}
     />
   )],
 ];

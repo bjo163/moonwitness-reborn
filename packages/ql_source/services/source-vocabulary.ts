@@ -8,7 +8,7 @@
  * second addon or client genuinely needs the same vocabulary.
  *
  * `LIFECYCLE_STAGES` is transcribed verbatim from
- * `docs/data/DATA_LIFECYCLE_AND_PROVENANCE.md:8-12` — adding or renaming a
+ * `https://github.com/bjo163/moonwitness-reborn/wiki/docs-data-DATA_LIFECYCLE_AND_PROVENANCE` — adding or renaming a
  * stage requires updating that spec first, and any transition-guard change
  * in `services/source-service.ts`.
  */

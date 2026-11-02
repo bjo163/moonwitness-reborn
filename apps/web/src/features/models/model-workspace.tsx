@@ -26,6 +26,7 @@ import {
   PageHeader,
   SidePanel,
   Textarea,
+  SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
 } from "@moonwitness/ui";
@@ -33,7 +34,6 @@ import {
   ArrowLeft,
   Boxes,
   KeyRound,
-  Menu,
   Plus,
   Save,
   Trash2,
@@ -386,15 +386,11 @@ export default function ModelWorkspace() {
       header={
         <>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={t("web.common.openMenu")}
-              className="md:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu size={18} />
-            </Button>
+            <SidebarTrigger
+              label={t("web.common.openMenu")}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
             <div>
               <div className="text-sm font-semibold">{t("web.models.title")}</div>
               <div className="text-xs text-muted">{t("web.models.dataViews")}</div>

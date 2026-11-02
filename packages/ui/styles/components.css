@@ -345,11 +345,27 @@
   padding: 0.75rem;
   border-right: 1px solid var(--ql-ui-border);
   transform: translateX(-100%);
-  transition: transform 200ms ease;
+  /*
+   * MW-0584: the drawer is off-canvas until `.is-open` slides it in, but
+   * `transform` alone leaves every nav link, brand link, and close button
+   * inside the closed drawer still focusable by keyboard and screen reader.
+   * `visibility: hidden` removes the subtree from tab order; the delayed
+   * transition keeps the drawer painted while the 200ms transform animates
+   * back out, then hides it. `.is-open` reverses the delay so the drawer is
+   * visible the instant the transform starts moving it in.
+   */
+  visibility: hidden;
+  transition:
+    transform 200ms ease,
+    visibility 0s linear 200ms;
 }
 
 .ql-workspace__sidebar.is-open {
   transform: translateX(0);
+  visibility: visible;
+  transition:
+    transform 200ms ease,
+    visibility 0s;
 }
 
 .ql-workspace__main {
@@ -379,6 +395,7 @@
     width: 17rem;
     flex-shrink: 0;
     transform: none;
+    visibility: visible;
   }
 
   .ql-workspace__header {
@@ -708,5 +725,57 @@
 @media (prefers-reduced-motion: reduce) {
   .ql-button {
     transition: none;
+  }
+}
+
+/*
+ * MW-0584 desktop/mobile display rules for the sidebar drawer controls.
+ *
+ * `.md\:hidden` alone cannot hide these buttons because `.ql-button`
+ * `display: inline-flex` is unlayered and Tailwind's `hidden` utility sits in
+ * the `utilities` layer; unlayered styles beat layered styles in the CSS
+ * cascade (MW-0572 keeps `.ql-*` unlayered so a screen cannot accidentally
+ * override the design system). The correct pattern is to own the responsive
+ * rule inside the design system itself, which is what these two classes do.
+ */
+.ql-sidebar-trigger {
+  display: inline-flex;
+}
+
+.ql-sidebar-close {
+  display: inline-flex;
+}
+
+@media (min-width: 768px) {
+  .ql-sidebar-trigger,
+  .ql-sidebar-close {
+    display: none;
+  }
+}
+
+/*
+ * MW-0584 mobile tap-target policy. WCAG 2.2 SC 2.5.5 asks for a 44x44 CSS px
+ * target on touch devices; the 40px row height the desktop HUD uses reads
+ * cramped when the sidebar becomes a thumb-sized drawer at 375px. The rules
+ * sit at the end of the file — after `.ql-nav-link`, `.ql-button--sm`,
+ * `.ql-button--icon` and `.ql-hud-brand` have declared their desktop values —
+ * so equal-specificity source order resolves to the mobile override.
+ */
+@media (max-width: 767.98px) {
+  .ql-nav-link {
+    min-height: 2.75rem;
+  }
+
+  .ql-button--sm {
+    min-height: 2.75rem;
+  }
+
+  .ql-button--icon {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .ql-hud-brand {
+    min-height: 2.75rem;
   }
 }

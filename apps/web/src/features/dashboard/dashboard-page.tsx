@@ -14,6 +14,7 @@ import {
   MetricList,
   MetricRow,
   PageHeader,
+  SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
   type SidebarNavItem,
@@ -24,7 +25,6 @@ import {
   KeyRound,
   LayoutDashboard,
   Languages,
-  Menu,
   MessageSquare,
   Microscope,
   Plug,
@@ -271,15 +271,11 @@ export default function DashboardPage() {
       header={
         <>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={copy.common.openMenu}
-              className="md:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu aria-hidden="true" size={19} />
-            </Button>
+            <SidebarTrigger
+              label={copy.common.openMenu}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
             <span className="text-sm font-medium text-ink-soft">
               {copy.common.dashboard}
             </span>

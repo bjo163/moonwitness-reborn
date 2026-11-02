@@ -416,7 +416,7 @@ export interface AuditListResponseDto {
 /**
  * Legal values for `workflow.change.state`. Mirrors the addon's
  * `REVIEW_STATES` vocabulary verbatim (see
- * `docs/workflows/WORKFLOW_AND_PUBLISHING_SPECIFICATION.md:8-12`).
+ * `https://github.com/bjo163/moonwitness-reborn/wiki/docs-workflows-WORKFLOW_AND_PUBLISHING_SPECIFICATION`).
  */
 export type WorkflowStateDto =
   | "draft"

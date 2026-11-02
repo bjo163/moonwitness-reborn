@@ -160,7 +160,7 @@ import {
   listProjectTasks,
   projectProgressSummary,
   readyProjectTaskIds,
-} from "../project-progress/tracker.js";
+} from "../project-progress/github-issues.js";
 
 const MAX_BODY_BYTES = 64 * 1024;
 const MAX_INPUT_LENGTH = 16_000;
@@ -1513,12 +1513,14 @@ export function createApiServer(
     providerFactory?: ModelProviderFactory;
     resolveConnectorToken?(): Promise<ResolvedCredential>;
     cloudflareFetcher?: typeof fetch;
+    projectTasksFetcher?: typeof fetch;
   } = {},
 ) {
   const connectorCredentials: ConnectorCredentials = {
     resolveToken: options.resolveConnectorToken ?? (() => resolveCloudflareToken()),
     fetcher: options.cloudflareFetcher ?? globalThis.fetch,
   };
+  const projectTasksFetcher = options.projectTasksFetcher ?? globalThis.fetch;
 
   async function handleApiRequest(
     request: IncomingMessage,
@@ -1733,7 +1735,7 @@ export function createApiServer(
       pathname === apiRoutes.projectProgress.summary
     ) {
       try {
-        const tasks = await listProjectTasks();
+        const tasks = await listProjectTasks(projectTasksFetcher);
         sendJson(response, 200, projectProgressSummary(tasks));
       } catch (error) {
         handleRequestError(response, error);
@@ -1749,7 +1751,7 @@ export function createApiServer(
       if (!user) return;
       try {
         requireGroup(user, "admin", "operator");
-        const tasks = await listProjectTasks();
+        const tasks = await listProjectTasks(projectTasksFetcher);
         sendJson(response, 200, {
           tasks,
           readyTaskIds: readyProjectTaskIds(tasks),

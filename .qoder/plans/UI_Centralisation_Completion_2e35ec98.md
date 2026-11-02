@@ -1,10 +1,12 @@
 # Penuntasan Centralisasi UI ke `@moonwitness/ui` (MW-0570)
 
+> Arsip rencana historis. Status task kini kanonis di GitHub Issues dan dokumentasi proyek di GitHub Wiki; gunakan alur `.github/skills/github-issues/SKILL.md`, bukan prosedur status lokal yang lama.
+
 ## Ringkasan
 
 Fondasi MW-0571–MW-0575 sudah ada di disk (belum di-commit): CSS terpecah ke `packages/ui/styles/{tokens,base,components,preset}.css`, `globals.css` sudah satu baris `@import "@moonwitness/ui/preset.css"`, dan 7 composite sudah di-export.
 
-Temuan yang mengubah rencana (hasil verifikasi kode, bukan label tracker):
+Temuan yang mengubah rencana (hasil verifikasi kode, bukan label Issue):
 
 | Fakta | Bukti |
 |---|---|
@@ -22,19 +24,12 @@ Keputusan owner: (1) 3 layar light dikonversi ke dark HUD, (2) cakupan penuh MW-
 
 ---
 
-## A. Task tracker dulu (wajib, per `.github/skills/task-tracker/SKILL.md`)
+## A. GitHub Issues dulu (wajib, per `.github/skills/github-issues/SKILL.md`)
 
-1. `pnpm tracker:check` — pastikan sumber kanonis dan view cocok sebelum edit.
-2. Edit `docs/governance/task-tracker.json`:
-   - Reopen **MW-0574** dan **MW-0575** → `state: "in_progress"`, `status_label` jujur: "Reopened — no test files existed under `packages/ui`" / "Reopened — `.size-limit.json`/CI step never landed".
-   - Tambah task baru (ID belum dipakai; verifikasi dengan grep `MW-05` di JSON):
-     - **MW-0579** — Lengkapi design token (ink/border/shadow/void) + `@source` Tailwind; kriteria: tidak ada kelas `stone-*`/`bg-white`/hex-arbitrary yang tersisa di `apps/web/src/**/*.tsx`, dan utilitas yang hanya dipakai di `packages/ui` terbukti ter-emit di CSS build.
-     - **MW-0580** — Ship composite `SidebarNav`, `IconTile`, `MetricRow`, `SidePanel` + test render; dependensi MW-0579.
-     - **MW-0581** — Konversi 3 layar light-theme ke dark HUD; dependensi MW-0579, MW-0580.
-     - **MW-0582** — Ukur & kunci bundle budget per route dengan skrip lokal; revisi teks MW-ADR-020; dependensi MW-0575.
-   - Perbaiki **MW-0576**: ganti judul jadi "(14 sub-screens)", `status_label` jadi "Partial — 0 of 14 screens consume any composite; atoms/blocks/templates adopted".
-3. Tambah marker + table row untuk tiap task baru di `docs/governance/TODO.template.md` (header sama dengan task `Developer tooling — UI centralisation`: `ID | Subject | Status | Owner | Acceptance Criterion`).
-4. `pnpm tracker:render` lalu `pnpm tracker:check` dan `pnpm tracker:test`.
+1. Baca Issue yang cocok dan semua dependency Issue untuk **MW-0574**, **MW-0575**, **MW-0576**, **MW-0577**, **MW-0578**, **MW-0579**, **MW-0580**, **MW-0581**, dan **MW-0582**; jangan menyimpulkan kesiapan hanya dari judul.
+2. Gunakan Issue yang sudah ada untuk setiap ID tersebut. Jangan membuat duplikat atau menyalin status ke file lokal. Perubahan status/evidence dilakukan pada Issue sesuai `.github/skills/github-issues/SKILL.md` dan hanya jika pengguna mengizinkan penulisan Issue.
+3. Pertahankan acceptance criteria teknis dalam Issue terkait: MW-0579 mencakup token/Tailwind, MW-0580 composite dan render test, MW-0581 migrasi tema, MW-0582 budget bundle per route; perbaiki cakupan MW-0576 menjadi 14 sub-screens bila kriteria Issue mengizinkan.
+4. Tidak ada proses render atau sinkronisasi TODO lokal.
 
 Tidak ada commit/push pada fase ini atau fase lain tanpa diminta eksplisit (AGENTS.md).
 
@@ -115,20 +110,20 @@ Urutan dari risiko terendah. **Per layar = satu commit-sized increment**: (a) ga
     - parse `apps/web/.next/app-build-manifest.json`, resolve daftar `initial` per rute ke `apps/web/.next/static/**`, hitung ukuran **gzip** via `node:zlib`;
     - exit non-zero bila rute mana pun > 150 kB atau naiknya > 2 kB dari baseline; dengan flag `--update` tulis baseline baru.
 38. `apps/web/package.json` tambah `"size": "node scripts/check-bundle-budget.mjs"`; `.github/workflows/ci.yml` tambah step `- run: pnpm --filter @moonwitness/web size` **setelah** `pnpm test` (pola langkah lain di file itu: `uses`/`run` + `-`), dan pastikan `next build` sudah menghasilkan `.next/app-build-manifest.json` sebelum step itu.
-39. Jalankan sekali, simpan baseline awal, lalu catat revisi di `docs/decisions/ADR_REGISTRY.md` MW-ADR-020: ganti kalimat "`pnpm --filter @moonwitness/web size` (via `size-limit`)" menjadi nama skrip budget per-route, dengan alasan di atas. Task MW-0575 di-reopen (langkah A) dan ditutup lewat MW-0582.
+39. Jalankan sekali, simpan baseline awal, lalu catat revisi di [MW-ADR-020 pada Wiki](https://github.com/bjo163/moonwitness-reborn/wiki/docs-decisions-ADR_REGISTRY): ganti kalimat "`pnpm --filter @moonwitness/web size` (via `size-limit`)" menjadi nama skrip budget per-route, dengan alasan di atas. Status MW-0575 dan MW-0582 dikelola hanya melalui Issue masing-masing.
 
 ## I. Dokumentasi (MW-0578)
 
 40. `packages/ui/README.md` — perbaiki contoh impor dari `styles.css` ke `@import "@moonwitness/ui/preset.css";` (file itu sekarang masih mendokumentasikan cara lama), dokumentasikan layer `raw/atoms/blocks/components/composites/templates` **beserta** komponen baru beserta contoh usage, tabel token, dan prosedur "menambah token baru".
 41. `.github/skills/moonwitness-development/SKILL.md` — tambah seksi "UI Consistency Rules" yang menunjuk MW-ADR-020: daftar pola yang dilarang (hex arbitrary, `stone-*`/palette default, `<button>/<input>/<select>/<textarea>` telanjang, `<a href="/…">`, `style={}`), di mana komponen baru harus ditaruh, dan cara menjalankan gate.
 42. `AGENTS.md` §UI dan perubahan — perluas daftar komponen wajib dengan composite baru + larangan palette default, supaya teks aturan dan isi package tidak bercabang (jaga satu sumber kanonis: rujuk MW-ADR-020, jangan salin seluruh aturan).
-43. `docs/architecture/DOMAIN_OWNERSHIP_AND_DEPENDENCIES.md` — perbarui row `@moonwitness/ui` bila permukaan export berubah.
+43. [Domain Ownership and Dependencies pada Wiki](https://github.com/bjo163/moonwitness-reborn/wiki/docs-architecture-DOMAIN_OWNERSHIP_AND_DEPENDENCIES) — perbarui row `@moonwitness/ui` bila permukaan export berubah.
 
 ## J. Quality gate & bukti
 
-44. Urutan wajib dari checkout ini (AGENTS.md): `pnpm exec turbo run build` → `pnpm lint` → `pnpm typecheck` → `pnpm test`, lalu `pnpm --filter @moonwitness/web build`, `pnpm --filter @moonwitness/web size`, `pnpm tracker:render` → `pnpm tracker:check` → `pnpm tracker:test`. Bedakan error vs warning saat melapor hasil.
+44. Urutan wajib dari checkout ini (AGENTS.md): `pnpm exec turbo run build` → `pnpm lint` → `pnpm typecheck` → `pnpm test`, lalu `pnpm --filter @moonwitness/web build` dan `pnpm --filter @moonwitness/web size`. Ikuti workflow GitHub Issues untuk pembaruan status dan evidence; tidak ada register lokal yang perlu dirender atau diperiksa. Bedakan error vs warning saat melapor hasil.
 45. Smoke visual tiap dari 14 route (`/`, `/auth`, `/command-center`, `/command-center/chat`, `/models`, `/providers`, `/connectors`, `/connectors/:id/dns`, `/corpus`, `/corpus/:editionKey/:surah`, `/workflow`, `/admin/users`, `/admin/translations`) dalam kondisi loading / error / empty / drawer-mobile, khususnya 3 layar hasil konversi light→dark.
-46. Tutup task: MW-0574, MW-0575, MW-0579, MW-0580, MW-0581, MW-0576, MW-0577, MW-0582, MW-0578 dengan bukti di `status_label`; `pnpm tracker:render`. Sebut ID task + state + bukti + blocker di laporan akhir, dan nyatakan bahwa Done bukan klaim rilis.
+46. Tutup Issue MW-0574, MW-0575, MW-0579, MW-0580, MW-0581, MW-0576, MW-0577, MW-0582, dan MW-0578 hanya setelah acceptance criteria masing-masing memiliki evidence langsung di kontrak Issue; sebutkan ID, state, evidence, dan blocker. Done bukan klaim rilis.
 
 ## Urutan kerja & dependensi
 

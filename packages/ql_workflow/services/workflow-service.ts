@@ -33,7 +33,7 @@ const OWNER_ONLY_ACTIONS: readonly TransitionAction[] = ["submit"];
  * Reviewer actions that must additionally be performed by someone other than
  * the change owner, even if the actor also holds a reviewer group. Mirrors
  * the spec rule "submitter cannot approve their own work" (see
- * `docs/workflows/WORKFLOW_AND_PUBLISHING_SPECIFICATION.md:14`).
+ * `https://github.com/bjo163/moonwitness-reborn/wiki/docs-workflows-WORKFLOW_AND_PUBLISHING_SPECIFICATION`).
  */
 const SELF_FORBIDDEN_ACTIONS: readonly TransitionAction[] = [
   "approve",

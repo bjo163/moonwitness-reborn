@@ -30,6 +30,7 @@ import {
   PageHeader,
   Select,
   SidePanel,
+  SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
   type DataTableColumn,
@@ -38,7 +39,6 @@ import {
   ArrowLeft,
   Globe,
   History,
-  Menu,
   Plug,
   Plus,
   RefreshCw,
@@ -485,15 +485,11 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
       header={
         <>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              aria-label={t("web.common.openMenu")}
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu size={18} />
-            </Button>
+            <SidebarTrigger
+              label={t("web.common.openMenu")}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
             <div>
               <div className="text-sm font-semibold">
                 {connector?.label ?? t("web.dns.connector")}

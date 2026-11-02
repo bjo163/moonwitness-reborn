@@ -14,7 +14,7 @@ import chatManifest from "ql_chat/__manifest__";
 import corpusManifest from "ql_corpus/__manifest__";
 import sourceManifest from "ql_source/__manifest__";
 import { createApiServer } from "./server.js";
-import { listProjectTasks } from "../project-progress/tracker.js";
+import { listProjectTasks } from "../project-progress/github-issues.js";
 
 let server: ReturnType<typeof createApiServer>;
 let address: string;
@@ -24,6 +24,48 @@ let closeOrm: () => void;
 let receivedMessages: readonly AgentMessage[] = [];
 let receivedProviderConfig: { apiKey: string; model: string } | undefined;
 const providerEncryptionKey = Buffer.alloc(32, 7);
+const projectTaskIssues = [
+  {
+    title: "[MW-0001] Build foundation",
+    body: `<!-- mw-task-record-start -->
+\`\`\`json
+${JSON.stringify({
+  id: "MW-0001",
+  title: "Build foundation",
+  section: "Phase 0",
+  owner: "Owner",
+  depends_on: [],
+  acceptance_criteria: "The foundation is available.",
+})}
+\`\`\`
+<!-- mw-task-record-end -->`,
+    state: "closed",
+    closed_at: "2026-01-01T00:00:00Z",
+    labels: [{ name: "type:task" }],
+  },
+  {
+    title: "[MW-0002] Build next",
+    body: `<!-- mw-task-record-start -->
+\`\`\`json
+${JSON.stringify({
+  id: "MW-0002",
+  title: "Build next",
+  section: "Phase 0",
+  owner: "Owner",
+  depends_on: ["MW-0001"],
+  acceptance_criteria: "The next task can start.",
+})}
+\`\`\`
+<!-- mw-task-record-end -->`,
+    state: "open",
+    closed_at: null,
+    labels: [{ name: "type:task" }, { name: "status:pending" }],
+  },
+];
+const projectTasksFetcher: typeof fetch = () =>
+  Promise.resolve(
+    new Response(JSON.stringify(projectTaskIssues), { status: 200 }),
+  );
 
 before(async () => {
   const ormRuntime = await createQlOrm("file::memory:", [
@@ -45,6 +87,7 @@ before(async () => {
   };
   server = createApiServer(provider, store, orm, {
     encryptionKey: providerEncryptionKey,
+    projectTasksFetcher,
     providerFactory(config) {
       receivedProviderConfig = config;
       return {
@@ -104,7 +147,9 @@ void test("first-use onboarding grants exactly one super admin", async () => {
     chatManifest,
   ]);
   const setupStore = createConversationStore(runtime.orm);
-  const setupServer = createApiServer(undefined, setupStore, runtime.orm);
+  const setupServer = createApiServer(undefined, setupStore, runtime.orm, {
+    projectTasksFetcher,
+  });
   await new Promise<void>((resolve) => {
     setupServer.listen(0, "127.0.0.1", resolve);
   });
@@ -180,8 +225,11 @@ void test("first-use onboarding grants exactly one super admin", async () => {
       readyCount: number;
       states: Record<string, number>;
     };
-    const projectTasks = await listProjectTasks();
+    const projectTasks = await listProjectTasks(projectTasksFetcher);
     assert.equal(summaryBody.total, projectTasks.length);
+    assert.equal(summaryBody.states.done, 1);
+    assert.equal(summaryBody.states.pending, 1);
+    assert.equal(summaryBody.readyCount, 1);
     assert.equal(
       Object.values(summaryBody.states).reduce((sum, count) => sum + count, 0),
       projectTasks.length,
@@ -204,6 +252,7 @@ void test("first-use onboarding grants exactly one super admin", async () => {
     };
     assert.equal(ownerDetailsBody.tasks.length, projectTasks.length);
     assert.equal(ownerDetailsBody.readyTaskIds.length, summaryBody.readyCount);
+    assert.deepEqual(ownerDetailsBody.readyTaskIds, ["MW-0002"]);
 
     const closedSetup = await fetch(`${setupBaseUrl}/auth/setup`);
     assert.deepEqual(await closedSetup.json(), { required: false });

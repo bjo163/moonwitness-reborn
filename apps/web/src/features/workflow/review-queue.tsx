@@ -19,10 +19,11 @@ import {
   LoadingScreen,
   PageHeader,
   Textarea,
+  SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
 } from "@moonwitness/ui";
-import { Boxes, Menu, ShieldCheck } from "lucide-react";
+import { Boxes, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { LocaleSwitcher } from "../locale/locale-switcher";
@@ -315,15 +316,11 @@ export default function ReviewQueue() {
       header={
         <>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={copy.common.openMenu}
-              className="md:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu aria-hidden="true" size={19} />
-            </Button>
+            <SidebarTrigger
+              label={copy.common.openMenu}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
             <span className="text-sm font-medium text-ink-soft">
               {wf.queueTitle}
             </span>

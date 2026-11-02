@@ -17,6 +17,7 @@ import {
   NavSectionLabel,
   OptionNav,
   Textarea,
+  SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
   cn,
@@ -33,7 +34,6 @@ import {
   KeyRound,
   LogOut,
   MessageSquare,
-  Menu,
   Plug,
   Plus,
   ShieldCheck,
@@ -344,15 +344,11 @@ export default function Home() {
       header={
         <>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={copy.common.openMenu}
-              className="md:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu size={19} />
-            </Button>
+            <SidebarTrigger
+              label={copy.common.openMenu}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
             <div className="text-sm font-medium text-ink-soft">{copy.common.chat}</div>
           </div>
           <Badge variant="live" className="ql-hud-status">

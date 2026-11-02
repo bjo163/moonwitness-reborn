@@ -20,13 +20,13 @@ import {
   PageHeader,
   Select,
   Textarea,
+  SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
 } from "@moonwitness/ui";
 import {
   Boxes,
   BookOpen,
-  Menu,
   Microscope,
   ShieldCheck,
 } from "lucide-react";
@@ -282,15 +282,11 @@ export default function ResearchReviewPage() {
       header={
         <>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={copy.common.openMenu}
-              className="md:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu aria-hidden="true" size={19} />
-            </Button>
+            <SidebarTrigger
+              label={copy.common.openMenu}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
             <span className="text-sm font-medium text-ink-soft">
               {research.title}
             </span>

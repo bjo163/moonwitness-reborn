@@ -24,6 +24,7 @@ import {
   PageHeader,
   SectionGrid,
   Select,
+  SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
 } from "@moonwitness/ui";
@@ -33,7 +34,6 @@ import {
   ExternalLink,
   Globe,
   KeyRound,
-  Menu,
   Plug,
   RefreshCw,
   Save,
@@ -351,15 +351,11 @@ export default function ConnectorWorkspace() {
       header={
         <>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              aria-label={t("web.common.openMenu")}
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu size={18} />
-            </Button>
+            <SidebarTrigger
+              label={t("web.common.openMenu")}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
             <div>
               <div className="text-sm font-semibold">{t("web.connectors.integrations")}</div>
               <div className="text-xs text-muted">

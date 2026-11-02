@@ -9,7 +9,7 @@ import {
 /**
  * `source.artifact` — the top-level registry entry for an external body of
  * work (a Quran edition, a tafsir corpus, a lexicon release). Per
- * `docs/architecture/DOMAIN_OWNERSHIP_AND_DEPENDENCIES.md:13` this addon
+ * `https://github.com/bjo163/moonwitness-reborn/wiki/docs-architecture-DOMAIN_OWNERSHIP_AND_DEPENDENCIES` this addon
  * owns source artifact/version/citation/rights/provenance and **nothing**
  * about the normalized corpus text.
  *

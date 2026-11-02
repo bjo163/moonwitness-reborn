@@ -9,7 +9,6 @@ import {
 import {
   Alert,
   Badge,
-  Button,
   Card,
   CardContent,
   CardHeader,
@@ -18,10 +17,11 @@ import {
   LoadingScreen,
   PageHeader,
   SectionGrid,
+  SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
 } from "@moonwitness/ui";
-import { Boxes, BookOpen, Menu, ShieldCheck } from "lucide-react";
+import { Boxes, BookOpen, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
@@ -193,15 +193,11 @@ export default function CorpusShelf() {
       header={
         <>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={copy.common.openMenu}
-              className="md:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu aria-hidden="true" size={19} />
-            </Button>
+            <SidebarTrigger
+              label={copy.common.openMenu}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
             <span className="text-sm font-medium text-ink-soft">{shelfLabel}</span>
           </div>
         </>

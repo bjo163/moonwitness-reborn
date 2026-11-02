@@ -18,13 +18,13 @@ import {
   LoadingScreen,
   PageHeader,
   Select,
-  SidebarBrand,
-  SidebarFooter,
-  SidebarNav,
+  SidebarTrigger,
+  WorkspaceSidebar,
   WorkspaceTemplate,
   type DataTableColumn,
 } from "@moonwitness/ui";
 import { ArrowLeft, ShieldCheck, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
 import { translateMetadata } from "../locale/translate-metadata";
@@ -60,6 +60,7 @@ export default function UserAdminPage() {
   const [user, setUser] = useState<AuthUserDto | null>(null);
   useLocalePreference(user);
   const { t, tm, locale } = useTranslationCatalog();
+  const router = useRouter();
   const [users, setUsers] = useState<AdminUserDto[]>([]);
   const [roles, setRoles] = useState<RoleDto[]>([]);
   const [pendingRole, setPendingRole] = useState<Record<string, string>>({});
@@ -68,6 +69,17 @@ export default function UserAdminPage() {
   const [workingId, setWorkingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  async function logout() {
+    setError(null);
+    try {
+      await moonClient.logout();
+      router.replace("/auth");
+    } catch (logoutError) {
+      setError(apiErrorMessage(logoutError, t));
+    }
+  }
 
   const loadDirectory = useCallback(async () => {
     const [userResult, roleResult] = await Promise.all([
@@ -186,35 +198,37 @@ export default function UserAdminPage() {
 
   return (
     <WorkspaceTemplate
-      sidebarOpen={false}
-      onCloseSidebar={() => undefined}
+      sidebarOpen={sidebarOpen}
+      onCloseSidebar={() => setSidebarOpen(false)}
       closeLabel={t("web.common.closeMenu")}
       sidebar={
-        <>
-          <SidebarBrand
-            icon={<ShieldCheck aria-hidden="true" size={16} />}
-          />
-          <SidebarNav
-            label={t("web.adminUsers.title")}
-            items={[
-              {
-                href: "/command-center/chat",
-                label: t("web.adminUsers.backToChat"),
-                icon: <ArrowLeft aria-hidden="true" size={16} />,
-              },
-            ]}
-          />
-          <SidebarFooter
-            logoutLabel={t("web.common.logout")}
-            userName={user.name}
-            userSubtitle={roleName(user.role)}
-          />
-        </>
+        <WorkspaceSidebar
+          brandIcon={<ShieldCheck aria-hidden="true" size={16} />}
+          closeLabel={t("web.common.closeMenu")}
+          identity={{ name: user.name, subtitle: roleName(user.role) }}
+          items={[
+            {
+              href: "/command-center/chat",
+              label: t("web.adminUsers.backToChat"),
+              icon: <ArrowLeft aria-hidden="true" size={16} />,
+            },
+          ]}
+          logout={{ label: t("web.common.logout"), onLogout: () => void logout() }}
+          navLabel={t("web.adminUsers.title")}
+          onCloseSidebar={() => setSidebarOpen(false)}
+        />
       }
       header={
         <>
-          <div className="text-sm font-medium text-ink-soft">
-            {t("web.adminUsers.title")}
+          <div className="flex items-center gap-2">
+            <SidebarTrigger
+              label={t("web.common.openMenu")}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
+            <div className="text-sm font-medium text-ink-soft">
+              {t("web.adminUsers.title")}
+            </div>
           </div>
           <Badge variant="live">{t("web.adminUsers.accountCount", { count: users.length })}</Badge>
         </>

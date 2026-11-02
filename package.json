@@ -9,11 +9,7 @@
     "dev": "turbo run dev",
     "lint": "eslint apps packages",
     "test": "turbo run test --concurrency=1",
-    "typecheck": "turbo run typecheck",
-    "tracker:render": "python -B docs/audit/tools/task_tracker.py --write",
-    "tracker:ui": "python -B docs/audit/tools/task_tracker_server.py",
-    "tracker:check": "python -B docs/audit/tools/task_tracker.py --check",
-    "tracker:test": "python -B docs/audit/tools/test_task_tracker.py && python -B docs/audit/tools/test_tracker_invariants.py"
+    "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",

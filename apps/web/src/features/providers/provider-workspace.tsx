@@ -19,6 +19,7 @@ import {
   LoadingScreen,
   PageHeader,
   SectionGrid,
+  SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
 } from "@moonwitness/ui";
@@ -55,6 +56,7 @@ export default function ProviderWorkspace() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const loadProviders = useCallback(async () => {
     const result = await moonClient.listProviders();
@@ -172,8 +174,8 @@ export default function ProviderWorkspace() {
 
   return (
     <WorkspaceTemplate
-      sidebarOpen={false}
-      onCloseSidebar={() => undefined}
+      sidebarOpen={sidebarOpen}
+      onCloseSidebar={() => setSidebarOpen(false)}
       closeLabel={t("web.common.closeMenu")}
       sidebar={
         <WorkspaceSidebar
@@ -188,10 +190,24 @@ export default function ProviderWorkspace() {
             },
           ]}
           navLabel={t("web.providers.title")}
-          onCloseSidebar={() => undefined}
+          onCloseSidebar={() => setSidebarOpen(false)}
         />
       }
-      header={<><div className="text-sm font-medium text-ink-soft">{t("web.providers.modelGateway")}</div><Badge variant="live">{t("web.providers.personal")}</Badge></>}
+      header={
+        <>
+          <div className="flex items-center gap-2">
+            <SidebarTrigger
+              label={t("web.common.openMenu")}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
+            <div className="text-sm font-medium text-ink-soft">
+              {t("web.providers.modelGateway")}
+            </div>
+          </div>
+          <Badge variant="live">{t("web.providers.personal")}</Badge>
+        </>
+      }
     >
       <div className="flex-1 overflow-y-auto px-4 py-8 md:px-8">
         <div className="mx-auto max-w-5xl space-y-7">

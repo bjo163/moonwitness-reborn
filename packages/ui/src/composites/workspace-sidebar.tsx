@@ -67,7 +67,7 @@ export function WorkspaceSidebar({
         <SidebarBrand href={brandHref} icon={brandIcon} label={brandLabel} />
         <Button
           aria-label={closeLabel}
-          className="md:hidden"
+          className="ql-sidebar-close"
           onClick={() => onCloseSidebar()}
           size="icon"
           title={closeLabel}

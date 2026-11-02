@@ -5,7 +5,7 @@ import { views } from "./views/index.js";
 /**
  * `ql_source` — the source registry that owns artifact, version, citation,
  * rights record and provenance (see
- * `docs/architecture/DOMAIN_OWNERSHIP_AND_DEPENDENCIES.md:13`). It does **not**
+ * `https://github.com/bjo163/moonwitness-reborn/wiki/docs-architecture-DOMAIN_OWNERSHIP_AND_DEPENDENCIES`). It does **not**
  * own normalized corpus text — that is `ql_corpus`.
  *
  * ACL is deny-by-default. Notable structural choices:

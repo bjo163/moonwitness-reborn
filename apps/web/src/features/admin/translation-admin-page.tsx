@@ -17,6 +17,7 @@ import {
   PageHeader,
   Select,
   Textarea,
+  SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
 } from "@moonwitness/ui";
@@ -53,6 +54,7 @@ export default function TranslationAdminPage() {
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { locale, changeLocale } = useLocalePreference(user);
   const { t, refresh } = useTranslationCatalog();
 
@@ -327,8 +329,8 @@ export default function TranslationAdminPage() {
 
   return (
     <WorkspaceTemplate
-      sidebarOpen={false}
-      onCloseSidebar={() => undefined}
+      sidebarOpen={sidebarOpen}
+      onCloseSidebar={() => setSidebarOpen(false)}
       closeLabel={t("web.common.closeMenu")}
       sidebar={
         <WorkspaceSidebar
@@ -343,14 +345,21 @@ export default function TranslationAdminPage() {
             },
           ]}
           navLabel={t("web.common.mainNavigation")}
-          onCloseSidebar={() => undefined}
+          onCloseSidebar={() => setSidebarOpen(false)}
         />
       }
       header={
         <>
-          <span className="text-sm font-medium text-ink-soft">
-            {t("web.translationAdmin.title")}
-          </span>
+          <div className="flex items-center gap-2">
+            <SidebarTrigger
+              label={t("web.common.openMenu")}
+              onOpenSidebar={() => setSidebarOpen(true)}
+              sidebarOpen={sidebarOpen}
+            />
+            <span className="text-sm font-medium text-ink-soft">
+              {t("web.translationAdmin.title")}
+            </span>
+          </div>
           <Button
             type="button"
             variant="ghost"

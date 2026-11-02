@@ -31,6 +31,10 @@ export {
   type SidebarFooterProps,
 } from "./composites/sidebar-footer.js";
 export {
+  SidebarTrigger,
+  type SidebarTriggerProps,
+} from "./composites/sidebar-trigger.js";
+export {
   PageHeader,
   type PageHeaderProps,
 } from "./composites/page-header.js";

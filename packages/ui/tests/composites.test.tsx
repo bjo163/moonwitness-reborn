@@ -16,6 +16,7 @@ import {
   SidebarBrand,
   SidebarFooter,
   SidebarNav,
+  SidebarTrigger,
   WorkspaceSidebar,
   type SidebarNavItem,
 } from "../src/index.js";
@@ -298,4 +299,29 @@ void test("WorkspaceSidebar composes brand row, nav list, children and footer on
   assert.match(markup, /aria-label="Sign out"/);
   assert.equal((markup.match(/ql-nav-link/g) ?? []).length, 2);
   assertNoOwnColours(markup, "WorkspaceSidebar");
+});
+
+void test("SidebarTrigger links the hamburger to the drawer via aria-controls and reflects open state in aria-expanded", () => {
+  const closed = render(
+    <SidebarTrigger
+      label="Open menu"
+      onOpenSidebar={() => undefined}
+      sidebarOpen={false}
+    />,
+  );
+  assert.match(closed, /aria-label="Open menu"/);
+  assert.match(closed, /aria-controls="ql-workspace-sidebar"/);
+  assert.match(closed, /aria-expanded="false"/);
+  assert.match(closed, /class="[^"]*ql-sidebar-trigger[^"]*"/);
+  assert.match(closed, /ql-button--icon/);
+  assertNoOwnColours(closed, "SidebarTrigger");
+
+  const open = render(
+    <SidebarTrigger
+      label="Open menu"
+      onOpenSidebar={() => undefined}
+      sidebarOpen
+    />,
+  );
+  assert.match(open, /aria-expanded="true"/);
 });
