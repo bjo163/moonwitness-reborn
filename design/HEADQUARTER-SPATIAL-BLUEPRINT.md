@@ -125,7 +125,7 @@ Responsibilities:
 
 System Observatory is the operational control and evidence surface for the wider ecosystem. It does not own mission/task records, research content, stories, media publications, or personal workspace data. It coordinates and observes work owned by those domains through authorized contracts.
 
-Monitoring and durable scheduling must continue independently of AI availability. Playwright is an isolated browser executor; OpenClaw is an optional external agent/runtime adapter. Neither is the domain database, policy authority, or required platform foundation.
+Monitoring and durable scheduling must continue independently of AI availability. ARSY cognition, planning, memory, policy and agent orchestration are MoonWitness-owned capabilities. Playwright is only an isolated, replaceable browser-control library; no external agent framework or gateway is part of the target architecture.
 
 Never expose secrets, tokens, credentials, browser cookies, or private operational data to unauthorized users.
 
