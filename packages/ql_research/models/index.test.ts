@@ -581,3 +581,33 @@ void test("character.canon is registered in ql_research and preserves canon stat
     },
   );
 });
+
+void test("character.classification is registered in ql_research and validates archetypes", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+      researchManifest,
+    ],
+    async (orm) => {
+      const classification = await orm.createRecordForService("character.classification", {
+        canonical_id: "mw:charclass:tariq-ibn-ziyad",
+        character_id: "mw:char:tariq-ibn-ziyad",
+        archetype: "historical_ruler",
+        alignment: "righteous_principled",
+        core_traits: "Courageous, decisive, articulate orator, deeply devoted commander",
+        narrative_function: "Serves as an exemplar of faith-driven leadership and historical turning point catalyst",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      assert.ok(classification.id);
+
+      const found = await orm.findOneByService("character.classification", { id: classification.id });
+      assert.equal(found?.["character_id"], "mw:char:tariq-ibn-ziyad");
+      assert.equal(found?.["archetype"], "historical_ruler");
+      assert.equal(found?.["alignment"], "righteous_principled");
+    },
+  );
+});
