@@ -8,6 +8,7 @@ export type UploadItemStatus =
   | "uploading"
   | "verifying"
   | "paused"
+  | "needsFile"
   | "done"
   | "failed";
 
@@ -48,9 +49,17 @@ export interface AttachmentUploadProps {
   className?: string;
 }
 
-function isSettled(status: UploadItemStatus): boolean {
-  return status === "done" || status === "failed";
-}
+const PAUSABLE: readonly UploadItemStatus[] = ["queued", "uploading", "verifying"];
+const DISMISSABLE: readonly UploadItemStatus[] = [
+  "queued",
+  "uploading",
+  "verifying",
+  "paused",
+  "needsFile",
+];
+// Without the original bytes the client cannot state how far along the server
+// is, so these two show a moving bar instead of a number it would be inventing.
+const UNQUANTIFIED: readonly UploadItemStatus[] = ["verifying", "needsFile"];
 
 /**
  * Upload surface for resumable attachments. Copy arrives through `labels` so the
@@ -115,7 +124,7 @@ export function AttachmentUpload({
                 </span>
               </div>
               <Progress
-                indeterminate={item.status === "verifying"}
+                indeterminate={UNQUANTIFIED.includes(item.status)}
                 labelledBy={`ql-upload-${item.id}`}
                 max={item.totalBytes}
                 value={item.sentBytes}
@@ -125,24 +134,27 @@ export function AttachmentUpload({
                 <p className="ql-attachment-upload__error">{item.error}</p>
               )}
               <div className="ql-attachment-upload__actions">
-                {isSettled(item.status) ? null : (
-                  <>
-                    <Button
-                      onClick={() => onTogglePause(item.id)}
-                      variant="secondary"
-                    >
-                      {item.status === "paused"
-                        ? labels.resume()
-                        : labels.pause()}
-                    </Button>
-                    <Button onClick={() => onCancelItem(item.id)} variant="ghost">
-                      {labels.cancel()}
-                    </Button>
-                  </>
-                )}
                 {item.status === "failed" ? (
                   <Button onClick={() => onRetryItem(item.id)} variant="secondary">
                     {labels.retry()}
+                  </Button>
+                ) : null}
+                {item.status === "paused" ? (
+                  <Button onClick={() => onTogglePause(item.id)} variant="secondary">
+                    {labels.resume()}
+                  </Button>
+                ) : null}
+                {PAUSABLE.includes(item.status) ? (
+                  <Button
+                    onClick={() => onTogglePause(item.id)}
+                    variant="secondary"
+                  >
+                    {labels.pause()}
+                  </Button>
+                ) : null}
+                {DISMISSABLE.includes(item.status) ? (
+                  <Button onClick={() => onCancelItem(item.id)} variant="ghost">
+                    {labels.cancel()}
                   </Button>
                 ) : null}
               </div>

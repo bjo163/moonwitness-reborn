@@ -725,6 +725,25 @@ export interface VerifyAyahProofResponseDto {
   diffExplanation?: string;
 }
 
+/**
+ * The stored state of one verse's provenance: the digest recomputed from the
+ * published text, plus the `corpus.ayah_proof` anchor when an operator has
+ * written one. `authoritativeHash` is what a reader copies and what
+ * `verify` recomputes server-side; `anchorHash` is the separate digest over
+ * the canonical payload (edition + locator + text).
+ */
+export interface AyahProofResponseDto {
+  surahNumber: number;
+  ayahNumber: number;
+  editionCode: string;
+  editionTitle: string;
+  canonicalText: string;
+  authoritativeHash: string;
+  anchored: boolean;
+  anchorHash: string | null;
+  verificationCount: number;
+}
+
 // Track 05: Audio Tilawah Spatial Resonance
 export interface ReciterListItemDto {
   id: string;
@@ -1191,6 +1210,7 @@ export interface AttachmentChunkProgressDto {
   receivedBytes: number;
   totalChunks: number;
   expectedBytes: number;
+  chunkBytes: number;
   /** Chunk indices the server has not stored yet; the resume work list. */
   missingChunks: number[];
 }
@@ -1724,6 +1744,17 @@ export class MoonClient {
     payload: VerifyAyahProofRequestDto,
   ): Promise<VerifyAyahProofResponseDto> {
     return this.request(apiRoutes.corpusProofs.verify, "POST", payload);
+  }
+
+  getAyahProof(
+    editionCode: string,
+    surahNumber: number,
+    ayahNumber: number,
+  ): Promise<AyahProofResponseDto> {
+    return this.request(
+      apiRoutes.corpusProofs.getProof(editionCode, surahNumber, ayahNumber),
+      "GET",
+    );
   }
 
   getReciters(): Promise<ReciterListItemDto[]> {

@@ -1,0 +1,47 @@
+{
+  "name": "ql_attachment",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./__manifest__": {
+      "types": "./dist/__manifest__.d.ts",
+      "import": "./dist/__manifest__.js"
+    },
+    "./models": {
+      "types": "./dist/models/index.d.ts",
+      "import": "./dist/models/index.js"
+    },
+    "./views": {
+      "types": "./dist/views/index.d.ts",
+      "import": "./dist/views/index.js"
+    },
+    "./services/attachment-service": {
+      "types": "./dist/services/attachment-service.d.ts",
+      "import": "./dist/services/attachment-service.js"
+    },
+    "./services/attachment-vocabulary": {
+      "types": "./dist/services/attachment-vocabulary.d.ts",
+      "import": "./dist/services/attachment-vocabulary.js"
+    },
+    "./services/media-policy": {
+      "types": "./dist/services/media-policy.d.ts",
+      "import": "./dist/services/media-policy.js"
+    },
+    "./services/policy-env": {
+      "types": "./dist/services/policy-env.d.ts",
+      "import": "./dist/services/policy-env.js"
+    },
+    "./services/errors": {
+      "types": "./dist/services/errors.d.ts",
+      "import": "./dist/services/errors.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsx --test models/index.test.ts services/media-policy.test.ts services/attachment-service.test.ts services/policy-env.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "ql_orm": "workspace:*"
+  }
+}

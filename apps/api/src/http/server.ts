@@ -125,6 +125,11 @@ import {
   readVerse,
   type PassageReadDto,
 } from "ql_corpus/services/reader-service";
+import {
+  isSha256Hex,
+  readAyahProofSummary,
+  verifyAyahProof,
+} from "ql_corpus/services/proof-service";
 import { PASSAGE_KINDS } from "ql_corpus/services/corpus-vocabulary";
 import {
   ROLE_CATALOG,
@@ -1286,9 +1291,9 @@ async function handleWorkflowRequest(
     }
     if (method === "POST") {
       const raw = parseObject(await readJsonBody(request));
-      const decision = String(raw.decision ?? "") as "approved" | "changes_requested";
-      const notes = String(raw.notes ?? "");
-      const sanadChainRef = String(raw.sanadChainRef ?? "");
+      const decision = (typeof raw.decision === "string" ? raw.decision : "") as "approved" | "changes_requested";
+      const notes = typeof raw.notes === "string" ? raw.notes : "";
+      const sanadChainRef = typeof raw.sanadChainRef === "string" ? raw.sanadChainRef : "";
       await submitPeerReviewForService(orm, changeId, user.id, {
         decision,
         notes,
@@ -1345,7 +1350,7 @@ async function handleWorkflowRequest(
       {
         state: "published",
         ethics_affirmed_at: now,
-        ethics_digest: String(ethics.ethicsDigest ?? ""),
+        ethics_digest: typeof ethics.ethicsDigest === "string" ? ethics.ethicsDigest : "",
         is_not_fatwa_affirmed: true,
         updated_at: now,
       },
@@ -2662,10 +2667,10 @@ export function createApiServer(
         const user = await requireAuthenticatedUser(request, response, store);
         if (!user) return;
         const raw = parseObject(await readJsonBody(request));
-        const covenantVersion = String(raw.covenantVersion ?? "1.0.0");
-        const termsDigest = String(raw.termsDigest ?? "");
-        const statementAccepted = Boolean(raw.statementAccepted);
-        const contributorCallsign = String(raw.contributorCallsign ?? user.name);
+const covenantVersion = typeof raw.covenantVersion === "string" ? raw.covenantVersion : "1.0.0";
+      const termsDigest = typeof raw.termsDigest === "string" ? raw.termsDigest : "";
+      const statementAccepted = Boolean(raw.statementAccepted);
+      const contributorCallsign = typeof raw.contributorCallsign === "string" ? raw.contributorCallsign : user.name;
 
         if (!statementAccepted) {
           sendJson(response, 422, { error: "statement_accepted must be true to sign." });
@@ -2757,8 +2762,8 @@ export function createApiServer(
           const user = await requireAuthenticatedUser(request, response, store);
           if (!user) return;
           const raw = parseObject(await readJsonBody(request));
-          const passageLocator = String(raw.passageLocator ?? "");
-          const content = String(raw.content ?? "");
+          const passageLocator = typeof raw.passageLocator === "string" ? raw.passageLocator : "";
+          const content = typeof raw.content === "string" ? raw.content : "";
           const now = new Date();
           const created = await orm.createRecordForService("community.circle_reflection", {
             circle_id: circleId,
@@ -2795,11 +2800,15 @@ export function createApiServer(
         sendJson(response, 200, {
           deeds: deeds.map((d) => ({
             id: String(d.id ?? ""),
-            contributorCallsign: Boolean(d.is_anonymous)
+            contributorCallsign: d.is_anonymous
               ? "Anonymous Scholar"
               : String(d.contributor_id ?? "Contributor"),
-            isAnonymous: Boolean(d.is_anonymous),
-            deedKind: String(d.deed_kind ?? "typo_correction") as any,
+            isAnonymous: d.is_anonymous,
+            deedKind: (typeof d.deed_kind === "string" ? d.deed_kind : "typo_correction") as
+                | "typo_correction"
+                | "translation_review"
+                | "reference_verification"
+                | "annotation_audit",
             summary: String(d.summary ?? ""),
             proofHash: String(d.proof_hash ?? ""),
             createdAt: new Date(Number(d.created_at ?? Date.now())).toISOString(),
