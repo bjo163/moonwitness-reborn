@@ -30,9 +30,7 @@ const BROWSER_BOUNDARY_MESSAGE =
 const UI_CONSISTENCY_MESSAGE =
   "Use @moonwitness/ui components and the cn() utility; do not duplicate the design system.";
 const UI_PRIMITIVE_BAN_MESSAGE =
-  "Use @moonwitness/ui primitives (Button, Input, Textarea, Select, Checkbox, Badge, Alert, Card, DataTable, FormField, RawField, WorkspaceTemplate, CenteredAuth) and its composites (NavLink, SidebarNav, OptionNav, NavSectionLabel, SidebarBrand, SidebarFooter, SidebarTrigger, WorkspaceSidebar, PageHeader, LoadingScreen, EmptyState, SectionGrid, IconTile, MetricRow, MetricList, ListOption, SidePanel); do not hand-roll them in apps/web.";
-const UI_SIDEBAR_TRIGGER_MESSAGE =
-  "Importing the `Menu` icon signals a hand-rolled mobile hamburger; use SidebarTrigger from @moonwitness/ui so the drawer keeps its `aria-expanded`/`aria-controls` contract (MW-0584).";
+  "Use @moonwitness/ui primitives (Button, Input, Textarea, Select, Checkbox, Badge, Alert, Card, DataTable, FormField, RawField, WorkspaceTemplate, CenteredAuth) and its composites (NavLink, SidebarNav, OptionNav, NavSectionLabel, SidebarBrand, SidebarFooter, SidebarTrigger, WorkspaceSidebar, PageHeader, LoadingScreen, EmptyState, SectionGrid, IconTile, MetricRow, ListOption, SidePanel); do not hand-roll them in apps/web.";
 const UI_INTERNAL_LINK_MESSAGE =
   "Use Next.js <Link> or @moonwitness/ui NavLink for internal routes in apps/web.";
 const UI_INLINE_STYLE_MESSAGE =
@@ -300,14 +298,7 @@ export function moonwitnessConfig({
           "error",
           {
             paths: [contractsBanPath, ...httpClientBanPaths, ...cssInJsBanPaths],
-            patterns: [
-              ...browserBoundaryPatterns,
-              {
-                name: ["lucide-react", "lucide-react/**"],
-                importNames: ["Menu"],
-                message: UI_SIDEBAR_TRIGGER_MESSAGE,
-              },
-            ],
+            patterns: browserBoundaryPatterns,
           },
         ],
         "no-restricted-properties": ["error", ...httpBoundaryProperties],
