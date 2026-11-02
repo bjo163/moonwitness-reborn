@@ -950,7 +950,6 @@ void test("GET /search queries search.index_entry securely with owner isolation"
 
   // Create an index entry in orm via createRecordForService (owned by user)
   await orm.createRecordForService("search.index_entry", {
-    id: "entry_musa_01",
     target_model: "story.narrative",
     target_id: "story_musa",
     token: "musa",
