@@ -12,11 +12,6 @@ export const searchIndexEntryModel: QlModelDefinition = {
   tableName: "search_index_entry",
   ownerField: "owner_id",
   fields: {
-    id: {
-      type: "char",
-      required: true,
-      maxLength: 64,
-    },
     target_model: {
       type: "char",
       required: true,
