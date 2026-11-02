@@ -50,6 +50,9 @@ export class GroundedAgentOutputError extends Error {
   }
 }
 
+export const GroundedAgentValidationError = GroundedAgentOutputError;
+export type GroundedAgentValidationError = GroundedAgentOutputError;
+
 export interface AgentHistoryMessage {
   role: ChatRole;
   content: string;
@@ -131,13 +134,17 @@ export async function runGroundedAgent(
   return parseGroundedAgentOutput(providerOutput, allowedEvidenceIds);
 }
 
-function parseGroundedAgentOutput(
+export function parseGroundedAgentOutput(
   output: string,
   allowedEvidenceIds: ReadonlySet<string>,
 ): GroundedAgentResult {
+  let raw = output.trim();
+  if (raw.startsWith("```")) {
+    raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+  }
   let parsed: unknown;
   try {
-    parsed = JSON.parse(output);
+    parsed = JSON.parse(raw);
   } catch {
     throw new GroundedAgentOutputError(
       "Grounded agent returned malformed JSON.",

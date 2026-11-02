@@ -6,8 +6,10 @@ import {
   apiRoutes,
   moonClient,
   type ChatCitationDto,
+  type ChatGroundingStatusDto,
   type ChatRequestDto,
   type ChatResponseDto,
+  type GroundedChatResponseDto,
 } from "./index.js";
 
 function recorder(response: unknown = {}) {
@@ -495,9 +497,10 @@ void test("MoonClient preserves legacy and supports grounded chat contracts", as
     surah: 2,
     ayah: 255,
   };
-  const groundedResponse: ChatResponseDto = {
+  const groundedStatus: ChatGroundingStatusDto = "grounded";
+  const groundedResponse: GroundedChatResponseDto = {
     reply: "Grounded answer.",
-    groundingStatus: "grounded",
+    groundingStatus: groundedStatus,
     citations: [citation],
   };
   const grounded = recorder(groundedResponse);

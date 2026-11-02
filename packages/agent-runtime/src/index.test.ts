@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   GroundedAgentOutputError,
+  GroundedAgentValidationError,
+  parseGroundedAgentOutput,
   runAgent,
   runGroundedAgent,
   type AgentMessage,
@@ -185,6 +187,65 @@ void test("runGroundedAgent does not call the provider without evidence", async 
     {
       name: "GroundedAgentOutputError",
       message: "Grounded agent requires at least one evidence item.",
+    },
+  );
+});
+
+void test("runGroundedAgent handles markdown-fenced JSON responses", async () => {
+  const provider: ModelProvider = {
+    generate() {
+      return Promise.resolve(
+        "```json\n" +
+          JSON.stringify({
+            status: "grounded",
+            reply: "Answer inside markdown fence.",
+            citations: ["passage-1"],
+          }) +
+          "\n```",
+      );
+    },
+  };
+
+  const result = await runGroundedAgent(provider, {
+    input: "Question?",
+    evidence: [{ id: "passage-1", text: "Evidence text." }],
+  });
+
+  assert.deepEqual(result, {
+    reply: "Answer inside markdown fence.",
+    groundingStatus: "grounded",
+    citations: [{ evidenceId: "passage-1" }],
+  });
+});
+
+void test("parseGroundedAgentOutput validates allowed evidence and exports GroundedAgentValidationError", () => {
+  const allowed = new Set(["ev-1", "ev-2"]);
+
+  const valid = parseGroundedAgentOutput(
+    JSON.stringify({
+      status: "grounded",
+      reply: "Direct parse answer.",
+      citations: ["ev-1"],
+    }),
+    allowed,
+  );
+  assert.equal(valid.groundingStatus, "grounded");
+  assert.equal(valid.reply, "Direct parse answer.");
+
+  assert.throws(
+    () =>
+      parseGroundedAgentOutput(
+        JSON.stringify({
+          status: "grounded",
+          reply: "Invented evidence answer.",
+          citations: ["ev-unknown"],
+        }),
+        allowed,
+      ),
+    (error: unknown) => {
+      assert.ok(error instanceof GroundedAgentValidationError);
+      assert.match(error.message, /cited unknown evidence ID 'ev-unknown'/);
+      return true;
     },
   );
 });

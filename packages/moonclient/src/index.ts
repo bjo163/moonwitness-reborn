@@ -179,6 +179,8 @@ export type ChatGroundingStatus =
   | "insufficient_evidence"
   | "legacy";
 
+export type ChatGroundingStatusDto = ChatGroundingStatus;
+
 export interface ChatCitationDto {
   evidenceId: string;
   editionId: string;
@@ -192,6 +194,11 @@ export interface ChatCitationDto {
   surah: number;
   ayah: number;
 }
+
+export type GroundedChatResponseDto = Extract<
+  ChatResponseDto,
+  { groundingStatus: "grounded" | "insufficient_evidence" }
+>;
 
 export type ChatResponseDto =
   | {
