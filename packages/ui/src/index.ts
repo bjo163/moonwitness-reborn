@@ -107,4 +107,36 @@ export {
   type CommandAction,
   type CommandCategory,
 } from "./composites/command-palette.js";
+export {
+  AmbientAtmosphere,
+  type AmbientAtmosphereProps,
+  type AtmosphereDensity,
+  type AtmosphereParticle,
+} from "./composites/ambient-atmosphere.js";
+export {
+  HolographicOrbitDeck,
+  type HolographicOrbitDeckProps,
+  type OrbitRegionNode,
+  type CommandRegionId,
+} from "./composites/holographic-orbit.js";
+export {
+  ChimeToggle,
+  type ChimeToggleProps,
+} from "./composites/chime-toggle.js";
+export {
+  SanctuaryZenStage,
+  type SanctuaryZenStageProps,
+} from "./composites/sanctuary-zen-stage.js";
+export {
+  AdaptiveHudShell,
+  type AdaptiveHudShellProps,
+  type HudPaneDefinition,
+  type SpatialDensityTier,
+} from "./composites/adaptive-hud-shell.js";
+export {
+  microChimeEngine,
+  type MicroChimeTone,
+  type MicroChimeConfig,
+} from "./lib/micro-chime-engine.js";
+
 

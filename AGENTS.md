@@ -47,6 +47,7 @@
 - Urutan otoritatif GitHub Actions berada di `.github/workflows/ci.yml`: build, lint type-aware, typecheck, test, lalu budget web. Bedakan error lint dari warning dan jangan menyatakan workflow lulus tanpa hasil run yang diamati.
 - Untuk perubahan tata kelola Issues/Wiki, verifikasi Issue, label, dan dokumentasi langsung pada sumber kanonis GitHub Issues/Wiki menggunakan skill GitHub Issues. Requirement audit gates lokal sudah dipensiunkan; jangan menambahkan kembali salinan snapshot atau script lokal sebagai sumber status.
 - Pecah pekerjaan paralel hanya untuk bagian yang benar-benar independen dan file/interface yang tidak tumpang tindih. Beri tiap worker lingkup serta kriteria selesai yang jelas; satu integrator menangani kontrak bersama dan menjalankan validasi akhir.
+- Alur branch: `dev` adalah branch kerja harian dan menerima `git push origin dev` langsung; jangan membuka pull request untuk memasukkan pekerjaan ke `dev` dan jangan menjadikan `dev` sebagai branch yang butuh gerbang tambahan. Branch default repo adalah `main`, tetapi `main` hanya garis rilis: masuknya lewat pull request `dev` → `main` yang dibuka workflow Release (`.github/workflows/release.yml`) dan dijaga status check `validate` dengan `enforce_admins`. Jangan mengubah default branch atau proteksi `main`/`dev` tanpa perintah eksplisit pengguna.
 - Jangan commit, push, mengubah konfigurasi GitHub, atau menjalankan deployment kecuali diminta secara eksplisit.
 
 ## Kustomisasi agent

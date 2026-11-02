@@ -1,4 +1,4 @@
-﻿msgid ""
+msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Language: id\n"
@@ -3450,3 +3450,20 @@ msgstr "Tekan ESC untuk menutup. Ketik untuk mencari."
 msgctxt "web:common.quickLinks"
 msgid "Quick Links"
 msgstr "Tautan Cepat"
+
+msgctxt "web:corpus.zenModeToggle"
+msgid "Mode Hening"
+msgstr "Mode Hening"
+
+msgctxt "web:corpus.exitZenMode"
+msgid "Kembali dari Mode Hening (Esc)"
+msgstr "Kembali dari Mode Hening (Esc)"
+
+msgctxt "web:common.chimeToggleActive"
+msgid "Suara Harmoni Aktif"
+msgstr "Suara Harmoni Aktif"
+
+msgctxt "web:common.chimeToggleMuted"
+msgid "Suara Harmoni Senyap"
+msgstr "Suara Harmoni Senyap"
+

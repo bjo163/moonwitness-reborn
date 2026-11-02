@@ -1087,3 +1087,50 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/*
+ * Spatial Visual, Atmosphere & Audio Resonance (Tracks 11 - 15)
+ */
+.ql-ambient-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ql-holographic-orbit-deck {
+  position: relative;
+  border-radius: 0.75rem;
+}
+
+.ql-chime-toggle {
+  user-select: none;
+}
+
+.ql-sanctuary-zen-stage {
+  backdrop-filter: blur(8px);
+}
+
+.ql-adaptive-hud-shell {
+  max-width: 100%;
+}
+
+.ql-density--compact .ql-hud-pane {
+  padding: 0.5rem;
+}
+
+.ql-density--tablet .ql-hud-pane {
+  padding: 1rem;
+}
+
+.ql-density--dual .ql-hud-pane {
+  padding: 1.5rem;
+}
+
+.ql-density--trio .ql-hud-pane {
+  padding: 1.5rem;
+}
+
+.ql-density--panoramic .ql-hud-pane {
+  padding: 2rem;
+}

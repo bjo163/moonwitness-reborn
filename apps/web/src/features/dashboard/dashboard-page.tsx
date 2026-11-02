@@ -16,7 +16,10 @@ import {
   SidebarTrigger,
   WorkspaceSidebar,
   WorkspaceTemplate,
+  HolographicOrbitDeck,
+  AmbientAtmosphere,
   type SidebarNavItem,
+  type CommandRegionId,
 } from "@moonwitness/ui";
 import {
   ArrowRight,
@@ -329,12 +332,91 @@ export default function DashboardPage() {
         {/* =========================================================================
             2. WORLD CORE & SPATIAL AXIS SELECTOR (Landmark Navigation)
            ========================================================================= */}
-        <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-12">
+        <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-12 relative">
+          {/* Subtle Ambient Canvas in background */}
+          <AmbientAtmosphere density="subtle" />
+
           {(error || localeError) && (
             <Alert variant="error" className="mb-8">
               {error ?? localeError}
             </Alert>
           )}
+
+          {/* 5-Region 3D Holographic Spatial Orbit Visualizer (Track 12) */}
+          <div className="mb-10">
+            <HolographicOrbitDeck
+              regions={[
+                {
+                  id: "revelation",
+                  label: "Revelation Archive",
+                  tagline: "Holy Quranic text and classical readings",
+                  href: "/corpus",
+                  thetaRad: 0,
+                  status: hasCorpus ? "nominal" : "active",
+                  metricLabel: "Status",
+                  metricValue: hasCorpus ? "Online" : "Standby",
+                },
+                {
+                  id: "hermeneutics",
+                  label: "Hermeneutic Core",
+                  tagline: "Cross-surah thematic discourse",
+                  href: "/research",
+                  thetaRad: (2 * Math.PI) / 5,
+                  status: hasResearch ? "nominal" : "active",
+                  metricLabel: "Research Lab",
+                  metricValue: hasResearch ? "Online" : "Standby",
+                },
+                {
+                  id: "sanad",
+                  label: "Epistemic Sanad",
+                  tagline: "Cryptographic attribution chain",
+                  href: "/workflow",
+                  thetaRad: (4 * Math.PI) / 5,
+                  status: hasWorkflow ? "nominal" : "active",
+                  metricLabel: "Review Queue",
+                  metricValue: hasWorkflow ? "Operational" : "Standby",
+                },
+                {
+                  id: "harbor",
+                  label: "Harbor Concourse",
+                  tagline: "Collaborative inquiry and reflections",
+                  href: "/command-center/chat",
+                  thetaRad: (6 * Math.PI) / 5,
+                  status: "nominal",
+                  metricLabel: "AI Dialog",
+                  metricValue: "Active",
+                },
+                {
+                  id: "telemetry",
+                  label: "Fleet Operability",
+                  tagline: "System health and telemetry monitors",
+                  href: "/connectors",
+                  thetaRad: (8 * Math.PI) / 5,
+                  status: hasConnectors ? "nominal" : "active",
+                  metricLabel: "Edge Gateway",
+                  metricValue: hasConnectors ? "Online" : "Local",
+                },
+              ]}
+              activeRegionId={
+                activeRegion === "05"
+                  ? "revelation"
+                  : activeRegion === "04"
+                    ? "hermeneutics"
+                    : activeRegion === "03"
+                      ? "sanad"
+                      : activeRegion === "01"
+                        ? "harbor"
+                        : "telemetry"
+              }
+              onSelectRegion={(regionId: CommandRegionId) => {
+                if (regionId === "revelation") setActiveRegion("05");
+                else if (regionId === "hermeneutics") setActiveRegion("04");
+                else if (regionId === "sanad") setActiveRegion("03");
+                else if (regionId === "harbor") setActiveRegion("01");
+                else setActiveRegion("06");
+              }}
+            />
+          </div>
 
           <div className="mb-8 border-b border-hairline pb-6">
             <div className="flex flex-wrap items-center justify-between gap-4">

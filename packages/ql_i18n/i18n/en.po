@@ -1,4 +1,4 @@
-﻿msgid ""
+msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Language: en\n"
@@ -3447,3 +3447,20 @@ msgstr "Press ESC to close. Type to search."
 msgctxt "web:common.quickLinks"
 msgid "Quick Links"
 msgstr "Quick Links"
+
+msgctxt "web:corpus.zenModeToggle"
+msgid "Mode Hening"
+msgstr "Zen Sanctuary Mode"
+
+msgctxt "web:corpus.exitZenMode"
+msgid "Kembali dari Mode Hening (Esc)"
+msgstr "Exit Zen Mode (Esc)"
+
+msgctxt "web:common.chimeToggleActive"
+msgid "Suara Harmoni Aktif"
+msgstr "Harmonic Chime Active"
+
+msgctxt "web:common.chimeToggleMuted"
+msgid "Suara Harmoni Senyap"
+msgstr "Harmonic Chime Muted"
+

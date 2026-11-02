@@ -185,7 +185,7 @@ const uiPurePaletteBan = {
  * @param {string} [options.webAppDir] Workspace-relative directory of the Next.js app.
  * @param {string} [options.apiConnectorsDir] Workspace-relative directory of the
  *   API's credential-touching connectors module.
- * @returns {import("eslint").Linter.Config[]}
+ * @returns {import("typescript-eslint").ConfigArray}
  */
 export function moonwitnessConfig({
   tsconfigRootDir,
@@ -198,6 +198,7 @@ export function moonwitnessConfig({
     );
   }
 
+  /** @type {import("typescript-eslint").Config["rules"]} */
   const cleanCodeRules = {
     "@typescript-eslint/consistent-type-imports": [
       "error",

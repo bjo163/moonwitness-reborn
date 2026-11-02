@@ -7,11 +7,20 @@ import {
   type CorpusPassageDto,
   type CorpusSurahDto,
 } from "@moonwitness/moonclient";
-import { Alert, Badge, SanctuaryHeader } from "@moonwitness/ui";
-import { ArrowLeft } from "lucide-react";
+import {
+  Alert,
+  Badge,
+  Button,
+  SanctuaryHeader,
+  AmbientAtmosphere,
+  ChimeToggle,
+  SanctuaryZenStage,
+  microChimeEngine,
+} from "@moonwitness/ui";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
 import { useTranslationCatalog } from "../locale/translation-catalog";
 import { useLocalePreference } from "../locale/use-locale-preference";
@@ -77,6 +86,29 @@ export default function QuranReader() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reading, setReading] = useState<CorpusSurahDto | null>(null);
+  const [zenActive, setZenActive] = useState(false);
+  const [chimeEnabled, setChimeEnabled] = useState(false);
+
+  useEffect(() => {
+    setChimeEnabled(microChimeEngine.isEnabled());
+  }, []);
+
+  const handleToggleChime = useCallback((next: boolean) => {
+    microChimeEngine.setEnabled(next);
+    setChimeEnabled(next);
+    if (next) {
+      microChimeEngine.play("affirmation");
+    }
+  }, []);
+
+  const handleEnterZen = useCallback(() => {
+    setZenActive(true);
+    microChimeEngine.play("contemplation");
+  }, []);
+
+  const handleExitZen = useCallback(() => {
+    setZenActive(false);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,8 +146,25 @@ export default function QuranReader() {
   }, [editionKey, surah, t]);
 
   const rtl = isArabicVerbatim(reading?.passages[0]);
+  const primaryPassage = reading?.passages[0];
+
   return (
-    <main className="ql-hud-app min-h-dvh bg-panel-deep text-ink-soft">
+    <main className="ql-hud-app relative min-h-dvh bg-panel-deep text-ink-soft">
+      {/* Universal Ambient Atmosphere Canvas (Track 11) */}
+      <AmbientAtmosphere density="subtle" />
+
+      {/* Sanctuary Zen Mode Overlay (Track 14) */}
+      {zenActive && primaryPassage && (
+        <SanctuaryZenStage
+          arabicText={primaryPassage.text}
+          citation={primaryPassage.locator || `Surah ${surah}:${primaryPassage.ayah}`}
+          surahNumber={surah}
+          ayahNumber={primaryPassage.ayah}
+          onExit={handleExitZen}
+          exitLabel={t("web.corpus.exitZenMode")}
+        />
+      )}
+
       <SanctuaryHeader
         eyebrow={
           <span className="flex items-center gap-2">
@@ -126,13 +175,32 @@ export default function QuranReader() {
         }
         title={t("web.corpus.surahTitle", { surah })}
         actions={
-          <Link
-            href="/corpus"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-hairline bg-panel hover:border-acid hover:text-acid transition-colors"
-          >
-            <ArrowLeft aria-hidden="true" size={14} />
-            <span>{t("web.corpus.backToShelf")}</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <ChimeToggle
+              enabled={chimeEnabled}
+              onToggle={handleToggleChime}
+              label={chimeEnabled ? t("web.common.chimeToggleActive") : t("web.common.chimeToggleMuted")}
+            />
+            {reading && reading.passages.length > 0 && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={handleEnterZen}
+                className="gap-1.5"
+              >
+                <Sparkles size={14} aria-hidden="true" />
+                <span>{t("web.corpus.zenModeToggle")}</span>
+              </Button>
+            )}
+            <Link
+              href="/corpus"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-hairline bg-panel hover:border-acid hover:text-acid transition-colors"
+            >
+              <ArrowLeft aria-hidden="true" size={14} />
+              <span>{t("web.corpus.backToShelf")}</span>
+            </Link>
+          </div>
         }
       />
 
