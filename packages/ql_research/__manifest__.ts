@@ -6,7 +6,7 @@ const manifest: QlAddonManifest = {
   name: "ql_research",
   version: "1.0.0",
   description:
-    "Versioned research assessments, witness statements, story narratives, event records, person profiles, law instruments, mizan assessments, and research correlations.",
+    "Versioned research assessments, witness statements, story narratives, event records, person profiles, law instruments, mizan assessments, research correlations, and character canon.",
   depends: ["ql_base", "ql_auth", "ql_source", "ql_corpus"],
   models,
   access: [
@@ -195,6 +195,31 @@ const manifest: QlAddonManifest = {
     },
     {
       model: "research.correlation",
+      group: "admin",
+      read: true,
+      write: true,
+      create: true,
+      unlink: true,
+    },
+    // character.canon — MW-1233
+    {
+      model: "character.canon",
+      group: "user",
+      read: true,
+      write: false,
+      create: false,
+      unlink: false,
+    },
+    {
+      model: "character.canon",
+      group: "operator",
+      read: true,
+      write: true,
+      create: true,
+      unlink: false,
+    },
+    {
+      model: "character.canon",
       group: "admin",
       read: true,
       write: true,
