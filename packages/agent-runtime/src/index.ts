@@ -47,7 +47,8 @@ export async function runAgent(
 export { calculateMetrics, judgeResponse } from "./evaluator.js";
 export type {
   ClassificationCounts,
-  EvaluationMetrics,
-  JudgePromptOptions,
-  JudgeResult,
+  EvaluationItem,
+  EvaluationJudgment,
+  JudgmentCriteria,
+  MetricScores,
 } from "./evaluator.js";
