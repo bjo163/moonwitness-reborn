@@ -9,6 +9,8 @@ const externalIdModel: QlModelDefinition = {
   name: "ir.model.data",
   description: "External identifiers for stable addon seed data.",
   tableName: "ir_model_data",
+  logAccess: false,
+  softDelete: false,
   fields: {
     external_id: {
       type: "char",

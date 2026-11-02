@@ -30,6 +30,5 @@ export const resRole: QlModelDefinition = {
           : "Field 'groups' must be a comma-separated list of group identifiers.",
     },
     assignable: { type: "boolean", required: true, default: true },
-    created_at: { type: "datetime", required: true },
   },
 };

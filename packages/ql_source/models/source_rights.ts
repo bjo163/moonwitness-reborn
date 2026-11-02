@@ -58,7 +58,5 @@ export const sourceRights: QlModelDefinition = {
     license_evidence_ref: { type: "char", maxLength: 500, private: true },
     basis_notes: { type: "text", maxLength: 4000 },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

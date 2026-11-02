@@ -60,7 +60,5 @@ export const sourceVersion: QlModelDefinition = {
       validator: enumValidator("lifecycle_stage", LIFECYCLE_STAGES),
     },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

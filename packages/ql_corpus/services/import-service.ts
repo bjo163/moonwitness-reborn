@@ -515,7 +515,11 @@ export async function undoImportRun(
   orm: QlOrm,
   importRunId: string,
 ): Promise<number> {
-  return orm.deleteRecordsForService("corpus.passage", {
-    import_run_id: importRunId,
-  });
+  return orm.deleteRecordsForService(
+    "corpus.passage",
+    {
+      import_run_id: importRunId,
+    },
+    { hard: true },
+  );
 }

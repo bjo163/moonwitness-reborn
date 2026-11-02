@@ -162,12 +162,11 @@ export async function publishEdition(
       "Rights for display are not cleared for this edition; refusing to publish (deny-by-default per DATA_LIFECYCLE_AND_PROVENANCE.md:27).",
     );
   }
-  const stamped = new Date();
   const cid = correlationId();
   const stageUpdates = await orm.updateRecordsForService(
     "corpus.edition",
     { edition_key: editionKey },
-    { stage: "published", updated_at: stamped },
+    { stage: "published" },
   );
   if (stageUpdates === 0) {
     throw new QlConflictError(`Edition '${editionKey}' could not be published.`);
@@ -175,7 +174,7 @@ export async function publishEdition(
   await orm.updateRecordsForService(
     "corpus.passage",
     { edition_id: String(edition.id), stage: "staged" },
-    { stage: "published", updated_at: stamped },
+    { stage: "published" },
   );
   await appendSourceProvenance(orm, {
     subjectType: "corpus.edition",
@@ -217,12 +216,11 @@ export async function withdrawEdition(
   if (!isCorpusStage("withdrawn")) {
     throw new QlValidationError("Internal: 'withdrawn' is not a known corpus stage.");
   }
-  const stamped = new Date();
   const cid = correlationId();
   const updated = await orm.updateRecordsForService(
     "corpus.edition",
     { edition_key: editionKey },
-    { stage: "withdrawn", updated_at: stamped },
+    { stage: "withdrawn" },
   );
   if (updated === 0) {
     throw new QlConflictError(`Edition '${editionKey}' could not be withdrawn.`);
@@ -230,7 +228,7 @@ export async function withdrawEdition(
   await orm.updateRecordsForService(
     "corpus.passage",
     { edition_id: String(edition.id), stage: "published" },
-    { stage: "withdrawn", updated_at: stamped },
+    { stage: "withdrawn" },
   );
   await appendSourceProvenance(orm, {
     subjectType: "corpus.edition",

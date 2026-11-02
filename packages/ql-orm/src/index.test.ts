@@ -635,8 +635,6 @@ async function runRecordSuite(
             default: true,
           },
           owner_id: { type: "char" as const, required: true, private: true },
-          created_at: { type: "datetime" as const, required: true },
-          updated_at: { type: "datetime" as const, required: true },
         },
       },
     ],
@@ -765,6 +763,39 @@ async function runRecordSuite(
       id: String(coded?.id),
     });
     assert.equal(disabled?.enabled, false);
+    assert.equal(disabled?.active, true);
+    assert.equal(disabled?.create_uid, "owner-1");
+    assert.equal(disabled?.write_uid, "owner-1");
+    assert.equal(typeof disabled?.updated_at, "number");
+    await assert.rejects(
+      runtime.orm.update(
+        "ai.provider",
+        { id: "owner-1", groups: ["user"] },
+        String(coded?.id),
+        { created_at: "2026-01-01T00:00:00.000Z" },
+      ),
+      /read-only/,
+    );
+    const deleted = await runtime.orm.delete(
+      "ai.provider",
+      { id: "owner-1", groups: ["user"] },
+      String(coded?.id),
+    );
+    assert.equal(deleted, true);
+    assert.equal(
+      await runtime.orm.findOneByService("ai.provider", {
+        id: String(coded?.id),
+      }),
+      undefined,
+    );
+    const softDeleted = await runtime.orm.findOneByService(
+      "ai.provider",
+      { id: String(coded?.id) },
+      { includeInactive: true },
+    );
+    assert.equal(softDeleted?.active, false);
+    assert.equal(typeof softDeleted?.deleted_at, "number");
+    assert.equal(softDeleted?.write_uid, "owner-1");
   } finally {
     runtime.close();
   }

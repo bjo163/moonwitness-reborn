@@ -24,6 +24,7 @@ export const sourceProvenance: QlModelDefinition = {
   description:
     "Ledger append-only setiap transisi lifecycle/keputusan atas sumber dan korpus.",
   tableName: "source_provenance",
+  softDelete: false,
   // Intentionally no `ownerField` — the audit trail is a shared ledger read
   // by reviewer groups via `findManyByService`; per-user filtering would let
   // one reviewer hide an action from another. Access is instead controlled

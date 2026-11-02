@@ -58,6 +58,5 @@ export const i18nTranslation: QlModelDefinition = {
           : "Field 'draft_source' is invalid.",
     },
     updated_by: { type: "char", required: true, maxLength: 64 },
-    updated_at: { type: "datetime", required: true },
   },
 };

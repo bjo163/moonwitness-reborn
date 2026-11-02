@@ -11,7 +11,5 @@ export const resPartner: QlModelDefinition = {
     phone: { type: "char", maxLength: 40 },
     company_name: { type: "char", maxLength: 160 },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

@@ -6,6 +6,7 @@ export const resVerification: QlModelDefinition = {
   name: "res.verification",
   description: "Token sekali pakai untuk pemulihan akun.",
   tableName: "res_verification",
+  softDelete: false,
   fields: {
     user_id: { type: "char", required: true, private: true },
     purpose: {
@@ -20,6 +21,5 @@ export const resVerification: QlModelDefinition = {
     },
     token_hash: { type: "char", required: true, unique: true, private: true },
     expires_at: { type: "datetime", required: true, private: true },
-    created_at: { type: "datetime", required: true, private: true },
   },
 };

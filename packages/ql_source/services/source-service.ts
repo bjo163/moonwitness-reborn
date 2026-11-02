@@ -132,11 +132,10 @@ export async function transitionStage(
       `${model} is already in stage '${toStage}'; transition is a no-op.`,
     );
   }
-  const stamped = new Date();
   const updatedCount = await orm.updateRecordsForService(
     model,
     { id },
-    { lifecycle_stage: toStage, updated_at: stamped },
+    { lifecycle_stage: toStage },
   );
   if (updatedCount === 0) {
     throw new QlNotFoundError(`${model} '${id}' could not be updated.`);
@@ -218,7 +217,6 @@ export async function upsertRights(
         verified_at: stamped,
         license_evidence_ref: input.licenseEvidenceRef ?? "",
         basis_notes: input.basisNotes ?? "",
-        updated_at: stamped,
       },
     );
     if (changed === 0) {
@@ -244,8 +242,6 @@ export async function upsertRights(
       license_evidence_ref: input.licenseEvidenceRef ?? "",
       basis_notes: input.basisNotes ?? "",
       owner_id: ownerId,
-      created_at: stamped,
-      updated_at: stamped,
     });
   }
   const cid = correlationId();

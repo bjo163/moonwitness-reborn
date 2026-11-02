@@ -32,7 +32,6 @@ export const views: QlViewDefinition[] = [
     model: "integration.audit",
     type: "form",
     fields: [
-      "created_at",
       "action",
       "outcome",
       "target",

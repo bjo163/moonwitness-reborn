@@ -11,6 +11,7 @@ export const researchLexicalReview: QlModelDefinition = {
   description:
     "Append-only human assessment of an exploratory lexical-frequency result, pinned to a source and method snapshot.",
   tableName: "research_lexical_review",
+  softDelete: false,
   fields: {
     candidate_id: { type: "char", required: true, maxLength: 64 },
     edition_key: { type: "char", required: true, maxLength: 160 },

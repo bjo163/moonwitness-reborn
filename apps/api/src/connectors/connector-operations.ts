@@ -115,7 +115,7 @@ async function attempt<T>(
       await ctx.orm.updateRecordsForService(
         "integration.connector",
         { id: scope.connectorId, owner_id: scope.ownerId },
-        { verify_status: status, last_verify_at: new Date(), updated_at: new Date() },
+        { verify_status: status, last_verify_at: new Date() },
       );
     }
     await writeAudit(ctx.orm, scope, { ...entry, error });
@@ -157,7 +157,6 @@ export async function createConnector(
       `Maksimal ${MAX_CONNECTORS_PER_OWNER} konektor per akun. Hapus yang tidak dipakai dulu.`,
     );
   }
-  const now = new Date();
   const created = await ctx.orm.createRecordForService("integration.connector", {
     kind: input.kind,
     label: input.label,
@@ -165,8 +164,6 @@ export async function createConnector(
     token_source: "unresolved",
     verify_status: "unverified",
     owner_id: ctx.ownerId,
-    created_at: now,
-    updated_at: now,
   });
   const scope = scopeOf(ctx, String(created.id));
   // A missing token is not a reason to refuse the row; the connector shows up
@@ -178,7 +175,7 @@ export async function createConnector(
     await ctx.orm.updateRecordsForService(
       "integration.connector",
       { id: String(created.id), owner_id: ctx.ownerId },
-      { verify_status: "missing", updated_at: new Date() },
+      { verify_status: "missing" },
     );
   }
   await writeAudit(ctx.orm, scope, { action: "create", target: input.label });
@@ -195,7 +192,7 @@ export async function updateConnector(
   await ctx.orm.updateRecordsForService(
     "integration.connector",
     { id: connectorId, owner_id: ctx.ownerId },
-    { ...values, updated_at: new Date() },
+    values,
   );
   await writeAudit(ctx.orm, scopeOf(ctx, connectorId), {
     action: "update",

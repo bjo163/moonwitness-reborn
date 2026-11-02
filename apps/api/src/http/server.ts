@@ -762,8 +762,6 @@ function providerInput(
     encrypted_api_key: encryptedApiKey,
     priority,
     enabled,
-    updated_at: new Date().toISOString(),
-    ...(!existing ? { created_at: new Date().toISOString() } : {}),
   };
 }
 
@@ -1973,6 +1971,7 @@ export function createApiServer(
                       fieldName,
                       {
                         ...metadata,
+                        ...(field.readOnly ? { readOnly: true } : {}),
                         ...(compute
                           ? {
                               computed: true,
@@ -2253,7 +2252,7 @@ export function createApiServer(
         const rows = await orm.findManyByService(
           "res.users",
           {},
-          { limit: 500, orderBy: { field: "created_at", direction: "asc" } },
+          { limit: 500, includeInactive: true, orderBy: { field: "created_at", direction: "asc" } },
         );
         sendJson(response, 200, {
           users: rows.map(toAdminUser),

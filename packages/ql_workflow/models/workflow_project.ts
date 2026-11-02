@@ -30,7 +30,5 @@ export const workflowProject: QlModelDefinition = {
       validator: enumValidator("state", PROJECT_STATES),
     },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

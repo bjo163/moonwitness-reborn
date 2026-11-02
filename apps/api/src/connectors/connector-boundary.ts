@@ -168,7 +168,6 @@ export async function writeAudit(
 ): Promise<void> {
   try {
     const failure = entry.error;
-    const now = new Date();
     await orm.createRecordForService("integration.audit", {
       connector_id: scope.connectorId,
       owner_id: scope.ownerId,
@@ -180,7 +179,6 @@ export async function writeAudit(
       detail: sanitizeCloudflareMessage(entry.detail ?? ""),
       error_code: failure ? String(errorCodeOf(failure)).slice(0, 24) : "",
       error_message: failure ? sanitizeCloudflareMessage(errorMessageOf(failure)) : "",
-      created_at: now,
     });
   } catch (error) {
     console.error("Audit write failed; the domain change itself is unaffected.", error);
@@ -254,7 +252,6 @@ export async function stampCredential(
     {
       token_source: credential.source,
       token_ref: credential.ref.slice(0, 200),
-      updated_at: new Date(),
       ...extra,
     },
   );

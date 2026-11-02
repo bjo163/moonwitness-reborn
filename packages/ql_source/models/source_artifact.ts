@@ -54,7 +54,5 @@ export const sourceArtifact: QlModelDefinition = {
     },
     lifecycle_note: { type: "text", maxLength: 4000 },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

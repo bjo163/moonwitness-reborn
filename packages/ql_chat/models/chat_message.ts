@@ -16,6 +16,5 @@ export const chatMessage: QlModelDefinition = {
           : "Message role must be user or assistant.",
     },
     content: { type: "text", required: true, maxLength: 16_000 },
-    created_at: { type: "datetime", required: true },
   },
 };

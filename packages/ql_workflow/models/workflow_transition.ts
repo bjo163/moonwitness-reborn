@@ -27,6 +27,7 @@ export const workflowTransition: QlModelDefinition = {
     "Jejak append-only setiap transisi state pada workflow.change; tidak dapat diubah atau dihapus.",
   tableName: "workflow_transition",
   ownerField: "owner_id",
+  softDelete: false,
   fields: {
     change_id: { type: "char", required: true, maxLength: 64 },
     from_state: {
@@ -51,6 +52,5 @@ export const workflowTransition: QlModelDefinition = {
     revision: { type: "integer", required: true, minValue: 1 },
     actor_id: { type: "char", required: true, private: true },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
   },
 };

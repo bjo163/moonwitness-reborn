@@ -8,7 +8,5 @@ export const chatConversation: QlModelDefinition = {
   fields: {
     user_id: { type: "char", required: true, private: true },
     title: { type: "char", required: true, maxLength: 120 },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

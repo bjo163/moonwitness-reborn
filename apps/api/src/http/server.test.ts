@@ -670,6 +670,7 @@ void test("authenticated model metadata exposes addon views without private fiel
     "email",
     "phone",
     "company_name",
+    "active",
     "created_at",
     "updated_at",
   ]);

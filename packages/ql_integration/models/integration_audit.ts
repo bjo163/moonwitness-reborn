@@ -15,6 +15,7 @@ export const integrationAudit: QlModelDefinition = {
   description: "Jejak append-only untuk setiap aksi pada konektor eksternal.",
   tableName: "integration_audit",
   ownerField: "owner_id",
+  softDelete: false,
   fields: {
     connector_id: { type: "char", required: true, maxLength: 64 },
     zone_id: { type: "char", maxLength: 64 },
@@ -37,6 +38,5 @@ export const integrationAudit: QlModelDefinition = {
     error_code: { type: "char", maxLength: 24 },
     error_message: { type: "char", maxLength: 500 },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
   },
 };

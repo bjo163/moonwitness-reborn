@@ -9,7 +9,6 @@ export const resUsers: QlModelDefinition = {
     name: { type: "char", required: true, maxLength: 100 },
     email: { type: "char", required: true, unique: true, maxLength: 254 },
     password_hash: { type: "char", required: true, private: true },
-    active: { type: "boolean", required: true, default: true },
     role: {
       type: "char",
       required: true,
@@ -41,6 +40,5 @@ export const resUsers: QlModelDefinition = {
           ? undefined
           : "Field 'preferred_locale' must be 'id' or 'en'.",
     },
-    created_at: { type: "datetime", required: true },
   },
 };

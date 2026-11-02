@@ -143,15 +143,13 @@ export async function requestTransition(
 
   const nextRevision =
     (typeof existing.revision === "number" ? existing.revision : 1) + 1;
-  const now = Date.now();
-  const stamped = new Date(now);
   const trimmedReason =
     typeof reason === "string" && reason.trim() ? reason.trim().slice(0, 4000) : null;
 
   const updated = await orm.updateRecordsForService(
     "workflow.change",
     { id: changeId },
-    { state: next, revision: nextRevision, updated_at: stamped },
+    { state: next, revision: nextRevision },
   );
   if (updated === 0) {
     throw new QlNotFoundError(`Change '${changeId}' could not be updated.`);
@@ -166,7 +164,6 @@ export async function requestTransition(
     revision: nextRevision,
     actor_id: user.id,
     owner_id: owner,
-    created_at: stamped,
   });
   const change = await orm.findOneByService("workflow.change", { id: changeId });
   if (!change) throw new QlNotFoundError(`Change '${changeId}' vanished after update.`);

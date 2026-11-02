@@ -102,7 +102,5 @@ export const corpusPassage: QlModelDefinition = {
       default: DEFAULT_CORPUS_STAGE,
       validator: enumValidator("stage", CORPUS_STAGES),
     },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

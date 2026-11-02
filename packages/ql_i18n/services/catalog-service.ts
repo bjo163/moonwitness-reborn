@@ -242,7 +242,6 @@ export async function saveTranslationDraft(
     status: "draft",
     draft_source: input.source ?? "manual",
     updated_by: actorId,
-    updated_at: new Date().toISOString(),
   };
   if (existing) {
     await orm.updateRecordsForService(
@@ -279,7 +278,6 @@ export async function approveTranslation(
     {
       status: "published",
       updated_by: actorId,
-      updated_at: new Date().toISOString(),
     },
   );
   const approved = await orm.findOneByService("i18n.translation", { id });

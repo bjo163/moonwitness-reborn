@@ -25,6 +25,8 @@ export interface QlFieldDefinition {
   unique?: boolean;
   maxLength?: number;
   private?: boolean;
+  readOnly?: boolean;
+  system?: boolean;
   default?: string | number | boolean;
   minValue?: number;
   maxValue?: number;
@@ -45,6 +47,8 @@ export interface QlModelDefinition {
   tableName: string;
   fields: Record<string, QlFieldDefinition>;
   ownerField?: string;
+  logAccess?: boolean;
+  softDelete?: boolean;
 }
 
 export interface QlComputedModelQuery {
@@ -118,6 +122,11 @@ export type QlSqlValue = QlServiceValue;
 export interface QlServiceQueryOptions {
   limit?: number;
   orderBy?: { field: string; direction: "asc" | "desc" } | "rowid-asc";
+  includeInactive?: boolean;
+}
+export interface QlServiceDeleteOptions {
+  hard?: boolean;
+  actorId?: string;
 }
 
 export class QlValidationError extends Error {}
@@ -484,6 +493,74 @@ function validateAddonData(
   }
 }
 
+function applySystemFields(model: QlModelDefinition): void {
+  const declaredFields = Object.entries(model.fields).filter(
+    ([, field]) => !field.system,
+  );
+  const allDeclaredPrivate =
+    declaredFields.length > 0 &&
+    declaredFields.every(([, field]) => field.private === true);
+
+  if (model.softDelete !== false) {
+    if (!model.fields.active) {
+      model.fields.active = {
+        type: "boolean",
+        required: true,
+        default: true,
+        system: true,
+        ...(allDeclaredPrivate ? { private: true } : {}),
+      };
+    }
+    if (!model.fields.deleted_at) {
+      model.fields.deleted_at = {
+        type: "datetime",
+        private: true,
+        readOnly: true,
+        system: true,
+      };
+    }
+  }
+
+  if (model.logAccess !== false) {
+    if (!model.fields.created_at) {
+      model.fields.created_at = {
+        type: "datetime",
+        required: true,
+        readOnly: true,
+        system: true,
+        ...(allDeclaredPrivate ? { private: true } : {}),
+      };
+    }
+    if (!model.fields.updated_at) {
+      model.fields.updated_at = {
+        type: "datetime",
+        required: true,
+        readOnly: true,
+        system: true,
+        ...(allDeclaredPrivate ? { private: true } : {}),
+      };
+    }
+    if (!model.fields.create_uid) {
+      model.fields.create_uid = {
+        type: "char",
+        maxLength: 64,
+        private: true,
+        readOnly: true,
+        system: true,
+      };
+    }
+    if (!model.fields.write_uid) {
+      model.fields.write_uid = {
+        type: "char",
+        maxLength: 64,
+        private: true,
+        readOnly: true,
+        system: true,
+      };
+    }
+  }
+}
+
 export function loadAddons(
   manifests: readonly QlAddonManifest[],
 ): QlAddonManifest[] {
@@ -494,6 +571,9 @@ export function loadAddons(
     }
     if (byName.has(manifest.name)) {
       throw new Error(`Duplicate addon '${manifest.name}'.`);
+    }
+    for (const model of manifest.models) {
+      applySystemFields(model);
     }
     validateAddonData(manifest.name, manifest.data);
     byName.set(manifest.name, manifest);
@@ -895,17 +975,25 @@ export class QlOrm {
 
     let targetId: string | undefined;
     if (metadata) {
-      const target = await this.findOneByService(seed.model, {
-        id: metadata.record_id,
-      });
+      const target = await this.findOneByService(
+        seed.model,
+        {
+          id: metadata.record_id,
+        },
+        { includeInactive: true },
+      );
       if (target && typeof target.id === "string") {
         targetId = target.id;
       }
     }
     if (!targetId) {
-      const existing = await this.findOneByService(seed.model, {
-        [seed.key.field]: seed.key.value,
-      });
+      const existing = await this.findOneByService(
+        seed.model,
+        {
+          [seed.key.field]: seed.key.value,
+        },
+        { includeInactive: true },
+      );
       if (existing && typeof existing.id === "string") {
         targetId = existing.id;
       }
@@ -984,6 +1072,9 @@ export class QlOrm {
       conditions.push(
         `${quoteIdentifier(model.ownerField)} = ${sql.param(user.id)}`,
       );
+    }
+    if (model.softDelete !== false && model.fields.active) {
+      conditions.push(`${quoteIdentifier("active")} = ${sql.param(1)}`);
     }
     const result = await this.connection.execute(
       `SELECT ${selectedColumns.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)}${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""} ORDER BY ${orderExpression(this.connection.driver)} DESC LIMIT ${sql.param(Math.max(1, Math.min(500, Math.floor(limit))))}`,
@@ -1104,10 +1195,33 @@ export class QlOrm {
     const values: Record<string, QlSqlValue> = { id: randomUUID() };
     for (const [name, value] of Object.entries(input)) {
       const field = validateValue(model, name, value);
+      if (field.readOnly) {
+        throw new QlValidationError(`Field '${name}' is read-only.`);
+      }
       if (field.private) {
         throw new QlValidationError(`Field '${name}' cannot be written through this API.`);
       }
       values[name] = toDatabaseValue(value, field);
+    }
+    const now = Date.now();
+    if (model.logAccess !== false) {
+      if (model.fields.created_at && values.created_at === undefined) {
+        values.created_at = now;
+      }
+      if (model.fields.updated_at && values.updated_at === undefined) {
+        values.updated_at = values.created_at ?? now;
+      }
+      if (model.fields.create_uid && values.create_uid === undefined) {
+        values.create_uid = user.id;
+      }
+      if (model.fields.write_uid && values.write_uid === undefined) {
+        values.write_uid = user.id;
+      }
+    }
+    if (model.softDelete !== false) {
+      if (model.fields.active && values.active === undefined) {
+        values.active = 1;
+      }
     }
     for (const [name, field] of Object.entries(model.fields)) {
       if (field.compute) continue;
@@ -1117,7 +1231,7 @@ export class QlOrm {
         if (field.default !== undefined) {
           values[name] = toDatabaseValue(field.default, field);
         } else if (field.type === "datetime") {
-          values[name] = Date.now();
+          values[name] = now;
         } else {
           throw new QlValidationError(`Field '${name}' is required.`);
         }
@@ -1161,6 +1275,9 @@ export class QlOrm {
         throw new QlValidationError("Record ownership cannot be changed.");
       }
       const field = validateValue(model, name, value);
+      if (field.readOnly) {
+        throw new QlValidationError(`Field '${name}' is read-only.`);
+      }
       if (field.private) {
         throw new QlValidationError(`Field '${name}' cannot be written through this API.`);
       }
@@ -1169,11 +1286,33 @@ export class QlOrm {
     if (assignments.length === 0) {
       throw new QlValidationError("At least one field is required.");
     }
+    const now = Date.now();
+    if (model.logAccess !== false) {
+      if (model.fields.updated_at && !("updated_at" in input)) {
+        assignments.push(`${quoteIdentifier("updated_at")} = ${sql.param(now)}`);
+      }
+      if (model.fields.write_uid && !("write_uid" in input)) {
+        assignments.push(`${quoteIdentifier("write_uid")} = ${sql.param(user.id)}`);
+      }
+    }
+    if (
+      model.softDelete !== false &&
+      "active" in input &&
+      model.fields.deleted_at &&
+      !("deleted_at" in input)
+    ) {
+      assignments.push(
+        `${quoteIdentifier("deleted_at")} = ${sql.param(input.active === false ? now : null)}`,
+      );
+    }
     const conditions = [`${quoteIdentifier("id")} = ${sql.param(id)}`];
     if (model.ownerField) {
       conditions.push(
         `${quoteIdentifier(model.ownerField)} = ${sql.param(user.id)}`,
       );
+    }
+    if (model.softDelete !== false && model.fields.active && !("active" in input)) {
+      conditions.push(`${quoteIdentifier("active")} = ${sql.param(1)}`);
     }
     const result = await this.connection.execute(
       `UPDATE ${quoteIdentifier(model.tableName)} SET ${assignments.join(", ")} WHERE ${conditions.join(" AND ")}`,
@@ -1192,6 +1331,35 @@ export class QlOrm {
     this.requireAccess(modelName, user, "unlink");
     const model = this.registry.getModel(modelName);
     const sql = new SqlBuilder(this.connection.driver);
+    if (model.softDelete !== false && model.fields.active) {
+      const now = Date.now();
+      const assignments = [`${quoteIdentifier("active")} = ${sql.param(0)}`];
+      if (model.fields.deleted_at) {
+        assignments.push(`${quoteIdentifier("deleted_at")} = ${sql.param(now)}`);
+      }
+      if (model.logAccess !== false) {
+        if (model.fields.updated_at) {
+          assignments.push(`${quoteIdentifier("updated_at")} = ${sql.param(now)}`);
+        }
+        if (model.fields.write_uid) {
+          assignments.push(`${quoteIdentifier("write_uid")} = ${sql.param(user.id)}`);
+        }
+      }
+      const conditions = [
+        `${quoteIdentifier("id")} = ${sql.param(id)}`,
+        `${quoteIdentifier("active")} = ${sql.param(1)}`,
+      ];
+      if (model.ownerField) {
+        conditions.push(
+          `${quoteIdentifier(model.ownerField)} = ${sql.param(user.id)}`,
+        );
+      }
+      const result = await this.connection.execute(
+        `UPDATE ${quoteIdentifier(model.tableName)} SET ${assignments.join(", ")} WHERE ${conditions.join(" AND ")}`,
+        sql.args,
+      );
+      return result.rowsAffected > 0;
+    }
     const conditions = [`${quoteIdentifier("id")} = ${sql.param(id)}`];
     if (model.ownerField) {
       conditions.push(
@@ -1244,6 +1412,14 @@ export class QlOrm {
         )}`,
       );
     }
+    if (
+      model.softDelete !== false &&
+      model.fields.active &&
+      filters.active === undefined &&
+      !options.includeInactive
+    ) {
+      conditions.push(`${quoteIdentifier("active")} = ${sql.param(1)}`);
+    }
     let orderClause = `ORDER BY ${orderExpression(this.connection.driver)} DESC`;
     if (options.orderBy === "rowid-asc") {
       orderClause = `ORDER BY ${orderExpression(this.connection.driver)} ASC`;
@@ -1271,8 +1447,10 @@ export class QlOrm {
   async findOneByService(
     modelName: string,
     filters: Record<string, QlServiceValue>,
+    options: QlServiceQueryOptions = {},
   ): Promise<QlRecord | undefined> {
     const [record] = await this.findManyByService(modelName, filters, {
+      ...options,
       limit: 1,
     });
     return record;
@@ -1288,13 +1466,44 @@ export class QlOrm {
       const field = validateValue(model, name, value);
       values[name] = toDatabaseValue(value, field);
     }
+    const now = Date.now();
+    const defaultActor =
+      model.ownerField && typeof values[model.ownerField] === "string"
+        ? values[model.ownerField]
+        : "system";
+    if (model.logAccess !== false) {
+      if (model.fields.created_at && values.created_at === undefined) {
+        values.created_at = now;
+      }
+      if (model.fields.updated_at && values.updated_at === undefined) {
+        values.updated_at = values.created_at ?? now;
+      }
+      if (model.fields.create_uid && values.create_uid === undefined) {
+        values.create_uid = defaultActor;
+      }
+      if (model.fields.write_uid && values.write_uid === undefined) {
+        values.write_uid = values.create_uid ?? defaultActor;
+      }
+    }
+    if (model.softDelete !== false) {
+      if (model.fields.active && values.active === undefined) {
+        values.active = 1;
+      }
+      if (
+        model.fields.deleted_at &&
+        values.deleted_at === undefined &&
+        values.active === 0
+      ) {
+        values.deleted_at = now;
+      }
+    }
     for (const [name, field] of Object.entries(model.fields)) {
       if (field.compute) continue;
       if (field.required && values[name] === undefined) {
         if (field.default !== undefined) {
           values[name] = toDatabaseValue(field.default, field);
         } else if (field.type === "datetime") {
-          values[name] = Date.now();
+          values[name] = now;
         } else {
           throw new QlValidationError(`Field '${name}' is required.`);
         }
@@ -1320,7 +1529,7 @@ export class QlOrm {
     const [record] = await this.findManyByService(
       modelName,
       { id: values.id },
-      { limit: 1 },
+      { limit: 1, includeInactive: true },
     );
     if (!record) throw new Error("Created service record could not be loaded.");
     return record;
@@ -1342,6 +1551,31 @@ export class QlOrm {
     }
     if (assignments.length === 0) {
       throw new QlValidationError("At least one field is required.");
+    }
+    const now = Date.now();
+    if (model.logAccess !== false) {
+      if (model.fields.updated_at && !("updated_at" in input)) {
+        assignments.push(`${quoteIdentifier("updated_at")} = ${sql.param(now)}`);
+      }
+      if (model.fields.write_uid && !("write_uid" in input)) {
+        const defaultActor =
+          model.ownerField && typeof filters[model.ownerField] === "string"
+            ? filters[model.ownerField]
+            : "system";
+        assignments.push(
+          `${quoteIdentifier("write_uid")} = ${sql.param(defaultActor)}`,
+        );
+      }
+    }
+    if (
+      model.softDelete !== false &&
+      "active" in input &&
+      model.fields.deleted_at &&
+      !("deleted_at" in input)
+    ) {
+      assignments.push(
+        `${quoteIdentifier("deleted_at")} = ${sql.param(input.active === false ? now : null)}`,
+      );
     }
     const conditions: string[] = [];
     for (const [name, value] of Object.entries(filters)) {
@@ -1372,10 +1606,59 @@ export class QlOrm {
   async deleteRecordsForService(
     modelName: string,
     filters: Record<string, QlServiceValue>,
+    options: QlServiceDeleteOptions = {},
   ): Promise<number> {
     const model = this.registry.getModel(modelName);
     const conditions: string[] = [];
     const sql = new SqlBuilder(this.connection.driver);
+    if (model.softDelete !== false && model.fields.active && !options.hard) {
+      const now = Date.now();
+      const assignments = [`${quoteIdentifier("active")} = ${sql.param(0)}`];
+      if (model.fields.deleted_at) {
+        assignments.push(`${quoteIdentifier("deleted_at")} = ${sql.param(now)}`);
+      }
+      if (model.logAccess !== false) {
+        if (model.fields.updated_at) {
+          assignments.push(`${quoteIdentifier("updated_at")} = ${sql.param(now)}`);
+        }
+        if (model.fields.write_uid) {
+          const defaultActor =
+            options.actorId ??
+            (model.ownerField && typeof filters[model.ownerField] === "string"
+              ? (filters[model.ownerField] as string)
+              : "system");
+          assignments.push(
+            `${quoteIdentifier("write_uid")} = ${sql.param(defaultActor)}`,
+          );
+        }
+      }
+      for (const [name, value] of Object.entries(filters)) {
+        if (name !== "id" && !model.fields[name]) {
+          throw new QlValidationError(`Unknown field '${name}' on model '${modelName}'.`);
+        }
+        if (model.fields[name]?.compute) {
+          throw new QlValidationError(
+            `Computed field '${name}' cannot be used as a database filter.`,
+          );
+        }
+        conditions.push(
+          `${quoteIdentifier(name)} = ${sql.param(
+            name === "id" ? value : toDatabaseValue(value, model.fields[name]),
+          )}`,
+        );
+      }
+      if (!conditions.length) {
+        throw new Error("Service deletes require at least one filter.");
+      }
+      if (filters.active === undefined) {
+        conditions.push(`${quoteIdentifier("active")} = ${sql.param(1)}`);
+      }
+      const result = await this.connection.execute(
+        `UPDATE ${quoteIdentifier(model.tableName)} SET ${assignments.join(", ")} WHERE ${conditions.join(" AND ")}`,
+        sql.args,
+      );
+      return result.rowsAffected;
+    }
     for (const [name, value] of Object.entries(filters)) {
       if (name !== "id" && !model.fields[name]) {
         throw new QlValidationError(`Unknown field '${name}' on model '${modelName}'.`);
@@ -1421,6 +1704,33 @@ export class QlOrm {
       const field = validateValue(model, name, value);
       values[name] = toDatabaseValue(value, field);
     }
+    const now = Date.now();
+    if (model.logAccess !== false) {
+      if (model.fields.created_at && values.created_at === undefined) {
+        values.created_at = now;
+      }
+      if (model.fields.updated_at && values.updated_at === undefined) {
+        values.updated_at = values.created_at ?? now;
+      }
+      if (model.fields.create_uid && values.create_uid === undefined) {
+        values.create_uid = ownerId;
+      }
+      if (model.fields.write_uid && values.write_uid === undefined) {
+        values.write_uid = values.create_uid ?? ownerId;
+      }
+    }
+    if (model.softDelete !== false) {
+      if (model.fields.active && values.active === undefined) {
+        values.active = 1;
+      }
+      if (
+        model.fields.deleted_at &&
+        values.deleted_at === undefined &&
+        values.active === 0
+      ) {
+        values.deleted_at = now;
+      }
+    }
     for (const [name, field] of Object.entries(model.fields)) {
       if (field.compute) continue;
       if (name === model.ownerField) continue;
@@ -1428,7 +1738,7 @@ export class QlOrm {
         if (field.default !== undefined) {
           values[name] = toDatabaseValue(field.default, field);
         } else if (field.type === "datetime") {
-          values[name] = Date.now();
+          values[name] = now;
         } else {
           throw new QlValidationError(`Field '${name}' is required.`);
         }
@@ -1484,10 +1794,32 @@ export class QlOrm {
     if (assignments.length === 0) {
       throw new QlValidationError("At least one field is required.");
     }
+    const now = Date.now();
+    if (model.logAccess !== false) {
+      if (model.fields.updated_at && !("updated_at" in input)) {
+        assignments.push(`${quoteIdentifier("updated_at")} = ${sql.param(now)}`);
+      }
+      if (model.fields.write_uid && !("write_uid" in input)) {
+        assignments.push(`${quoteIdentifier("write_uid")} = ${sql.param(ownerId)}`);
+      }
+    }
+    if (
+      model.softDelete !== false &&
+      "active" in input &&
+      model.fields.deleted_at &&
+      !("deleted_at" in input)
+    ) {
+      assignments.push(
+        `${quoteIdentifier("deleted_at")} = ${sql.param(input.active === false ? now : null)}`,
+      );
+    }
     const conditions = [
       `${quoteIdentifier("id")} = ${sql.param(id)}`,
       `${quoteIdentifier(model.ownerField)} = ${sql.param(ownerId)}`,
     ];
+    if (model.softDelete !== false && model.fields.active && !("active" in input)) {
+      conditions.push(`${quoteIdentifier("active")} = ${sql.param(1)}`);
+    }
     const result = await this.connection.execute(
       `UPDATE ${quoteIdentifier(model.tableName)} SET ${assignments.join(", ")} WHERE ${conditions.join(" AND ")}`,
       sql.args,
@@ -1511,6 +1843,26 @@ export class QlOrm {
       throw new Error(`Service-owned model '${modelName}' must define ownerField.`);
     }
     const sql = new SqlBuilder(this.connection.driver);
+    if (model.softDelete !== false && model.fields.active) {
+      const now = Date.now();
+      const assignments = [`${quoteIdentifier("active")} = ${sql.param(0)}`];
+      if (model.fields.deleted_at) {
+        assignments.push(`${quoteIdentifier("deleted_at")} = ${sql.param(now)}`);
+      }
+      if (model.logAccess !== false) {
+        if (model.fields.updated_at) {
+          assignments.push(`${quoteIdentifier("updated_at")} = ${sql.param(now)}`);
+        }
+        if (model.fields.write_uid) {
+          assignments.push(`${quoteIdentifier("write_uid")} = ${sql.param(ownerId)}`);
+        }
+      }
+      const result = await this.connection.execute(
+        `UPDATE ${quoteIdentifier(model.tableName)} SET ${assignments.join(", ")} WHERE ${quoteIdentifier("id")} = ${sql.param(id)} AND ${quoteIdentifier(model.ownerField)} = ${sql.param(ownerId)} AND ${quoteIdentifier("active")} = ${sql.param(1)}`,
+        sql.args,
+      );
+      return result.rowsAffected > 0;
+    }
     const result = await this.connection.execute(
       `DELETE FROM ${quoteIdentifier(model.tableName)} WHERE ${quoteIdentifier("id")} = ${sql.param(id)} AND ${quoteIdentifier(model.ownerField)} = ${sql.param(ownerId)}`,
       sql.args,

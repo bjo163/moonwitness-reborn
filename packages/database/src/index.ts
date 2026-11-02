@@ -338,8 +338,6 @@ export function createConversationStore(orm: QlOrm): ConversationStore {
         await orm.createRecordForService("chat.conversation", {
           user_id: userId,
           title,
-          created_at: new Date(),
-          updated_at: new Date(),
         }),
       );
     },

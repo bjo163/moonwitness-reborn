@@ -48,7 +48,5 @@ export const personProfile: QlModelDefinition = {
     biographical_summary: { type: "text", maxLength: 4000 },
     attribution_notes: { type: "text", maxLength: 2000 },
     source_artifact_id: { type: "char", maxLength: 64 },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };
