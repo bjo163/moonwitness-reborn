@@ -230,8 +230,8 @@ export default function SearchWorkspacePage() {
           <LocaleSwitcher
             locale={locale}
             label={copy.common.localeLabel}
-            saving={localeSaving}
-            onChange={changeLocale}
+            disabled={localeSaving}
+            onChange={(nextLocale) => void changeLocale(nextLocale)}
           />
         </div>
       }
