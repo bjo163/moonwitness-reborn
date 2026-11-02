@@ -17,17 +17,23 @@ import {
   type AttachmentRow,
   type SidebarNavItem,
   type UploadItem,
-  type UploadItemStatus,
 } from "@moonwitness/ui";
 import { useRouter } from "next/navigation";
-import type { ReactNode } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
 import { useMessages, type AppMessages } from "../locale/messages";
 import { useTranslationCatalog } from "../locale/translation-catalog";
 import { useAttachmentUploads, type UploadStatus } from "./use-attachment-uploads";
 
 const DELETE_ARM_MS = 6000;
+
+/**
+ * The catalog hands back plain strings, so placeholder text is substituted
+ * here rather than pretending a message is a function.
+ */
+function fill(template: string, values: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (_match, key: string) => values[key] ?? "");
+}
 
 /**
  * Browser file types the server accepts for a `media` attachment. Mirrored only
@@ -79,7 +85,7 @@ export default function AttachmentsWorkspace() {
   const uploads = useAttachmentUploads({
     onUploaded: (attachment) => {
       setItems((current) => [attachment, ...current]);
-      setNotice(at.uploaded(attachment.name));
+      setNotice(fill(at.uploaded, { name: attachment.name }));
     },
     errorText,
     copy: { needsFile: () => at.needsFile },
@@ -144,11 +150,21 @@ export default function AttachmentsWorkspace() {
     try {
       await moonClient.deleteAttachment(attachment.id);
       setItems((current) => current.filter((entry) => entry.id !== attachment.id));
-      setNotice(at.deleted(attachment.name));
+      setNotice(fill(at.deleted, { name: attachment.name }));
     } catch (error) {
-      setNotice(at.deleteFailed(errorText(error)));
+      setNotice(fill(at.deleteFailed, { reason: errorText(error) }));
     } finally {
       setBusyId(null);
+    }
+  }
+
+  async function logout(): Promise<void> {
+    try {
+      await moonClient.logout();
+      router.replace("/auth");
+    } catch (error) {
+      setNotice(at.signOutFailed);
+      setListError(errorText(error));
     }
   }
 
@@ -206,7 +222,7 @@ export default function AttachmentsWorkspace() {
     name: task.name,
     totalBytes: task.totalBytes,
     sentBytes: task.sentBytes,
-    status: task.status as UploadItemStatus,
+    status: task.status,
     ...(task.error === undefined ? {} : { error: task.error }),
   }));
 
@@ -219,14 +235,17 @@ export default function AttachmentsWorkspace() {
           closeLabel={copy.common.closeMenu}
           identity={{ name: user.name, subtitle: user.email }}
           items={sidebarItems}
+          logout={{ label: copy.common.logout, onLogout: () => void logout() }}
           navLabel={copy.common.mainNavigation}
+          onCloseSidebar={() => setSidebarOpen(false)}
         />
       }
       sidebarOpen={sidebarOpen}
-      trigger={
+      header={
         <SidebarTrigger
           label={copy.common.openMenu}
-          onClick={() => setSidebarOpen(true)}
+          onOpenSidebar={() => setSidebarOpen(true)}
+          sidebarOpen={sidebarOpen}
         />
       }
     >
@@ -251,9 +270,10 @@ export default function AttachmentsWorkspace() {
                 pickFile: () => at.pickFile,
                 itemStatus: (status) => statusLabel(status, at),
                 progressText: (sent, total) =>
-                  at.progressText
-                    .replace("{sent}", formatBytes(sent))
-                    .replace("{total}", formatBytes(total)),
+                  fill(at.progressText, {
+                    sent: formatBytes(sent),
+                    total: formatBytes(total),
+                  }),
                 cancel: () => at.cancel,
                 retry: () => at.retry,
                 pause: () => at.pause,

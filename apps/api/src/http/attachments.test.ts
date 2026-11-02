@@ -329,10 +329,10 @@ void test("another member cannot see, serve, or delete the attachment", async ()
   const body = pngBody(1_024);
   const id = await upload(body);
 
-  assert.deepEqual(
-    (await (await call(apiRoutes.attachments.collection, {}, memberCookie)).json()).attachments,
-    [],
-  );
+  const ownerList = (await (
+    await call(apiRoutes.attachments.collection, {}, memberCookie)
+  ).json()) as { attachments: unknown[] };
+  assert.deepEqual(ownerList.attachments, []);
   assert.equal((await call(apiRoutes.attachments.item(id), {}, memberCookie)).status, 404);
   assert.equal((await call(apiRoutes.attachments.content(id), {}, memberCookie)).status, 404);
   assert.equal(

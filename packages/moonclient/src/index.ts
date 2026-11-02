@@ -744,6 +744,22 @@ export interface AyahProofResponseDto {
   verificationCount: number;
 }
 
+/**
+ * Coarse locator envelope a browser may pre-check before calling the proof
+ * endpoints, so a typo is caught on the form instead of as a 400. The
+ * authoritative table is `SURAHS` in `ql_corpus/services/corpus-vocabulary.ts`
+ * (not importable from the browser), and the per-surah verse count stays a
+ * server-side rule: `ayahMax` is the highest verse number of any surah, not
+ * the count of the one being verified.
+ */
+export const ayahLocatorLimits = {
+  surahMin: 1,
+  surahMax: 114,
+  ayahMin: 1,
+  ayahMax: 286,
+  sha256HexLength: 64,
+} as const;
+
 // Track 05: Audio Tilawah Spatial Resonance
 export interface ReciterListItemDto {
   id: string;
@@ -1349,6 +1365,7 @@ export const apiRoutes = {
     allConcepts: "/search/graph/concepts",
   },
   corpusProofs: {
+    prefix: "/corpus/proofs/",
     verify: "/corpus/proofs/verify",
     getProof: (edition: string, surah: number, ayah: number) =>
       `/corpus/proofs/${segment(edition)}/${segment(String(surah))}/${segment(String(ayah))}`,

@@ -113,6 +113,7 @@ import {
   recordLexicalCandidateReview,
 } from "ql_research/services/lexical-review-service";
 import {
+  assertAyahWithinSurah,
   publishEdition,
   withdrawEdition,
 } from "ql_corpus/services/corpus-service";
@@ -129,8 +130,14 @@ import {
   isSha256Hex,
   readAyahProofSummary,
   verifyAyahProof,
+  type VerifyAyahProofInput,
 } from "ql_corpus/services/proof-service";
-import { PASSAGE_KINDS } from "ql_corpus/services/corpus-vocabulary";
+import {
+  AYAH_MAX_BOUND,
+  PASSAGE_KINDS,
+  SURAH_MAX,
+  SURAH_MIN,
+} from "ql_corpus/services/corpus-vocabulary";
 import {
   ROLE_CATALOG,
   countUsersWithRole,
@@ -1512,6 +1519,129 @@ function toSourceRightsSummaryDto(record: QlRecord): SourceRightsSummaryDto {
   };
 }
 
+const PROOF_EDITION_CODE_MAX_LENGTH = 64;
+const PROOF_CLAIMED_TEXT_MAX_LENGTH = 8000;
+
+function parseVerifyProofBody(body: unknown): VerifyAyahProofInput {
+  const input = parseObject(body);
+  const surahNumber = input.surahNumber;
+  const ayahNumber = input.ayahNumber;
+  const editionCode = input.editionCode;
+  const claimedHash = input.claimedHash;
+
+  if (
+    typeof surahNumber !== "number" ||
+    !Number.isInteger(surahNumber) ||
+    surahNumber < SURAH_MIN ||
+    surahNumber > SURAH_MAX
+  ) {
+    throw new RequestError(
+      `Field 'surahNumber' must be an integer from ${SURAH_MIN} to ${SURAH_MAX}.`,
+      400,
+    );
+  }
+  if (
+    typeof ayahNumber !== "number" ||
+    !Number.isInteger(ayahNumber) ||
+    ayahNumber < 1 ||
+    ayahNumber > AYAH_MAX_BOUND
+  ) {
+    throw new RequestError(
+      `Field 'ayahNumber' must be an integer from 1 to ${AYAH_MAX_BOUND}.`,
+      400,
+    );
+  }
+  // Coarse bounds above keep the payload sane; the canonical per-surah verse
+  // count is a cross-field rule, so it is asserted here and in the write
+  // services rather than by a single-value column validator.
+  assertAyahWithinSurah(surahNumber, ayahNumber);
+
+  if (
+    typeof editionCode !== "string" ||
+    editionCode.length === 0 ||
+    editionCode.length > PROOF_EDITION_CODE_MAX_LENGTH
+  ) {
+    throw new RequestError(
+      `Field 'editionCode' must be a string of 1 to ${PROOF_EDITION_CODE_MAX_LENGTH} characters.`,
+      400,
+    );
+  }
+  if (!isSha256Hex(claimedHash)) {
+    throw new RequestError(
+      "Field 'claimedHash' must be a 64-character hexadecimal SHA-256 digest.",
+      400,
+    );
+  }
+
+  const claimedText = input.claimedText;
+  if (claimedText !== undefined) {
+    if (
+      typeof claimedText !== "string" ||
+      claimedText.length > PROOF_CLAIMED_TEXT_MAX_LENGTH
+    ) {
+      throw new RequestError(
+        `Field 'claimedText' must be a string of at most ${PROOF_CLAIMED_TEXT_MAX_LENGTH} characters.`,
+        400,
+      );
+    }
+  }
+
+  return {
+    surahNumber,
+    ayahNumber,
+    editionCode,
+    claimedHash,
+    ...(claimedText === undefined ? {} : { claimedText }),
+  };
+}
+
+/**
+ * Track 04 — verifiable ayah provenance endpoints.
+ *
+ * Both are read-only: the digest is recomputed from `corpus.passage` by
+ * `proof-service.ts`, so a tampered row is caught by the arithmetic rather
+ * than by trusting a stored column, and no verification attempt mutates
+ * `corpus.ayah_proof.verification_count` behind the caller's back.
+ */
+async function handleProofsRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+  orm: QlOrm,
+  pathname: string,
+): Promise<boolean> {
+  const method = request.method ?? "GET";
+
+  if (pathname === apiRoutes.corpusProofs.verify) {
+    if (method !== "POST") return false;
+    const verification = await verifyAyahProof(
+      orm,
+      parseVerifyProofBody(await readJsonBody(request)),
+    );
+    sendJson(response, 200, verification);
+    return true;
+  }
+
+  const proofMatch = pathname.match(
+    new RegExp(`^${apiRoutes.corpusProofs.prefix}([^/]+)/([0-9]+)/([0-9]+)$`),
+  );
+  if (proofMatch && method === "GET") {
+    const editionCode = decodeURIComponent(proofMatch[1]);
+    const surahNumber = Number.parseInt(proofMatch[2], 10);
+    const ayahNumber = Number.parseInt(proofMatch[3], 10);
+    assertAyahWithinSurah(surahNumber, ayahNumber);
+    const summary = await readAyahProofSummary(
+      orm,
+      editionCode,
+      surahNumber,
+      ayahNumber,
+    );
+    sendJson(response, 200, summary);
+    return true;
+  }
+
+  return false;
+}
+
 /**
  * Corpus reader endpoints. All GET; nothing bulk. Every response is rights-
  * gated and stage-gated by `reader-service.ts` (MW-ADR-019 §(e)). A staged
@@ -1530,6 +1660,13 @@ async function handleCorpusRequest(
 ): Promise<boolean> {
   const method = request.method ?? "GET";
   const ctx = userContext(user);
+
+  // Ayah proofs live under the same `/corpus/` prefix as the reader, so the
+  // prefix branch above routes them here rather than letting an unhandled
+  // sub-path fall through to the caller's 405.
+  if (pathname.startsWith(apiRoutes.corpusProofs.prefix)) {
+    return handleProofsRequest(request, response, orm, pathname);
+  }
 
   if (pathname === apiRoutes.corpus.editions && method === "GET") {
     // Only published editions surface here — the shelf never shows staged

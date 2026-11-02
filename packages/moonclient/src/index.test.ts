@@ -400,6 +400,36 @@ void test("corpus and source routes stay under their own prefixes and encode eve
   );
 });
 
+void test("MoonClient reaches the ayah proof contract on the shared path", async () => {
+  const { client, requests } = recorder({ status: "verified", isValid: true });
+  await client.getAyahProof("mw:edition:quran|ar", 2, 255);
+  await client.verifyAyahProof({
+    surahNumber: 2,
+    ayahNumber: 255,
+    editionCode: "mw:edition:quran|ar",
+    claimedHash: "a".repeat(64),
+  });
+
+  assert.equal(
+    apiRoutes.corpusProofs.getProof("mw:edition:quran|ar", 2, 255),
+    "/corpus/proofs/mw%3Aedition%3Aquran%7Car/2/255",
+  );
+  assert.equal(requests[0].url, "/api/corpus/proofs/mw%3Aedition%3Aquran%7Car/2/255");
+  assert.equal(requests[0].method, "GET");
+  assert.equal(requests[1].url, "/api/corpus/proofs/verify");
+  assert.equal(requests[1].method, "POST");
+
+  // The server dispatches the locator form with three segments under the same
+  // prefix, so `verify` must never be parseable as `edition/surah/ayah`.
+  assert.ok(apiRoutes.corpusProofs.verify.startsWith(apiRoutes.corpusProofs.prefix));
+  assert.equal(
+    new RegExp(
+      `^${apiRoutes.corpusProofs.prefix}([^/]+)/([0-9]+)/([0-9]+)$`,
+    ).test(apiRoutes.corpusProofs.verify),
+    false,
+  );
+});
+
 void test("no connector contract surface accepts a credential", () => {
   const clientMembers = [
     ...Object.getOwnPropertyNames(MoonClient.prototype),
@@ -779,7 +809,10 @@ void test("attachment routes are reached through the shared route table", async 
       ["DELETE", "/api/attachments/a-1"],
     ],
   );
-  assert.equal(JSON.parse(sentAt(sent, 2).body as string).sizeBytes, 10);
+  const createPayload = JSON.parse(sentAt(sent, 2).body as string) as {
+    sizeBytes: number;
+  };
+  assert.equal(createPayload.sizeBytes, 10);
 });
 
 void test("a chunk is sent as an octet-stream body, never as JSON", async () => {
