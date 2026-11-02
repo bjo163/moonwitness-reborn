@@ -956,8 +956,8 @@ void test("GET /search queries search.index_entry securely with owner isolation"
     weight: 3,
     snippet: "Kisah Nabi Musa dan perjalanan di padang pasir",
     owner_id: user.id,
-    created_at: Date.now(),
-    updated_at: Date.now(),
+    created_at: new Date(),
+    updated_at: new Date(),
   });
 
   const searchRes = await fetch(`${address}/search?q=musa`, {
