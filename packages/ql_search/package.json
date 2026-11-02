@@ -1,0 +1,33 @@
+{
+  "name": "ql_search",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./__manifest__": {
+      "types": "./dist/__manifest__.d.ts",
+      "import": "./dist/__manifest__.js"
+    },
+    "./models": {
+      "types": "./dist/models/index.d.ts",
+      "import": "./dist/models/index.js"
+    },
+    "./services/search-indexing-service": {
+      "types": "./dist/services/search-indexing-service.d.ts",
+      "import": "./dist/services/search-indexing-service.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsx --test models/index.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@moonwitness/types": "workspace:*",
+    "ql_auth": "workspace:*",
+    "ql_base": "workspace:*",
+    "ql_corpus": "workspace:*",
+    "ql_orm": "workspace:*",
+    "ql_research": "workspace:*"
+  }
+}

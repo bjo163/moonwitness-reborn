@@ -1039,3 +1039,58 @@ void test("registry resolves model addon, category, and validates landing views"
     /options must be a non-empty list of strings/,
   );
 });
+
+void test("findMany filters records using parameterized SQL search options", async () => {
+  const runtime = await createQlOrm("file::memory:", [
+    {
+      ...base,
+      name: "ql_test_search",
+      models: [
+        {
+          name: "test.search_item",
+          description: "Search item",
+          tableName: "test_search_item",
+          fields: {
+            title: { type: "char", required: true },
+            content: { type: "text" },
+          },
+        },
+      ],
+      access: [
+        {
+          model: "test.search_item",
+          group: "user",
+          read: true,
+          write: true,
+          create: true,
+          unlink: true,
+        },
+      ],
+    },
+  ]);
+  try {
+    const user = { id: "user-1", groups: ["user"] };
+    await runtime.orm.create("test.search_item", user, {
+      title: "Kisah Nabi Ibrahim",
+      content: "Membangun Ka'bah bersama Nabi Ismail",
+    });
+    await runtime.orm.create("test.search_item", user, {
+      title: "Kisah Nabi Musa",
+      content: "Membelah lautan dengan mukjizat",
+    });
+
+    const matchedTitle = await runtime.orm.findMany("test.search_item", user, {
+      search: { fields: ["title"], query: "musa" },
+    });
+    assert.equal(matchedTitle.length, 1);
+    assert.equal(matchedTitle[0].title, "Kisah Nabi Musa");
+
+    const matchedContent = await runtime.orm.findMany("test.search_item", user, {
+      search: { fields: ["content"], query: "ka'bah" },
+    });
+    assert.equal(matchedContent.length, 1);
+    assert.equal(matchedContent[0].title, "Kisah Nabi Ibrahim");
+  } finally {
+    runtime.close();
+  }
+});

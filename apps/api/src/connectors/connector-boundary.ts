@@ -168,18 +168,19 @@ export async function writeAudit(
 ): Promise<void> {
   try {
     const failure = entry.error;
+    const hasError = failure !== undefined && failure !== null;
     const now = new Date();
     await orm.createRecordForService("integration.audit", {
       connector_id: scope.connectorId,
       owner_id: scope.ownerId,
       action: entry.action.slice(0, 24),
       target: entry.target.slice(0, 253),
-      outcome: entry.outcome ?? (failure ? "error" : "ok"),
+      outcome: entry.outcome ?? (hasError ? "error" : "ok"),
       zone_id: (entry.zoneId ?? "").slice(0, 64),
       record_id: (entry.recordId ?? "").slice(0, 64),
       detail: sanitizeCloudflareMessage(entry.detail ?? ""),
-      error_code: failure ? String(errorCodeOf(failure)).slice(0, 24) : "",
-      error_message: failure ? sanitizeCloudflareMessage(errorMessageOf(failure)) : "",
+      error_code: hasError ? String(errorCodeOf(failure)).slice(0, 24) : "",
+      error_message: hasError ? sanitizeCloudflareMessage(errorMessageOf(failure)) : "",
       created_at: now,
     });
   } catch (error) {

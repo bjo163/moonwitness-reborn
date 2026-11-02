@@ -167,6 +167,9 @@ importers:
       ql_research:
         specifier: workspace:*
         version: link:../../packages/ql_research
+      ql_search:
+        specifier: workspace:*
+        version: link:../../packages/ql_search
       ql_source:
         specifier: workspace:*
         version: link:../../packages/ql_source
@@ -385,6 +388,27 @@ importers:
       ql_source:
         specifier: workspace:*
         version: link:../ql_source
+
+  packages/ql_search:
+    dependencies:
+      '@moonwitness/types':
+        specifier: workspace:*
+        version: link:../types
+      ql_auth:
+        specifier: workspace:*
+        version: link:../ql_auth
+      ql_base:
+        specifier: workspace:*
+        version: link:../ql_base
+      ql_corpus:
+        specifier: workspace:*
+        version: link:../ql_corpus
+      ql_orm:
+        specifier: workspace:*
+        version: link:../ql-orm
+      ql_research:
+        specifier: workspace:*
+        version: link:../ql_research
 
   packages/ql_source:
     dependencies:

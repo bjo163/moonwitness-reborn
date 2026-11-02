@@ -77,6 +77,21 @@ export interface AppMessages {
     progressReady: string;
     progressBlocked: string;
     progressNote: string;
+    heroEyebrow: string;
+    heroTagline: string;
+    heroNarrative: string;
+    enterUniverse: string;
+    navHome: string;
+    navEcosystem: string;
+    navPortals: string;
+    navJourney: string;
+    navProgress: string;
+    portalsLabel: string;
+    portalMoonWitness: string;
+    portalDock: string;
+    portalCockpit: string;
+    portalHeadquarter: string;
+    footerValues: string;
   };
   dashboard: {
     greeting: string;

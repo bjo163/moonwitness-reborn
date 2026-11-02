@@ -78,3 +78,5 @@ export {
   type WorkspaceSidebarProps,
 } from "./composites/workspace-sidebar.js";
 export { cn } from "./lib/utils.js";
+export { HeroStage, type HeroStageProps } from "./composites/hero-stage.js";
+export { PortalCard, type PortalCardProps } from "./composites/portal-card.js";

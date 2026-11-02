@@ -18,36 +18,43 @@
  * what lets `@moonwitness/eslint-config` reject default-palette classes
  * in app markup (MW-ADR-020).
  *
+ * Direction: "Empire of the Light" (A-L-L-A-H.COM). Dark theme is a
+ * deep indigo night with warm ivory text and a gold accent; light theme
+ * is parchment with a bronze accent. The accent keeps its historical
+ * token name (`acid`) so no consumer had to be renamed; only its value
+ * moved from lime to gold.
+ *
  * Consumers import this file through `preset.css` after
  * `@import "tailwindcss"`; do not import it directly unless the
  * tailwind pipeline is already active in the same stylesheet.
  */
 @theme {
-  --color-ink: #e9eee6;
-  --color-ink-soft: #c6cfc0;
-  --color-muted: #9da69a;
-  --color-muted-dim: #7c8679;
-  --color-panel: #111713;
-  --color-panel-raised: #18211b;
-  --color-panel-deep: #0b110b;
-  --color-panel-deeper: #0a0e0b;
-  --color-panel-edge: #121a13;
-  --color-panel-well: #0c110e;
-  --color-hairline: #354135;
-  --color-hairline-soft: #2a342a;
-  --color-hairline-strong: #38443a;
-  --color-acid: #d7ff63;
-  --color-acid-dark: #9ebd42;
-  --color-acid-muted: #b8cc91;
-  --color-acid-shadow: #738d32;
-  --color-danger: #ff766d;
+  --color-ink: #f1ead9;
+  --color-ink-soft: #d3cbb8;
+  --color-muted: #a6a3bb;
+  --color-muted-dim: #8d8aa6;
+  --color-panel: #0f1230;
+  --color-panel-raised: #171a3d;
+  --color-panel-deep: #0a0c24;
+  --color-panel-deeper: #070918;
+  --color-panel-edge: #12153a;
+  --color-panel-well: #0a0c22;
+  --color-hairline: #3a3560;
+  --color-hairline-soft: #2a2750;
+  --color-hairline-strong: #4a4478;
+  --color-acid: #f2c15e;
+  --color-acid-dark: #c99a3a;
+  --color-acid-muted: #d9bf86;
+  --color-acid-shadow: #8a6a22;
+  --color-danger: #ff8a80;
   --color-success: #6ee7b7;
   --color-warning: #fbbf24;
-  --color-void: #050706;
+  --color-void: #04050f;
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Cormorant Garamond", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
   --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
-  --shadow-hud: 6px 6px 0 var(--color-void);
-  --shadow-hud-sm: 4px 4px 0 var(--color-void);
+  --shadow-hud: 0 10px 34px var(--color-void);
+  --shadow-hud-sm: 0 6px 18px var(--color-void);
 }
 
 
@@ -62,56 +69,79 @@
  * hex literal of its own.
  */
 :root {
-  --ql-on-acid: #141912;
-  --ql-button-secondary-border: #687744;
-  --ql-button-secondary-bg: #293320;
-  --ql-button-secondary-bg-hover: #364329;
-  --ql-button-ghost-bg-hover: #202a22;
-  --ql-button-danger-border: #633d38;
-  --ql-button-danger-bg: #311f1e;
-  --ql-input-placeholder: #747d72;
-  --ql-field-ink: #dce5d6;
-  --ql-card-shadow: #080b09;
-  --ql-alert-error-border: #70413b;
-  --ql-alert-error-bg: #251615;
-  --ql-alert-error-ink: #ffb6aa;
-  --ql-badge-default-border: #53613d;
-  --ql-badge-default-bg: #20281b;
-  --ql-hud-panel: #101612;
-  --ql-nav-active-border: #3b4937;
-  --ql-nav-active-bg: #192119;
-  --ql-hud-topbar-border: #2e392f;
-  --ql-hud-user-border: #566543;
-  --ql-hud-user-bg: #293220;
-  --ql-hud-user-ink: #eff8dd;
-  --ql-hud-user-shadow: #10150e;
-  --ql-hud-assistant-border: #607444;
-  --ql-hud-assistant-bg: #29351f;
-  --ql-hud-composer-border: #495540;
-  --ql-hud-composer-border-focus: #859e56;
-  --ql-hud-status-border: #374532;
-  --ql-hud-status-bg: #151d15;
-  --ql-hud-status-ink: #cfdda8;
-  --ql-hud-auth-bg: #090d0a;
-  --ql-hud-auth-card-border: #49563e;
-  --ql-hud-auth-card-shadow: #030504;
+  --ql-on-acid: #1a1204;
+  --ql-button-secondary-border: #7b6a3e;
+  --ql-button-secondary-bg: #221f45;
+  --ql-button-secondary-bg-hover: #2d2958;
+  --ql-button-ghost-bg-hover: #1b1e45;
+  --ql-button-danger-border: #6d3b4a;
+  --ql-button-danger-bg: #2f1a2c;
+  --ql-input-placeholder: #7d7a99;
+  --ql-field-ink: #ece5d3;
+  --ql-card-shadow: #04050f;
+  --ql-alert-error-border: #7a4150;
+  --ql-alert-error-bg: #2a1626;
+  --ql-alert-error-ink: #ffb9b1;
+  --ql-badge-default-border: #6f5d33;
+  --ql-badge-default-bg: #241f3a;
+  --ql-hud-panel: #0e112d;
+  --ql-nav-active-border: #5a4f86;
+  --ql-hud-topbar-border: #2d2a56;
+  --ql-nav-active-bg: #1c1f4a;
+  --ql-hud-user-border: #6f5d33;
+  --ql-hud-user-bg: #272347;
+  --ql-hud-user-ink: #f7f0de;
+  --ql-hud-user-shadow: #0a0c22;
+  --ql-hud-assistant-border: #6f5d33;
+  --ql-hud-assistant-bg: #2a2548;
+  --ql-hud-composer-border: #4d4781;
+  --ql-hud-composer-border-focus: #d2a64e;
+  --ql-hud-status-border: #3a3764;
+  --ql-hud-status-bg: #141739;
+  --ql-hud-status-ink: #e4d3a6;
+  --ql-hud-auth-bg: #060816;
+  --ql-hud-auth-card-border: #54497f;
+  --ql-hud-auth-card-shadow: #02030a;
 
-  --ql-hud-grid-line: rgba(185, 204, 157, 0.025);
-  --ql-hud-auth-grid-line: rgba(185, 204, 157, 0.04);
-  --ql-table-row-border: rgba(56, 68, 58, 0.65);
-  --ql-table-row-hover: rgba(215, 255, 99, 0.045);
-  --ql-hud-app-glow: rgba(84, 111, 54, 0.14);
-  --ql-backdrop: rgba(0, 0, 0, 0.58);
+  --ql-hud-grid-line: rgba(200, 190, 255, 0.025);
+  --ql-hud-auth-grid-line: rgba(200, 190, 255, 0.04);
+  --ql-table-row-border: rgba(74, 68, 120, 0.65);
+  --ql-table-row-hover: rgba(242, 193, 94, 0.05);
+  --ql-hud-app-glow: rgba(242, 193, 94, 0.1);
+  --ql-hud-app-glow-cool: rgba(104, 92, 214, 0.2);
+  --ql-backdrop: rgba(2, 3, 12, 0.66);
   --ql-scanline: rgba(255, 255, 255, 0.016);
-  --ql-hud-sidebar-tint: rgba(208, 255, 92, 0.045);
-  --ql-hud-topbar-bg: rgba(11, 16, 12, 0.78);
-  --ql-hud-composer-bg: rgba(15, 21, 16, 0.97);
-  --ql-hud-composer-sheen: rgba(220, 255, 133, 0.08);
-  --ql-hud-auth-glow: rgba(115, 145, 66, 0.2);
-  --ql-hud-auth-card-tint: rgba(205, 255, 95, 0.055);
-  --ql-hud-auth-card-glow: rgba(145, 185, 78, 0.09);
-  --ql-side-panel-tint: rgba(215, 255, 99, 0.055);
-  --ql-side-panel-shadow: rgba(0, 0, 0, 0.4);
+  --ql-hud-sidebar-tint: rgba(242, 193, 94, 0.04);
+  --ql-hud-topbar-bg: rgba(10, 12, 36, 0.78);
+  --ql-hud-composer-bg: rgba(14, 17, 45, 0.97);
+  --ql-hud-composer-sheen: rgba(242, 193, 94, 0.08);
+  --ql-hud-auth-glow: rgba(242, 193, 94, 0.14);
+  --ql-hud-auth-card-tint: rgba(242, 193, 94, 0.05);
+  --ql-hud-auth-card-glow: rgba(120, 104, 230, 0.16);
+  --ql-side-panel-tint: rgba(242, 193, 94, 0.05);
+  --ql-side-panel-shadow: rgba(0, 0, 0, 0.5);
+  --ql-glow-gold: rgba(242, 193, 94, 0.34);
+  --ql-glow-gold-strong: rgba(242, 193, 94, 0.55);
+
+  /*
+   * Hero stage (home). The artwork behind it is always a night scene, so
+   * these values stay fixed in both themes and are not overridden under
+   * `[data-theme="light"]`. `.ql-hero` re-points the accent aliases at them
+   * so buttons and links inside the stage keep their contrast.
+   */
+  --ql-hero-ink: #f6efdd;
+  --ql-hero-ink-soft: #ddd5c0;
+  --ql-hero-gold: #f2c15e;
+  --ql-hero-gold-soft: #d9bf86;
+  --ql-hero-on-gold: #1a1204;
+  --ql-hero-veil-solid: rgba(6, 8, 22, 0.94);
+  --ql-hero-veil-mid: rgba(6, 8, 22, 0.55);
+  --ql-hero-veil-clear: rgba(6, 8, 22, 0);
+  --ql-portal-bg: rgba(14, 17, 45, 0.66);
+  --ql-portal-bg-hover: rgba(26, 30, 70, 0.86);
+  --ql-portal-border: rgba(242, 193, 94, 0.3);
+  --ql-portal-border-hover: rgba(242, 193, 94, 0.7);
+  --ql-hero-line: rgba(242, 193, 94, 0.45);
 }
 
 :root {
@@ -133,6 +163,7 @@
   --ql-ui-void: var(--color-void);
   --ql-ui-font-mono: var(--font-mono);
   --ql-ui-font-sans: var(--font-sans);
+  --ql-ui-font-display: var(--font-display);
 }
 
 /*
@@ -141,76 +172,79 @@
  */
 :root[data-theme="light"],
 [data-theme="light"] {
-  --color-ink: #111713;
-  --color-ink-soft: #2a342a;
-  --color-muted: #536150;
-  --color-muted-dim: #6d7d69;
-  --color-panel: #ffffff;
-  --color-panel-raised: #f7faf6;
-  --color-panel-deep: #eef3ec;
-  --color-panel-deeper: #e5ece2;
-  --color-panel-edge: #d8e2d4;
-  --color-panel-well: #f0f5ee;
-  --color-hairline: #ccd8c8;
-  --color-hairline-soft: #dce5d8;
-  --color-hairline-strong: #b5c4b0;
-  --color-acid: #557811;
-  --color-acid-dark: #3f590b;
-  --color-acid-muted: #6e8a32;
-  --color-acid-shadow: #8fa855;
-  --color-danger: #c52820;
+  --color-ink: #1c1738;
+  --color-ink-soft: #3a3560;
+  --color-muted: #55516f;
+  --color-muted-dim: #6d6987;
+  --color-panel: #fffdf7;
+  --color-panel-raised: #faf5e8;
+  --color-panel-deep: #f3ecda;
+  --color-panel-deeper: #f7f1e1;
+  --color-panel-edge: #ece3ce;
+  --color-panel-well: #f6f0e0;
+  --color-hairline: #d9ccab;
+  --color-hairline-soft: #e6dcc3;
+  --color-hairline-strong: #c4b387;
+  --color-acid: #8a5a00;
+  --color-acid-dark: #6a4300;
+  --color-acid-muted: #9a7420;
+  --color-acid-shadow: #c9a45a;
+  --color-danger: #b3261e;
   --color-success: #15803d;
   --color-warning: #b45309;
-  --color-void: #ffffff;
+  --color-void: #fffdf7;
 
-  --ql-on-acid: #ffffff;
-  --ql-button-secondary-border: #a4b89a;
-  --ql-button-secondary-bg: #eaf1e7;
-  --ql-button-secondary-bg-hover: #dce7d7;
-  --ql-button-ghost-bg-hover: #eaf1e7;
+  --ql-on-acid: #fffdf7;
+  --ql-button-secondary-border: #c4a45a;
+  --ql-button-secondary-bg: #f3e8cc;
+  --ql-button-secondary-bg-hover: #ead9ac;
+  --ql-button-ghost-bg-hover: #f3e8cc;
   --ql-button-danger-border: #f0a39e;
   --ql-button-danger-bg: #fdf2f1;
-  --ql-input-placeholder: #7c8a79;
-  --ql-field-ink: #18221a;
-  --ql-card-shadow: #d1ded0;
+  --ql-input-placeholder: #7f7a96;
+  --ql-field-ink: #221c40;
+  --ql-card-shadow: #d9ccab;
   --ql-alert-error-border: #f5b5b0;
   --ql-alert-error-bg: #fdf3f2;
   --ql-alert-error-ink: #991b1b;
-  --ql-badge-default-border: #b8cbb3;
-  --ql-badge-default-bg: #eef5eb;
-  --ql-hud-panel: #ffffff;
-  --ql-nav-active-border: #a4bba0;
-  --ql-nav-active-bg: #e6f0e4;
-  --ql-hud-topbar-border: #d0ded0;
-  --ql-hud-user-border: #b0c4ac;
-  --ql-hud-user-bg: #edf5eb;
-  --ql-hud-user-ink: #162217;
-  --ql-hud-user-shadow: #dce5da;
-  --ql-hud-assistant-border: #a4ba9c;
-  --ql-hud-assistant-bg: #e7f2e4;
-  --ql-hud-composer-border: #b5c7b1;
-  --ql-hud-composer-border-focus: #557811;
-  --ql-hud-status-border: #bccab9;
-  --ql-hud-status-bg: #eef5eb;
-  --ql-hud-status-ink: #2d451f;
-  --ql-hud-auth-bg: #f8faf7;
-  --ql-hud-auth-card-border: #b8ccb3;
-  --ql-hud-auth-card-shadow: #cbd9c8;
+  --ql-badge-default-border: #cdb479;
+  --ql-badge-default-bg: #f6eed8;
+  --ql-hud-panel: #fffdf7;
+  --ql-nav-active-border: #c4a45a;
+  --ql-nav-active-bg: #f3e8cc;
+  --ql-hud-topbar-border: #e0d3b2;
+  --ql-hud-user-border: #cdb479;
+  --ql-hud-user-bg: #f6eed8;
+  --ql-hud-user-ink: #241d40;
+  --ql-hud-user-shadow: #e6dcc3;
+  --ql-hud-assistant-border: #cdb479;
+  --ql-hud-assistant-bg: #f1e6c8;
+  --ql-hud-composer-border: #cdbd93;
+  --ql-hud-composer-border-focus: #8a5a00;
+  --ql-hud-status-border: #d4c69f;
+  --ql-hud-status-bg: #f6eed8;
+  --ql-hud-status-ink: #4a3410;
+  --ql-hud-auth-bg: #fbf6e8;
+  --ql-hud-auth-card-border: #cdb479;
+  --ql-hud-auth-card-shadow: #e0d3b2;
 
-  --ql-hud-grid-line: rgba(50, 75, 40, 0.05);
-  --ql-hud-auth-grid-line: rgba(50, 75, 40, 0.06);
-  --ql-table-row-border: rgba(180, 198, 175, 0.65);
-  --ql-table-row-hover: rgba(85, 120, 17, 0.06);
-  --ql-hud-app-glow: rgba(85, 120, 17, 0.05);
-  --ql-backdrop: rgba(15, 20, 16, 0.45);
+  --ql-hud-grid-line: rgba(90, 70, 20, 0.05);
+  --ql-hud-auth-grid-line: rgba(90, 70, 20, 0.06);
+  --ql-table-row-border: rgba(196, 179, 135, 0.65);
+  --ql-table-row-hover: rgba(138, 90, 0, 0.06);
+  --ql-hud-app-glow: rgba(201, 164, 90, 0.2);
+  --ql-hud-app-glow-cool: rgba(120, 104, 230, 0.07);
+  --ql-backdrop: rgba(28, 23, 56, 0.45);
   --ql-scanline: rgba(0, 0, 0, 0.01);
-  --ql-hud-sidebar-tint: rgba(85, 120, 17, 0.04);
-  --ql-hud-topbar-bg: rgba(255, 255, 255, 0.88);
-  --ql-hud-composer-bg: rgba(255, 255, 255, 0.98);
-  --ql-hud-composer-sheen: rgba(85, 120, 17, 0.05);
-  --ql-hud-auth-glow: rgba(85, 120, 17, 0.08);
-  --ql-hud-auth-card-tint: rgba(85, 120, 17, 0.03);
-  --ql-hud-auth-card-glow: rgba(85, 120, 17, 0.05);
-  --ql-side-panel-tint: rgba(85, 120, 17, 0.03);
-  --ql-side-panel-shadow: rgba(0, 0, 0, 0.15);
+  --ql-hud-sidebar-tint: rgba(138, 90, 0, 0.04);
+  --ql-hud-topbar-bg: rgba(255, 253, 247, 0.88);
+  --ql-hud-composer-bg: rgba(255, 253, 247, 0.98);
+  --ql-hud-composer-sheen: rgba(138, 90, 0, 0.05);
+  --ql-hud-auth-glow: rgba(201, 164, 90, 0.2);
+  --ql-hud-auth-card-tint: rgba(138, 90, 0, 0.03);
+  --ql-hud-auth-card-glow: rgba(201, 164, 90, 0.14);
+  --ql-side-panel-tint: rgba(138, 90, 0, 0.03);
+  --ql-side-panel-shadow: rgba(28, 23, 56, 0.18);
+  --ql-glow-gold: rgba(138, 90, 0, 0.22);
+  --ql-glow-gold-strong: rgba(138, 90, 0, 0.38);
 }

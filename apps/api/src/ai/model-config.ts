@@ -8,22 +8,28 @@ export interface ModelProviderConfigResult {
   missingApiKey: boolean;
 }
 
+function parseMode(rawMode: string | undefined): ModelProviderMode {
+  if (rawMode === undefined || rawMode === "") {
+    return "openai-compatible";
+  }
+  if (rawMode === "openai-compatible" || rawMode === "freellmapi") {
+    return rawMode;
+  }
+  throw new Error(
+    `Unsupported MODEL_PROVIDER '${rawMode}'. Expected 'openai-compatible' or 'freellmapi'.`,
+  );
+}
+
 export function resolveModelProviderConfig(
   env: NodeJS.ProcessEnv,
 ): ModelProviderConfigResult {
   const configuredMode = env.MODEL_PROVIDER?.trim().toLowerCase();
-  const mode = configuredMode || "openai-compatible";
-  if (mode !== "openai-compatible" && mode !== "freellmapi") {
-    throw new Error(
-      `Unsupported MODEL_PROVIDER '${mode}'. Expected 'openai-compatible' or 'freellmapi'.`,
-    );
-  }
+  const mode = parseMode(configuredMode);
 
   const isFreeLlmApi = mode === "freellmapi";
-  const apiKey = (
-    isFreeLlmApi ? env.FREELLMAPI_API_KEY : env.MODEL_API_KEY
-  )?.trim();
-  if (!apiKey) {
+  const rawKey = isFreeLlmApi ? env.FREELLMAPI_API_KEY : env.MODEL_API_KEY;
+  const apiKey = rawKey?.trim();
+  if (apiKey === undefined || apiKey === "") {
     return { mode, missingApiKey: true };
   }
 
@@ -31,7 +37,7 @@ export function resolveModelProviderConfig(
     ? (env.FREELLMAPI_MODEL ?? "auto")
     : env.MODEL_NAME;
   const model = modelSetting?.trim();
-  if (!model) {
+  if (model === undefined || model === "") {
     throw new Error(
       isFreeLlmApi
         ? "FREELLMAPI_MODEL must not be empty."

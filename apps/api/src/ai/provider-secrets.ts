@@ -4,7 +4,7 @@ const KEY_BYTES = 32;
 
 export function parseProviderEncryptionKey(value: string | undefined) {
   const key = value?.trim();
-  if (!key) return undefined;
+  if (key === undefined || key === "") return undefined;
   if (!/^[\da-f]{64}$/i.test(key)) {
     throw new Error("PROVIDER_ENCRYPTION_KEY must be exactly 64 hexadecimal characters.");
   }
@@ -37,7 +37,15 @@ export function decryptProviderSecret(
     throw new Error("Provider encryption key must be 32 bytes.");
   }
   const [encodedIv, encodedTag, encodedCiphertext, extra] = value.split(".");
-  if (!encodedIv || !encodedTag || !encodedCiphertext || extra !== undefined) {
+  if (
+    encodedIv === undefined ||
+    encodedIv === "" ||
+    encodedTag === undefined ||
+    encodedTag === "" ||
+    encodedCiphertext === undefined ||
+    encodedCiphertext === "" ||
+    extra !== undefined
+  ) {
     throw new Error("Stored provider credential has an invalid format.");
   }
   const iv = Buffer.from(encodedIv, "base64url");

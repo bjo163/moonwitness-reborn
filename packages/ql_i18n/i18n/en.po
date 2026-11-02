@@ -2944,3 +2944,63 @@ msgstr "Public read-only mode. Sign in to manage records with your account permi
 msgctxt "web.models:signInToManage"
 msgid "Masuk"
 msgstr "Sign in"
+
+msgctxt "web:landing.heroEyebrow"
+msgid "Selamat datang di Kekaisaran"
+msgstr "Welcome to the Empire"
+
+msgctxt "web:landing.heroTagline"
+msgid "Saat Bulan Terbit, Kita Berbagi Pesan"
+msgstr "When the Moon Rises, We Share Messages"
+
+msgctxt "web:landing.heroNarrative"
+msgid "Sebuah semesta, sebuah perjalanan, untuk menemukan cahaya, menyebarkan kebaikan, dan meraih ridha ALLAH."
+msgstr "One universe, one journey: to find the light, spread goodness, and seek the pleasure of ALLAH."
+
+msgctxt "web:landing.enterUniverse"
+msgid "Masuk ke Semesta"
+msgstr "Enter the Universe"
+
+msgctxt "web:landing.navHome"
+msgid "Beranda"
+msgstr "Home"
+
+msgctxt "web:landing.navEcosystem"
+msgid "Ekosistem"
+msgstr "Ecosystem"
+
+msgctxt "web:landing.navPortals"
+msgid "Gerbang"
+msgstr "Gateways"
+
+msgctxt "web:landing.navJourney"
+msgid "Perjalanan"
+msgstr "Journey"
+
+msgctxt "web:landing.navProgress"
+msgid "Kemajuan"
+msgstr "Progress"
+
+msgctxt "web:landing.portalsLabel"
+msgid "Gerbang ekosistem"
+msgstr "Ecosystem gateways"
+
+msgctxt "web:landing.portalMoonWitness"
+msgid "Kisah, transmisi, dan sumber pengetahuan."
+msgstr "Stories, transmissions, and sources of knowledge."
+
+msgctxt "web:landing.portalDock"
+msgid "Portal komunitas dan anggota."
+msgstr "Community portal and members."
+
+msgctxt "web:landing.portalCockpit"
+msgid "Pusat kendali dan personalisasi."
+msgstr "Your control center and personalization."
+
+msgctxt "web:landing.portalHeadquarter"
+msgid "Administrasi dan operasional."
+msgstr "Administration and operations."
+
+msgctxt "web:landing.footerValues"
+msgid "Iman · Pengetahuan · Harmoni · Keabadian"
+msgstr "Faith · Knowledge · Harmony · Eternity"

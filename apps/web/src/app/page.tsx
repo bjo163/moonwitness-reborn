@@ -14,19 +14,27 @@ import {
   Button,
   MetricList,
   MetricRow,
+  HeroStage,
+  NavLink,
+  PortalCard,
   SidebarBrand,
 } from "@moonwitness/ui";
 import {
-  ArrowDownRight,
   ArrowRight,
   BookOpenCheck,
   Boxes,
+  ChevronDown,
+  ChevronRight,
+  Compass,
   KeyRound,
+  Landmark,
+  Moon,
   Plug,
   Sparkles,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { LocaleSwitcher } from "../features/locale/locale-switcher";
 import { apiErrorMessage } from "../features/locale/api-error-message";
 import { useMessages } from "../features/locale/messages";
@@ -36,6 +44,10 @@ import {
   useTranslationCatalog,
 } from "../features/locale/translation-catalog";
 import { useLocalePreference } from "../features/locale/use-locale-preference";
+
+const BRAND_NAME = "A-L-L-A-H.COM";
+const BRAND_ECOSYSTEM = "Empire of the Light";
+const BRAND_DECLARATION = "Only You. Your Deeds. And ALLAH.";
 
 const LANDING_SECTIONS: readonly {
   section: LandingViewSection;
@@ -134,92 +146,192 @@ export default function LandingPage() {
   const loadErrorMessage =
     loadError === null ? null : apiErrorMessage(loadError, t);
 
+  const portals: readonly {
+    title: string;
+    description: string;
+    href: string;
+    icon: ReactNode;
+    proposed?: boolean;
+  }[] = [
+    {
+      title: "MoonWitness",
+      description: copy.landing.portalMoonWitness,
+      href: "/corpus",
+      icon: <Moon aria-hidden="true" size={22} />,
+    },
+    {
+      title: "Dock",
+      description: copy.landing.portalDock,
+      href: "#product-direction",
+      icon: <Users aria-hidden="true" size={22} />,
+      proposed: true,
+    },
+    {
+      title: "Cockpit",
+      description: copy.landing.portalCockpit,
+      href: "/command-center",
+      icon: <Compass aria-hidden="true" size={22} />,
+    },
+    {
+      title: "Headquarter",
+      description: copy.landing.portalHeadquarter,
+      href: "/admin/users",
+      icon: <Landmark aria-hidden="true" size={22} />,
+    },
+  ];
   return (
     <main className="ql-hud-app min-h-dvh">
-      <header className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5 md:px-10">
-        <SidebarBrand href="/" icon={<Sparkles aria-hidden="true" size={18} />} />
-        <nav
-          className="ml-auto flex items-center gap-2"
-          aria-label={copy.common.mainNavigation}
-        >
-          <LocaleSwitcher
-            locale={locale}
-            label={copy.common.localeLabel}
-            onChange={(nextLocale) => void changeLocale(nextLocale)}
-            disabled={user === undefined || saving}
+      <HeroStage imageSrc="/hero-empire.jpg">
+        <header className="relative mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-5 py-4 md:px-10">
+          <SidebarBrand
+            href="/"
+            label={BRAND_NAME}
+            icon={<Sparkles aria-hidden="true" size={18} />}
           />
-          <Link
-            href={`/auth?mode=login&locale=${locale}`}
-            className="hidden text-sm font-medium text-ink-soft underline-offset-4 hover:text-acid hover:underline sm:inline"
+          <nav
+            className="ql-topnav order-3 w-full lg:order-none lg:w-auto"
+            aria-label={copy.common.mainNavigation}
           >
-            {copy.landing.login}
-          </Link>
-          <Button
-            onClick={() => window.location.assign(dashboardHref)}
-            disabled={user === undefined}
-          >
-            {user
-              ? copy.landing.signedInAction
-              : copy.landing.primaryAction}{" "}
-            <ArrowRight aria-hidden="true" size={16} />
-          </Button>
-        </nav>
-      </header>
-
-      <section className="mx-auto grid min-h-[68dvh] w-full max-w-7xl items-center gap-12 px-5 py-14 md:grid-cols-[1.08fr_0.92fr] md:px-10 md:py-20">
-        <div>
-          <h1 className="max-w-3xl text-5xl font-semibold leading-[1.04] tracking-[-0.045em] text-ink md:text-7xl">
-            {copy.landing.title}
-          </h1>
-          <p className="mt-7 max-w-2xl text-base leading-7 text-ink-soft md:text-lg md:leading-8">
-            {copy.landing.description}
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button onClick={() => window.location.assign(dashboardHref)}>
-              {user
-                ? copy.landing.signedInAction
-                : copy.landing.primaryAction}
-              <ArrowRight aria-hidden="true" size={16} />
-            </Button>
+            <NavLink href="/" active>
+              {copy.landing.navHome}
+            </NavLink>
+            <NavLink href="#portals">{copy.landing.navPortals}</NavLink>
+            <NavLink href="#ecosystem-context">
+              {copy.landing.navEcosystem}
+            </NavLink>
+            <NavLink href="#product-direction">
+              {copy.landing.navJourney}
+            </NavLink>
+            <NavLink href="#project-progress">
+              {copy.landing.navProgress}
+            </NavLink>
+          </nav>
+          <div className="flex items-center gap-2">
+            <LocaleSwitcher
+              locale={locale}
+              label={copy.common.localeLabel}
+              onChange={(nextLocale) => void changeLocale(nextLocale)}
+              disabled={user === undefined || saving}
+            />
             <Link
-              href="#ecosystem-context"
-              className="inline-flex min-h-11 items-center gap-2 px-3 text-sm font-medium text-ink-soft underline-offset-4 hover:text-acid hover:underline"
+              href={`/auth?mode=login&locale=${locale}`}
+              className="inline-flex min-h-11 items-center px-2 text-sm font-medium text-ink-soft underline-offset-4 hover:text-acid hover:underline"
             >
-              {copy.landing.ecosystemLinkLabel}
-              <ArrowDownRight aria-hidden="true" size={15} />
+              {copy.landing.login}
             </Link>
           </div>
-          {loadErrorMessage !== null && (
-            <Alert className="mt-6 max-w-xl" variant="error">
-              {loadErrorMessage}
-            </Alert>
-          )}
-          {localeError !== null && (
-            <Alert className="mt-3 max-w-xl" variant="error">
-              {copy.landing.localeSaveError}
-            </Alert>
-          )}
+        </header>
+
+        <div className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center gap-10 px-5 py-10 md:px-10 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
+          <div className="max-w-xl">
+            <p className="ql-hero__eyebrow">{copy.landing.heroEyebrow}</p>
+            <h1 className="ql-hero__title">{BRAND_NAME}</h1>
+            <p className="ql-hero__subtitle">{BRAND_ECOSYSTEM}</p>
+            <p className="ql-hero__tagline">{copy.landing.heroTagline}</p>
+            <p className="mt-5 max-w-md text-sm leading-7 text-ink-soft md:text-base">
+              {copy.landing.heroNarrative}
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Button
+                onClick={() => window.location.assign(dashboardHref)}
+                disabled={user === undefined}
+              >
+                {user ? copy.landing.signedInAction : copy.landing.enterUniverse}
+                <ArrowRight aria-hidden="true" size={16} />
+              </Button>
+            </div>
+            {loadErrorMessage !== null && (
+              <Alert className="mt-6 max-w-xl" variant="error">
+                {loadErrorMessage}
+              </Alert>
+            )}
+            {localeError !== null && (
+              <Alert className="mt-3 max-w-xl" variant="error">
+                {copy.landing.localeSaveError}
+              </Alert>
+            )}
+          </div>
+          <blockquote className="ql-hero__declaration max-w-[16rem] lg:text-right">
+            <p>&ldquo;{BRAND_DECLARATION}&rdquo;</p>
+          </blockquote>
         </div>
 
-        <aside
-          id="product-direction"
-          className="ql-card bg-panel-edge/90 p-6 md:p-8"
-          aria-labelledby="product-direction-title"
+        <div
+          id="portals"
+          className="relative mx-auto w-full max-w-7xl px-5 pb-5 md:px-10"
         >
-          <div className="flex items-center justify-between gap-4">
-            <h2
-              id="product-direction-title"
-              className="text-sm font-semibold tracking-wide text-ink-soft"
+          <ul className="ql-portal-grid" aria-label={copy.landing.portalsLabel}>
+            {portals.map((portal) => (
+              <li key={portal.title}>
+                <PortalCard
+                  href={portal.href}
+                  title={portal.title}
+                  description={portal.description}
+                  icon={portal.icon}
+                  arrow={<ChevronRight aria-hidden="true" size={16} />}
+                  status={portal.proposed ? copy.common.statusProposed : undefined}
+                />
+              </li>
+            ))}
+          </ul>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-hairline pt-4">
+            <p className="text-xs font-medium tracking-[0.22em] text-ink-soft">
+              {copy.landing.footerValues}
+            </p>
+            <Link
+              href="#ecosystem-context"
+              className="inline-flex min-h-11 items-center gap-2 px-2 text-xs font-semibold tracking-[0.18em] text-acid uppercase underline-offset-4 hover:underline"
             >
-              {copy.landing.productDirection}
-            </h2>
-            <Badge variant="outline">{copy.common.statusProposed}</Badge>
+              {copy.landing.ecosystemLinkLabel}
+              <ChevronDown aria-hidden="true" size={14} />
+            </Link>
           </div>
-          <ol className="mt-7 space-y-0">
+        </div>
+      </HeroStage>
+
+      <section
+        id="ecosystem-context"
+        className="mx-auto w-full max-w-7xl px-5 py-14 md:px-10 md:py-20"
+        aria-labelledby="ecosystem-context-title"
+      >
+        <div className="grid gap-4 md:grid-cols-[0.8fr_1.2fr] md:gap-8">
+          <h2
+            id="ecosystem-context-title"
+            className="ql-display max-w-md text-3xl leading-tight text-ink md:text-4xl"
+          >
+            {copy.landing.ecosystemContextTitle}
+          </h2>
+          <p className="max-w-3xl text-sm leading-7 text-ink-soft md:text-base">
+            {copy.landing.ecosystemContext}
+          </p>
+        </div>
+      </section>
+
+      <section
+        id="product-direction"
+        className="mx-auto w-full max-w-7xl border-t border-hairline px-5 py-12 md:px-10 md:py-16"
+        aria-labelledby="product-direction-title"
+      >
+        <div className="grid gap-8 md:grid-cols-[0.85fr_1.15fr]">
+          <div>
+            <div className="flex items-center gap-3">
+              <h2
+                id="product-direction-title"
+                className="ql-display text-3xl leading-tight text-ink md:text-4xl"
+              >
+                {copy.landing.productDirection}
+              </h2>
+              <Badge variant="outline">{copy.common.statusProposed}</Badge>
+            </div>
+            <p className="mt-4 max-w-md text-sm leading-6 text-muted">
+              {copy.landing.journeyNote}
+            </p>
+          </div>
+          <ol className="grid content-start gap-x-8 sm:grid-cols-2">
             {copy.landing.journey.map((step, index) => (
               <li
                 key={step}
-                className="flex min-h-10 items-center gap-4 border-t border-hairline-soft py-2.5"
+                className="flex min-h-11 items-center gap-4 border-t border-hairline-soft py-2.5"
               >
                 <span className="w-6 shrink-0 text-xs tabular-nums text-acid-muted">
                   {String(index + 1).padStart(2, "0")}
@@ -235,27 +347,6 @@ export default function LandingPage() {
               </li>
             ))}
           </ol>
-          <p className="mt-5 text-sm leading-6 text-muted">
-            {copy.landing.journeyNote}
-          </p>
-        </aside>
-      </section>
-
-      <section
-        id="ecosystem-context"
-        className="mx-auto w-full max-w-7xl border-t border-hairline px-5 py-10 md:px-10 md:py-12"
-        aria-labelledby="ecosystem-context-title"
-      >
-        <div className="grid gap-4 md:grid-cols-[0.8fr_1.2fr] md:gap-8">
-          <h2
-            id="ecosystem-context-title"
-            className="max-w-md text-2xl font-semibold leading-tight tracking-tight text-ink"
-          >
-            {copy.landing.ecosystemContextTitle}
-          </h2>
-          <p className="max-w-3xl text-sm leading-7 text-ink-soft md:text-base">
-            {copy.landing.ecosystemContext}
-          </p>
         </div>
       </section>
 
@@ -270,7 +361,7 @@ export default function LandingPage() {
               <div>
                 <h2
                   id={`landing-section-${group.section}`}
-                  className="max-w-md text-2xl font-semibold leading-tight tracking-tight text-ink md:text-3xl"
+                  className="ql-display max-w-md text-3xl leading-tight text-ink md:text-4xl"
                 >
                   {t(group.titleKey)}
                 </h2>
@@ -335,7 +426,7 @@ export default function LandingPage() {
             <div>
               <h2
                 id="current-foundation-title"
-                className="max-w-md text-2xl font-semibold leading-tight tracking-tight text-ink md:text-3xl"
+                className="ql-display max-w-md text-3xl leading-tight text-ink md:text-4xl"
               >
                 {copy.landing.currentFoundation}
               </h2>
@@ -366,6 +457,7 @@ export default function LandingPage() {
       )}
 
       <section
+        id="project-progress"
         className="mx-auto w-full max-w-7xl border-t border-hairline px-5 py-10 md:px-10 md:py-12"
         aria-labelledby="project-progress-title"
       >
@@ -373,7 +465,7 @@ export default function LandingPage() {
           <div>
             <h2
               id="project-progress-title"
-              className="max-w-md text-2xl font-semibold leading-tight tracking-tight text-ink"
+              className="ql-display max-w-md text-3xl leading-tight text-ink md:text-4xl"
             >
               {copy.landing.progressTitle}
             </h2>
