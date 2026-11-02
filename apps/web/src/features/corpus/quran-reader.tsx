@@ -237,6 +237,13 @@ export default function QuranReader() {
                 activeAyahNumber={activeAyah}
                 reciterName="Sheikh Mahmoud Khalil Al-Husary"
                 reciterStyle="Murattal"
+                audioStreamUrl={`https://everyayah.com/data/Husary_128kbps/${String(surah).padStart(3, "0")}${String(activeAyah).padStart(3, "0")}.mp3`}
+                segments={reading.passages.map((p, idx) => ({
+                  surahNumber: surah,
+                  ayahNumber: p.ayah,
+                  startMs: idx * 5000,
+                  endMs: (idx + 1) * 5000,
+                }))}
                 isPlaying={isPlayingAudio}
                 onPlayStateChange={(playing) => setIsPlayingAudio(playing)}
                 onAyahChange={handleAyahChange}
