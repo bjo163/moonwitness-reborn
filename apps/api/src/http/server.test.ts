@@ -13,6 +13,8 @@ import baseManifest from "ql_base/__manifest__";
 import chatManifest from "ql_chat/__manifest__";
 import corpusManifest from "ql_corpus/__manifest__";
 import sourceManifest from "ql_source/__manifest__";
+import researchManifest from "ql_research/__manifest__";
+import searchManifest from "ql_search/__manifest__";
 import { createApiServer } from "./server.js";
 import { listProjectTasks } from "../project-progress/github-issues.js";
 
@@ -75,6 +77,8 @@ before(async () => {
     chatManifest,
     sourceManifest,
     corpusManifest,
+    researchManifest,
+    searchManifest,
   ]);
   orm = ormRuntime.orm;
   closeOrm = ormRuntime.close;
@@ -938,3 +942,36 @@ void test("GET /models exposes addon and category metadata and GET /public/landi
   );
   assert.equal(publicExplorerDenied.status, 404);
 });
+
+void test("GET /search queries search.index_entry securely with owner isolation", async () => {
+  const cookie = await register("searcher@example.com");
+  const user = await store.getUserByEmail("searcher@example.com");
+  assert.ok(user);
+
+  // Create an index entry in orm via createRecordForService (owned by user)
+  await orm.createRecordForService("search.index_entry", {
+    target_model: "story.narrative",
+    target_id: "story_musa",
+    token: "musa",
+    weight: 3,
+    snippet: "Kisah Nabi Musa dan perjalanan di padang pasir",
+    owner_id: user.id,
+    created_at: new Date(),
+    updated_at: new Date(),
+  });
+
+  const searchRes = await fetch(`${address}/search?q=musa`, {
+    headers: { cookie },
+  });
+  assert.equal(searchRes.status, 200);
+  const data = (await searchRes.json()) as {
+    query: string;
+    total: number;
+    results: Array<{ id: string; targetModel: string; targetId: string }>;
+  };
+  assert.equal(data.query, "musa");
+  assert.ok(data.total >= 1);
+  assert.equal(data.results[0].targetId, "story_musa");
+  assert.equal(data.results[0].targetModel, "story.narrative");
+});
+

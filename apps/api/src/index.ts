@@ -16,6 +16,7 @@ import geoManifest from "ql_geo/__manifest__";
 import sourceManifest from "ql_source/__manifest__";
 import researchManifest from "ql_research/__manifest__";
 import workflowManifest from "ql_workflow/__manifest__";
+import searchManifest from "ql_search/__manifest__";
 import { resolveModelProviderConfig } from "./ai/model-config.js";
 import { parseProviderEncryptionKey } from "./ai/provider-secrets.js";
 import { createApiServer } from "./http/server.js";
@@ -25,6 +26,14 @@ dotenv.config({
 });
 
 const port = Number(process.env.PORT ?? 3000);
+const rawEncryptionKey = process.env.PROVIDER_ENCRYPTION_KEY?.trim();
+const isKnownZeroKey = rawEncryptionKey === "0".repeat(64);
+if (process.env.NODE_ENV === "production" && isKnownZeroKey) {
+  throw new Error(
+    "PROVIDER_ENCRYPTION_KEY cannot use the all-zero development fallback in production mode.",
+  );
+}
+
 const modelProvider = resolveModelProviderConfig(process.env);
 const provider = modelProvider.config
   ? new OpenAICompatibleProvider(modelProvider.config)
@@ -44,6 +53,7 @@ const { orm, close: closeOrm } = await createQlOrm(databaseUrl, [
   sourceManifest,
   corpusManifest,
   researchManifest,
+  searchManifest,
 ]);
 const store = createConversationStore(orm);
 const server = createApiServer(provider, store, orm, {

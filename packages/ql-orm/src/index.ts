@@ -132,6 +132,11 @@ export interface QlUserContext {
 export type QlRecord = RecordValues;
 export type QlServiceValue = RecordValue;
 export type QlSqlValue = QlServiceValue;
+export interface QlFindManyOptions {
+  limit?: number;
+  search?: { fields: string[]; query: string };
+}
+
 export interface QlServiceQueryOptions {
   limit?: number;
   orderBy?: { field: string; direction: "asc" | "desc" } | "rowid-asc";
@@ -1094,9 +1099,14 @@ export class QlOrm {
   async findMany(
     modelName: string,
     user: QlUserContext,
-    limit = 100,
+    limitOrOptions: number | QlFindManyOptions = 100,
   ): Promise<QlRecord[]> {
     this.requireAccess(modelName, user, "read");
+    const options: QlFindManyOptions =
+      typeof limitOrOptions === "number"
+        ? { limit: limitOrOptions }
+        : limitOrOptions;
+    const limit = options.limit ?? 100;
     const model = this.registry.getModel(modelName);
     const selected = Object.keys(model.fields)
       .filter((name) => !model.fields[name].private)
@@ -1108,6 +1118,15 @@ export class QlOrm {
       conditions.push(
         `${quoteIdentifier(model.ownerField)} = ${sql.param(user.id)}`,
       );
+    }
+    if (options.search && options.search.query.trim()) {
+      const searchPattern = `%${options.search.query.trim().toLowerCase()}%`;
+      const searchConditions = options.search.fields
+        .filter((f) => model.fields[f] && !model.fields[f].private && !model.fields[f].compute)
+        .map((f) => `LOWER(${quoteIdentifier(f)}) LIKE ${sql.param(searchPattern)}`);
+      if (searchConditions.length > 0) {
+        conditions.push(`(${searchConditions.join(" OR ")})`);
+      }
     }
     const result = await this.connection.execute(
       `SELECT ${selectedColumns.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)}${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""} ORDER BY ${orderExpression(this.connection.driver)} DESC LIMIT ${sql.param(Math.max(1, Math.min(500, Math.floor(limit))))}`,

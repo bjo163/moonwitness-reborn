@@ -58,6 +58,8 @@ import {
   type TranslationDraftRequestDto,
   type TranslationAiDraftRequestDto,
   type UiLanguageDto,
+  type SearchQueryResponseDto,
+  type SearchResultItemDto,
 } from "@moonwitness/moonclient";
 import {
   QlAccessError,
@@ -2738,6 +2740,72 @@ export function createApiServer(
           return;
         }
         sendJson(response, 200, { deleted: true });
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
+
+
+    if (request.method === "GET" && pathname === apiRoutes.search.query) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        const url = new URL(request.url ?? "/", "http://localhost");
+        const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
+        const targetModel = url.searchParams.get("targetModel") ?? undefined;
+        const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 20), 1), 100);
+
+        if (!q) {
+          sendJson(response, 200, {
+            query: "",
+            total: 0,
+            results: [],
+          } satisfies SearchQueryResponseDto);
+          return;
+        }
+
+        // Search tokens in search.index_entry using QlOrm findManyByService
+        const filter: Record<string, string> = {};
+        if (targetModel) filter.target_model = targetModel;
+        const searchTerms = q.split(/\s+/).filter(Boolean);
+        const primaryTerm = searchTerms[0] ?? q;
+        const entries = (await orm.findMany("search.index_entry", userContext(user), {
+          limit: 200,
+          search: { fields: ["token", "snippet"], query: primaryTerm },
+        })).filter((e) => !targetModel || e.target_model === targetModel);
+
+        // Score and rank matched entries
+        const matched: SearchResultItemDto[] = entries
+          .filter((entry: Record<string, unknown>) => {
+            const tokenStr = typeof entry.token === "string" ? entry.token.toLowerCase() : "";
+            const snippetStr = typeof entry.snippet === "string" ? entry.snippet.toLowerCase() : "";
+            return searchTerms.some((term) => tokenStr.includes(term) || snippetStr.includes(term));
+          })
+          .map((entry: Record<string, unknown>) => {
+            const tokenVal = typeof entry.token === "string" ? entry.token : "";
+            const snippetVal = typeof entry.snippet === "string" ? entry.snippet : undefined;
+            const idVal = typeof entry.id === "string" ? entry.id : "";
+            const targetModelVal = typeof entry.target_model === "string" ? entry.target_model : "";
+            const targetIdVal = typeof entry.target_id === "string" ? entry.target_id : "";
+            const weightVal = typeof entry.weight === "number" ? entry.weight : 1;
+            return {
+              id: idVal,
+              targetModel: targetModelVal,
+              targetId: targetIdVal,
+              token: tokenVal,
+              weight: weightVal,
+              snippet: snippetVal,
+            };
+          })
+          .sort((a: SearchResultItemDto, b: SearchResultItemDto) => b.weight - a.weight)
+          .slice(0, limit);
+
+        sendJson(response, 200, {
+          query: q,
+          total: matched.length,
+          results: matched,
+        } satisfies SearchQueryResponseDto);
       } catch (error) {
         handleRequestError(response, error);
       }

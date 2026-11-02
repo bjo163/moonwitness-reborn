@@ -140,7 +140,7 @@ export async function getAuthenticatedUser(
   store: ConversationStore,
 ): Promise<User | undefined> {
   const token = parseCookies(request).get(SESSION_COOKIE);
-  if (!token || !/^[A-Za-z0-9_-]{40,50}$/.test(token)) return undefined;
+  if (token === undefined || !/^[A-Za-z0-9_-]{40,50}$/.test(token)) return undefined;
   return store.getSessionUser(hashToken(token));
 }
 
@@ -150,7 +150,7 @@ export async function clearSession(
   store: ConversationStore,
 ): Promise<void> {
   const token = parseCookies(request).get(SESSION_COOKIE);
-  if (token && /^[A-Za-z0-9_-]{40,50}$/.test(token)) {
+  if (token !== undefined && /^[A-Za-z0-9_-]{40,50}$/.test(token)) {
     await store.deleteSession(hashToken(token));
   }
   response.setHeader(

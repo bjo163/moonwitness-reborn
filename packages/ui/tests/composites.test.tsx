@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   EmptyState,
+  HeroStage,
   IconTile,
   ListOption,
   LoadingScreen,
@@ -11,6 +12,7 @@ import {
   NavLink,
   OptionNav,
   PageHeader,
+  PortalCard,
   SectionGrid,
   SidePanel,
   SidebarBrand,
@@ -334,4 +336,42 @@ void test("SidebarTrigger links the hamburger to the drawer via aria-controls an
     />,
   );
   assert.match(renamed, /aria-controls="ql-secondary-workspace-sidebar"/);
+});
+
+void test("HeroStage hides decorative artwork and keeps ql-hero when className overrides", () => {
+  const markup = render(
+    <HeroStage className="probe-keep-class" imageSrc="/hero.jpg">
+      <h1>Title</h1>
+    </HeroStage>,
+  );
+  assert.match(markup, /ql-hero/);
+  assert.match(markup, /probe-keep-class/);
+  assert.match(markup, /ql-hero__veil/);
+  assert.match(markup, /alt=""/);
+  assert.match(markup, /<h1>Title<\/h1>/);
+  assertNoOwnColours(markup, "HeroStage");
+});
+
+void test("PortalCard is one link named by its title and carries description and status", () => {
+  const markup = render(
+    <PortalCard
+      className="probe-keep-class"
+      description="Community portal"
+      href="/corpus"
+      icon={<i />}
+      status="Proposed"
+      title="Dock"
+    />,
+  );
+  assert.match(markup, /href="\/corpus"/);
+  assert.match(markup, /ql-portal-card/);
+  assert.match(markup, /probe-keep-class/);
+  assert.match(markup, /Dock/);
+  assert.match(markup, /Community portal \(Proposed\)/);
+  assert.equal((markup.match(/<a /g) ?? []).length, 1);
+  assertNoOwnColours(markup, "PortalCard");
+
+  const plain = render(<PortalCard description="d" href="/x" title="T" />);
+  assert.doesNotMatch(plain, /ql-portal-card__icon/);
+  assert.doesNotMatch(plain, /\(/);
 });

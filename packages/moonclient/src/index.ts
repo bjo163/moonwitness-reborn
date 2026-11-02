@@ -45,6 +45,28 @@ export interface InitialSetupStatusDto {
   required: boolean;
 }
 
+
+export interface SearchQueryRequestDto {
+  q: string;
+  targetModel?: string;
+  limit?: number;
+}
+
+export interface SearchResultItemDto {
+  id: string;
+  targetModel: string;
+  targetId: string;
+  token: string;
+  weight: number;
+  snippet?: string;
+}
+
+export interface SearchQueryResponseDto {
+  query: string;
+  total: number;
+  results: SearchResultItemDto[];
+}
+
 export interface LoginRequestDto {
   email: string;
   password: string;
@@ -879,6 +901,9 @@ export const apiRoutes = {
     summary: "/project/progress/summary",
     tasks: "/project/progress/tasks",
   },
+  search: {
+    query: "/search",
+  },
   landing: {
     catalog: "/public/landing",
     models: "/public/models",
@@ -1022,6 +1047,14 @@ export class MoonClient {
 
   login(input: LoginRequestDto): Promise<AuthResponseDto> {
     return this.request(apiRoutes.auth.login, "POST", input);
+  }
+
+  search(params: SearchQueryRequestDto): Promise<SearchQueryResponseDto> {
+    const queryParams = new URLSearchParams();
+    queryParams.set("q", params.q);
+    if (params.targetModel) queryParams.set("targetModel", params.targetModel);
+    if (params.limit) queryParams.set("limit", String(params.limit));
+    return this.request(`${apiRoutes.search.query}?${queryParams.toString()}`);
   }
 
   logout(): Promise<{ loggedOut: boolean }> {
