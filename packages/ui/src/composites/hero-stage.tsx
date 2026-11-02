@@ -17,7 +17,6 @@ export interface HeroStageProps {
 export function HeroStage({ imageSrc, children, className }: HeroStageProps) {
   return (
     <section className={cn("ql-hero", className)}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         alt=""
         aria-hidden="true"
