@@ -9,6 +9,7 @@ import { personProfile } from "./person_profile.js";
 import { researchCorrelation } from "./research_correlation.js";
 import { researchLexicalReview } from "./research_lexical_review.js";
 import { storyNarrative } from "./story_narrative.js";
+import { studioArtifact } from "./studio_artifact.js";
 import { witnessStatement } from "./witness_statement.js";
 
 export const models: QlModelDefinition[] = [
@@ -23,6 +24,7 @@ export const models: QlModelDefinition[] = [
   characterCanon,
   characterClassification,
   characterAppearance,
+  studioArtifact,
 ];
 
 export { researchLexicalReview } from "./research_lexical_review.js";
@@ -36,3 +38,4 @@ export { researchCorrelation, CORRELATION_TYPES, CORRELATION_CERTAINTIES } from 
 export { characterCanon, CHARACTER_CANON_STATUSES } from "./character_canon.js";
 export { characterClassification, CHARACTER_ARCHETYPES, CHARACTER_ALIGNMENTS } from "./character_classification.js";
 export { characterAppearance, APPEARANCE_PROMINENCES } from "./character_appearance.js";
+export { studioArtifact, STUDIO_ARTIFACT_KINDS, STUDIO_LIFECYCLE_STAGES } from "./studio_artifact.js";

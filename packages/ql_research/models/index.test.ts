@@ -642,3 +642,37 @@ void test("character.appearance is registered in ql_research and tracks narrativ
     },
   );
 });
+
+void test("studio.artifact is registered in ql_research and validates draft lifecycle", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+      researchManifest,
+    ],
+    async (orm) => {
+      const artifact = await orm.createRecordForService("studio.artifact", {
+        canonical_id: "mw:studio:andalusia-screenplay-act1",
+        title: "The Tariq Chronicle: Act I",
+        kind: "screenplay_script",
+        lifecycle_stage: "drafting",
+        version_tag: "v0.3-alpha",
+        synopsis: "Opening act establishing the strategic crossing and historical context of Andalusia.",
+        content_body: "EXT. MEDITERRANEAN COAST - DUSK... Tariq stands by the shoreline watching the fleet assemble.",
+        lore_review_notes: "Checked against classical chronicles. Ensure speech quotes historical phrasing faithfully.",
+        owner_id: "author-user-42",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      assert.ok(artifact.id);
+
+      const found = await orm.findOneByService("studio.artifact", { id: artifact.id });
+      assert.equal(found?.["title"], "The Tariq Chronicle: Act I");
+      assert.equal(found?.["kind"], "screenplay_script");
+      assert.equal(found?.["lifecycle_stage"], "drafting");
+      assert.equal(found?.["owner_id"], "author-user-42");
+    },
+  );
+});
