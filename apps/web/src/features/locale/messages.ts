@@ -27,6 +27,9 @@ export interface AppMessages {
     themeToLight: string;
     themeToDark: string;
     searchAction: string;
+    searchPlaceholder: string;
+    searchPrompt: string;
+    quickLinks: string;
   };
   auth: {
     setupTitle: string;

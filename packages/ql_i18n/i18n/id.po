@@ -3438,3 +3438,15 @@ msgstr "Terbatas"
 msgctxt "web:landing.scrollCue"
 msgid "Explore More"
 msgstr "Jelajahi Lebih Lanjut"
+
+msgctxt "web:common.searchPlaceholder"
+msgid "Search surah, transmission, or knowledge..."
+msgstr "Cari surah, transmisi, atau pengetahuan..."
+
+msgctxt "web:common.searchPrompt"
+msgid "Press ESC to close. Type to search."
+msgstr "Tekan ESC untuk menutup. Ketik untuk mencari."
+
+msgctxt "web:common.quickLinks"
+msgid "Quick Links"
+msgstr "Tautan Cepat"

@@ -22,6 +22,8 @@ import {
   SidebarNav,
   SidebarTrigger,
   ThemeToggle,
+  SearchDialog,
+  SanctuaryHeader,
   WorkspaceSidebar,
   type SidebarNavItem,
 } from "../src/index.js";
@@ -440,4 +442,41 @@ void test("ThemeToggle renders aria-pressed and label", () => {
   assert.match(markup, /aria-label="Beralih ke tema gelap"/);
   assert.match(markup, /ql-nav-link/);
   assertNoOwnColours(markup, "ThemeToggle");
+});
+
+void test("SanctuaryHeader renders eyebrow, title, and description", () => {
+  const markup = render(
+    <SanctuaryHeader
+      eyebrow="Corpus"
+      title="Kitab Suci"
+      description="Kumpulan wahyu dan sumber terverifikasi"
+    />,
+  );
+  assert.match(markup, /Corpus/);
+  assert.match(markup, /Kitab Suci/);
+  assert.match(markup, /Kumpulan wahyu/);
+  assertNoOwnColours(markup, "SanctuaryHeader");
+});
+
+void test("SearchDialog renders modal with accessible title and placeholder", () => {
+  const markup = render(
+    <SearchDialog
+      isOpen
+      title="Pencarian Global"
+      placeholder="Cari surah atau bab..."
+      closeLabel="Tutup"
+      query="Fatihah"
+      onQueryChange={() => undefined}
+      onSubmit={() => undefined}
+      onClose={() => undefined}
+    >
+      <p>Hasil pencarian</p>
+    </SearchDialog>,
+  );
+  assert.match(markup, /role="dialog"/);
+  assert.match(markup, /aria-label="Pencarian Global"/);
+  assert.match(markup, /placeholder="Cari surah atau bab\.\.\."/);
+  assert.match(markup, /value="Fatihah"/);
+  assert.match(markup, /Hasil pencarian/);
+  assertNoOwnColours(markup, "SearchDialog");
 });

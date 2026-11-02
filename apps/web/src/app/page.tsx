@@ -17,6 +17,7 @@ import {
   SidebarBrand,
   SpatialRegion,
   ThemeToggle,
+  SearchDialog,
   TransmissionCard,
 } from "@moonwitness/ui";
 import {
@@ -82,6 +83,8 @@ export default function LandingPage() {
   const { locale, changeLocale, saving, error: localeError } =
     useLocalePreference(user);
   const { theme, toggleTheme } = useThemePreference();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const copy = useMessages();
   const { t, tm } = useTranslationCatalog();
 
@@ -119,6 +122,17 @@ export default function LandingPage() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
   }, []);
 
   const groupedSections = useMemo(
@@ -197,14 +211,16 @@ export default function LandingPage() {
             </NavLink>
           </nav>
           <div className="flex items-center gap-2">
-            <Link
-              href={user ? "/command-center/search" : "/corpus"}
+            <Button
+              variant="ghost"
+              size="icon"
               aria-label={copy.common.searchAction}
-              title={copy.common.searchAction}
-              className="ql-nav-link inline-flex min-h-11 min-w-11 items-center justify-center"
+              title={`${copy.common.searchAction} (Ctrl+K)`}
+              onClick={() => setSearchOpen(true)}
+              className="ql-nav-link inline-flex min-h-11 min-w-11 items-center justify-center cursor-pointer"
             >
               <Search aria-hidden="true" size={16} />
-            </Link>
+            </Button>
             <ThemeToggle
               theme={theme}
               label={
@@ -713,6 +729,63 @@ export default function LandingPage() {
           <p>{copy.landing.footer}</p>
         </div>
       </footer>
+
+      {/* Spotlight Search Dialog (Ctrl+K) */}
+      <SearchDialog
+        isOpen={searchOpen}
+        title={copy.common.searchAction}
+        placeholder={copy.common.searchPlaceholder}
+        closeLabel={copy.common.closeMenu}
+        query={searchQuery}
+        onQueryChange={(q) => setSearchQuery(q)}
+        onSubmit={() => {
+          if (searchQuery.trim()) {
+            window.location.assign(`/corpus?query=${encodeURIComponent(searchQuery.trim())}`);
+          }
+        }}
+        onClose={() => setSearchOpen(false)}
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-muted">{copy.common.searchPrompt}</p>
+          <div>
+            <p className="text-xs font-semibold tracking-wider text-acid uppercase mb-2">
+              {copy.common.quickLinks}
+            </p>
+            <ul className="space-y-1 text-sm">
+              <li>
+                <Link
+                  href="/corpus"
+                  onClick={() => setSearchOpen(false)}
+                  className="block p-2 rounded hover:bg-panel-edge text-ink-soft hover:text-acid transition-colors"
+                >
+                  <span className="font-semibold text-ink">MoonWitness Corpus</span> &middot;{" "}
+                  {copy.landing.portalMoonWitness}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/community"
+                  onClick={() => setSearchOpen(false)}
+                  className="block p-2 rounded hover:bg-panel-edge text-ink-soft hover:text-acid transition-colors"
+                >
+                  <span className="font-semibold text-ink">The Harbor Dock</span> &middot;{" "}
+                  {copy.landing.portalDock}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/command-center"
+                  onClick={() => setSearchOpen(false)}
+                  className="block p-2 rounded hover:bg-panel-edge text-ink-soft hover:text-acid transition-colors"
+                >
+                  <span className="font-semibold text-ink">Command Center</span> &middot;{" "}
+                  {copy.landing.portalCockpit}
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </SearchDialog>
     </main>
   );
 }

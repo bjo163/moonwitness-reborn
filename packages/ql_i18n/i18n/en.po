@@ -3435,3 +3435,15 @@ msgstr "Restricted"
 msgctxt "web:landing.scrollCue"
 msgid "Explore More"
 msgstr "Explore More"
+
+msgctxt "web:common.searchPlaceholder"
+msgid "Search surah, transmission, or knowledge..."
+msgstr "Search surah, transmission, or knowledge..."
+
+msgctxt "web:common.searchPrompt"
+msgid "Press ESC to close. Type to search."
+msgstr "Press ESC to close. Type to search."
+
+msgctxt "web:common.quickLinks"
+msgid "Quick Links"
+msgstr "Quick Links"
