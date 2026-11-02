@@ -1,9 +1,10 @@
 # A-L-L-A-H.COM — Home Experience Blueprint
 
-**Status:** Foundation blueprint  
-**Implementation:** Not implemented or approved by this document  
+**Status:** Design foundation; reconciliation required against current Home code  
+**Repository implementation:** Eight-movement Home sequence exists on `dev` at reviewed HEAD `f60a418bda8754b618d1abdaa57706b244ce5825`  
+**Design approval:** Not established by code presence; see [Implementation Reconciliation Audit](./IMPLEMENTATION-RECONCILIATION-AUDIT.md)  
 **Primary role:** Public front door — The Gate  
-**Design direction:** Living Cosmic Interface / Celestial Architecture
+**Design direction:** Cosmic Ivory & Antique Gold / Monumental Celestial Architecture
 
 ## 1. Home's job
 
@@ -275,7 +276,13 @@ If a public content source is unavailable, the page falls back to authored everg
 - Content provenance is visible where factual claims appear.
 - The design remains recognizable without the logo or wordmark.
 
-## 12. Out of scope
+## 12. Current implementation reconciliation
+
+The current `dev` branch contains an eight-movement Home implementation. The implementation is a repository fact, not evidence that every composition, content claim, route, accessibility behavior, or visual decision has passed design review. The [Implementation Reconciliation Audit](./IMPLEMENTATION-RECONCILIATION-AUDIT.md) records the static findings and the P0/P1 work required before the Home experience can be considered design-approved.
+
+Do not use this blueprint's earlier implementation-neutral wording to imply that no Home code exists. Equally, do not use the existence of code to imply visual approval, runtime verification, or deployment.
+
+## 13. Out of scope
 
 This blueprint does not create:
 - production artwork, logo, emblem, or 3D assets;
