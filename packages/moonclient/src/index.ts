@@ -1049,6 +1049,14 @@ export class MoonClient {
     return this.request(apiRoutes.auth.login, "POST", input);
   }
 
+  search(params: SearchQueryRequestDto): Promise<SearchQueryResponseDto> {
+    const queryParams = new URLSearchParams();
+    queryParams.set("q", params.q);
+    if (params.targetModel) queryParams.set("targetModel", params.targetModel);
+    if (params.limit) queryParams.set("limit", String(params.limit));
+    return this.request(`${apiRoutes.search.query}?${queryParams.toString()}`);
+  }
+
   logout(): Promise<{ loggedOut: boolean }> {
     return this.request(apiRoutes.auth.logout, "POST");
   }
