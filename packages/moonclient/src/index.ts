@@ -171,11 +171,49 @@ export interface ChatRequestDto {
   conversationId: string;
   input: string;
   instructions?: string;
+  grounding?: "grounded";
 }
 
-export interface ChatResponseDto {
-  reply: string;
+export type ChatGroundingStatus =
+  | "grounded"
+  | "insufficient_evidence"
+  | "legacy";
+
+export interface ChatCitationDto {
+  evidenceId: string;
+  editionId: string;
+  editionKey: string;
+  authority: PassageKindDto;
+  editionAuthority: PassageKindDto;
+  locale: string;
+  publisher: string;
+  attribution: string;
+  locator: string;
+  surah: number;
+  ayah: number;
 }
+
+export type ChatResponseDto =
+  | {
+      reply: string;
+      groundingStatus: "grounded";
+      citations: ChatCitationDto[];
+    }
+  | {
+      reply: string;
+      groundingStatus: "insufficient_evidence";
+      citations: [];
+    }
+  | {
+      reply: string;
+      groundingStatus: "legacy";
+      citations?: never;
+    }
+  | {
+      reply: string;
+      groundingStatus?: never;
+      citations?: never;
+    };
 
 export interface ModelFieldDto {
   type: FieldType;
