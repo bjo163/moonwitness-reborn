@@ -29,9 +29,9 @@ Do not sustain maximum spectacle across every section. Contrast and quiet are pa
 - Texture should suggest crafted architecture, not stock noise or a generic technical grid.
 
 ### Palette
-The existing Moon UI palette is the source of truth. Its semantic families include ink, muted text, panel surfaces, hairlines, void, acid accent, and semantic success/warning/danger colors. Home and Headquarter may compose those tokens differently, but must not invent independent hex palettes.
+The existing Moon UI palette is the source of truth. The current approved direction is **Cosmic Ivory & Antique Gold**: a deep indigo / obsidian night environment, warm ivory text, and antique-gold interaction emphasis. The light-theme counterpart uses parchment surfaces and bronze emphasis. Home and Headquarter may compose these tokens differently, but must not invent independent hex palettes.
 
-Acid green is a signature interaction accent, not a flood color. Brass/gold is a material/narrative accent, not a new status system. Any additional palette expansion requires a token-level proposal and review.
+The token family retains the historical names `acid`, `acid-dark`, `acid-muted`, and `acid-shadow`; in the current implementation these values render gold, not green. Never infer a token's visual hue from its legacy name. Gold is a brand/interaction accent, not a success, warning, or danger status color. Any palette expansion requires a token-level proposal and review.
 
 ### Form language
 - Architectural silhouettes and intentional asymmetry.
@@ -41,8 +41,9 @@ Acid green is a signature interaction accent, not a flood color. Brass/gold is a
 - Avoid making every surface a rounded card.
 
 ### Typography
-- Use the existing sans family for readable editorial and interface text.
-- Use monospace selectively for actual technical identifiers, timestamps, or system metadata.
+- Use the existing Inter-based sans family for readable interface and body text.
+- Use the existing Cormorant Garamond display family selectively for monumental/editorial headings where the composition benefits from it.
+- Use Cascadia Code / the existing mono stack only for actual technical identifiers, timestamps, or system metadata.
 - Headings should have character and editorial hierarchy; do not default to all-caps monospace.
 - Body text must remain comfortably readable, especially for long-form stories and mobile.
 - Preserve Indonesian diacritics and punctuation; test localized line wrapping.
