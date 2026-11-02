@@ -342,9 +342,20 @@ export default function DashboardPage() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-acid">
                   {copy.dashboard.hqWorldCoreTitle}
                 </p>
-                <p className="mt-1 text-xs text-muted">
-                  {copy.dashboard.hqIdentityFrameTitle}
-                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px]">
+                  <span className="flex items-center gap-1.5 text-ink-soft">
+                    <span className="size-2 rounded-full bg-live animate-pulse" />
+                    <span>Corpus: {hasCorpus ? "Online" : "Standby"}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5 text-ink-soft">
+                    <span className="size-2 rounded-full bg-acid animate-pulse" />
+                    <span>Research Hub: {hasResearch ? "Online" : "Standby"}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5 text-ink-soft">
+                    <span className="size-2 rounded-full bg-live animate-pulse" />
+                    <span>Workflow Engine: {hasWorkflow ? "Operational" : "Standby"}</span>
+                  </span>
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider">
                 <Button

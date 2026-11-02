@@ -7,7 +7,7 @@ import {
   type CorpusPassageDto,
   type CorpusSurahDto,
 } from "@moonwitness/moonclient";
-import { Alert, Badge, PageHeader } from "@moonwitness/ui";
+import { Alert, Badge, SanctuaryHeader } from "@moonwitness/ui";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -115,18 +115,28 @@ export default function QuranReader() {
 
   const rtl = isArabicVerbatim(reading?.passages[0]);
   return (
-    <main className="ql-hud-app min-h-dvh bg-panel-deep px-5 py-8 text-ink-soft md:px-10 md:py-12">
-      <div className="mx-auto w-full max-w-3xl space-y-6">
-        <PageHeader
-          title={t("web.corpus.surahTitle", { surah })}
-          description={reading ? headingFor(reading, t) : undefined}
-          actions={
-            <Link href="/corpus" className="text-xs text-acid-muted hover:underline">
-              <ArrowLeft aria-hidden="true" className="mr-1 inline" size={13} />
-              {t("web.corpus.backToShelf")}
-            </Link>
-          }
-        />
+    <main className="ql-hud-app min-h-dvh bg-panel-deep text-ink-soft">
+      <SanctuaryHeader
+        eyebrow={
+          <span className="flex items-center gap-2">
+            <span>MoonWitness · Corpus</span>
+            <span>&middot;</span>
+            <span>{reading ? headingFor(reading, t) : t("web.corpus.shelfTitle")}</span>
+          </span>
+        }
+        title={t("web.corpus.surahTitle", { surah })}
+        actions={
+          <Link
+            href="/corpus"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-hairline bg-panel hover:border-acid hover:text-acid transition-colors"
+          >
+            <ArrowLeft aria-hidden="true" size={14} />
+            <span>{t("web.corpus.backToShelf")}</span>
+          </Link>
+        }
+      />
+
+      <div className="mx-auto w-full max-w-4xl px-5 py-8 md:px-10 md:py-12 space-y-8">
         {loading && (
           <p role="status" className="text-sm text-muted">
             {t("web.corpus.loadingSurah")}
@@ -140,32 +150,35 @@ export default function QuranReader() {
         )}
         {reading && reading.passages.length > 0 && (
           <>
-            <div className="flex items-center gap-2 text-xs">
-              <Badge variant={rtl ? "live" : "outline"}>
-                {authorityLabel(
-                  reading.editionAuthority,
-                  reading.editionLocale,
-                  t,
-                )}
-              </Badge>
-              <span className="text-muted">{reading.editionLocale}</span>
-              <span className="text-muted">·</span>
-              <span className="text-ink-soft">
-                {reading.passages[0]?.edition_attribution_text}
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline pb-4 text-xs">
+              <div className="flex items-center gap-2">
+                <Badge variant={rtl ? "live" : "outline"}>
+                  {authorityLabel(
+                    reading.editionAuthority,
+                    reading.editionLocale,
+                    t,
+                  )}
+                </Badge>
+                <span className="text-muted uppercase tracking-wider">{reading.editionLocale}</span>
+                <span className="text-muted">·</span>
+                <span className="text-ink-soft font-medium">
+                  {reading.passages[0]?.edition_attribution_text}
+                </span>
+              </div>
             </div>
+
             <ol
-              className="space-y-4"
+              className="space-y-6"
               dir={rtl ? "rtl" : "ltr"}
               lang={rtl ? "ar" : reading.editionLocale}
             >
               {reading.passages.map((passage) => (
                 <li
                   key={passage.id}
-                  className="rounded-lg border border-hairline bg-panel-deep p-4"
+                  className="group relative rounded-xl border border-hairline-strong bg-panel/70 p-6 md:p-8 backdrop-blur transition-all hover:border-acid/60 hover:shadow-[0_0_20px_var(--ql-glow-gold)]"
                 >
-                  <div className="flex items-baseline justify-between gap-4">
-                    <span className="text-[11px] font-mono text-acid-muted">
+                  <div className="flex items-center justify-between gap-4 border-b border-hairline pb-3">
+                    <span className="text-xs font-mono font-semibold tracking-wider text-acid">
                       {passage.locator}
                     </span>
                     <Badge variant="outline">
@@ -181,25 +194,29 @@ export default function QuranReader() {
                   <p
                     className={
                       rtl
-                        ? "mt-3 text-2xl leading-[2.4] text-ink"
-                        : "mt-3 text-base leading-7 text-ink-soft"
+                        ? "mt-5 text-2xl md:text-3xl font-serif leading-[2.6] text-ink text-right"
+                        : "mt-4 text-base md:text-lg leading-relaxed text-ink-soft text-left"
                     }
                   >
                     {passage.text}
                   </p>
-                  <p className="mt-3 text-[10px] uppercase tracking-wide text-muted">
-                    {authorityLabel(
-                      passage.authority,
-                      passage.edition_locale,
-                      t,
-                    )}{" "}
-                    · {passage.edition_publisher} · {t("web.corpus.checksum")}{" "}
-                    {passage.text_checksum.slice(0, 8)}…
-                  </p>
+                  <div className="mt-5 pt-3 border-t border-hairline-soft flex items-center justify-between text-[11px] text-muted">
+                    <span>
+                      {authorityLabel(
+                        passage.authority,
+                        passage.edition_locale,
+                        t,
+                      )}{" "}
+                      · {passage.edition_publisher}
+                    </span>
+                    <span className="font-mono text-[10px]">
+                      {t("web.corpus.checksum")} {passage.text_checksum.slice(0, 8)}…
+                    </span>
+                  </div>
                 </li>
               ))}
             </ol>
-            <p className="text-xs text-muted">
+            <p className="text-xs text-muted text-center pt-6">
               {t("web.corpus.readerDisclaimer")}
             </p>
           </>

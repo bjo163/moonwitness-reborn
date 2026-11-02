@@ -739,14 +739,66 @@ export default function LandingPage() {
         query={searchQuery}
         onQueryChange={(q) => setSearchQuery(q)}
         onSubmit={() => {
-          if (searchQuery.trim()) {
-            window.location.assign(`/corpus?query=${encodeURIComponent(searchQuery.trim())}`);
+          const q = searchQuery.trim().toLowerCase();
+          if (!q) return;
+          if (q === "1" || q.includes("fatihah")) {
+            window.location.assign("/corpus/quran-ar/1");
+          } else if (q === "2" || q.includes("baqarah")) {
+            window.location.assign("/corpus/quran-ar/2");
+          } else if (q.includes("dock") || q.includes("community")) {
+            window.location.assign("/community");
+          } else if (q.includes("command") || q.includes("cockpit")) {
+            window.location.assign("/command-center");
+          } else {
+            window.location.assign(`/command-center/search?q=${encodeURIComponent(searchQuery.trim())}`);
           }
         }}
         onClose={() => setSearchOpen(false)}
       >
         <div className="space-y-4">
           <p className="text-xs text-muted">{copy.common.searchPrompt}</p>
+
+          {/* Quick Surah Jump Suggestions */}
+          <div>
+            <p className="text-xs font-semibold tracking-wider text-acid uppercase mb-2">
+              Surah Quick Jump
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <Link
+                href="/corpus/quran-ar/1"
+                onClick={() => setSearchOpen(false)}
+                className="flex items-center justify-between p-2 rounded border border-hairline bg-panel-edge hover:border-acid hover:text-acid transition-colors"
+              >
+                <span className="font-semibold text-ink">1. Al-Fatihah</span>
+                <span className="text-[10px] text-muted">7 Ayah</span>
+              </Link>
+              <Link
+                href="/corpus/quran-ar/2"
+                onClick={() => setSearchOpen(false)}
+                className="flex items-center justify-between p-2 rounded border border-hairline bg-panel-edge hover:border-acid hover:text-acid transition-colors"
+              >
+                <span className="font-semibold text-ink">2. Al-Baqarah</span>
+                <span className="text-[10px] text-muted">286 Ayah</span>
+              </Link>
+              <Link
+                href="/corpus/quran-ar/36"
+                onClick={() => setSearchOpen(false)}
+                className="flex items-center justify-between p-2 rounded border border-hairline bg-panel-edge hover:border-acid hover:text-acid transition-colors"
+              >
+                <span className="font-semibold text-ink">36. Ya-Sin</span>
+                <span className="text-[10px] text-muted">83 Ayah</span>
+              </Link>
+              <Link
+                href="/corpus/quran-ar/67"
+                onClick={() => setSearchOpen(false)}
+                className="flex items-center justify-between p-2 rounded border border-hairline bg-panel-edge hover:border-acid hover:text-acid transition-colors"
+              >
+                <span className="font-semibold text-ink">67. Al-Mulk</span>
+                <span className="text-[10px] text-muted">30 Ayah</span>
+              </Link>
+            </div>
+          </div>
+
           <div>
             <p className="text-xs font-semibold tracking-wider text-acid uppercase mb-2">
               {copy.common.quickLinks}
