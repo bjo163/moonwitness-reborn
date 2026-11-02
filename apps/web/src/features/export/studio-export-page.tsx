@@ -24,7 +24,6 @@ import {
 } from "@moonwitness/ui";
 import {
   Boxes,
-  Database,
   Download,
   FileText,
   KeyRound,
@@ -39,7 +38,6 @@ import {
   Workflow as WorkflowIcon,
   BookOpen,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";

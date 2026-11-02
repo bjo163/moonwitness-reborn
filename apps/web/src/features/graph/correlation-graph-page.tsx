@@ -8,7 +8,7 @@ import {
 import {
   Alert,
   Badge,
-  Button,
+  ListOption,
   Card,
   CardContent,
   CardHeader,
@@ -21,8 +21,6 @@ import {
 } from "@moonwitness/ui";
 import {
   Boxes,
-  Database,
-  GitFork,
   KeyRound,
   LayoutDashboard,
   Languages,
@@ -35,7 +33,6 @@ import {
   Workflow as WorkflowIcon,
   BookOpen,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
@@ -317,24 +314,21 @@ export default function CorrelationGraphPage() {
                 ) : (
                   <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                     {nodes.map((node) => (
-                      <button
-                        type="button"
+                      <ListOption
                         key={node.id}
-                        onClick={() => setSelectedNode(node)}
-                        className={`rounded-lg border p-3 text-left transition-colors ${
-                          selectedNode?.id === node.id
-                            ? "border-primary bg-surface-subtle"
-                            : "border-hairline hover:bg-surface-subtle"
-                        }`}
+                        selected={selectedNode?.id === node.id}
+                        onSelect={() => setSelectedNode(node)}
+                        ariaLabel={node.label}
+                        className="w-full text-left"
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex w-full items-center justify-between">
                           <span className="font-medium text-ink">{node.label}</span>
                           <Badge variant="outline">{node.kind}</Badge>
                         </div>
                         <div className="mt-1 font-mono text-xs text-muted">
                           {node.id}
                         </div>
-                      </button>
+                      </ListOption>
                     ))}
                   </div>
                 )}

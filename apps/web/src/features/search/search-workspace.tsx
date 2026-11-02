@@ -2,7 +2,6 @@
 
 import {
   moonClient,
-  MoonClientError,
   type AuthUserDto,
   type SearchResultItemDto,
 } from "@moonwitness/moonclient";
@@ -25,7 +24,6 @@ import {
 } from "@moonwitness/ui";
 import {
   Boxes,
-  Database,
   KeyRound,
   LayoutDashboard,
   Languages,
@@ -33,12 +31,10 @@ import {
   Microscope,
   Plug,
   Search as SearchIcon,
-  ShieldCheck,
   Sparkles,
   Workflow as WorkflowIcon,
   BookOpen,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
