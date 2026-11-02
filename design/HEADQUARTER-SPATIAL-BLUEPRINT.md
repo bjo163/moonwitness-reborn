@@ -180,16 +180,16 @@ A monumental, cinematic, celestial architectural environment with a distinctive 
 | Form | Monumental, geometric, architectural |
 | Materials | Obsidian, dark stone, brushed metal, selective glass |
 | Light | Moonlight, restrained ambient illumination, warm accents |
-| Accent | Existing MoonWitness acid-green used sparingly; brass/gold as a material accent |
+| Accent | Antique Gold via the existing Moon UI semantic accent tokens; never use it as success/warning/danger status |
 | Depth | Clear foreground, midground, and background |
 | Typography | Characterful sans-serif for navigation; monospace only for technical data |
 | Motion | Deliberate camera movement and spatial transitions |
 | Icons | A coherent symbolic vocabulary, not a random generic icon collection |
 
 ### Existing design-system continuity
-The current Moon UI tokens include a dark green/near-black foundation, ink and muted text colors, acid-green accents, semantic status colors, and sans/mono typography. Preserve and evolve these shared tokens rather than introducing an unrelated palette or a second design system.
+The current Moon UI direction is Cosmic Ivory & Antique Gold: deep indigo / obsidian foundations, warm ivory text, Antique Gold interaction emphasis, and a parchment / bronze light-theme counterpart. The existing token family retains historical names such as `acid`; those names must not be mistaken for the current rendered hue. Preserve the shared tokens rather than introducing an unrelated palette or a second design system.
 
-Acid green is an interaction/status accent, not a color to flood every surface. Brass/gold is an environmental/material accent and must not become a competing status color.
+Antique Gold is the brand/interaction accent, not a success, warning, or danger status color. Use it sparingly and only through the existing semantic token contract.
 
 ### HUD principles
 - HUD elements are contextual parts of the environment, not labels announcing themselves as HUD.
