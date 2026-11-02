@@ -1,36 +1,40 @@
 # A-L-L-A-H.COM & MoonWitness Design Library
 
-**Status:** Foundation documentation in progress; implementation is not authorized by these documents.  
+**Status:** Design foundation and art-direction contracts  
 **Repository:** `bjo163/moonwitness-reborn`  
 **Branch:** `dev`  
 **Language policy:** Indonesian is the default product language; English remains supported.  
-**Design mode:** Antislop DURING, selected for this session.
+**Design mode:** Antislop DURING.
 
-This folder is the working design source for the A-L-L-A-H.COM public experience and the connected MoonWitness product ecosystem. Documents are intentionally separated by responsibility so that visual direction, product boundaries, user journeys, and screen specifications do not contradict or duplicate one another.
+This folder is the source of truth for design intent, product boundaries, visual language, interaction behavior, responsive composition, and mockup review. Documents are separated by responsibility to prevent duplication and contradiction.
 
 ## Document map
 
-| Document | Responsibility | Status |
-|---|---|---|
-| [VISION.md](./VISION.md) | Product purpose, audience, promise, principles, success definition | Foundation |
-| [INFORMATION-ARCHITECTURE.md](./INFORMATION-ARCHITECTURE.md) | Sitemap, product boundaries, navigation, roles, content model | Foundation |
-| [USER-JOURNEY.md](./USER-JOURNEY.md) | End-to-end journeys, entry/return paths, states, trust and conversion | Foundation |
-| [DESIGN-DNA.md](./DESIGN-DNA.md) | Distinctive art direction, visual grammar, motion, HUD and anti-slop rules | Foundation |
-| [DESIGN-TOKENS.md](./DESIGN-TOKENS.md) | Semantic token contract mapped to the existing Moon UI system | Foundation |
-| [HOME-BLUEPRINT.md](./HOME-BLUEPRINT.md) | Full public Home experience and section-by-section behavior | Foundation |
-| [MOCKUP-SPEC.md](./MOCKUP-SPEC.md) | Mockup sequence, frames, responsive coverage and review gates | Foundation |
-| [HEADQUARTER-SPATIAL-BLUEPRINT.md](./HEADQUARTER-SPATIAL-BLUEPRINT.md) | Headquarter spatial command center | Existing |
+| Document | Responsibility |
+|---|---|
+| [MASTER-DESIGN-CONSTITUTION.md](./MASTER-DESIGN-CONSTITUTION.md) | Highest-level design laws, decision hierarchy, approval gate |
+| [VISION.md](./VISION.md) | Product purpose, audience, promise, principles, success definition |
+| [INFORMATION-ARCHITECTURE.md](./INFORMATION-ARCHITECTURE.md) | Sitemap, product boundaries, navigation, roles, content model |
+| [USER-JOURNEY.md](./USER-JOURNEY.md) | End-to-end journeys, entry/return paths, states, trust and conversion |
+| [DESIGN-DNA.md](./DESIGN-DNA.md) | Distinctive art direction, visual grammar, motion, HUD and anti-slop rules |
+| [VISUAL-WORLD-ASSET-LANGUAGE.md](./VISUAL-WORLD-ASSET-LANGUAGE.md) | World grammar, destination art direction, material/light, asset provenance |
+| [DESIGN-TOKENS.md](./DESIGN-TOKENS.md) | Semantic token contract mapped to the existing Moon UI system |
+| [INTERACTION-MOTION-SOUND.md](./INTERACTION-MOTION-SOUND.md) | Input, navigation choreography, motion, sound and state truth |
+| [RESPONSIVE-ACCESSIBILITY-QA.md](./RESPONSIVE-ACCESSIBILITY-QA.md) | Responsive art direction, WCAG review, test matrix and acceptance gates |
+| [HOME-BLUEPRINT.md](./HOME-BLUEPRINT.md) | Full public Home experience and section-by-section behavior |
+| [MOCKUP-SPEC.md](./MOCKUP-SPEC.md) | Nine mockup sequence, frames, responsive coverage and review gates |
+| [HEADQUARTER-SPATIAL-BLUEPRINT.md](./HEADQUARTER-SPATIAL-BLUEPRINT.md) | Headquarter spatial command center |
 
 ## Reading order
 
-1. Vision
-2. Information architecture
+1. Master design constitution
+2. Product vision and information architecture
 3. User journeys
-4. Design DNA
-5. Design tokens
-6. Home blueprint
-7. Headquarter blueprint
-8. Mockup specification
+4. Design DNA and visual world / asset language
+5. Design tokens and interaction / motion / sound
+6. Responsive / accessibility QA
+7. Home and Headquarter blueprints
+8. Mockup specification and visual review
 
 ## Product boundary at a glance
 
@@ -46,7 +50,7 @@ These are distinct responsibilities connected by one coherent identity. They are
 ## Non-negotiable project constraints
 
 - Documentation and mockups come before implementation.
-- No implementation, deployment, domain routing, database changes, or backend changes are implied by these documents.
+- No implementation, deployment, domain routing, database changes, or backend changes are implied by design documents.
 - Keep the current repository architecture: Next.js web app, `@moonwitness/moonclient`, `@moonwitness/ui`, QlOrm and `ql_*` domain addons.
 - No parallel backend, data authority, identity model, or browser-to-database path.
 - Use existing Moon UI tokens and components; do not invent a second token system.
@@ -55,22 +59,24 @@ These are distinct responsibilities connected by one coherent identity. They are
 - Every action shown in a mockup must have a real destination or be explicitly marked as a future concept.
 - Respect accessibility, keyboard use, reduced motion, touch, mobile reflow, and all relevant UI states.
 - Preserve the distinction between faith/narrative/creative interpretation and verifiable scientific or historical evidence.
+- Generated images are concepts until reviewed; document provenance and rights before production use.
 
 ## Status vocabulary
 
 - **Proposed:** a documented direction, not implemented.
-- **Designed:** represented in an approved design or mockup.
+- **Designed:** represented in a design or mockup; approval status must be stated separately.
+- **Approved:** explicitly accepted for the next design/implementation stage.
 - **Implemented:** present in repository code.
 - **Tested:** automated or manual test evidence exists.
-- **Verified:** behavior and evidence have been checked against the acceptance criteria.
+- **Verified:** behavior and evidence have been checked against acceptance criteria.
 - **Deployed:** available in a named environment with a verified deployment reference.
 
 Never promote a status without evidence.
 
 ## Change control
 
-Update the relevant document when a product boundary, design principle, route, content structure, or interaction contract changes. Keep one source of truth for each topic. Do not create issue trackers or duplicate project task status inside this folder; GitHub Issues remain the task register and the Wiki remains canonical project documentation where applicable.
+Update the relevant source document when a product boundary, design principle, route, content structure, visual rule, or interaction contract changes. Keep one source of truth for each topic. Do not create issue trackers or duplicate project task status inside this folder; GitHub Issues remain the task register and the Wiki remains canonical project documentation where applicable.
 
 ## Current delivery boundary
 
-The current deliverable is the design foundation. Next is visual mockup work in the order specified by `MOCKUP-SPEC.md`. Code changes begin only after the relevant design direction and mockups are reviewed and explicitly approved.
+The design foundation is documented. Visual mockups are the next design deliverable and must be reviewed against the constitution and the relevant screen specification. Code changes, asset production adoption, and deployment require their own explicit approval.
