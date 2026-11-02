@@ -210,14 +210,14 @@ export default function StudioExportPage() {
     },
     {
       href: "/corpus",
-      label: copy.corpus.navTitle,
+      label: t("web.dashboard.corpusTitle"),
       icon: <BookOpen className="size-4" />,
     },
     ...(isReviewer
       ? [
           {
             href: "/research",
-            label: copy.research.navTitle,
+            label: copy.research.navLabel,
             icon: <Microscope className="size-4" />,
           },
         ]
@@ -226,7 +226,7 @@ export default function StudioExportPage() {
       ? [
           {
             href: "/workflow",
-            label: copy.workflow.navTitle,
+            label: copy.workflow.navLabel,
             icon: <WorkflowIcon className="size-4" />,
           },
         ]
@@ -240,7 +240,7 @@ export default function StudioExportPage() {
           },
           {
             href: "/admin/translations",
-            label: copy.i18n.navTitle,
+            label: t("web.translationAdmin.title"),
             icon: <Languages className="size-4" />,
           },
         ]
