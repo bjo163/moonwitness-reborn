@@ -5,6 +5,7 @@ import {
 } from "node:http";
 import {
   runAgent,
+  runGroundedAgent,
   type AgentRequest,
   type ModelProvider,
   type OpenAICompatibleProviderOptions,
@@ -106,7 +107,10 @@ import {
   publishEdition,
   withdrawEdition,
 } from "ql_corpus/services/corpus-service";
-import { indexCorpusEdition } from "ql_search/services/search-indexing-service";
+import {
+  indexCorpusEdition,
+  searchCorpusPassages,
+} from "ql_search/services/search-indexing-service";
 import {
   readSurahWindow,
   readVerse,
@@ -196,6 +200,21 @@ function conversationDto(
 
 function isPassageKind(value: string): value is PassageKindDto {
   return PASSAGE_KINDS.some((kind) => kind === value);
+}
+
+async function insufficientEvidenceReply(
+  orm: QlOrm,
+  locale: UiLocale,
+): Promise<string> {
+  const translation = (
+    await getPublishedCatalog(orm, locale, "chat")
+  ).find(({ key }) => key === "insufficientEvidence");
+  if (!translation?.value.trim()) {
+    throw new Error(
+      `Published insufficient-evidence copy is missing for locale '${locale}'.`,
+    );
+  }
+  return translation.value;
 }
 
 async function revalidateCitation(
@@ -481,7 +500,7 @@ function parseTranslationAiDraft(
 }
 
 function parseAgentRequest(body: unknown): AgentRequest & ChatRequestDto {
-  const { input, instructions, conversationId } = parseObject(body);
+  const { input, instructions, conversationId, grounding } = parseObject(body);
   if (typeof input !== "string" || !input.trim()) {
     throw new RequestError("Field 'input' must be a non-empty string.", 400);
   }
@@ -503,10 +522,14 @@ function parseAgentRequest(body: unknown): AgentRequest & ChatRequestDto {
   ) {
     throw new RequestError("Field 'instructions' is too long.", 400);
   }
+  if (grounding !== undefined && grounding !== "grounded") {
+    throw new RequestError("Field 'grounding' must be 'grounded'.", 400);
+  }
   return {
     input,
     conversationId,
     ...(typeof instructions === "string" ? { instructions } : {}),
+    ...(grounding === "grounded" ? { grounding } : {}),
   };
 }
 
@@ -2930,40 +2953,6 @@ export function createApiServer(
       const user = await requireAuthenticatedUser(request, response, store);
       if (!user) return;
       try {
-        const configuredProviders = (
-          await orm.findManyForService("ai.provider", user.id)
-        )
-          .map(toStoredProvider)
-          .sort((left, right) => left.priority - right.priority)
-          .filter(({ enabled }) => enabled)
-          .map(({ id, name, base_url, model, encrypted_api_key }) => {
-            if (!options.encryptionKey) {
-              throw new RequestError(
-                "Provider credentials cannot be decrypted; configure PROVIDER_ENCRYPTION_KEY.",
-                503,
-              );
-            }
-            return {
-              id,
-              name,
-              config: {
-                apiKey: decryptProviderSecret(
-                  encrypted_api_key,
-                  options.encryptionKey,
-                ),
-                baseUrl: base_url,
-                model,
-              } satisfies OpenAICompatibleProviderOptions,
-            };
-          });
-        const chatProvider = configuredProviders.length
-          ? createFallbackProvider(configuredProviders, options.providerFactory)
-          : provider;
-        if (!chatProvider) {
-          request.resume();
-          sendJson(response, 503, { error: "No model provider is configured." });
-          return;
-        }
         const agentRequest = parseAgentRequest(await readJsonBody(request));
         const conversation = await store.getConversation(
           agentRequest.conversationId,
@@ -2978,6 +2967,181 @@ export function createApiServer(
           user.id,
           HISTORY_LIMIT,
         );
+
+        const resolveChatProvider = async (): Promise<
+          ModelProvider | undefined
+        > => {
+          const configuredProviders = (
+            await orm.findManyForService("ai.provider", user.id)
+          )
+            .map(toStoredProvider)
+            .sort((left, right) => left.priority - right.priority)
+            .filter(({ enabled }) => enabled)
+            .map(({ id, name, base_url, model, encrypted_api_key }) => {
+              if (!options.encryptionKey) {
+                throw new RequestError(
+                  "Provider credentials cannot be decrypted; configure PROVIDER_ENCRYPTION_KEY.",
+                  503,
+                );
+              }
+              return {
+                id,
+                name,
+                config: {
+                  apiKey: decryptProviderSecret(
+                    encrypted_api_key,
+                    options.encryptionKey,
+                  ),
+                  baseUrl: base_url,
+                  model,
+                } satisfies OpenAICompatibleProviderOptions,
+              };
+            });
+          return configuredProviders.length
+            ? createFallbackProvider(
+                configuredProviders,
+                options.providerFactory,
+              )
+            : provider;
+        };
+
+        if (agentRequest.grounding === "grounded") {
+          const candidates = await searchCorpusPassages(
+            orm,
+            agentRequest.input.trim(),
+            user.preferredLocale,
+          );
+          const persistInsufficientEvidence = async (reply: string) => {
+            await store.addMessage(
+              agentRequest.conversationId,
+              user.id,
+              "assistant",
+              reply,
+              { groundingStatus: "insufficient_evidence" },
+            );
+            sendJson(response, 200, {
+              reply,
+              groundingStatus: "insufficient_evidence",
+              citations: [],
+            } satisfies ChatResponseDto);
+          };
+          if (candidates.length === 0) {
+            await store.addMessage(
+              agentRequest.conversationId,
+              user.id,
+              "user",
+              agentRequest.input.trim(),
+            );
+            await persistInsufficientEvidence(
+              await insufficientEvidenceReply(orm, user.preferredLocale),
+            );
+            return;
+          }
+          const chatProvider = await resolveChatProvider();
+          if (!chatProvider) {
+            request.resume();
+            sendJson(response, 503, {
+              error: "No model provider is configured.",
+            });
+            return;
+          }
+          await store.addMessage(
+            agentRequest.conversationId,
+            user.id,
+            "user",
+            agentRequest.input.trim(),
+          );
+
+          let groundedResult: Awaited<
+            ReturnType<typeof runGroundedAgent>
+          >;
+          try {
+            groundedResult = await runGroundedAgent(chatProvider, {
+              input: agentRequest.input.trim(),
+              history: history
+                .filter(({ role }) => role === "user")
+                .map(({ role, content }) => ({ role, content })),
+              evidence: candidates.map(({ passage }) => ({
+                id: passage.id,
+                text: passage.text,
+              })),
+            });
+          } catch (error) {
+            console.error("Grounded model provider request failed.", error);
+            sendJson(response, 502, {
+              error: "Grounded model provider request failed.",
+            });
+            return;
+          }
+          if (groundedResult.groundingStatus === "insufficient_evidence") {
+            await persistInsufficientEvidence(groundedResult.reply);
+            return;
+          }
+
+          const candidatesById = new Map<
+            string,
+            (typeof candidates)[number]
+          >();
+          for (const candidate of candidates) {
+            candidatesById.set(candidate.passage.id, candidate);
+          }
+          const citationReferences = groundedResult.citations.map(
+            ({ evidenceId }): CitationReference => {
+              const candidate = candidatesById.get(evidenceId);
+              if (!candidate) {
+                throw new Error(
+                  "Grounded agent returned a citation outside retrieved evidence.",
+                );
+              }
+              return {
+                evidenceId,
+                editionId: candidate.passage.edition_id,
+                editionKey: candidate.editionKey,
+                surah: candidate.passage.surah,
+                ayah: candidate.passage.ayah,
+              };
+            },
+          );
+          const revalidatedCitations = await Promise.all(
+            citationReferences.map((citation) =>
+              revalidateCitation(orm, citation),
+            ),
+          );
+          const citationDtos = revalidatedCitations.filter(
+            (citation): citation is ChatCitationDto =>
+              citation !== undefined,
+          );
+          if (citationDtos.length !== citationReferences.length) {
+            await persistInsufficientEvidence(
+              await insufficientEvidenceReply(orm, user.preferredLocale),
+            );
+            return;
+          }
+
+          await store.addMessage(
+            agentRequest.conversationId,
+            user.id,
+            "assistant",
+            groundedResult.reply,
+            {
+              groundingStatus: "grounded",
+              citations: citationReferences,
+            },
+          );
+          sendJson(response, 200, {
+            reply: groundedResult.reply,
+            groundingStatus: "grounded",
+            citations: citationDtos,
+          } satisfies ChatResponseDto);
+          return;
+        }
+
+        const chatProvider = await resolveChatProvider();
+        if (!chatProvider) {
+          request.resume();
+          sendJson(response, 503, { error: "No model provider is configured." });
+          return;
+        }
         await store.addMessage(
           agentRequest.conversationId,
           user.id,
@@ -2988,7 +3152,10 @@ export function createApiServer(
         let reply: string;
         try {
           reply = await runAgent(chatProvider, {
-            ...agentRequest,
+            input: agentRequest.input,
+            ...(agentRequest.instructions
+              ? { instructions: agentRequest.instructions }
+              : {}),
             history: history.map(({ role, content }) => ({ role, content })),
           });
         } catch (error) {

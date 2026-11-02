@@ -6,7 +6,7 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
-    "test": "tsx --test src/connectors/os-credential-store.test.ts src/http/server.test.ts src/http/connectors.test.ts src/http/workflow.test.ts src/http/corpus.test.ts src/http/research.test.ts src/http/i18n.test.ts src/ai/model-config.test.ts src/ai/model-router.test.ts src/ai/provider-secrets.test.ts src/project-progress/github-issues.test.ts",
+    "test": "tsx --test src/connectors/os-credential-store.test.ts src/http/server.test.ts src/http/connectors.test.ts src/http/workflow.test.ts src/http/corpus.test.ts src/http/grounded-chat.test.ts src/http/research.test.ts src/http/i18n.test.ts src/ai/model-config.test.ts src/ai/model-router.test.ts src/ai/provider-secrets.test.ts src/project-progress/github-issues.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

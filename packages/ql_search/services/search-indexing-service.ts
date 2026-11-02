@@ -45,6 +45,7 @@ export interface CorpusIndexResult {
 
 export interface CorpusSearchResult {
   passage: PassageReadDto;
+  editionKey: string;
   score: number;
 }
 
@@ -479,7 +480,11 @@ export async function searchCorpusPassages(
     ) {
       continue;
     }
-    results.push({ passage, score: candidate.score });
+    results.push({
+      passage,
+      editionKey: candidate.editionKey,
+      score: candidate.score,
+    });
     if (results.length === limit) break;
   }
   return results;

@@ -254,6 +254,11 @@ void test("corpus indexing is idempotent and retrieval is ranked, bounded, and d
         { id: String(second.id), score: 1 },
       ],
     );
+    assert.ok(
+      ranked.every(
+        ({ editionKey }) => editionKey === String(edition.edition_key),
+      ),
+    );
     assert.deepEqual(
       (await searchCorpusPassages(orm, "light", "en", 1)).map(
         ({ passage }) => passage.id,

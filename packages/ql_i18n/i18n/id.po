@@ -2912,6 +2912,10 @@ msgctxt "web:landing.views.workflow_change.title"
 msgid "Antrean Review & Tata Kelola CAB"
 msgstr "Antrean Review & Tata Kelola CAB"
 
+msgctxt "chat:insufficientEvidence"
+msgid "Saya belum menemukan bukti yang cukup dan dapat digunakan untuk menjawab."
+msgstr "Saya belum menemukan bukti yang cukup dan dapat digunakan untuk menjawab."
+
 msgctxt "web:landing.views.workflow_change.description"
 msgid "Kelola usulan perubahan, persetujuan berjenjang, dan jejak transisi audit."
 msgstr "Kelola usulan perubahan, persetujuan berjenjang, dan jejak transisi audit."
