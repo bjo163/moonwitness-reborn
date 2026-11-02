@@ -24,6 +24,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
 import { useTranslationCatalog } from "../locale/translation-catalog";
 import { useLocalePreference } from "../locale/use-locale-preference";
+import { authorityLabel } from "./corpus-labels";
 
 /**
  * The reader. Arabic verbatim renders right-to-left under a heading that
@@ -60,20 +61,6 @@ function headingFor(
   return t("web.corpus.attributedHeading", {
     authority: reading.editionAuthority,
   });
-}
-
-function authorityLabel(
-  authority: string,
-  locale: string,
-  t: ReturnType<typeof useTranslationCatalog>["t"],
-): string {
-  if (authority === "revelation_verbatim") {
-    return t("web.corpus.authorityVerbatim", { locale });
-  }
-  if (authority === "translation") {
-    return t("web.corpus.authorityTranslation", { locale });
-  }
-  return t("web.corpus.authorityAttributed", { authority });
 }
 
 export default function QuranReader() {

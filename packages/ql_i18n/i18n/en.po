@@ -597,6 +597,62 @@ msgctxt "web:assistant.sendHint"
 msgid "Enter untuk kirim · Shift + Enter untuk baris baru"
 msgstr "Enter to send · Shift + Enter for a new line"
 
+msgctxt "web:assistant.groundedEvidence"
+msgid "Berbasis sumber yang diambil"
+msgstr "Grounded in retrieved sources"
+
+msgctxt "web:assistant.insufficientEvidence"
+msgid "Bukti yang tersedia belum cukup"
+msgstr "Insufficient evidence"
+
+msgctxt "web:assistant.legacyEvidence"
+msgid "Rujukan belum diverifikasi"
+msgstr "Citations unverified"
+
+msgctxt "web:assistant.citationsTitle"
+msgid "Rujukan yang digunakan"
+msgstr "Sources used"
+
+msgctxt "web:assistant.sourceEdition"
+msgid "Edisi sumber"
+msgstr "Source edition"
+
+msgctxt "web:assistant.locale"
+msgid "Bahasa"
+msgstr "Locale"
+
+msgctxt "web:assistant.passageAuthority"
+msgid "Otoritas teks"
+msgstr "Passage authority"
+
+msgctxt "web:assistant.editionAuthority"
+msgid "Otoritas edisi"
+msgstr "Edition authority"
+
+msgctxt "web:assistant.attribution"
+msgid "Atribusi"
+msgstr "Attribution"
+
+msgctxt "web:assistant.publisher"
+msgid "Penerbit"
+msgstr "Publisher"
+
+msgctxt "web:assistant.verseLocator"
+msgid "Ayat"
+msgstr "Verse"
+
+msgctxt "web:assistant.openSource"
+msgid "Buka di pembaca korpus"
+msgstr "Open in corpus reader"
+
+msgctxt "web:assistant.noCitationMetadata"
+msgid "Metadata rujukan tidak tersedia."
+msgstr "No citation metadata was provided."
+
+msgctxt "web:assistant.metadataUnavailable"
+msgid "Tidak dicantumkan"
+msgstr "Not provided"
+
 msgctxt "web:workflow.navLabel"
 msgid "Antrean review"
 msgstr "Review queue"

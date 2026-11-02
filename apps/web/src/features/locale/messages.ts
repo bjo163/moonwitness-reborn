@@ -267,6 +267,20 @@ export interface AppMessages {
     thinking: string;
     newConversationPlaceholder: string;
     sendHint: string;
+    groundedEvidence: string;
+    insufficientEvidence: string;
+    legacyEvidence: string;
+    citationsTitle: string;
+    sourceEdition: string;
+    locale: string;
+    passageAuthority: string;
+    editionAuthority: string;
+    attribution: string;
+    publisher: string;
+    verseLocator: string;
+    openSource: string;
+    noCitationMetadata: string;
+    metadataUnavailable: string;
   };
   workflow: {
     navLabel: string;
