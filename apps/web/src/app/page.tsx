@@ -132,6 +132,12 @@ export default function LandingPage() {
 
   return (
     <main className="ql-hud-app min-h-dvh">
+      <Link
+        href="#the-universe"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:border focus:border-acid focus:bg-panel-edge focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-acid"
+      >
+        {copy.common.skipToContent}
+      </Link>
       {/* =========================================================================
           MOVEMENT 01: ARRIVAL / THE GATE (HeroStage)
          ========================================================================= */}
@@ -264,7 +270,7 @@ export default function LandingPage() {
               className="shrink-0 text-xs font-medium text-muted underline-offset-4 hover:text-acid hover:underline"
             >
               <Lock aria-hidden="true" size={12} className="inline mr-1" />
-              <span>Admin</span>
+              <span>{copy.landing.m2AdminRestricted}</span>
             </Link>
           </div>
           <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-hairline pt-4">
@@ -293,7 +299,7 @@ export default function LandingPage() {
       >
         {/* Editorial directory index: numbered horizontal rows, not equal card grid.
             Purpose: distinct visual language from other movements, content-driven composition. */}
-        <ol className="divide-y divide-hairline border-y border-hairline" aria-label="Direktori pengetahuan">
+        <ol className="divide-y divide-hairline border-y border-hairline" aria-label={copy.landing.m3DirectoryAria}>
           <li>
             <Link
               href="/corpus"
@@ -366,12 +372,10 @@ export default function LandingPage() {
           <div className="flex flex-col justify-between border border-hairline bg-panel-edge/80 p-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-acid">
-                Prinsip Transmisi
+                {copy.landing.m4PrincipleTitle}
               </p>
               <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-                MoonWitness menjaga agar setiap kutipan menyertakan identitas sumber,
-                edisi, dan tingkat verifikasi secara transparan. Tidak ada fabrikasi klaim
-                keagamaan maupun penulisan firman secara sembarangan.
+                {copy.landing.m4PrincipleBody}
               </p>
             </div>
             <div className="mt-6 border-t border-hairline-soft pt-4">
@@ -379,7 +383,7 @@ export default function LandingPage() {
                 href="/corpus"
                 className="inline-flex items-center gap-2 text-xs font-medium text-acid underline-offset-4 hover:underline"
               >
-                <span>Pelajari Metodologi Penelusuran Sumber</span>
+                <span>{copy.landing.m4MethodologyAction}</span>
                 <ChevronRight aria-hidden="true" size={14} />
               </Link>
             </div>
@@ -398,7 +402,7 @@ export default function LandingPage() {
       >
         {/* Inline compass strip: flowing flex tags, not uniform square tiles.
             Purpose: visually distinct from M02/M03/M06, encourages browsing not comparison. */}
-        <nav aria-label="Topik pengetahuan">
+        <nav aria-label={copy.landing.m5TopicsAria}>
           <ul className="flex flex-wrap gap-3">
             <li>
               <Link
@@ -474,6 +478,15 @@ export default function LandingPage() {
             </p>
           </div>
         </div>
+        <div className="mt-6 flex items-center justify-end border-t border-hairline-soft pt-4">
+          <Link
+            href="/community"
+            className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-acid underline-offset-4 hover:underline"
+          >
+            <span>{copy.landing.m6DockAction}</span>
+            <ArrowRight aria-hidden="true" size={14} />
+          </Link>
+        </div>
       </SpatialRegion>
 
       {/* =========================================================================
@@ -503,7 +516,7 @@ export default function LandingPage() {
                 href="/corpus"
                 className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-acid underline-offset-4 hover:underline"
               >
-                <span>Mulai Membaca Publik</span>
+                <span>{copy.landing.m7AnonAction}</span>
                 <span aria-hidden="true">&rarr;</span>
               </Link>
             </div>
@@ -626,7 +639,7 @@ export default function LandingPage() {
             {copy.landing.m8FooterReflectionSource}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-6 text-xs font-medium tracking-wider text-muted">
-            <span>{copy.landing.m8EcosystemConstitution}</span>
+            <Link href="/community" className="underline-offset-4 hover:text-acid hover:underline transition-colors">{copy.landing.m8EcosystemConstitution}</Link>
             <span>&bull;</span>
             <span>{copy.landing.m8Privacy}</span>
             <span>&bull;</span>

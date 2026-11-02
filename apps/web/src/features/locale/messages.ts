@@ -23,6 +23,7 @@ export interface AppMessages {
     no: string;
     statusAvailable: string;
     statusProposed: string;
+    skipToContent: string;
   };
   auth: {
     setupTitle: string;
@@ -141,6 +142,13 @@ export interface AppMessages {
     m8Privacy: string;
     m8Terms: string;
     m8FooterReflectionSource: string;
+    m3DirectoryAria: string;
+    m4PrincipleTitle: string;
+    m4PrincipleBody: string;
+    m4MethodologyAction: string;
+    m5TopicsAria: string;
+    m7AnonAction: string;
+    m2AdminRestricted: string;
   };
   community: {
     commTitle: string;
@@ -159,6 +167,12 @@ export interface AppMessages {
     commCircle2: string;
     commCircle3: string;
     commActionRegister: string;
+    commCirclesHeading: string;
+    commCircleLabel: string;
+    commFooterSubtitle: string;
+    commNavHome: string;
+    commNavCorpus: string;
+    commNavWorkspace: string;
   };
   dashboard: {
     hqTitle: string;
@@ -177,6 +191,12 @@ export interface AppMessages {
     hqRegion5Desc: string;
     hqRegion6Title: string;
     hqRegion6Desc: string;
+    hqWorldCoreTitle: string;
+    hqIntelFeedTitle: string;
+    hqMissionStripTitle: string;
+    hqIdentityFrameTitle: string;
+    hqRegionAll: string;
+    hqRegionLabel: string;
     greeting: string;
     description: string;
     continueChat: string;

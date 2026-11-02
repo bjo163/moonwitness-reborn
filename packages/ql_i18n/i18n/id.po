@@ -3331,3 +3331,82 @@ msgstr "Karya Kreatif & Narasi"
 msgctxt "web:community.commActionRegister"
 msgid "Daftar Kontributor Dock"
 msgstr "Daftar Kontributor Dock"
+msgctxt "web:common.skipToContent"
+msgid "Lewati ke konten utama"
+msgstr "Lewati ke konten utama"
+
+msgctxt "web:landing.m3DirectoryAria"
+msgid "Direktori pengetahuan"
+msgstr "Direktori pengetahuan"
+
+msgctxt "web:landing.m4PrincipleTitle"
+msgid "Prinsip Transmisi"
+msgstr "Prinsip Transmisi"
+
+msgctxt "web:landing.m4PrincipleBody"
+msgid "MoonWitness menjaga agar setiap kutipan menyertakan identitas sumber, edisi, dan tingkat verifikasi secara transparan. Tidak ada fabrikasi klaim keagamaan maupun penulisan firman secara sembarangan."
+msgstr "MoonWitness menjaga agar setiap kutipan menyertakan identitas sumber, edisi, dan tingkat verifikasi secara transparan. Tidak ada fabrikasi klaim keagamaan maupun penulisan firman secara sembarangan."
+
+msgctxt "web:landing.m4MethodologyAction"
+msgid "Pelajari Metodologi Penelusuran Sumber"
+msgstr "Pelajari Metodologi Penelusuran Sumber"
+
+msgctxt "web:landing.m5TopicsAria"
+msgid "Topik pengetahuan"
+msgstr "Topik pengetahuan"
+
+msgctxt "web:landing.m7AnonAction"
+msgid "Mulai Membaca Publik"
+msgstr "Mulai Membaca Publik"
+
+msgctxt "web:landing.m2AdminRestricted"
+msgid "Akses Terbatas"
+msgstr "Akses Terbatas"
+
+msgctxt "web:community.commCirclesHeading"
+msgid "Bergabung dalam Lingkaran Telaah"
+msgstr "Bergabung dalam Lingkaran Telaah"
+
+msgctxt "web:community.commCircleLabel"
+msgid "Lingkaran"
+msgstr "Lingkaran"
+
+msgctxt "web:community.commFooterSubtitle"
+msgid "Pangkalan Kolaborasi Komunitas"
+msgstr "Pangkalan Kolaborasi Komunitas"
+
+msgctxt "web:community.commNavHome"
+msgid "Beranda"
+msgstr "Beranda"
+
+msgctxt "web:community.commNavCorpus"
+msgid "Korpus"
+msgstr "Korpus"
+
+msgctxt "web:community.commNavWorkspace"
+msgid "Headquarter"
+msgstr "Headquarter"
+
+msgctxt "web:dashboard.hqWorldCoreTitle"
+msgid "World Core & Poros Spasial"
+msgstr "World Core & Poros Spasial"
+
+msgctxt "web:dashboard.hqIntelFeedTitle"
+msgid "Status Kesiapan Ekosistem"
+msgstr "Status Kesiapan Ekosistem"
+
+msgctxt "web:dashboard.hqMissionStripTitle"
+msgid "Pelacak Tugas Nyata"
+msgstr "Pelacak Tugas Nyata"
+
+msgctxt "web:dashboard.hqIdentityFrameTitle"
+msgid "Batas Wilayah Kerja & Otoritas"
+msgstr "Batas Wilayah Kerja & Otoritas"
+
+msgctxt "web:dashboard.hqRegionAll"
+msgid "Tampilkan Semua Region"
+msgstr "Tampilkan Semua Region"
+
+msgctxt "web:dashboard.hqRegionLabel"
+msgid "Region"
+msgstr "Region"

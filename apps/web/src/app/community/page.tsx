@@ -51,6 +51,14 @@ export default function CommunityPage() {
 
   return (
     <main className="ql-hud-app min-h-dvh flex flex-col justify-between">
+      {/* WCAG 2.2 AA Skip Link */}
+      <Link
+        href="#community-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:border focus:border-acid focus:bg-panel-edge focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-acid"
+      >
+        {copy.common.skipToContent}
+      </Link>
+
       {/* HEADER */}
       <header className="border-b border-hairline bg-panel-edge/80 px-5 py-4 md:px-10">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
@@ -82,8 +90,11 @@ export default function CommunityPage() {
         </div>
       </header>
 
-      {/* HERO SECTION */}
-      <section className="relative mx-auto w-full max-w-7xl px-5 py-16 md:px-10 md:py-24">
+      {/* HERO SECTION / THE HARBOR THRESHOLD */}
+      <section
+        id="community-content"
+        className="relative mx-auto w-full max-w-7xl px-5 py-12 md:px-10 md:py-20"
+      >
         <div className="max-w-3xl">
           <div className="flex items-center gap-3">
             <span className="flex size-7 items-center justify-center border border-acid bg-panel text-acid">
@@ -92,7 +103,8 @@ export default function CommunityPage() {
             <span className="text-xs font-semibold uppercase tracking-[0.25em] text-acid">
               {copy.community.commTitle}
             </span>
-            <Badge variant="live">Dock Active</Badge>
+            {/* Truthful capability: Dock is planned, not falsely claimed as live */}
+            <Badge variant="outline">{copy.common.statusProposed}</Badge>
           </div>
           <h1 className="ql-display mt-5 text-4xl font-semibold tracking-wide text-ink md:text-6xl">
             {copy.community.commHero}
@@ -102,51 +114,57 @@ export default function CommunityPage() {
           </p>
         </div>
 
-        {/* GUIDELINES & ETHOS */}
+        {/* GUIDELINES & ETHOS — Architectural Covenant Ledger (Non-card composition) */}
         <div className="mt-16 border-t border-hairline pt-12">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-acid-muted">
             {copy.community.commGuidelinesTitle}
           </p>
-          <div className="mt-6 grid gap-6 md:grid-cols-3">
-            <div className="border border-hairline bg-panel p-6">
-              <div className="flex size-10 items-center justify-center border border-hairline-strong bg-panel-edge text-acid">
-                <FileCheck2 aria-hidden="true" size={20} />
+          <ol className="mt-6 divide-y divide-hairline border-y border-hairline">
+            <li className="grid gap-4 py-6 md:grid-cols-[0.35fr_0.65fr] md:items-center">
+              <div className="flex items-center gap-4">
+                <div className="flex size-10 shrink-0 items-center justify-center border border-hairline-strong bg-panel-edge text-acid">
+                  <FileCheck2 aria-hidden="true" size={18} />
+                </div>
+                <h3 className="ql-display text-lg font-semibold text-ink">
+                  {copy.community.commGuideline1}
+                </h3>
               </div>
-              <h3 className="ql-display mt-4 text-xl font-semibold text-ink">
-                {copy.community.commGuideline1}
-              </h3>
-              <p className="mt-2 text-xs leading-relaxed text-muted">
+              <p className="text-sm leading-relaxed text-muted">
                 {copy.community.commGuideline1Desc}
               </p>
-            </div>
+            </li>
 
-            <div className="border border-hairline bg-panel p-6">
-              <div className="flex size-10 items-center justify-center border border-hairline-strong bg-panel-edge text-acid">
-                <HeartHandshake aria-hidden="true" size={20} />
+            <li className="grid gap-4 py-6 md:grid-cols-[0.35fr_0.65fr] md:items-center">
+              <div className="flex items-center gap-4">
+                <div className="flex size-10 shrink-0 items-center justify-center border border-hairline-strong bg-panel-edge text-acid">
+                  <HeartHandshake aria-hidden="true" size={18} />
+                </div>
+                <h3 className="ql-display text-lg font-semibold text-ink">
+                  {copy.community.commGuideline2}
+                </h3>
               </div>
-              <h3 className="ql-display mt-4 text-xl font-semibold text-ink">
-                {copy.community.commGuideline2}
-              </h3>
-              <p className="mt-2 text-xs leading-relaxed text-muted">
+              <p className="text-sm leading-relaxed text-muted">
                 {copy.community.commGuideline2Desc}
               </p>
-            </div>
+            </li>
 
-            <div className="border border-hairline bg-panel p-6">
-              <div className="flex size-10 items-center justify-center border border-hairline-strong bg-panel-edge text-acid">
-                <Shield aria-hidden="true" size={20} />
+            <li className="grid gap-4 py-6 md:grid-cols-[0.35fr_0.65fr] md:items-center">
+              <div className="flex items-center gap-4">
+                <div className="flex size-10 shrink-0 items-center justify-center border border-hairline-strong bg-panel-edge text-acid">
+                  <Shield aria-hidden="true" size={18} />
+                </div>
+                <h3 className="ql-display text-lg font-semibold text-ink">
+                  {copy.community.commGuideline3}
+                </h3>
               </div>
-              <h3 className="ql-display mt-4 text-xl font-semibold text-ink">
-                {copy.community.commGuideline3}
-              </h3>
-              <p className="mt-2 text-xs leading-relaxed text-muted">
+              <p className="text-sm leading-relaxed text-muted">
                 {copy.community.commGuideline3Desc}
               </p>
-            </div>
-          </div>
+            </li>
+          </ol>
         </div>
 
-        {/* CIRCLES & ACTION */}
+        {/* CIRCLES & ACTION — Harbor Study Strip */}
         <div className="mt-16 border-t border-hairline pt-12">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
@@ -154,7 +172,7 @@ export default function CommunityPage() {
                 {copy.community.commCirclesTitle}
               </p>
               <h2 className="ql-display mt-2 text-2xl font-semibold text-ink md:text-4xl">
-                Bergabung dalam Lingkaran Telaah
+                {copy.community.commCirclesHeading}
               </h2>
             </div>
             <Link
@@ -166,24 +184,33 @@ export default function CommunityPage() {
             </Link>
           </div>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <div className="border border-hairline-soft bg-panel-edge p-5">
-              <span className="text-xs font-mono text-acid-muted">LINGKARAN 01</span>
-              <p className="mt-2 text-sm font-semibold text-ink">
+          <div className="mt-8 flex flex-col divide-y divide-hairline-soft border-y border-hairline-soft">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 py-4">
+              <span className="font-mono text-xs text-acid-muted">
+                {copy.community.commCircleLabel} 01
+              </span>
+              <p className="min-w-0 flex-1 text-sm font-medium text-ink md:text-base">
                 {copy.community.commCircle1}
               </p>
+              <Badge variant="outline">{copy.common.statusProposed}</Badge>
             </div>
-            <div className="border border-hairline-soft bg-panel-edge p-5">
-              <span className="text-xs font-mono text-acid-muted">LINGKARAN 02</span>
-              <p className="mt-2 text-sm font-semibold text-ink">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 py-4">
+              <span className="font-mono text-xs text-acid-muted">
+                {copy.community.commCircleLabel} 02
+              </span>
+              <p className="min-w-0 flex-1 text-sm font-medium text-ink md:text-base">
                 {copy.community.commCircle2}
               </p>
+              <Badge variant="outline">{copy.common.statusProposed}</Badge>
             </div>
-            <div className="border border-hairline-soft bg-panel-edge p-5">
-              <span className="text-xs font-mono text-acid-muted">LINGKARAN 03</span>
-              <p className="mt-2 text-sm font-semibold text-ink">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 py-4">
+              <span className="font-mono text-xs text-acid-muted">
+                {copy.community.commCircleLabel} 03
+              </span>
+              <p className="min-w-0 flex-1 text-sm font-medium text-ink md:text-base">
                 {copy.community.commCircle3}
               </p>
+              <Badge variant="outline">{copy.common.statusProposed}</Badge>
             </div>
           </div>
         </div>
@@ -192,11 +219,17 @@ export default function CommunityPage() {
       {/* FOOTER */}
       <footer className="border-t border-hairline bg-panel-deep px-5 py-8 md:px-10">
         <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 text-xs text-muted">
-          <p>A-L-L-A-H.COM · Dock Community Harbor</p>
+          <p>A-L-L-A-H.COM · {copy.community.commFooterSubtitle}</p>
           <div className="flex gap-4">
-            <Link href="/" className="hover:text-acid">Beranda</Link>
-            <Link href="/corpus" className="hover:text-acid">Korpus</Link>
-            <Link href="/command-center" className="hover:text-acid">Headquarter</Link>
+            <Link href="/" className="hover:text-acid underline-offset-4 hover:underline">
+              {copy.community.commNavHome}
+            </Link>
+            <Link href="/corpus" className="hover:text-acid underline-offset-4 hover:underline">
+              {copy.community.commNavCorpus}
+            </Link>
+            <Link href="/command-center" className="hover:text-acid underline-offset-4 hover:underline">
+              {copy.community.commNavWorkspace}
+            </Link>
           </div>
         </div>
       </footer>

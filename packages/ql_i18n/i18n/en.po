@@ -3328,3 +3328,82 @@ msgstr "Creative Works & Storytelling"
 msgctxt "web:community.commActionRegister"
 msgid "Daftar Kontributor Dock"
 msgstr "Register as Dock Contributor"
+msgctxt "web:common.skipToContent"
+msgid "Lewati ke konten utama"
+msgstr "Skip to main content"
+
+msgctxt "web:landing.m3DirectoryAria"
+msgid "Direktori pengetahuan"
+msgstr "Knowledge directory"
+
+msgctxt "web:landing.m4PrincipleTitle"
+msgid "Prinsip Transmisi"
+msgstr "Transmission Principles"
+
+msgctxt "web:landing.m4PrincipleBody"
+msgid "MoonWitness menjaga agar setiap kutipan menyertakan identitas sumber, edisi, dan tingkat verifikasi secara transparan. Tidak ada fabrikasi klaim keagamaan maupun penulisan firman secara sembarangan."
+msgstr "MoonWitness ensures every citation includes source identity, edition, and verification level transparently. There is no fabrication of religious claims or casual writing of sacred revelation."
+
+msgctxt "web:landing.m4MethodologyAction"
+msgid "Pelajari Metodologi Penelusuran Sumber"
+msgstr "Explore Source Attribution Methodology"
+
+msgctxt "web:landing.m5TopicsAria"
+msgid "Topik pengetahuan"
+msgstr "Knowledge topics"
+
+msgctxt "web:landing.m7AnonAction"
+msgid "Mulai Membaca Publik"
+msgstr "Start Public Reading"
+
+msgctxt "web:landing.m2AdminRestricted"
+msgid "Akses Terbatas"
+msgstr "Restricted Access"
+
+msgctxt "web:community.commCirclesHeading"
+msgid "Bergabung dalam Lingkaran Telaah"
+msgstr "Join Study Circles"
+
+msgctxt "web:community.commCircleLabel"
+msgid "Lingkaran"
+msgstr "Circle"
+
+msgctxt "web:community.commFooterSubtitle"
+msgid "Pangkalan Kolaborasi Komunitas"
+msgstr "Community Collaboration Harbor"
+
+msgctxt "web:community.commNavHome"
+msgid "Beranda"
+msgstr "Home"
+
+msgctxt "web:community.commNavCorpus"
+msgid "Korpus"
+msgstr "Corpus"
+
+msgctxt "web:community.commNavWorkspace"
+msgid "Headquarter"
+msgstr "Headquarter"
+
+msgctxt "web:dashboard.hqWorldCoreTitle"
+msgid "World Core & Poros Spasial"
+msgstr "World Core & Spatial Axis"
+
+msgctxt "web:dashboard.hqIntelFeedTitle"
+msgid "Status Kesiapan Ekosistem"
+msgstr "Ecosystem Readiness Status"
+
+msgctxt "web:dashboard.hqMissionStripTitle"
+msgid "Pelacak Tugas Nyata"
+msgstr "Verified Mission Tracker"
+
+msgctxt "web:dashboard.hqIdentityFrameTitle"
+msgid "Batas Wilayah Kerja & Otoritas"
+msgstr "Workspace Boundaries & Authority"
+
+msgctxt "web:dashboard.hqRegionAll"
+msgid "Tampilkan Semua Region"
+msgstr "Show All Regions"
+
+msgctxt "web:dashboard.hqRegionLabel"
+msgid "Region"
+msgstr "Region"
