@@ -419,10 +419,10 @@ This architecture does not authorize:
 - [ ] Existing `ql_workflow`, `ql_integration`, `ql_ai`, agent-runtime and `moonclient` responsibilities are reconciled before new models are added.
 - [ ] All domain persistence uses QlOrm `ql_*` addons and repository ACL/ownership conventions.
 - [ ] Web API contracts live in `@moonwitness/moonclient`.
-- [ ] Monitoring and scheduling continue when AI/OpenClaw is unavailable.
+- [ ] Monitoring and scheduling continue when all model providers are unavailable.
 - [ ] Scheduler is durable, idempotent and crash-recoverable.
 - [ ] Playwright runs in an isolated worker with network/resource/security boundaries.
-- [ ] OpenClaw remains optional and cannot bypass MoonWitness policy.
+- [ ] No external agent framework or gateway is required; native ARSY execution cannot bypass MoonWitness policy.
 - [ ] All consequential actions have actor, policy, approval, result and evidence traceability.
 - [ ] UI states and metrics are backed by authoritative data.
 - [ ] Documentation, GitHub Issues and Wiki remain aligned; no task status is duplicated in design docs.
