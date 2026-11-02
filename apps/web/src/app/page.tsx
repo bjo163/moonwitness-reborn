@@ -16,6 +16,7 @@ import {
   PortalCard,
   SidebarBrand,
   SpatialRegion,
+  ThemeToggle,
   TransmissionCard,
 } from "@moonwitness/ui";
 import {
@@ -26,9 +27,12 @@ import {
   Compass,
   FileText,
   Globe,
+  Home,
   Lock,
   Moon,
+  Radio,
   Scroll,
+  Search,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -43,6 +47,7 @@ import {
   useTranslationCatalog,
 } from "../features/locale/translation-catalog";
 import { useLocalePreference } from "../features/locale/use-locale-preference";
+import { useThemePreference } from "../features/theme/use-theme-preference";
 
 const BRAND_NAME = "A-L-L-A-H.COM";
 const BRAND_ECOSYSTEM = "Empire of the Light";
@@ -76,6 +81,7 @@ export default function LandingPage() {
   const [landingItems, setLandingItems] = useState<LandingViewItemDto[]>([]);
   const { locale, changeLocale, saving, error: localeError } =
     useLocalePreference(user);
+  const { theme, toggleTheme } = useThemePreference();
   const copy = useMessages();
   const { t, tm } = useTranslationCatalog();
 
@@ -142,38 +148,94 @@ export default function LandingPage() {
           MOVEMENT 01: ARRIVAL / THE GATE (HeroStage)
          ========================================================================= */}
       <HeroStage imageSrc="/hero-empire.jpg">
-        <header className="relative mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-5 py-4 md:px-10">
+        <header className="relative mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-4 md:px-10">
           <SidebarBrand
             href="/"
             label={BRAND_NAME}
-            icon={<Sparkles aria-hidden="true" size={18} />}
+            icon={
+              <img
+                src="/brand/emblem.svg"
+                alt=""
+                aria-hidden="true"
+                width={20}
+                height={20}
+                className="size-5 text-acid"
+              />
+            }
           />
           <nav
-            className="ql-topnav order-3 w-full lg:order-none lg:w-auto"
+            className="ql-topnav order-3 flex flex-wrap items-center gap-1 w-full lg:order-none lg:w-auto"
             aria-label={copy.common.mainNavigation}
           >
-            <NavLink href="/" active>
-              {copy.landing.navHome}
+            <NavLink href="/" active className="inline-flex items-center gap-1.5">
+              <Home aria-hidden="true" size={14} />
+              <span>{copy.landing.navHome}</span>
             </NavLink>
-            <NavLink href="#the-universe">{copy.landing.navPortals}</NavLink>
-            <NavLink href="#explore-knowledge">{copy.landing.navExplore}</NavLink>
-            <NavLink href="#transmissions">{copy.landing.navTransmissions}</NavLink>
-            <NavLink href="#community-dock">{copy.landing.navDock}</NavLink>
-            <NavLink href="#your-journey">{copy.landing.navJourney}</NavLink>
+            <NavLink href="#the-universe" className="inline-flex items-center gap-1.5">
+              <Globe aria-hidden="true" size={14} />
+              <span>{copy.landing.navPortals}</span>
+            </NavLink>
+            <NavLink href="#explore-knowledge" className="inline-flex items-center gap-1.5">
+              <Scroll aria-hidden="true" size={14} />
+              <span>{copy.landing.navExplore}</span>
+            </NavLink>
+            <NavLink href="#transmissions" className="inline-flex items-center gap-1.5">
+              <Radio aria-hidden="true" size={14} />
+              <span>{copy.landing.navTransmissions}</span>
+            </NavLink>
+            <NavLink href="#discover" className="inline-flex items-center gap-1.5">
+              <Compass aria-hidden="true" size={14} />
+              <span>{copy.landing.navDiscover}</span>
+            </NavLink>
+            <NavLink href="#community-dock" className="inline-flex items-center gap-1.5">
+              <Users aria-hidden="true" size={14} />
+              <span>{copy.landing.navDock}</span>
+            </NavLink>
+            <NavLink href="#your-journey" className="inline-flex items-center gap-1.5">
+              <Boxes aria-hidden="true" size={14} />
+              <span>{copy.landing.navJourney}</span>
+            </NavLink>
           </nav>
           <div className="flex items-center gap-2">
+            <Link
+              href={user ? "/command-center/search" : "/corpus"}
+              aria-label={copy.common.searchAction}
+              title={copy.common.searchAction}
+              className="ql-nav-link inline-flex min-h-11 min-w-11 items-center justify-center"
+            >
+              <Search aria-hidden="true" size={16} />
+            </Link>
+            <ThemeToggle
+              theme={theme}
+              label={
+                theme === "light"
+                  ? copy.common.themeToDark
+                  : copy.common.themeToLight
+              }
+              onToggle={toggleTheme}
+            />
             <LocaleSwitcher
               locale={locale}
               label={copy.common.localeLabel}
               onChange={(nextLocale) => void changeLocale(nextLocale)}
               disabled={user === undefined || saving}
             />
-            <Link
-              href={`/auth?mode=login&locale=${locale}`}
-              className="inline-flex min-h-11 items-center px-2 text-sm font-medium text-ink-soft underline-offset-4 hover:text-acid hover:underline"
-            >
-              {copy.landing.login}
-            </Link>
+            {user ? (
+              <Link
+                href="/command-center"
+                aria-label={user.name || copy.common.account}
+                className="inline-flex size-8 items-center justify-center rounded-full border border-hairline-strong bg-panel-edge text-xs font-semibold uppercase text-acid"
+              >
+                {(user.name?.[0] || "U").toUpperCase()}
+              </Link>
+            ) : (
+              <Link
+                href={`/auth?mode=login&locale=${locale}`}
+                className="inline-flex min-h-11 items-center px-2 text-sm font-medium text-ink-soft underline-offset-4 hover:text-acid hover:underline"
+              >
+                {copy.landing.login}
+              </Link>
+            )}
           </div>
         </header>
 
@@ -212,20 +274,18 @@ export default function LandingPage() {
         </div>
 
         {/* =========================================================================
-            MOVEMENT 02: THE UNIVERSE (Portal Cards Grid)
+            MOVEMENT 02: THE UNIVERSE (Portal Dock Strip)
            ========================================================================= */}
         <div
           id="the-universe"
           className="relative mx-auto w-full max-w-7xl px-5 pb-5 md:px-10"
         >
-          {/* Asymmetric authored portal map: MoonWitness dominant (editorial role),
-              Dock + Cockpit as operational wings, Headquarter gated/restricted */}
+          {/* Mockup 4-tile horizontal glass dock: MoonWitness, Dock, Cockpit, Headquarter */}
           <ul
-            className="grid gap-3 md:grid-cols-[2fr_1fr] md:grid-rows-[auto_auto]"
+            className="ql-portal-dock"
             aria-label={copy.landing.portalsLabel}
           >
-            {/* MoonWitness — dominant anchor, full left column */}
-            <li className="md:row-span-2">
+            <li>
               <PortalCard
                 href="/corpus"
                 title="MoonWitness"
@@ -234,7 +294,6 @@ export default function LandingPage() {
                 arrow={<ChevronRight aria-hidden="true" size={16} />}
               />
             </li>
-            {/* Dock — proposed, operational wing top */}
             <li>
               <PortalCard
                 href="#community-dock"
@@ -245,7 +304,6 @@ export default function LandingPage() {
                 status={copy.common.statusProposed}
               />
             </li>
-            {/* Cockpit — operational wing bottom */}
             <li>
               <PortalCard
                 href="/command-center"
@@ -255,25 +313,29 @@ export default function LandingPage() {
                 arrow={<ChevronRight aria-hidden="true" size={16} />}
               />
             </li>
+            <li>
+              <PortalCard
+                href="/command-center"
+                title="Headquarter"
+                description={copy.landing.portalHeadquarter}
+                icon={<Lock aria-hidden="true" size={22} />}
+                arrow={<ChevronRight aria-hidden="true" size={16} />}
+                status={copy.landing.portalHqRestricted}
+              />
+            </li>
           </ul>
-          {/* Headquarter — gated separately below the asymmetric grid, restricted role */}
-          <div className="mt-3 flex items-center gap-3 border border-hairline bg-panel-edge/60 px-5 py-4">
-            <span className="flex size-8 shrink-0 items-center justify-center border border-hairline-strong text-muted">
-              <Lock aria-hidden="true" size={16} />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-ink-soft">Headquarter</p>
-              <p className="text-xs text-muted">{copy.landing.portalHeadquarter}</p>
-            </div>
-            <Link
-              href="/admin/users"
-              className="shrink-0 text-xs font-medium text-muted underline-offset-4 hover:text-acid hover:underline"
-            >
-              <Lock aria-hidden="true" size={12} className="inline mr-1" />
-              <span>{copy.landing.m2AdminRestricted}</span>
-            </Link>
-          </div>
+
+          {/* Bottom Hero Base Bar (Mockup match): EST. 2026, Core Values, Scroll cue */}
           <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-hairline pt-4">
+            <div className="flex items-center gap-2">
+              <span
+                aria-hidden="true"
+                className="size-2 rounded-full bg-acid shadow-[0_0_8px_var(--ql-glow-gold)]"
+              />
+              <span className="text-xs font-semibold tracking-[0.2em] text-ink-soft uppercase">
+                {copy.landing.heroEst}
+              </span>
+            </div>
             <p className="text-xs font-medium tracking-[0.22em] text-ink-soft">
               {copy.landing.footerValues}
             </p>
@@ -281,7 +343,7 @@ export default function LandingPage() {
               href="#explore-knowledge"
               className="inline-flex min-h-11 items-center gap-2 px-2 text-xs font-semibold tracking-[0.18em] text-acid uppercase underline-offset-4 hover:underline"
             >
-              {copy.landing.ecosystemLinkLabel}
+              <span>{copy.landing.scrollCue}</span>
               <ChevronDown aria-hidden="true" size={14} />
             </Link>
           </div>

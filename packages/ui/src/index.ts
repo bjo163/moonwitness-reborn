@@ -79,6 +79,7 @@ export {
 } from "./composites/workspace-sidebar.js";
 export { cn } from "./lib/utils.js";
 export { HeroStage, type HeroStageProps } from "./composites/hero-stage.js";
+export { ThemeToggle, type ThemeToggleProps } from "./composites/theme-toggle.js";
 export { PortalCard, type PortalCardProps } from "./composites/portal-card.js";
 export { TransmissionCard, type TransmissionCardProps } from "./composites/transmission-card.js";
 export { SpatialRegion, type SpatialRegionProps } from "./composites/spatial-region.js";

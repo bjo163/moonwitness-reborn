@@ -134,3 +134,5 @@ This constitution governs design work only. It does not authorize code changes, 
 - [Responsive and accessibility QA](./RESPONSIVE-ACCESSIBILITY-QA.md)
 - [Home blueprint](./HOME-BLUEPRINT.md)
 - [Mockup specification](./MOCKUP-SPEC.md)
+
+> **Owner decision:** exceptions to this document for the Home mockup are recorded in [OWNER-DECISIONS.md](./OWNER-DECISIONS.md).

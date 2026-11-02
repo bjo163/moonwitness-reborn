@@ -186,3 +186,5 @@ Do not blur original project copy, paraphrase, and scripture.
 This audit is a design and content-governance artifact. It does not modify application code, route behavior, API contracts, data models, visual assets, or deployment settings. The current Home implementation remains **implemented in the repository but not design-approved or runtime-verified by this audit**.
 
 The next design-only work is to close the P0/P1 findings and then review the visual mockup sequence. Implementation changes require a separate explicit authorization.
+
+> **Owner decision:** exceptions to this document for the Home mockup are recorded in [OWNER-DECISIONS.md](./OWNER-DECISIONS.md).

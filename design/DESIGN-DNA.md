@@ -168,3 +168,5 @@ If no purpose can be stated, remove the technique.
 | Texture | Material and environmental, not generic tech decoration |
 | Spatiality | Strong landmarks; direct navigation always available |
 | Copy | Humble, clear, warm, Indonesian-first |
+
+> **Owner decision:** exceptions to this document for the Home mockup are recorded in [OWNER-DECISIONS.md](./OWNER-DECISIONS.md).

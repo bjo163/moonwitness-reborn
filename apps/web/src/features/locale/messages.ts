@@ -24,6 +24,9 @@ export interface AppMessages {
     statusAvailable: string;
     statusProposed: string;
     skipToContent: string;
+    themeToLight: string;
+    themeToDark: string;
+    searchAction: string;
   };
   auth: {
     setupTitle: string;
@@ -90,6 +93,10 @@ export interface AppMessages {
     navExplore: string;
     navTransmissions: string;
     navDock: string;
+    navDiscover: string;
+    heroEst: string;
+    portalHqRestricted: string;
+    scrollCue: string;
     portalsLabel: string;
     portalMoonWitness: string;
     portalDock: string;

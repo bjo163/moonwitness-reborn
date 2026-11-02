@@ -294,3 +294,5 @@ This blueprint does not create:
 - claims of publication readiness.
 
 Those require separate approval and implementation tasks.
+
+> **Owner decision:** exceptions to this document for the Home mockup are recorded in [OWNER-DECISIONS.md](./OWNER-DECISIONS.md).

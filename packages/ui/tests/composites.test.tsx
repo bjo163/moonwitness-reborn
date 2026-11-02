@@ -21,6 +21,7 @@ import {
   SidebarFooter,
   SidebarNav,
   SidebarTrigger,
+  ThemeToggle,
   WorkspaceSidebar,
   type SidebarNavItem,
 } from "../src/index.js";
@@ -410,4 +411,33 @@ void test("SpatialRegion renders heading, eyebrow and children", () => {
   assert.match(markup, /Explore the Knowledge/);
   assert.match(markup, /Inner content/);
   assertNoOwnColours(markup, "SpatialRegion");
+});
+
+void test("HeroStage renders background media and children", () => {
+  const markup = render(
+    <HeroStage imageSrc="/hero.jpg">
+      <h1>Title</h1>
+    </HeroStage>,
+  );
+  assert.match(markup, /src="\/hero\.jpg"/);
+  assert.match(markup, /width="1920"/);
+  assert.match(markup, /height="1080"/);
+  assert.match(markup, /fetchPriority="high"/);
+  assert.match(markup, /decoding="async"/);
+  assert.match(markup, /Title/);
+  assertNoOwnColours(markup, "HeroStage");
+});
+
+void test("ThemeToggle renders aria-pressed and label", () => {
+  const markup = render(
+    <ThemeToggle
+      theme="light"
+      label="Beralih ke tema gelap"
+      onToggle={() => undefined}
+    />,
+  );
+  assert.match(markup, /aria-pressed="true"/);
+  assert.match(markup, /aria-label="Beralih ke tema gelap"/);
+  assert.match(markup, /ql-nav-link/);
+  assertNoOwnColours(markup, "ThemeToggle");
 });

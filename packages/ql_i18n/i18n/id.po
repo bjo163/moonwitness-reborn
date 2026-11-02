@@ -3410,3 +3410,31 @@ msgstr "Tampilkan Semua Region"
 msgctxt "web:dashboard.hqRegionLabel"
 msgid "Region"
 msgstr "Region"
+
+msgctxt "web:common.themeToLight"
+msgid "Switch to light theme"
+msgstr "Beralih ke tema terang"
+
+msgctxt "web:common.themeToDark"
+msgid "Switch to dark theme"
+msgstr "Beralih ke tema gelap"
+
+msgctxt "web:common.searchAction"
+msgid "Search"
+msgstr "Pencarian"
+
+msgctxt "web:landing.heroEst"
+msgid "A-L-L-A-H EMPIRE · EST. 2026"
+msgstr "A-L-L-A-H EMPIRE · EST. 2026"
+
+msgctxt "web:landing.navDiscover"
+msgid "Discover"
+msgstr "Temukan"
+
+msgctxt "web:landing.portalHqRestricted"
+msgid "Restricted"
+msgstr "Terbatas"
+
+msgctxt "web:landing.scrollCue"
+msgid "Explore More"
+msgstr "Jelajahi Lebih Lanjut"
