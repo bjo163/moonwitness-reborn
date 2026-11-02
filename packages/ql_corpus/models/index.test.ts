@@ -816,7 +816,7 @@ void test("importer is idempotent: a second real run skips via passage_key UNIQU
 });
 
 void test("UNILEX ontology models corpus.term and corpus.concept are registered and validated", async () => {
-  await withTestDb(
+  await withMemoryOrm(
     [
       stubAddonManifest("ql_base"),
       stubAddonManifest("ql_auth"),
