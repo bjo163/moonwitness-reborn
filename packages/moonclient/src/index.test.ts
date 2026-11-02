@@ -602,6 +602,19 @@ void test("MoonClient supports Batch 3 contracts: searchGraph, corpusProofs, and
   assert.equal(requests[0].url, "/api/search/graph/concepts/nur");
   assert.equal(requests[0].method, "GET");
 
+  await client.listSemanticGraphConcepts();
+  assert.equal(requests[1].url, "/api/search/graph/concepts");
+  assert.equal(requests[1].method, "GET");
+
+  // The server dispatches on `prefix` and rebuilds the locator regex from
+  // `allConcepts`, so both have to stay inside this contract.
+  assert.ok(apiRoutes.searchGraph.allConcepts.startsWith(apiRoutes.searchGraph.prefix));
+  assert.equal(
+    apiRoutes.searchGraph.byConcept("a/b"),
+    "/search/graph/concepts/a%2Fb",
+    "a slug can never escape its path segment",
+  );
+
   const proofRecorder = recorder({
     status: "verified",
     isValid: true,

@@ -6,6 +6,8 @@ import {
   moonClient,
   type CorpusPassageDto,
   type CorpusSurahDto,
+  type ReciterListItemDto,
+  type SurahAudioManifestResponseDto,
 } from "@moonwitness/moonclient";
 import {
   Alert,
@@ -17,7 +19,6 @@ import {
   SanctuaryZenStage,
   microChimeEngine,
   AyahProofCard,
-  EmptyState,
 } from "@moonwitness/ui";
 import { ArrowLeft, Sparkles, ShieldCheck } from "lucide-react";
 import Link from "next/link";
@@ -27,6 +28,7 @@ import { apiErrorMessage } from "../locale/api-error-message";
 import { useTranslationCatalog } from "../locale/translation-catalog";
 import { useLocalePreference } from "../locale/use-locale-preference";
 import { authorityLabel } from "./corpus-labels";
+import { TilawahRegion } from "./tilawah-region";
 
 /**
  * The reader. Arabic verbatim renders right-to-left under a heading that
@@ -65,6 +67,20 @@ function headingFor(
   });
 }
 
+/**
+ * Whose voice the reader asks for: keep the reciter the reader was already
+ * playing, otherwise the first row of the registry. The registry is ordered by
+ * slug server-side, so the fallback is stable across reloads.
+ */
+function preferredReciterSlug(
+  registry: readonly ReciterListItemDto[],
+  current: string,
+): string {
+  return registry.some((reciter) => reciter.slug === current)
+    ? current
+    : (registry[0]?.slug ?? "");
+}
+
 export default function QuranReader() {
   const { t } = useTranslationCatalog();
   const params = useParams<{ editionKey: string; surah: string }>();
@@ -79,6 +95,16 @@ export default function QuranReader() {
   const [chimeEnabled, setChimeEnabled] = useState(false);
   const [activeAyah, setActiveAyah] = useState<number>(1);
   const [proofAyah, setProofAyah] = useState<CorpusPassageDto | null>(null);
+  /**
+   * Track 05. `null` means the registry has not answered yet. There is no
+   * placeholder reciter and no placeholder timeline: the reader waits for the
+   * rows, and says so when the rows do not exist.
+   */
+  const [reciters, setReciters] = useState<ReciterListItemDto[] | null>(null);
+  const [reciterSlug, setReciterSlug] = useState("");
+  const [audioManifest, setAudioManifest] =
+    useState<SurahAudioManifestResponseDto | null>(null);
+  const [audioError, setAudioError] = useState<string | null>(null);
   /**
    * The verification deep link is copied as an absolute URL, so it is built
    * only once the browser origin is known. The server render omits it instead
@@ -146,6 +172,48 @@ export default function QuranReader() {
       })
       .finally(() => setLoading(false));
   }, [editionKey, surah, t]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void moonClient
+      .getReciters()
+      .then(({ reciters: registry }) => {
+        if (cancelled) return;
+        setReciters(registry);
+        setReciterSlug((current) =>
+          registry.some((reciter) => reciter.slug === current)
+            ? current
+            : (registry[0]?.slug ?? ""),
+        );
+      })
+      .catch((requestError: unknown) => {
+        if (cancelled) return;
+        setReciters([]);
+        setAudioError(apiErrorMessage(requestError, t));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
+
+  useEffect(() => {
+    if (!reciterSlug) return;
+    let cancelled = false;
+    setAudioError(null);
+    setAudioManifest(null);
+    void moonClient
+      .getSurahAudioManifest(reciterSlug, surah)
+      .then((manifest) => {
+        if (!cancelled) setAudioManifest(manifest);
+      })
+      .catch((requestError: unknown) => {
+        if (cancelled) return;
+        setAudioError(apiErrorMessage(requestError, t));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reciterSlug, surah, t]);
 
   const rtl = isArabicVerbatim(reading?.passages[0]);
   const primaryPassage = reading?.passages[0];
@@ -257,12 +325,16 @@ export default function QuranReader() {
             </div>
 
             <div className="space-y-4">
-              {/* `corpus.reciter` / `corpus.audio_segment` hold no verified reciter
-                  manifest or ayah boundaries yet, so the reader says that instead
-                  of inventing timings and an attribution. */}
-              <EmptyState
-                title={t("web.corpus.audioUnavailableTitle")}
-                description={t("web.corpus.audioUnavailableBody")}
+              <TilawahRegion
+                reciters={reciters}
+                reciterSlug={reciterSlug}
+                manifest={audioManifest}
+                error={audioError}
+                surahNumber={surah}
+                activeAyahNumber={activeAyah}
+                onSelectReciter={setReciterSlug}
+                onAyahChange={setActiveAyah}
+                t={t}
               />
 
               {proofAyah && (

@@ -1,5 +1,6 @@
 import type { QlAddonManifest } from "ql_orm";
 import { models } from "./models/index.js";
+import { views } from "./views/index.js";
 
 const manifest: QlAddonManifest = {
   name: "ql_search",
@@ -98,7 +99,10 @@ const manifest: QlAddonManifest = {
       unlink: true,
     },
   ],
-  views: [],
+  views,
+  // No seed: a thematic relation is a scholarly claim, not system data. It is
+  // authored through the operator form views above and reviewed, so an
+  // unverified claim can never reach a reader as shipped reference data.
   data: [],
 };
 

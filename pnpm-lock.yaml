@@ -299,6 +299,13 @@ importers:
       ql_orm:
         specifier: workspace:*
         version: link:../ql-orm
+    devDependencies:
+      '@types/pg':
+        specifier: 'catalog:'
+        version: 8.23.1
+      pg:
+        specifier: 'catalog:'
+        version: 8.23.1
 
   packages/ql_auth:
     dependencies:
@@ -317,6 +324,9 @@ importers:
       ql_auth:
         specifier: workspace:*
         version: link:../ql_auth
+      ql_base:
+        specifier: workspace:*
+        version: link:../ql_base
       ql_orm:
         specifier: workspace:*
         version: link:../ql-orm

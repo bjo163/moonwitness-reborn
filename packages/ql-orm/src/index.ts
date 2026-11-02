@@ -58,7 +58,49 @@ export interface QlFieldDefinition {
   minValue?: number;
   maxValue?: number;
   compute?: QlComputedFieldDefinition;
+  relation?: QlRelationDefinition;
   validator?(value: unknown): string | undefined;
+}
+
+/**
+ * `m2o` stores the target record id in this field's own column. `o2m` owns no
+ * column: it is the reverse of an `m2o` on the target model and is filled by
+ * `readRelations`, never by a write.
+ */
+export type QlRelationDefinition =
+  | { readonly kind: "m2o"; readonly model: string }
+  | {
+      readonly kind: "o2m";
+      readonly model: string;
+      readonly inverseField: string;
+    };
+
+/** Target record id to the related records of one relation field. */
+export type QlRelationGraph = Record<string, QlRecord[]>;
+
+export interface QlInFilter {
+  readonly in: readonly QlServiceValue[];
+}
+
+export type QlServiceFilter = QlServiceValue | QlInFilter;
+
+const MAX_IN_FILTER_VALUES = 500;
+
+function isInFilter(value: QlServiceFilter): value is QlInFilter {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Array.isArray((value as QlInFilter).in)
+  );
+}
+
+/**
+ * Fields that own no database column: computed values and reverse relations.
+ * Accepts undefined because column lists also carry `id`, which is not declared.
+ */
+function isVirtualField(field: QlFieldDefinition | undefined): boolean {
+  return field?.compute !== undefined || field?.relation?.kind === "o2m";
 }
 
 export interface QlComputedFieldDefinition {
@@ -460,6 +502,11 @@ function validateValue(
   }
   if (field.compute) {
     throw new QlValidationError(`Computed field '${name}' is read-only.`);
+  }
+  if (field.relation?.kind === "o2m") {
+    throw new QlValidationError(
+      `Reverse relation '${name}' is read-only; write its m2o field instead.`,
+    );
   }
   return validateFieldValue(name, field, value);
 }
@@ -927,6 +974,7 @@ export class QlModelRegistry {
         }
       }
     }
+    this.validateRelations();
     for (const addon of this.addons) {
       for (const seed of addon.data) {
         const model = this.getModel(seed.model);
@@ -966,6 +1014,66 @@ export class QlModelRegistry {
               `Seed '${addon.name}.${seed.id}' references invalid or private field '${fieldName}' on '${seed.model}'.`,
             );
           }
+        }
+      }
+    }
+  }
+
+  /**
+   * Relations are checked after every addon is registered because a model may
+   * point at a target defined by a later dependency.
+   */
+  private validateRelations(): void {
+    for (const model of this.models.values()) {
+      for (const [name, field] of Object.entries(model.fields)) {
+        const relation = field.relation;
+        if (!relation) continue;
+        if (field.compute) {
+          throw new Error(
+            `Field '${model.name}.${name}' cannot both compute and declare a relation.`,
+          );
+        }
+        if (model.ownerField === name) {
+          throw new Error(
+            `Owner field '${model.name}.${name}' cannot be a relation.`,
+          );
+        }
+        if (field.type !== "char") {
+          throw new Error(
+            `Relation '${model.name}.${name}' must be stored as a char field.`,
+          );
+        }
+        if (!this.models.has(relation.model)) {
+          throw new Error(
+            `Relation '${model.name}.${name}' references unknown model '${relation.model}'.`,
+          );
+        }
+        if (relation.kind === "m2o") {
+          if (field.maxLength === undefined) {
+            throw new Error(
+              `m2o relation field '${model.name}.${name}' must declare maxLength.`,
+            );
+          }
+          continue;
+        }
+        if (field.required || field.unique || field.default !== undefined) {
+          throw new Error(
+            `Reverse relation '${model.name}.${name}' cannot be required, unique, or have a default.`,
+          );
+        }
+        const inverse = this.models.get(relation.model)?.fields[relation.inverseField];
+        if (!inverse) {
+          throw new Error(
+            `Reverse relation '${model.name}.${name}' references unknown field '${relation.inverseField}' on '${relation.model}'.`,
+          );
+        }
+        if (
+          inverse.relation?.kind !== "m2o" ||
+          inverse.relation.model !== model.name
+        ) {
+          throw new Error(
+            `Reverse relation '${model.name}.${name}' needs an m2o inverse on '${relation.model}', got '${relation.inverseField}'.`,
+          );
         }
       }
     }
@@ -1085,7 +1193,7 @@ export class QlOrm {
       const columns = [
         `${quoteIdentifier("id")} TEXT PRIMARY KEY NOT NULL`,
         ...Object.entries(model.fields)
-          .filter(([, field]) => !field.compute)
+          .filter(([, field]) => !isVirtualField(field))
           .map(([name, field]) => {
             const parts = [
               quoteIdentifier(name),
@@ -1112,7 +1220,7 @@ export class QlOrm {
         );
       }
       for (const [name, field] of Object.entries(model.fields)) {
-        if (field.compute) continue;
+        if (isVirtualField(field)) continue;
         if (existing.has(name)) continue;
         const definition = [
           quoteIdentifier(name),
@@ -1262,7 +1370,7 @@ export class QlOrm {
     const selected = Object.keys(model.fields)
       .filter((name) => !model.fields[name].private)
       .concat("id");
-    const selectedColumns = selected.filter((name) => !model.fields[name]?.compute);
+    const selectedColumns = selected.filter((name) => !isVirtualField(model.fields[name]));
     const sql = new SqlBuilder(this.connection.driver);
     const conditions: string[] = [];
     if (model.ownerField) {
@@ -1404,7 +1512,7 @@ export class QlOrm {
       values[name] = toDatabaseValue(value, field);
     }
     for (const [name, field] of Object.entries(model.fields)) {
-      if (field.compute) continue;
+      if (isVirtualField(field)) continue;
       if (model.ownerField === name) {
         values[name] = user.id;
       } else if (field.required && values[name] === undefined) {
@@ -1515,12 +1623,12 @@ export class QlOrm {
 
   async findManyByService(
     modelName: string,
-    filters: Record<string, QlServiceValue>,
+    filters: Record<string, QlServiceFilter>,
     options: QlServiceQueryOptions = {},
   ): Promise<QlRecord[]> {
     const model = this.registry.getModel(modelName);
     const selected = [...Object.keys(model.fields), "id"];
-    const selectedColumns = selected.filter((name) => !model.fields[name]?.compute);
+    const selectedColumns = selected.filter((name) => !isVirtualField(model.fields[name]));
     const sql = new SqlBuilder(this.connection.driver);
     const conditions: string[] = [];
     for (const [name, value] of Object.entries(filters)) {
@@ -1532,9 +1640,32 @@ export class QlOrm {
           `Computed field '${name}' cannot be used as a database filter.`,
         );
       }
+      if (model.fields[name]?.relation?.kind === "o2m") {
+        throw new QlValidationError(
+          `Reverse relation '${name}' cannot be used as a database filter.`,
+        );
+      }
+      const field = model.fields[name];
+      if (isInFilter(value)) {
+        if (value.in.length > MAX_IN_FILTER_VALUES) {
+          throw new QlValidationError(
+            `Filter '${name}' accepts at most ${MAX_IN_FILTER_VALUES} values.`,
+          );
+        }
+        // An empty set matches nothing; `IN ()` is not valid SQL.
+        if (value.in.length === 0) {
+          conditions.push("1 = 0");
+          continue;
+        }
+        const placeholders = value.in.map((item) =>
+          sql.param(name === "id" ? item : toDatabaseValue(item, field)),
+        );
+        conditions.push(`${quoteIdentifier(name)} IN (${placeholders.join(", ")})`);
+        continue;
+      }
       conditions.push(
         `${quoteIdentifier(name)} = ${sql.param(
-          name === "id" ? value : toDatabaseValue(value, model.fields[name]),
+          name === "id" ? value : toDatabaseValue(value, field),
         )}`,
       );
     }
@@ -1554,7 +1685,9 @@ export class QlOrm {
       }
       orderClause = `ORDER BY ${quoteIdentifier(options.orderBy.field)} ${options.orderBy.direction.toUpperCase()}`;
     }
-    orderClause += ` LIMIT ${sql.param(Math.max(1, Math.min(500, Math.floor(options.limit ?? 100))))}`;
+    orderClause += ` LIMIT ${sql.param(
+      Math.max(1, Math.min(MAX_IN_FILTER_VALUES * 4, Math.floor(options.limit ?? 100))),
+    )}`;
     const result = await this.connection.execute(
       `SELECT ${selectedColumns.map(quoteIdentifier).join(", ")} FROM ${quoteIdentifier(model.tableName)}${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""} ${orderClause}`,
       sql.args,
@@ -1572,6 +1705,91 @@ export class QlOrm {
     return record;
   }
 
+  /**
+   * Resolves declared relation fields for a page of records in one query per
+   * field rather than one query per record. `m2o` entries hold at most one
+   * target record; `o2m` entries can hold many.
+   *
+   * Results are read through the caller's own ACL and owner scope, so a
+   * relation never exposes a record the caller could not list directly.
+   */
+  async readRelations(
+    modelName: string,
+    user: QlUserContext,
+    records: readonly QlRecord[],
+    fieldNames?: readonly string[],
+  ): Promise<Record<string, QlRelationGraph>> {
+    this.requireAccess(modelName, user, "read");
+    const model = this.registry.getModel(modelName);
+    if (records.length > MAX_IN_FILTER_VALUES) {
+      throw new QlValidationError(
+        `readRelations accepts at most ${MAX_IN_FILTER_VALUES} records.`,
+      );
+    }
+    const requested =
+      fieldNames === undefined
+        ? Object.entries(model.fields)
+            .filter(([, field]) => field.relation !== undefined)
+            .map(([name]) => name)
+        : [...new Set(fieldNames)];
+
+    const graph: Record<string, QlRelationGraph> = {};
+    for (const fieldName of requested) {
+      const relation = model.fields[fieldName]?.relation;
+      if (!relation) {
+        throw new QlValidationError(
+          `Field '${fieldName}' on model '${modelName}' declares no relation.`,
+        );
+      }
+      this.requireAccess(relation.model, user, "read");
+      const target = this.registry.getModel(relation.model);
+      const byId: QlRelationGraph = {};
+      graph[fieldName] = byId;
+
+      if (relation.kind === "m2o") {
+        const wanted = new Set(
+          records
+            .map((record) => record[fieldName])
+            .filter(
+              (value): value is string => typeof value === "string" && value !== "",
+            ),
+        );
+        if (wanted.size === 0) continue;
+        const rows = await this.findManyByService(
+          relation.model,
+          { id: { in: [...wanted] } },
+          { limit: wanted.size },
+        );
+        for (const row of rows) {
+          const id = row.id;
+          if (typeof id === "string") byId[id] = [row];
+        }
+        continue;
+      }
+
+      const parents = new Set(
+        records
+          .map((record) => record.id)
+          .filter((id): id is string => typeof id === "string" && id !== ""),
+      );
+      if (parents.size === 0) continue;
+      const rows = await this.findManyByService(
+        relation.model,
+        {
+          [relation.inverseField]: { in: [...parents] },
+          ...(target.ownerField ? { [target.ownerField]: user.id } : {}),
+        },
+        { limit: MAX_IN_FILTER_VALUES * 4, orderBy: "rowid-asc" },
+      );
+      for (const row of rows) {
+        const parentId = row[relation.inverseField];
+        if (typeof parentId !== "string") continue;
+        (byId[parentId] ??= []).push(row);
+      }
+    }
+    return graph;
+  }
+
   async createRecordForService(
     modelName: string,
     input: Record<string, unknown>,
@@ -1583,7 +1801,7 @@ export class QlOrm {
       values[name] = toDatabaseValue(value, field);
     }
     for (const [name, field] of Object.entries(model.fields)) {
-      if (field.compute) continue;
+      if (isVirtualField(field)) continue;
       if (field.required && values[name] === undefined) {
         if (field.default !== undefined) {
           values[name] = toDatabaseValue(field.default, field);
@@ -1716,7 +1934,7 @@ export class QlOrm {
       values[name] = toDatabaseValue(value, field);
     }
     for (const [name, field] of Object.entries(model.fields)) {
-      if (field.compute) continue;
+      if (isVirtualField(field)) continue;
       if (name === model.ownerField) continue;
       if (field.required && values[name] === undefined) {
         if (field.default !== undefined) {
@@ -1820,7 +2038,7 @@ export class QlOrm {
     const selected = Object.keys(model.fields)
       .filter((name) => !model.fields[name].private)
       .concat("id");
-    const selectedColumns = selected.filter((name) => !model.fields[name]?.compute);
+    const selectedColumns = selected.filter((name) => !isVirtualField(model.fields[name]));
     const sql = new SqlBuilder(this.connection.driver);
     const conditions = [`${quoteIdentifier("id")} = ${sql.param(id)}`];
     if (model.ownerField) {
@@ -1843,7 +2061,7 @@ export class QlOrm {
     return rows.map((row) => {
       const record: QlRecord = {};
       for (const name of selected) {
-        if (model.fields[name]?.compute) continue;
+        if (isVirtualField(model.fields[name])) continue;
         const value = row[name];
         const field = model.fields[name];
         if (field?.type === "boolean" && typeof value === "number") {

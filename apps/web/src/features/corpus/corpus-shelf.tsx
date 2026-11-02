@@ -21,7 +21,8 @@ import {
   WorkspaceSidebar,
   WorkspaceTemplate,
 } from "@moonwitness/ui";
-import { Boxes, BookOpen, ShieldCheck } from "lucide-react";
+import { Boxes, BookOpen, Network, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
@@ -216,6 +217,15 @@ export default function CorpusShelf() {
           eyebrow="MoonWitness · Corpus"
           title={shelfLabel}
           description={t("web.corpus.shelfDescription")}
+          actions={
+            <Link
+              href="/corpus/graph"
+              className="inline-flex items-center gap-1.5 border border-hairline px-3 py-1.5 text-xs font-medium text-ink-soft hover:border-acid hover:text-acid"
+            >
+              <Network aria-hidden="true" size={14} />
+              <span>{t("web.corpus.semanticGraphTitle")}</span>
+            </Link>
+          }
         />
         <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-12">
           {error && (

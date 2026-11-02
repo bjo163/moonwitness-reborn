@@ -5,7 +5,7 @@ import {
   mkdirSync,
   type WriteStream,
 } from "node:fs";
-import { mkdir, readdir, rename, rm, stat as fsStat, statfs } from "node:fs/promises";
+import { mkdir, readdir, rename, rm, rmdir, stat as fsStat, statfs } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
 import {
   QlStorageError,
@@ -190,15 +190,21 @@ export class LocalDiskStorageDriver implements QlStorageDriver {
   }
 
   async remove(key: QlStorageKey): Promise<boolean> {
+    const finalPath = this.pathFor(key);
     try {
       // No `force`: with it rm() swallows ENOENT and every delete would look
       // successful, hiding lost attachments from the caller.
-      await rm(this.pathFor(key));
-      return true;
+      await rm(finalPath);
     } catch (error) {
       if (isNotFound(error)) return false;
       throw error;
     }
+    // Upload parts live in one directory per session. Without this prune the
+    // empty directory outlives every completed upload and nothing can reclaim it.
+    // rmdir is the only call that cannot accidentally take a sibling with it:
+    // it fails unless the directory is already empty.
+    await rmdir(dirname(finalPath)).catch(() => undefined);
+    return true;
   }
 
   async list(prefix: string): Promise<readonly QlStorageKey[]> {

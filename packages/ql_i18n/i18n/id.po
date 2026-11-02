@@ -3607,6 +3607,38 @@ msgctxt "web:corpus.audioUnavailableBody"
 msgid "Belum ada manifest qari dan batas waktu ayat yang terverifikasi untuk edisi ini."
 msgstr "Belum ada manifest qari dan batas waktu ayat yang terverifikasi untuk edisi ini."
 
+msgctxt "web:corpus.audioLoading"
+msgid "Memuatkan manifest tilawah…"
+msgstr "Memuatkan manifest tilawah…"
+
+msgctxt "web:corpus.audioUnalignedBody"
+msgid "Belum ada batas waktu ayat yang disejajarkan untuk {reciter} pada surah {surah}."
+msgstr "Belum ada batas waktu ayat yang disejajarkan untuk {reciter} pada surah {surah}."
+
+msgctxt "web:corpus.audioClipsetBody"
+msgid "Rekaman {reciter} tersimpan sebagai klip per ayat, bukan satu bacaan utuh untuk surah ini."
+msgstr "Rekaman {reciter} tersimpan sebagai klip per ayat, bukan satu bacaan utuh untuk surah ini."
+
+msgctxt "web:corpus.reciterPickerLabel"
+msgid "Pilih qari"
+msgstr "Pilih qari"
+
+msgctxt "web:corpus.tilawahPlayerLabel"
+msgid "Pemutar tilawah"
+msgstr "Pemutar tilawah"
+
+msgctxt "web:corpus.muteTilawah"
+msgid "Bisukan tilawah"
+msgstr "Bisukan tilawah"
+
+msgctxt "web:corpus.unmuteTilawah"
+msgid "Bunyikan tilawah"
+msgstr "Bunyikan tilawah"
+
+msgctxt "web:corpus.tilawahRights"
+msgid "Lisensi pembacaan: {license}"
+msgstr "Lisensi pembacaan: {license}"
+
 msgctxt "web:corpus.verificationReport"
 msgid "Laporan verifikasi ayat"
 msgstr "Laporan verifikasi ayat"
@@ -3694,6 +3726,14 @@ msgstr "Memuat lampiran..."
 msgctxt "web:attachments.signedOut"
 msgid "Sesi berakhir. Silakan masuk ulang."
 msgstr "Sesi berakhir. Silakan masuk ulang."
+
+msgctxt "web:attachments.loadFailed"
+msgid "Halaman lampiran gagal dimuat."
+msgstr "Halaman lampiran gagal dimuat."
+
+msgctxt "web:attachments.retryLoad"
+msgid "Coba lagi"
+msgstr "Coba lagi"
 
 msgctxt "web:attachments.uploadTitle"
 msgid "Unggah berkas"
@@ -3972,3 +4012,35 @@ msgid "Tidak ada ayat dengan locator tersebut pada edisi yang tayang."
 msgstr "Tidak ada ayat dengan locator tersebut pada edisi yang tayang."
 
 
+
+msgctxt "web:corpus.semanticGraphTitle"
+msgid "Graf Tema Lintas Surah"
+msgstr "Graf Tema Lintas Surah"
+
+msgctxt "web:corpus.semanticGraphDescription"
+msgid "Relasi tematik antar ayat yang disusun operator, dibaca langsung dari search.thematic_node dan search.semantic_edge."
+msgstr "Relasi tematik antar ayat yang disusun operator, dibaca langsung dari search.thematic_node dan search.semantic_edge."
+
+msgctxt "web:corpus.conceptSelectLabel"
+msgid "Tema"
+msgstr "Tema"
+
+msgctxt "web:corpus.loadingConcepts"
+msgid "Memuat daftar tema…"
+msgstr "Memuat daftar tema…"
+
+msgctxt "web:corpus.loadingGraph"
+msgid "Memuat graf tema…"
+msgstr "Memuat graf tema…"
+
+msgctxt "web:corpus.noConceptsTitle"
+msgid "Belum ada tema terdaftar"
+msgstr "Belum ada tema terdaftar"
+
+msgctxt "web:corpus.noConceptsBody"
+msgid "Graf ini hanya merender relasi yang ditulis operator lewat ruang Model. Tidak ada relasi yang dikarang oleh tampilan ini."
+msgstr "Graf ini hanya merender relasi yang ditulis operator lewat ruang Model. Tidak ada relasi yang dikarang oleh tampilan ini."
+
+msgctxt "web:corpus.unresolvedEdgesWarning"
+msgid "{count} relasi menunjuk ke simpul yang tidak terdaftar sehingga tidak digambar. Perbaiki data itu di ruang Model."
+msgstr "{count} relasi menunjuk ke simpul yang tidak terdaftar sehingga tidak digambar. Perbaiki data itu di ruang Model."

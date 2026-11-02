@@ -69,6 +69,10 @@ import {
   type UiLanguageDto,
   type SearchQueryResponseDto,
   type SearchResultItemDto,
+  type SemanticGraphConceptsResponseDto,
+  type SemanticGraphResponseDto,
+  type ReciterListResponseDto,
+  type SurahAudioManifestResponseDto,
   type ReindexCorpusSearchIndexRequestDto,
   type ReindexCorpusSearchIndexResponseDto,
 } from "@moonwitness/moonclient";
@@ -122,6 +126,11 @@ import {
   searchCorpusPassages,
 } from "ql_search/services/search-indexing-service";
 import {
+  assertConceptSlug,
+  listThematicConcepts,
+  readConceptGraph,
+} from "ql_search/services/graph-service";
+import {
   readSurahWindow,
   readVerse,
   type PassageReadDto,
@@ -138,6 +147,11 @@ import {
   SURAH_MAX,
   SURAH_MIN,
 } from "ql_corpus/services/corpus-vocabulary";
+import {
+  assertSurahNumber,
+  listReciters,
+  readSurahAudioManifest,
+} from "ql_corpus/services/audio-service";
 import {
   ROLE_CATALOG,
   countUsersWithRole,
@@ -1643,6 +1657,53 @@ async function handleProofsRequest(
 }
 
 /**
+ * Track 05 — tilawah audio endpoints.
+ *
+ * Both are read-only views over curated rows. The player used to be handed a
+ * hard-coded reciter name and `startMs: index * 5000`; here a name only appears
+ * if `corpus.reciter` carries it, a clip URL only appears if
+ * `corpus.audio_segment` carries it, and an un-curated surah answers with an
+ * empty segment list so the screen can say so honestly.
+ */
+async function handleAudioRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+  orm: QlOrm,
+  pathname: string,
+): Promise<boolean> {
+  if (!pathname.startsWith(apiRoutes.corpusAudio.prefix)) return false;
+
+  if ((request.method ?? "GET") !== "GET") {
+    sendJson(response, 405, { error: "Method not allowed." });
+    return true;
+  }
+
+  if (pathname === apiRoutes.corpusAudio.reciters) {
+    const reciters = (await listReciters(orm)).filter((reciter) => reciter.isActive);
+    sendJson(response, 200, { reciters } satisfies ReciterListResponseDto);
+    return true;
+  }
+
+  const manifestMatch = pathname.match(
+    new RegExp(`^${apiRoutes.corpusAudio.prefix}manifest/([^/]+)/surah/([0-9]+)$`),
+  );
+  if (!manifestMatch) {
+    // An unroutable shape under a prefix this handler owns is a 404, not the
+    // caller's generic 405.
+    sendJson(response, 404, { error: "Unknown corpus audio route." });
+    return true;
+  }
+  const surahNumber = Number.parseInt(manifestMatch[2], 10);
+  const manifest = await readSurahAudioManifest(
+    orm,
+    decodeURIComponent(manifestMatch[1]),
+    assertSurahNumber(surahNumber),
+  );
+  sendJson(response, 200, manifest satisfies SurahAudioManifestResponseDto);
+  return true;
+}
+
+/**
  * Corpus reader endpoints. All GET; nothing bulk. Every response is rights-
  * gated and stage-gated by `reader-service.ts` (MW-ADR-019 §(e)). A staged
  * or rights-pending edition returns 403 with no passage text in the body.
@@ -1666,6 +1727,12 @@ async function handleCorpusRequest(
   // sub-path fall through to the caller's 405.
   if (pathname.startsWith(apiRoutes.corpusProofs.prefix)) {
     return handleProofsRequest(request, response, orm, pathname);
+  }
+
+  // Tilawah audio shares the `/corpus/` prefix too; without this the two
+  // audio routes fell through to the caller's 405.
+  if (pathname.startsWith(apiRoutes.corpusAudio.prefix)) {
+    return handleAudioRequest(request, response, orm, pathname);
   }
 
   if (pathname === apiRoutes.corpus.editions && method === "GET") {
@@ -3332,6 +3399,43 @@ const covenantVersion = typeof raw.covenantVersion === "string" ? raw.covenantVe
       return;
     }
 
+    // Track 03 read path. Both graph routes sit under `/search/graph/`, which
+    // the exact-match comparisons further below cannot reach, so the prefix is
+    // resolved here first. The locator regex is built from the shared contract
+    // instead of a duplicated string.
+    if (pathname.startsWith(apiRoutes.searchGraph.prefix)) {
+      if (request.method !== "GET") {
+        sendJson(response, 405, { error: "Method not allowed." });
+        return;
+      }
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        if (pathname === apiRoutes.searchGraph.allConcepts) {
+          const concepts = await listThematicConcepts(orm, userContext(user));
+          sendJson(response, 200, {
+            concepts,
+          } satisfies SemanticGraphConceptsResponseDto);
+          return;
+        }
+        const conceptMatch = pathname.match(
+          new RegExp(`^${apiRoutes.searchGraph.allConcepts}/([^/]+)$`),
+        );
+        if (!conceptMatch) {
+          sendJson(response, 404, { error: "Unknown search graph route." });
+          return;
+        }
+        const graph = await readConceptGraph(
+          orm,
+          userContext(user),
+          assertConceptSlug(decodeURIComponent(conceptMatch[1])),
+        );
+        sendJson(response, 200, graph satisfies SemanticGraphResponseDto);
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
 
     if (
       request.method === "POST" &&

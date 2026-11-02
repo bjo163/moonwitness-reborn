@@ -35,6 +35,10 @@
       "types": "./dist/services/proof-service.d.ts",
       "import": "./dist/services/proof-service.js"
     },
+    "./services/audio-service": {
+      "types": "./dist/services/audio-service.d.ts",
+      "import": "./dist/services/audio-service.js"
+    },
     "./services/import-service": {
       "types": "./dist/services/import-service.d.ts",
       "import": "./dist/services/import-service.js"
@@ -46,7 +50,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "tsx --test models/index.test.ts",
+    "test": "tsx --test models/index.test.ts services/audio-service.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "import:quran": "tsx services/import-quran-cli.ts"
   },

@@ -311,13 +311,13 @@ export default function VerifyAyahPage() {
 
             <dl className="grid gap-3 border-t border-hairline pt-3 font-mono text-xs sm:grid-cols-2">
               <div>
-                <dt className="text-[10px] uppercase text-muted">
+                <dt className="text-xs uppercase text-muted">
                   {t("web.corpus.canonicalDigestLabel")}
                 </dt>
                 <dd className="break-all text-acid">{proof.authoritativeHash}</dd>
               </div>
               <div>
-                <dt className="text-[10px] uppercase text-muted">
+                <dt className="text-xs uppercase text-muted">
                   {t("web.corpus.anchorStateLabel")}
                 </dt>
                 <dd className="text-ink-soft">
@@ -328,7 +328,7 @@ export default function VerifyAyahPage() {
               </div>
               {proof.anchorHash !== null && (
                 <div>
-                  <dt className="text-[10px] uppercase text-muted">
+                  <dt className="text-xs uppercase text-muted">
                     {t("web.corpus.anchorDigestLabel")}
                   </dt>
                   <dd className="break-all text-ink-soft">{proof.anchorHash}</dd>
@@ -336,7 +336,7 @@ export default function VerifyAyahPage() {
               )}
               {proof.anchored && (
                 <div>
-                  <dt className="text-[10px] uppercase text-muted">
+                  <dt className="text-xs uppercase text-muted">
                     {t("web.corpus.anchorCounterLabel")}
                   </dt>
                   <dd className="text-ink-soft">{proof.verificationCount}</dd>

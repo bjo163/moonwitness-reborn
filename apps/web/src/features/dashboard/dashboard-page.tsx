@@ -37,6 +37,7 @@ import {
   BookOpen,
   Activity,
   Compass,
+  Paperclip,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -215,6 +216,12 @@ export default function DashboardPage() {
           },
         ]
       : []),
+    {
+      href: "/attachments",
+      label: copy.attachments.navLabel,
+      icon: <Paperclip aria-hidden="true" size={16} />,
+      onSelect: closeSidebar,
+    },
     ...(hasResearch
       ? [
           {

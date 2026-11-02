@@ -1474,6 +1474,11 @@
   font: 500 0.8rem/1.5 var(--ql-ui-font-sans);
 }
 
+.ql-attachment-upload__progress {
+  color: var(--ql-ui-muted);
+  font: 450 0.78rem/1.4 var(--ql-ui-font-mono);
+}
+
 .ql-attachment-upload__actions,
 .ql-attachment-list__actions {
   display: flex;

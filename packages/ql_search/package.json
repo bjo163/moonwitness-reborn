@@ -15,11 +15,15 @@
     "./services/search-indexing-service": {
       "types": "./dist/services/search-indexing-service.d.ts",
       "import": "./dist/services/search-indexing-service.js"
+    },
+    "./services/graph-service": {
+      "types": "./dist/services/graph-service.d.ts",
+      "import": "./dist/services/graph-service.js"
     }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "tsx --test models/index.test.ts services/search-indexing-service.test.ts",
+    "test": "tsx --test models/index.test.ts services/search-indexing-service.test.ts services/graph-service.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

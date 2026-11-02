@@ -36,7 +36,6 @@ export interface SemanticCrossSurahGraphProps {
   initialConceptId?: string;
   activeSurahFilter?: number;
   onNodeClick?(this: void, node: ThematicGraphNode): void;
-  onEdgeClick?(this: void, edge: ThematicGraphEdge): void;
   viewMode?: "graph" | "table";
   onViewModeChange?(this: void, mode: "graph" | "table"): void;
   /** Counts line; the caller formats it, e.g. `t("web.graph.summary", { nodes, edges })`. */
@@ -118,7 +117,6 @@ export function SemanticCrossSurahGraph({
   initialConceptId,
   activeSurahFilter,
   onNodeClick,
-  onEdgeClick,
   viewMode: controlledViewMode,
   onViewModeChange,
   summaryLabel,
@@ -274,7 +272,6 @@ export function SemanticCrossSurahGraph({
                       d={d}
                       className="ql-graph-edge"
                       strokeWidth={scaleByWeight(edge.weight ?? 0, maxEdgeWeight, 1.5, 2.5)}
-                      onClick={() => onEdgeClick?.(edge)}
                     />
                   );
                 })}

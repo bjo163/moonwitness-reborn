@@ -886,6 +886,266 @@ void test("transactions commit, roll back, and nest on libsql", async () => {
   await runTransactionSuite("file::memory:", "tx_note_libsql_test");
 });
 
+function relationManifest(): QlAddonManifest {
+  const char = { type: "char" as const, required: true, private: true };
+  return {
+    ...base,
+    name: "ql_library",
+    models: [
+      {
+        name: "library.book",
+        description: "Book",
+        tableName: "library_book_rel_test",
+        ownerField: "owner_id",
+        fields: {
+          title: { type: "char", required: true, maxLength: 80 },
+          shelves: {
+            type: "char",
+            relation: {
+              kind: "o2m",
+              model: "library.shelf",
+              inverseField: "book_id",
+            },
+          },
+          owner_id: char,
+        },
+      },
+      {
+        name: "library.shelf",
+        description: "Shelf",
+        tableName: "library_shelf_rel_test",
+        ownerField: "owner_id",
+        fields: {
+          label: { type: "char", required: true, maxLength: 40 },
+          book_id: {
+            type: "char",
+            required: true,
+            maxLength: 36,
+            relation: { kind: "m2o", model: "library.book" },
+          },
+          owner_id: char,
+        },
+      },
+    ],
+    access: [
+      {
+        model: "library.book",
+        group: "user",
+        read: true,
+        write: true,
+        create: true,
+        unlink: true,
+      },
+      {
+        model: "library.shelf",
+        group: "user",
+        read: true,
+        write: true,
+        create: true,
+        unlink: true,
+      },
+      {
+        model: "library.book",
+        group: "reader",
+        read: true,
+        write: false,
+        create: false,
+        unlink: false,
+      },
+    ],
+    views: [
+      {
+        name: "library.book.list",
+        model: "library.book",
+        type: "list",
+        fields: ["title"],
+      },
+    ],
+  };
+}
+
+void test("relations own no column, reject writes, and hydrate in batch", async () => {
+  const runtime = await createQlOrm("file::memory:", [relationManifest()]);
+  const owner = { id: "owner-1", groups: ["user"] };
+  try {
+    const first = await runtime.orm.createForService("library.book", owner.id, {
+      title: "First",
+    });
+    const second = await runtime.orm.createForService("library.book", owner.id, {
+      title: "Second",
+    });
+    for (const [bookId, label] of [
+      [first.id, "a"],
+      [first.id, "b"],
+      [second.id, "c"],
+    ] as const) {
+      await runtime.orm.createForService("library.shelf", owner.id, {
+        label,
+        book_id: bookId,
+      });
+    }
+
+    const books = await runtime.orm.findMany("library.book", owner);
+    assert.equal(books.length, 2);
+    // A reverse relation owns no column, so it never appears on a record.
+    assert.equal("shelves" in books[0], false);
+
+    await assert.rejects(
+      () =>
+        runtime.orm.create("library.book", owner, {
+          title: "Bad",
+          shelves: [],
+        }),
+      /Reverse relation 'shelves' is read-only/,
+    );
+
+    const graph = await runtime.orm.readRelations("library.book", owner, books);
+    const shelves = graph.shelves ?? {};
+    assert.equal((shelves[String(first.id)] ?? []).length, 2);
+    assert.equal((shelves[String(second.id)] ?? []).length, 1);
+    assert.deepEqual(
+      (shelves[String(first.id)] ?? []).map((row) => row.label),
+      ["a", "b"],
+    );
+    // A parent with no children gets no entry rather than an empty placeholder.
+    assert.equal(Object.keys(graph.shelves ?? {}).length, 2);
+
+    const back = await runtime.orm.readRelations(
+      "library.shelf",
+      owner,
+      await runtime.orm.findMany("library.shelf", owner),
+    );
+    const byBook = back.book_id ?? {};
+    assert.equal(
+      (byBook[String(first.id)] ?? []).map((row) => row.title)[0],
+      "First",
+    );
+    assert.equal(Object.keys(byBook).length, 2);
+  } finally {
+    runtime.close();
+  }
+});
+
+void test("readRelations honours ACL and owner scope", async () => {
+  const runtime = await createQlOrm("file::memory:", [relationManifest()]);
+  const owner = { id: "owner-1", groups: ["user"] };
+  const other = { id: "owner-2", groups: ["user"] };
+  try {
+    const book = await runtime.orm.createForService("library.book", owner.id, {
+      title: "Shared",
+    });
+    await runtime.orm.createForService("library.shelf", other.id, {
+      label: "elsewhere",
+      book_id: String(book.id),
+    });
+
+    const books = await runtime.orm.findMany("library.book", owner);
+    const graph = await runtime.orm.readRelations("library.book", owner, books);
+    // The other owner's shelf is invisible even though its book_id matches.
+    assert.equal(graph.shelves?.[String(book.id)], undefined);
+
+    const reader = { id: "owner-1", groups: ["reader"] };
+    await assert.rejects(
+      () => runtime.orm.readRelations("library.book", reader, books),
+      /read on 'library.shelf'/,
+    );
+
+    await assert.rejects(
+      () => runtime.orm.readRelations("library.book", owner, books, ["title"]),
+      /declares no relation/,
+    );
+  } finally {
+    runtime.close();
+  }
+});
+
+void test("relation declarations that cannot work are rejected at boot", () => {
+  const book = (extra: Record<string, unknown>) => ({
+    ...base,
+    name: "ql_library",
+    models: [
+      {
+        name: "library.book",
+        description: "Book",
+        tableName: "library_book_bad",
+        fields: {
+          title: { type: "char", required: true, maxLength: 80 },
+          ...extra,
+        },
+      },
+    ],
+    access: [],
+    views: [],
+    data: [],
+  });
+
+  const cases: Record<string, unknown>[] = [
+    { ghost: { type: "char", relation: { kind: "m2o", model: "library.missing" } } },
+    { ghost: { type: "integer", relation: { kind: "m2o", model: "library.book" } } },
+    { ghost: { type: "char", relation: { kind: "m2o", model: "library.book" } } },
+    {
+      ghost: {
+        type: "char",
+        relation: { kind: "o2m", model: "library.book", inverseField: "nope" },
+      },
+    },
+    {
+      ghost: {
+        type: "char",
+        required: true,
+        relation: { kind: "o2m", model: "library.book", inverseField: "self" },
+      },
+    },
+  ];
+  for (const extra of cases) {
+    assert.throws(
+      () => new QlModelRegistry([book(extra) as unknown as QlAddonManifest]),
+      /Relation|relation/,
+      JSON.stringify(Object.keys(extra)),
+    );
+  }
+});
+
+void test("an IN filter matches any listed value and an empty set matches nothing", async () => {
+  const runtime = await createQlOrm("file::memory:", [relationManifest()]);
+  const owner = { id: "owner-1", groups: ["user"] };
+  try {
+    const book = await runtime.orm.createForService("library.book", owner.id, {
+      title: "In",
+    });
+    for (const label of ["x", "y"]) {
+      await runtime.orm.createForService("library.shelf", owner.id, {
+        label,
+        book_id: String(book.id),
+      });
+    }
+    const both = await runtime.orm.findManyByService("library.shelf", {
+      label: { in: ["x", "y"] },
+    });
+    assert.equal(both.length, 2);
+    const none = await runtime.orm.findManyByService("library.shelf", {
+      label: { in: [] },
+    });
+    assert.deepEqual(none, []);
+    await assert.rejects(
+      () =>
+        runtime.orm.findManyByService("library.shelf", {
+          book_id: { in: Array.from({ length: 501 }, () => String(book.id)) },
+        }),
+      /at most 500 values/,
+    );
+    await assert.rejects(
+      () =>
+        runtime.orm.findManyByService("library.book", {
+          shelves: { in: [String(book.id)] },
+        }),
+      /cannot be used as a database filter/,
+    );
+  } finally {
+    runtime.close();
+  }
+});
+
 // Release yang menambah field harus tetap membuka tabel yang sudah berisi data,
 // jadi jalur ALTER TABLE diuji pada database yang sama, bukan tabel baru.
 async function runEvolutionSuite(

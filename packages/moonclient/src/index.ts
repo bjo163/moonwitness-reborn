@@ -681,10 +681,18 @@ export interface CreateLexicalResearchReviewResponseDto {
 // ---------------------------------------------------------------------------
 
 // Track 03: Semantic Cross-Surah Knowledge Graph
+/**
+ * A node of the thematic graph, read from `search.thematic_node`.
+ *
+ * Both titles travel because the model stores both (`title_id` / `title_en`)
+ * and `QlUserContext` carries no locale (`packages/ql-orm/src/index.ts:151`),
+ * so the server cannot pick one on the caller's behalf. The screen selects.
+ */
 export interface SemanticGraphNodeDto {
   id: string;
   slug: string;
-  title: string;
+  titleId: string;
+  titleEn: string;
   category: "concept" | "surah" | "prophet_narrative" | "legal_ruling";
   passageCount: number;
 }
@@ -702,7 +710,18 @@ export interface SemanticGraphResponseDto {
   conceptSlug: string;
   nodes: SemanticGraphNodeDto[];
   edges: SemanticGraphEdgeDto[];
+  /** Every edge that touches `conceptSlug`, including unresolved ones. */
   totalEdges: number;
+  /**
+   * Edges counted in `totalEdges` whose other end is not a declared node.
+   * They are omitted from `nodes`/`edges` rather than drawn as invented
+   * entities; a non-zero value means the operator's data needs fixing.
+   */
+  unresolvedEndpointCount: number;
+}
+
+export interface SemanticGraphConceptsResponseDto {
+  concepts: SemanticGraphNodeDto[];
 }
 
 // Track 04: Verifiable Ayah Cryptographic Proofs & Attribution Stamp
@@ -767,18 +786,40 @@ export interface ReciterListItemDto {
   nameTranslit: string;
   nameArabic: string;
   style: string;
+  /** Licence recorded beside the voice; attribution stays visible to the reader. */
+  licenseType: string;
+  isActive: boolean;
+}
+
+export interface ReciterListResponseDto {
+  reciters: ReciterListItemDto[];
+}
+
+export interface SurahAudioSegmentDto {
+  ayahNumber: number;
+  startMs: number;
+  endMs: number;
+  /** Clip address from `corpus.audio_segment`; never derived client-side. */
+  audioFileUrl: string;
 }
 
 export interface SurahAudioManifestResponseDto {
   surahNumber: number;
   reciterSlug: string;
-  audioStreamUrl: string;
+  reciterName: string;
+  reciterStyle: string;
+  licenseType: string;
+  /** Curated verse boundaries. Empty until a real recording has been aligned. */
+  segments: SurahAudioSegmentDto[];
+  /**
+   * The continuous recording the segment boundaries time, or null when the
+   * surah is curated as per-verse clips. Only ever read from
+   * `corpus.audio_segment.audio_file_url` — never built from a base URL and a
+   * filename pattern the schema does not define.
+   */
+  streamUrl: string | null;
+  /** End of the curated timeline (last `end_ms`), 0 when nothing is curated. */
   durationMs: number;
-  segments: Array<{
-    ayahNumber: number;
-    startMs: number;
-    endMs: number;
-  }>;
 }
 
 // Batch 5: Harbor Community, Governance & Command Operability (Tracks 16, 17, 18, 19, 20, 21, 24, 25)
@@ -1361,6 +1402,8 @@ export const apiRoutes = {
     reindexCorpus: "/search/corpus-index",
   },
   searchGraph: {
+    /** Shared prefix so the server dispatches from this contract, not a copy. */
+    prefix: "/search/graph/",
     byConcept: (slug: string) => `/search/graph/concepts/${segment(slug)}`,
     allConcepts: "/search/graph/concepts",
   },
@@ -1371,6 +1414,8 @@ export const apiRoutes = {
       `/corpus/proofs/${segment(edition)}/${segment(String(surah))}/${segment(String(ayah))}`,
   },
   corpusAudio: {
+    /** Shared prefix so the server dispatches from this contract, not a copy. */
+    prefix: "/corpus/audio/",
     reciters: "/corpus/audio/reciters",
     surahManifest: (reciter: string, surah: number) =>
       `/corpus/audio/manifest/${segment(reciter)}/surah/${segment(String(surah))}`,
@@ -1753,6 +1798,10 @@ export class MoonClient {
   }
 
   // Batch 3 SDK methods
+  listSemanticGraphConcepts(): Promise<SemanticGraphConceptsResponseDto> {
+    return this.request(apiRoutes.searchGraph.allConcepts, "GET");
+  }
+
   getSemanticGraph(conceptSlug: string): Promise<SemanticGraphResponseDto> {
     return this.request(apiRoutes.searchGraph.byConcept(conceptSlug), "GET");
   }
@@ -1774,7 +1823,7 @@ export class MoonClient {
     );
   }
 
-  getReciters(): Promise<ReciterListItemDto[]> {
+  getReciters(): Promise<ReciterListResponseDto> {
     return this.request(apiRoutes.corpusAudio.reciters, "GET");
   }
 

@@ -43,5 +43,9 @@
   },
   "dependencies": {
     "ql_orm": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/pg": "catalog:",
+    "pg": "catalog:"
   }
 }

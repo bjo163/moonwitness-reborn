@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  MoonClientError,
   moonClient,
   type AttachmentDto,
 } from "@moonwitness/moonclient";
@@ -65,6 +66,7 @@ export default function AttachmentsWorkspace() {
   const [armedDelete, setArmedDelete] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [authFailed, setAuthFailed] = useState(false);
   const armTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const errorText = useCallback((error: unknown): string => apiErrorMessage(error, t), [t]);
@@ -91,23 +93,28 @@ export default function AttachmentsWorkspace() {
     copy: { needsFile: () => at.needsFile },
   });
 
-  useEffect(() => {
-    let active = true;
-    void (async () => {
-      try {
-        const session = await moonClient.currentUser();
-        if (!active) return;
-        setUser(session.user ? toSessionUser(session.user) : null);
-      } catch {
-        if (active) setUser(null);
-      } finally {
-        if (active) setLoading(false);
+  const loadUser = useCallback(async (): Promise<void> => {
+    setLoading(true);
+    setAuthFailed(false);
+    try {
+      const session = await moonClient.currentUser();
+      setUser(session.user ? toSessionUser(session.user) : null);
+    } catch (error) {
+      // Only a real 401 ends the session. A server hiccup must not sign a valid
+      // user out or throw away the page they came to.
+      if (error instanceof MoonClientError && error.status === 401) {
+        setUser(null);
+      } else {
+        setAuthFailed(true);
       }
-    })();
-    return () => {
-      active = false;
-    };
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadUser();
+  }, [loadUser]);
 
   useEffect(() => {
     if (user === null) router.replace("/auth");
@@ -128,13 +135,20 @@ export default function AttachmentsWorkspace() {
   }, []);
 
   const formatBytes = useCallback(
-    (bytes: number): string =>
-      new Intl.NumberFormat(user?.preferredLocale === "en" ? "en-US" : "id-ID", {
-        style: "unit",
-        unit: "byte",
-        unitDisplay: "short",
-        maximumFractionDigits: 1,
-      }).format(bytes),
+    (bytes: number): string => {
+      const locale = user?.preferredLocale === "en" ? "en-US" : "id-ID";
+      const units = ["B", "KiB", "MiB", "GiB", "TiB"] as const;
+      // Intl has no auto-scaling byte unit, so the step is chosen here and only
+      // the number is localised.
+      const step = Math.min(
+        units.length - 1,
+        Math.floor(Math.log(Math.max(bytes, 1)) / Math.log(1024)),
+      );
+      const value = bytes / 1024 ** step;
+      return new Intl.NumberFormat(locale, {
+        maximumFractionDigits: step === 0 ? 0 : 1,
+      }).format(step === 0 ? bytes : value) + ` ${units[step]}`;
+    },
     [user?.preferredLocale],
   );
 
@@ -170,6 +184,15 @@ export default function AttachmentsWorkspace() {
 
   if (loading || user === undefined) {
     return <LoadingScreen label={at.loading} />;
+  }
+  if (authFailed) {
+    return (
+      <LoadingScreen
+        error={at.loadFailed}
+        onRetry={() => void loadUser()}
+        retryLabel={at.retryLoad}
+      />
+    );
   }
   if (user === null) {
     return <LoadingScreen error={at.signedOut} />;

@@ -8,7 +8,7 @@ import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { apiRoutes, type CreateAttachmentUploadResponseDto } from "@moonwitness/moonclient";
 import { createConversationStore } from "@moonwitness/database";
-import { createQlOrm, type QlOrm } from "ql_orm";
+import { createQlOrm, type QlOrm, type QlStorageDriver } from "ql_orm";
 import { LocalDiskStorageDriver } from "ql_orm/storage/local";
 import attachmentManifest from "ql_attachment/__manifest__";
 import authManifest from "ql_auth/__manifest__";
@@ -35,6 +35,35 @@ function pngBody(size: number): Uint8Array {
     body[offset] = (offset * 31) % 256;
   }
   return body;
+}
+
+const recordedAppends: number[] = [];
+
+/**
+ * Observes write sizes on the real HTTP path. A driver that received whole
+ * files would show up here as one enormous append, which is the failure mode
+ * the streaming contract exists to prevent.
+ */
+function recordAppends(base: LocalDiskStorageDriver): QlStorageDriver {
+  return {
+    id: base.id,
+    write: async (key) => {
+      const sink = await base.write(key);
+      return {
+        append: async (chunk: Uint8Array) => {
+          recordedAppends.push(chunk.byteLength);
+          await sink.append(chunk);
+        },
+        finish: () => sink.finish(),
+        abort: () => sink.abort(),
+      };
+    },
+    read: (key, range) => base.read(key, range),
+    stat: (key) => base.stat(key),
+    remove: (key) => base.remove(key),
+    list: (prefix) => base.list(prefix),
+    freeBytes: () => base.freeBytes(),
+  };
 }
 
 async function call(
@@ -138,7 +167,9 @@ async function upload(
 
 before(async () => {
   storageDir = await mkdtemp(join(tmpdir(), "ql-api-attachments-"));
-  const storage = new LocalDiskStorageDriver({ rootDir: storageDir });
+  const storage = recordAppends(
+    new LocalDiskStorageDriver({ rootDir: storageDir }),
+  );
   const runtime: { orm: QlOrm; close(): void } = await createQlOrm(
     "file::memory:",
     [baseManifest, authManifest, attachmentManifest],
@@ -434,6 +465,26 @@ void test("an upload far beyond the JSON body cap still completes intact", async
     attachment: { sha256?: string };
   };
   assert.equal(item.attachment.sha256, createHash("sha256").update(body).digest("hex"));
+});
+
+void test("the HTTP path streams, so no write ever approaches the file size", async () => {
+  recordedAppends.length = 0;
+  const body = pngBody(16 * MIB);
+  const id = await upload(body);
+
+  const served = await call(apiRoutes.attachments.content(id));
+  assert.equal(served.status, 200);
+  assert.equal((await served.arrayBuffer()).byteLength, body.byteLength);
+
+  const largest = Math.max(...recordedAppends);
+  assert.ok(
+    largest <= CHUNK_BYTES,
+    `largest single write was ${largest} bytes for a ${body.byteLength} byte upload`,
+  );
+  assert.ok(
+    recordedAppends.length > 60,
+    `expected many small writes, saw ${recordedAppends.length}`,
+  );
 });
 
 void test("an unknown upload field is rejected", async () => {

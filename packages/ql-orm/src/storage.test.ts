@@ -229,6 +229,33 @@ void test("remove reports whether the key existed", async () => {
   });
 });
 
+void test("removing the last part prunes its now-empty session directory", async () => {
+  await withDriver(async (driver, dir) => {
+    const uploadId = newStorageId();
+    await drain(await driver.write(chunkKey(uploadId, 0)), [bytes(1)]);
+    assert.equal((await driver.list(`tmp/${uploadId}/`)).length, 1);
+    await driver.remove(chunkKey(uploadId, 0));
+    assert.deepEqual(await driver.list(`tmp/${uploadId}/`), []);
+    const entries = await readdir(dir, { recursive: true });
+    assert.equal(
+      entries.some((entry) => String(entry).includes(join("tmp", uploadId))),
+      false,
+      `empty session directory survived: ${String(entries)}`,
+    );
+  });
+});
+
+void test("removing an object does not disturb its siblings", async () => {
+  await withDriver(async (driver) => {
+    const first = attachmentKey(newStorageId());
+    const second = attachmentKey(newStorageId());
+    await drain(await driver.write(first), [bytes(1)]);
+    await drain(await driver.write(second), [bytes(2)]);
+    assert.equal(await driver.remove(first), true);
+    assert.deepEqual(await driver.list("ir/attachment/"), [second]);
+  });
+});
+
 void test("a driver rooted at the filesystem is refused", () => {
   assert.throws(
     () => new LocalDiskStorageDriver({ rootDir: "/" }),

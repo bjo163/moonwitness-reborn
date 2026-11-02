@@ -350,6 +350,8 @@ export interface AppMessages {
     navLabel: string;
     loading: string;
     signedOut: string;
+    loadFailed: string;
+    retryLoad: string;
     uploadTitle: string;
     uploadIntro: string;
     pickFile: string;

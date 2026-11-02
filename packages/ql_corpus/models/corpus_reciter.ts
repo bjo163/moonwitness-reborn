@@ -1,4 +1,5 @@
 import type { QlModelDefinition } from "ql_orm";
+import { AYAH_MAX_BOUND, SURAH_MAX, SURAH_MIN } from "../services/corpus-vocabulary.js";
 
 export const corpusReciter: QlModelDefinition = {
   name: "corpus.reciter",
@@ -72,14 +73,16 @@ export const corpusAudioSegment: QlModelDefinition = {
     surah_number: {
       type: "integer",
       required: true,
-      minValue: 1,
-      maxValue: 114,
+      minValue: SURAH_MIN,
+      maxValue: SURAH_MAX,
     },
     ayah_number: {
       type: "integer",
       required: true,
       minValue: 1,
-      maxValue: 286,
+      // Coarse bound only. Which verse numbers actually exist per surah is the
+      // `SURAHS` table's job, enforced by `assertAyahWithinSurah`.
+      maxValue: AYAH_MAX_BOUND,
     },
     start_ms: {
       type: "integer",

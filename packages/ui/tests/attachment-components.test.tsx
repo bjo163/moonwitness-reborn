@@ -1,482 +1,278 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  EmptyState,
-  HeroStage,
-  IconTile,
-  ListOption,
+  AttachmentList,
+  AttachmentUpload,
+  FileInput,
   LoadingScreen,
-  MetricList,
-  MetricRow,
-  NavSectionLabel,
-  NavLink,
-  OptionNav,
-  PageHeader,
-  PortalCard,
-  SectionGrid,
-  SpatialRegion,
-  TransmissionCard,
-  SidePanel,
-  SidebarBrand,
-  SidebarFooter,
-  SidebarNav,
-  SidebarTrigger,
-  ThemeToggle,
-  SearchDialog,
-  SanctuaryHeader,
-  WorkspaceSidebar,
-  type SidebarNavItem,
+  Progress,
+  type AttachmentUploadLabels,
+  type UploadItem,
 } from "../src/index.js";
 import { assertNoOwnColours, render } from "./render-helpers.js";
 
-/**
- * Behaviour of each composite (MW-0574, MW-0580): the states it renders, the
- * slots it exposes, and the accessibility names it carries. The shared
- * `className`-override contract lives in `class-name-contract.test.tsx`, and
- * the colour rules it is checked against come from `render-helpers.tsx`.
- */
-void test("NavLink keeps ql-nav-link when className overrides and marks the active row", () => {
-  const plain = render(
-    <NavLink href="/models">Models</NavLink>,
-  );
-  assert.match(plain, /class="ql-nav-link"/);
-  assert.match(plain, /href="\/models"/);
-  assert.doesNotMatch(plain, /aria-current/);
+const uploadLabels: AttachmentUploadLabels = {
+  pickFile: () => "Pilih berkas",
+  itemStatus: (status) => `status:${status}`,
+  progressText: (sent, total) => `${sent} dari ${total} bita`,
+  cancel: () => "Batalkan",
+  retry: () => "Coba lagi",
+  pause: () => "Jeda",
+  resume: () => "Lanjutkan",
+  empty: () => "Belum ada unggahan.",
+  hint: () => "Maksimum 500 MiB per berkas.",
+};
 
-  const overridden = render(
-    <NavLink className="mt-2" href="/models">
-      Models
-    </NavLink>,
-  );
-  assert.match(overridden, /ql-nav-link/);
-  assert.match(overridden, /mt-2/);
+const listLabels = {
+  empty: () => "Belum ada lampiran.",
+  loading: () => "Memuat lampiran...",
+  error: (message: string) => `Gagal memuat: ${message}`,
+};
 
-  const active = render(
-    <NavLink active href="/models">
-      Models
-    </NavLink>,
-  );
-  assert.match(active, /is-active/);
-  assert.match(active, /aria-current="page"/);
-  assertNoOwnColours(active, "NavLink");
-});
+function item(overrides: Partial<UploadItem> = {}): UploadItem {
+  return {
+    id: "u-1",
+    name: "clip.mp4",
+    totalBytes: 1000,
+    sentBytes: 250,
+    status: "uploading",
+    ...overrides,
+  };
+}
 
-void test("SidebarBrand renders the wordmark, the tile, and a safe default href", () => {
-  const markup = render(<SidebarBrand icon={<i />} label="MoonWitness" />);
-  assert.match(markup, /href="\/command-center"/);
-  assert.match(markup, /ql-hud-brand/);
-  assert.match(markup, /ql-icon-tile/);
-  assert.match(markup, /ql-icon-tile--sm/);
-  assert.match(markup, /MoonWitness/);
-  assertNoOwnColours(markup, "SidebarBrand");
-});
+function noop(): void {
+  return undefined;
+}
 
-void test("SidebarFooter renders identity lines and only logs out when asked", () => {
-  const withLogout = render(
-    <SidebarFooter
-      logoutLabel="Sign out"
-      onLogout={() => undefined}
-      userSubtitle="user@example.com"
-      userName="Ada"
-    />,
-  );
-  assert.match(withLogout, /border-t/);
-  assert.match(withLogout, /Ada/);
-  assert.match(withLogout, /user@example\.com/);
-  assert.match(withLogout, /aria-label="Sign out"/);
-  assertNoOwnColours(withLogout, "SidebarFooter (logout)");
+const uploadActions = {
+  onCancelItem: noop,
+  onRetryItem: noop,
+  onSelectFiles: noop,
+  onTogglePause: noop,
+};
 
-  const identityOnly = render(
-    <SidebarFooter logoutLabel="Sign out" userName="Ada" />,
-  );
-  assert.doesNotMatch(identityOnly, /aria-label="Sign out"/);
-  assertNoOwnColours(identityOnly, "SidebarFooter (identity only)");
-});
-
-void test("PageHeader emits eyebrow, heading, description and an action slot", () => {
+void test("Progress exposes a real value and clamps it", () => {
   const markup = render(
-    <PageHeader
-      actions={<button type="button">Add</button>}
-      description="A description"
-      eyebrow="Section"
-      title="Providers"
+    <Progress
+      labelledBy="heading-1"
+      max={1000}
+      value={250}
+      valueText="250 dari 1000 bita"
     />,
   );
-  assert.match(markup, /<h1[^>]*>Providers<\/h1>/);
-  assert.match(markup, /A description/);
-  assert.match(markup, /Section/);
-  // The eyebrow is the package's shared `.ql-eyebrow` rule (the one SidePanel
-  // uses), not a per-component utility copy of it.
-  assert.match(markup, /class="ql-eyebrow"/);
-  assertNoOwnColours(markup, "PageHeader");
+  assert.match(markup, /role="progressbar"/);
+  assert.match(markup, /aria-valuemin="0"/);
+  assert.match(markup, /aria-valuemax="1000"/);
+  assert.match(markup, /aria-valuenow="250"/);
+  assert.match(markup, /aria-valuetext="250 dari 1000 bita"/);
+  assert.match(markup, /aria-labelledby="heading-1"/);
+  assert.match(markup, /--ql-progress-value:25\.00%/);
+  assertNoOwnColours(markup, "Progress");
+
+  assert.match(render(<Progress max={10} value={-40} />), /--ql-progress-value:0\.00%/);
+  assert.match(render(<Progress max={10} value={90} />), /--ql-progress-value:100\.00%/);
+  assert.match(render(<Progress max={0} value={5} />), /--ql-progress-value:0\.00%/);
 });
 
-void test("LoadingScreen prefers the error over the label and exposes a status", () => {
-  const loading = render(<LoadingScreen label="Loading" />);
-  assert.match(loading, /ql-hud-app/);
-  assert.match(loading, /role="status"/);
-  assert.match(loading, /Loading/);
+void test("an indeterminate Progress withholds a value it does not know", () => {
+  const markup = render(<Progress indeterminate value={0} />);
+  assert.equal(markup.includes("aria-valuenow"), false);
+  assert.match(markup, /class="ql-progress is-indeterminate"/);
+});
 
-  const failed = render(<LoadingScreen error="Boom" label="Loading" />);
+void test("Progress keeps its own class when a caller adds one", () => {
+  const markup = render(<Progress className="screen-extra" value={50} />);
+  assert.match(markup, /class="ql-progress screen-extra"/);
+});
+
+void test("FileInput stays a real input with a bindable id", () => {
+  const markup = render(
+    <FileInput accept="image/png" disabled id="picker-1" multiple name="files" />,
+  );
+  assert.match(markup, /type="file"/);
+  assert.match(markup, /id="picker-1"/);
+  assert.match(markup, /class="ql-file-input"/);
+  assert.match(markup, /accept="image\/png"/);
+  assert.match(markup, /disabled/);
+  assert.match(markup, /multiple/);
+});
+
+void test("FileInput keeps its class when a caller adds one", () => {
+  const markup = render(<FileInput className="screen-extra" id="picker-1" />);
+  assert.match(markup, /class="ql-file-input screen-extra"/);
+});
+
+void test("AttachmentUpload pairs the visible label with the hidden input", () => {
+  const markup = render(
+    <AttachmentUpload
+      accept="image/png"
+      fileInputId="picker-9"
+      items={[]}
+      labels={uploadLabels}
+      {...uploadActions}
+    />,
+  );
+  assert.match(markup, /<input class="ql-file-input" type="file"/);
+  assert.match(markup, /id="picker-9"/);
+  assert.match(
+    markup,
+    /<label class="[^"]*ql-attachment-upload__trigger" for="picker-9"/,
+  );
+  assert.match(markup, /Belum ada unggahan\./);
+  assert.match(markup, /Maksimum 500 MiB per berkas\./);
+  assertNoOwnColours(markup, "AttachmentUpload");
+});
+
+void test("AttachmentUpload shows progress and per-item affordances", () => {
+  const markup = render(
+    <AttachmentUpload
+      fileInputId="picker-9"
+      items={[
+        item(),
+        item({ id: "u-2", sentBytes: 900, status: "paused" }),
+        item({ error: "Berkas melebihi batas.", id: "u-3", status: "failed" }),
+        item({ id: "u-4", sentBytes: 1000, status: "done" }),
+        item({ id: "u-5", status: "verifying" }),
+        item({ id: "u-6", status: "needsFile" }),
+      ]}
+      labels={uploadLabels}
+      {...uploadActions}
+    />,
+  );
+  assert.equal(markup.includes("ql-attachment-upload__empty"), false);
+  assert.match(markup, /status:uploading/);
+  assert.match(markup, /Berkas melebihi batas\./);
+
+  // The byte figure is visible, not only announced to assistive technology.
+  assert.match(
+    markup,
+    /<p class="ql-attachment-upload__progress">250 dari 1000 bita<\/p>/,
+  );
+
+  const rows = markup.split('<li class="ql-attachment-upload__item"');
+  assert.equal(rows.length - 1, 6);
+
+  // A settled row offers no cancel, retry, pause, or resume.
+  assert.equal((rows[4] ?? "").includes("Batalkan"), false);
+  assert.equal((rows[4] ?? "").includes("Coba lagi"), false);
+  assert.equal((rows[4] ?? "").includes("Jeda"), false);
+  // A paused row needs a way forward and a way out, and not the pause control.
+  assert.equal((rows[2] ?? "").includes("Lanjutkan"), true);
+  assert.equal((rows[2] ?? "").includes("Batalkan"), true);
+  assert.equal((rows[2] ?? "").includes(">Jeda<"), false);
+  // A failed row can be retried and dropped; a live row can be paused and dropped.
+  assert.equal((rows[3] ?? "").includes("Coba lagi"), true);
+  assert.equal((rows[1] ?? "").includes(">Jeda<"), true);
+  // Verifying and needsFile have no trustworthy local figure, so both sweep.
+  assert.equal((rows[5] ?? "").includes("is-indeterminate"), true);
+  assert.equal((rows[6] ?? "").includes("is-indeterminate"), true);
+  // needsFile has no file to send, so resume must not be offered.
+  assert.equal((rows[6] ?? "").includes("Lanjutkan"), false);
+});
+
+void test("AttachmentUpload keeps its class when a caller adds one", () => {
+  const markup = render(
+    <AttachmentUpload
+      className="screen-extra"
+      fileInputId="picker-9"
+      items={[]}
+      labels={uploadLabels}
+      {...uploadActions}
+    />,
+  );
+  assert.match(markup, /class="ql-attachment-upload screen-extra"/);
+});
+
+void test("AttachmentList covers loading, error, and empty states", () => {
+  const loading = render(
+    <AttachmentList labels={listLabels} rows={[]} status="loading" />,
+  );
+  assert.match(loading, /aria-busy="true"/);
+  assert.match(loading, /Memuat lampiran\.\.\./);
+
+  const failed = render(
+    <AttachmentList
+      errorMessage="Sesi berakhir."
+      labels={listLabels}
+      rows={[]}
+      status="error"
+    />,
+  );
   assert.match(failed, /role="alert"/);
-  assert.match(failed, /Boom/);
-  assert.doesNotMatch(failed, /Loading/);
-  assertNoOwnColours(failed, "LoadingScreen");
-});
+  assert.match(failed, /class="ql-attachment-list__state is-error"/);
+  assert.match(failed, /Gagal memuat: Sesi berakhir\./);
 
-void test("EmptyState and SectionGrid compose without stealing the caller class", () => {
   const empty = render(
-    <EmptyState className="mt-6" description="Nothing here" title="Empty" />,
+    <AttachmentList labels={listLabels} rows={[]} status="ready" />,
   );
-  assert.match(empty, /ql-card/);
-  assert.match(empty, /mt-6/);
-  assert.match(empty, /Nothing here/);
-  assertNoOwnColours(empty, "EmptyState");
-
-  const grid = render(
-    <SectionGrid className="mt-4" columns={3}>
-      <span>row</span>
-    </SectionGrid>,
-  );
-  assert.match(grid, /grid-cols-1/);
-  assert.match(grid, /md:grid-cols-3/);
-  assert.match(grid, /mt-4/);
-  assertNoOwnColours(grid, "SectionGrid");
+  assert.match(empty, /Belum ada lampiran\./);
+  assertNoOwnColours(empty, "AttachmentList empty");
 });
 
-void test("MetricList/MetricRow pair the terms and can drop the divider", () => {
+void test("AttachmentList renders rows with their preview and action slots", () => {
   const markup = render(
-    <MetricList>
-      <MetricRow divided={false} hint="last run" label="Done" value={7} />
-      <MetricRow label="Blocked" value={2} />
-    </MetricList>,
-  );
-  assert.match(markup, /<dl/);
-  assert.match(markup, /<dt/);
-  assert.match(markup, /<dd/);
-  assert.match(markup, /last run/);
-  const rows = markup.split("</dt>");
-  assert.equal(
-    /ql-metric-row--divided/.test(rows[0]),
-    false,
-    "first row must be undivided",
-  );
-  assert.match(rows[1], /ql-metric-row--divided/);
-  assert.match(markup, /ql-metric-row__label/);
-  assert.match(markup, /ql-metric-row__value/);
-  assert.match(markup, /ql-metric-row__hint/);
-  assertNoOwnColours(markup, "MetricRow");
-});
-
-void test("IconTile exposes size and tone variants", () => {
-  const accent = render(
-    <IconTile size="sm">
-      <i />
-    </IconTile>,
-  );
-  assert.match(accent, /ql-icon-tile/);
-  assert.match(accent, /ql-icon-tile--sm/);
-  assert.match(accent, /aria-hidden="true"/);
-
-  const large = render(
-    <IconTile size="lg" tone="plain">
-      <i />
-    </IconTile>,
-  );
-  assert.match(large, /ql-icon-tile--lg/);
-  assert.match(large, /ql-icon-tile--plain/);
-  assertNoOwnColours(large, "IconTile");
-});
-
-void test("SidebarNav renders its list shape from ql-sidebar-nav", () => {
-  const nav = render(
-    <SidebarNav items={[{ href: "/corpus", label: "Quran" }]} label="Sections" />,
-  );
-  assert.match(nav, /<nav[^>]*class="ql-sidebar-nav mt-6"/);
-  assert.match(nav, /aria-label="Sections"/);
-  assertNoOwnColours(nav, "SidebarNav");
-});
-
-void test("NavSectionLabel renders the design-system section heading", () => {
-  const markup = render(<NavSectionLabel>Zones</NavSectionLabel>);
-  assert.match(markup, /ql-nav-section/);
-  assert.match(markup, /Zones/);
-  assertNoOwnColours(markup, "NavSectionLabel");
-});
-
-void test("OptionNav keeps the shared list shape for row-provided navs", () => {
-  const nav = render(
-    <OptionNav label="Zones">
-      <ListOption selected onSelect={() => undefined} variant="nav">
-        example.com
-      </ListOption>
-    </OptionNav>,
-  );
-  // No top margin: the section label above already carries the spacing, and
-  // the geometry of the list must come from the stylesheet, not the screen.
-  assert.match(nav, /<nav[^>]*class="ql-sidebar-nav"/);
-  assert.doesNotMatch(nav, /ql-sidebar-nav mt-/);
-  assert.match(nav, /aria-label="Zones"/);
-  assert.match(nav, /ql-nav-link[^>"]*is-active|is-active/);
-  assertNoOwnColours(nav, "OptionNav");
-});
-
-void test("ListOption marks selection with is-selected, and is-active in the nav variant", () => {
-  const card = render(
-    <ListOption onSelect={() => undefined} selected>
-      key.one
-    </ListOption>,
-  );
-  assert.match(card, /ql-list-option/);
-  assert.match(card, /is-selected/);
-  assert.match(card, /aria-current="true"/);
-
-  const nav = render(
-    <ListOption onSelect={() => undefined} selected variant="nav">
-      key.two
-    </ListOption>,
-  );
-  assert.match(nav, /ql-nav-link/);
-  assert.match(nav, /is-active/);
-  assert.doesNotMatch(nav, /is-selected/);
-
-  const idle = render(
-    <ListOption onSelect={() => undefined} selected={false}>
-      key.three
-    </ListOption>,
-  );
-  assert.doesNotMatch(idle, /is-selected|is-active|aria-current/);
-  assertNoOwnColours(nav, "ListOption");
-});
-
-void test("SidePanel labels itself, shows the eyebrow and closes through a Button", () => {
-  const markup = render(
-    <SidePanel
-      closeLabel="Close form"
-      eyebrow="New record"
-      label="Record form"
-      onClose={() => undefined}
-      title="example.com"
-    >
-      <p>fields</p>
-    </SidePanel>,
-  );
-  assert.match(markup, /ql-side-panel/);
-  assert.match(markup, /aria-label="Record form"/);
-  assert.match(markup, /<h2[^>]*>example\.com<\/h2>/);
-  assert.match(markup, /New record/);
-  assert.match(markup, /aria-label="Close form"/);
-  assert.match(markup, /class="ql-button/);
-  assert.match(markup, /fields/);
-  assertNoOwnColours(markup, "SidePanel");
-});
-
-const items: readonly SidebarNavItem[] = [
-  { href: "/command-center", label: "Dashboard" },
-  { href: "/workflow", label: "Workflow", active: true },
-];
-
-void test("SidebarNav renders one accessible labelled list with the given items", () => {
-  const nav = render(<SidebarNav items={items} label="Main navigation" />);
-  assert.match(nav, /<nav[^>]*aria-label="Main navigation"/);
-  assert.equal((nav.match(/ql-nav-link/g) ?? []).length, 2);
-  assert.match(nav, /aria-current="page"/);
-  assertNoOwnColours(nav, "SidebarNav");
-});
-
-void test("WorkspaceSidebar composes brand row, nav list, children and footer once", () => {
-  const markup = render(
-    <WorkspaceSidebar
-      brandIcon={<i />}
-      brandLabel="MoonWitness"
-      closeLabel="Close menu"
-      identity={{ name: "Ada", subtitle: "ada@example.com" }}
-      items={items}
-      logout={{ label: "Sign out", onLogout: () => undefined }}
-      navLabel="Main navigation"
-      onCloseSidebar={() => undefined}
-    >
-      <NavSectionLabel>Zones</NavSectionLabel>
-    </WorkspaceSidebar>,
-  );
-  assert.match(markup, /ql-hud-brand/);
-  assert.match(markup, /aria-label="Close menu"/);
-  assert.match(markup, /aria-label="Main navigation"/);
-  assert.match(markup, /Zones/);
-  assert.match(markup, /aria-label="Sign out"/);
-  assert.equal((markup.match(/ql-nav-link/g) ?? []).length, 2);
-  assertNoOwnColours(markup, "WorkspaceSidebar");
-});
-
-void test("SidebarTrigger links the hamburger to the drawer via aria-controls and reflects open state in aria-expanded", () => {
-  const closed = render(
-    <SidebarTrigger
-      label="Open menu"
-      onOpenSidebar={() => undefined}
-      sidebarOpen={false}
+    <AttachmentList
+      labels={listLabels}
+      rows={[
+        {
+          actions: <button type="button">Hapus</button>,
+          id: "a-1",
+          metaLine: "video/mp4 . 40 MiB",
+          name: "khutbah.mp4",
+          preview: <img alt="Pratinjau" height={90} src="/api/x" width={160} />,
+          stateLabel: "Siap",
+        },
+        {
+          id: "a-2",
+          metaLine: "application/pdf . 2 MiB",
+          name: "catatan.pdf",
+          stateLabel: "Mengunggah",
+        },
+      ]}
+      status="ready"
     />,
   );
-  assert.match(closed, /aria-label="Open menu"/);
-  assert.match(closed, /aria-controls="ql-workspace-sidebar"/);
-  assert.match(closed, /aria-expanded="false"/);
-  assert.match(closed, /class="[^"]*ql-sidebar-trigger[^"]*"/);
-  assert.match(closed, /ql-button--icon/);
-  assertNoOwnColours(closed, "SidebarTrigger");
+  assert.match(markup, /<ul class="ql-attachment-list"/);
+  assert.match(markup, /khutbah\.mp4/);
+  assert.match(markup, /<div class="ql-attachment-list__preview">/);
+  assert.match(markup, /alt="Pratinjau"/);
+  assert.match(markup, /width="160"/);
+  assert.match(markup, /height="90"/);
+  const rows = markup.split('<li class="ql-attachment-list__row"');
+  assert.equal(rows.length - 1, 2);
+  // A row without a preview must not emit an empty frame.
+  assert.equal((rows[2] ?? "").includes("ql-attachment-list__preview"), false);
+  assertNoOwnColours(markup, "AttachmentList rows");
+});
 
-  const open = render(
-    <SidebarTrigger
-      label="Open menu"
-      onOpenSidebar={() => undefined}
-      sidebarOpen
+void test("AttachmentList keeps its class in every state", () => {
+  for (const status of ["ready", "loading"] as const) {
+    const markup = render(
+      <AttachmentList
+        className="screen-extra"
+        labels={listLabels}
+        rows={[]}
+        status={status}
+      />,
+    );
+    assert.match(markup, /screen-extra/);
+  }
+});
+
+void test("LoadingScreen offers a way out of a failed load", () => {
+  const plain = render(<LoadingScreen error="Gagal dimuat." />);
+  assert.match(plain, /role="alert"/);
+  assert.match(plain, /Gagal dimuat\./);
+  assert.equal(plain.includes("<button"), false);
+
+  const retryable = render(
+    <LoadingScreen
+      error="Gagal dimuat."
+      onRetry={() => undefined}
+      retryLabel="Coba lagi"
     />,
   );
-  assert.match(open, /aria-expanded="true"/);
-
-  const renamed = render(
-    <SidebarTrigger
-      label="Open menu"
-      onOpenSidebar={() => undefined}
-      sidebarId="ql-secondary-workspace-sidebar"
-      sidebarOpen={false}
-    />,
-  );
-  assert.match(renamed, /aria-controls="ql-secondary-workspace-sidebar"/);
-});
-
-void test("HeroStage hides decorative artwork and keeps ql-hero when className overrides", () => {
-  const markup = render(
-    <HeroStage className="probe-keep-class" imageSrc="/hero.jpg">
-      <h1>Title</h1>
-    </HeroStage>,
-  );
-  assert.match(markup, /ql-hero/);
-  assert.match(markup, /probe-keep-class/);
-  assert.match(markup, /ql-hero__veil/);
-  assert.match(markup, /alt=""/);
-  assert.match(markup, /<h1>Title<\/h1>/);
-  assertNoOwnColours(markup, "HeroStage");
-});
-
-void test("PortalCard is one link named by its title and carries description and status", () => {
-  const markup = render(
-    <PortalCard
-      className="probe-keep-class"
-      description="Community portal"
-      href="/corpus"
-      icon={<i />}
-      status="Proposed"
-      title="Dock"
-    />,
-  );
-  assert.match(markup, /href="\/corpus"/);
-  assert.match(markup, /ql-portal-card/);
-  assert.match(markup, /probe-keep-class/);
-  assert.match(markup, /Dock/);
-  assert.match(markup, /Community portal \(Proposed\)/);
-  assert.equal((markup.match(/<a /g) ?? []).length, 1);
-  assertNoOwnColours(markup, "PortalCard");
-
-  const plain = render(<PortalCard description="d" href="/x" title="T" />);
-  assert.doesNotMatch(plain, /ql-portal-card__icon/);
-  assert.doesNotMatch(plain, /\(/);
-});
-void test("TransmissionCard renders title, excerpt and provenance", () => {
-  const markup = render(
-    <TransmissionCard
-      excerpt="When the moon rises, messages are shared."
-      href="/corpus/quran-en/1"
-      provenanceLabel="Verified Revelation"
-      readActionLabel="Read Chapter"
-      source="Surah Al-Fatihah"
-      title="The Opening"
-    />,
-  );
-  assert.match(markup, /The Opening/);
-  assert.match(markup, /Surah Al-Fatihah/);
-  assert.match(markup, /Verified Revelation/);
-  assert.match(markup, /Read Chapter/);
-  assertNoOwnColours(markup, "TransmissionCard");
-});
-
-void test("SpatialRegion renders heading, eyebrow and children", () => {
-  const markup = render(
-    <SpatialRegion
-      eyebrow="Movement 03"
-      id="explore-region"
-      title="Explore the Knowledge"
-    >
-      <p>Inner content</p>
-    </SpatialRegion>,
-  );
-  assert.match(markup, /id="explore-region"/);
-  assert.match(markup, /Movement 03/);
-  assert.match(markup, /Explore the Knowledge/);
-  assert.match(markup, /Inner content/);
-  assertNoOwnColours(markup, "SpatialRegion");
-});
-
-void test("HeroStage renders background media and children", () => {
-  const markup = render(
-    <HeroStage imageSrc="/hero.jpg">
-      <h1>Title</h1>
-    </HeroStage>,
-  );
-  assert.match(markup, /src="\/hero\.jpg"/);
-  assert.match(markup, /width="1920"/);
-  assert.match(markup, /height="1080"/);
-  assert.match(markup, /fetchPriority="high"/);
-  assert.match(markup, /decoding="async"/);
-  assert.match(markup, /Title/);
-  assertNoOwnColours(markup, "HeroStage");
-});
-
-void test("ThemeToggle renders aria-pressed and label", () => {
-  const markup = render(
-    <ThemeToggle
-      theme="light"
-      label="Beralih ke tema gelap"
-      onToggle={() => undefined}
-    />,
-  );
-  assert.match(markup, /aria-pressed="true"/);
-  assert.match(markup, /aria-label="Beralih ke tema gelap"/);
-  assert.match(markup, /ql-nav-link/);
-  assertNoOwnColours(markup, "ThemeToggle");
-});
-
-void test("SanctuaryHeader renders eyebrow, title, and description", () => {
-  const markup = render(
-    <SanctuaryHeader
-      eyebrow="Corpus"
-      title="Kitab Suci"
-      description="Kumpulan wahyu dan sumber terverifikasi"
-    />,
-  );
-  assert.match(markup, /Corpus/);
-  assert.match(markup, /Kitab Suci/);
-  assert.match(markup, /Kumpulan wahyu/);
-  assertNoOwnColours(markup, "SanctuaryHeader");
-});
-
-void test("SearchDialog renders modal with accessible title and placeholder", () => {
-  const markup = render(
-    <SearchDialog
-      isOpen
-      title="Pencarian Global"
-      placeholder="Cari surah atau bab..."
-      closeLabel="Tutup"
-      query="Fatihah"
-      onQueryChange={() => undefined}
-      onSubmit={() => undefined}
-      onClose={() => undefined}
-    >
-      <p>Hasil pencarian</p>
-    </SearchDialog>,
-  );
-  assert.match(markup, /role="dialog"/);
-  assert.match(markup, /aria-label="Pencarian Global"/);
-  assert.match(markup, /placeholder="Cari surah atau bab\.\.\."/);
-  assert.match(markup, /value="Fatihah"/);
-  assert.match(markup, /Hasil pencarian/);
-  assertNoOwnColours(markup, "SearchDialog");
+  assert.match(retryable, /<button[^>]*>Coba lagi<\/button>/);
+  assert.match(retryable, /ql-button--secondary/);
+  assertNoOwnColours(retryable, "LoadingScreen retry");
 });

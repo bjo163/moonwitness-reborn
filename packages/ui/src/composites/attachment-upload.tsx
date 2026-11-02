@@ -130,6 +130,11 @@ export function AttachmentUpload({
                 value={item.sentBytes}
                 valueText={labels.progressText(item.sentBytes, item.totalBytes)}
               />
+              {/* The same figure the progressbar announces, shown to everyone:
+                  a bar alone does not say how much is left. */}
+              <p className="ql-attachment-upload__progress">
+                {labels.progressText(item.sentBytes, item.totalBytes)}
+              </p>
               {item.error === undefined ? null : (
                 <p className="ql-attachment-upload__error">{item.error}</p>
               )}

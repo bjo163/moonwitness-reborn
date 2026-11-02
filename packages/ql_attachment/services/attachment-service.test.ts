@@ -4,12 +4,15 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import pg from "pg";
 import {
   QlNotFoundError,
   QlValidationError,
   chunkKey,
   createQlOrm,
+  type QlAddonManifest,
   type QlOrm,
+  type QlStorageDriver,
   type QlUserContext,
 } from "ql_orm";
 import { LocalDiskStorageDriver } from "ql_orm/storage/local";
@@ -93,16 +96,21 @@ async function withHarness(
   options: {
     clock?(): number;
     policy?: Partial<AttachmentPolicy>;
+    databaseUrl?: string;
   } = {},
 ): Promise<void> {
+  const databaseUrl = options.databaseUrl ?? "file::memory:";
+  // A Postgres database can be a persistent developer service, so the scratch
+  // tables a run creates are named uniquely and dropped again.
+  const suffix = databaseUrl === "file::memory:" ? "" : `pg${Date.now().toString(36)}`;
   const dir = await mkdtemp(join(tmpdir(), "ql-attachment-"));
   const storage = new LocalDiskStorageDriver({ rootDir: dir });
   const runtime = await createQlOrm(
-    "file::memory:",
+    databaseUrl,
     [
       stubAddonManifest("ql_base"),
       stubAddonManifest("ql_auth"),
-      attachmentManifest,
+      suffix ? attachmentManifestWithTables(suffix) : attachmentManifest,
     ],
     { storage },
   );
@@ -112,11 +120,40 @@ async function withHarness(
       orm: runtime.orm,
       storage,
       context: (user = owner) =>
-        createAttachmentContext(runtime.orm, user, { storage, policy, now: options.clock }),
+        createAttachmentContext(runtime.orm, user, {
+          storage,
+          policy,
+          now: options.clock,
+        }),
     });
   } finally {
     runtime.close();
     await rm(dir, { recursive: true, force: true });
+    if (suffix) {
+      await dropScratchTables(databaseUrl, suffix);
+    }
+  }
+}
+
+function attachmentManifestWithTables(suffix: string): QlAddonManifest {
+  return {
+    ...attachmentManifest,
+    models: attachmentManifest.models.map((model) => ({
+      ...model,
+      tableName: `${model.tableName}_${suffix}`,
+    })),
+  };
+}
+
+async function dropScratchTables(databaseUrl: string, suffix: string): Promise<void> {
+  const client = new pg.Client({ connectionString: databaseUrl });
+  try {
+    await client.connect();
+    for (const table of ["ir_attachment", "ir_attachment_upload"]) {
+      await client.query(`drop table if exists "${table}_${suffix}" cascade`);
+    }
+  } finally {
+    await client.end().catch(() => undefined);
   }
 }
 
@@ -377,6 +414,50 @@ void test("a zero byte attachment completes and reads back empty", async () => {
   });
 });
 
+void test("chunk writes and assembly stay within one chunk", async () => {
+  await withHarness(async (h) => {
+    const appends: number[] = [];
+    const recording: QlStorageDriver = {
+      id: h.storage.id,
+      write: async (key) => {
+        const sink = await h.storage.write(key);
+        return {
+          append: async (chunk) => {
+            appends.push(chunk.byteLength);
+            await sink.append(chunk);
+          },
+          finish: () => sink.finish(),
+          abort: () => sink.abort(),
+        };
+      },
+      read: (key, range) => h.storage.read(key, range),
+      stat: (key) => h.storage.stat(key),
+      remove: (key) => h.storage.remove(key),
+      list: (prefix) => h.storage.list(prefix),
+      freeBytes: () => h.storage.freeBytes(),
+    };
+    const ctx = createAttachmentContext(h.orm, owner, {
+      storage: recording,
+      policy: { chunkBytes: 64 },
+    });
+    const body = pngBody(280);
+    const session = await createUploadSession(ctx, {
+      name: "clip.png",
+      mimeType: "image/png",
+      kind: "media",
+      sizeBytes: body.byteLength,
+    });
+    await uploadAll(ctx, session, body);
+    await completeUpload(ctx, session.uploadId);
+
+    assert.ok(
+      appends.every((size) => size <= 64),
+      `a single write held ${Math.max(...appends)} bytes with a 64 byte chunk size`,
+    );
+    assert.ok(appends.length >= 8, `only ${appends.length} writes reached storage`);
+  });
+});
+
 void test("an expired session refuses further chunks", async () => {
   const clock = { current: 1_000 };
   await withHarness(
@@ -532,3 +613,104 @@ void test("parent links must be supplied as a pair", async () => {
     assert.equal(record["parent_record_id"], "edition-1");
   });
 });
+
+const postgresUrl = process.env.QL_ORM_PG_URL;
+
+if (postgresUrl) {
+  void test("the attachment lifecycle holds on postgres", async () => {
+    const clock = { current: 1_000 };
+    await withHarness(
+      async (h) => {
+        const body = pngBody(300);
+        const { ctx, session } = await openSession(h, body);
+        assert.equal(session.totalChunks, 5);
+
+        await uploadAll(ctx, session, body, [2]);
+        await assert.rejects(
+          () => completeUpload(ctx, session.uploadId),
+          (error: unknown) =>
+            error instanceof IntegrityError && /missing: 2/.test(error.message),
+        );
+        assert.equal((await h.storage.list("ir/attachment/")).length, 0);
+
+        await appendChunk(
+          ctx,
+          session.uploadId,
+          2,
+          asChunks(body.slice(128, 192), 64),
+        );
+        const record = await completeUpload(ctx, session.uploadId);
+        assert.equal(record["state"], "ready");
+        assert.equal(record["size_bytes"], 300);
+        assert.equal(record["sha256"], digest(body));
+        assert.equal("storage_key" in record, false);
+
+        const handle = await openContent(ctx, session.attachmentId);
+        assert.deepEqual(
+          await whole(handle.read({ start: 8, end: 15 }).body),
+          body.slice(8, 16),
+        );
+
+        const listed = await listAttachments(ctx);
+        assert.equal(listed.length, 1);
+        assert.equal("storage_key" in listed[0], false);
+
+        await assert.rejects(
+          () => getAttachment(h.context(intruder), session.attachmentId),
+          QlNotFoundError,
+        );
+        assert.deepEqual(await listAttachments(h.context(intruder)), []);
+
+        assert.equal(await removeAttachment(ctx, session.attachmentId), true);
+        assert.equal((await h.storage.list("ir/attachment/")).length, 0);
+        assert.deepEqual(await listAttachments(ctx), []);
+      },
+      { clock: () => clock.current, databaseUrl: postgresUrl },
+    );
+  });
+
+  void test("expired uploads and quota refusal hold on postgres", async () => {
+    const clock = { current: 1_000 };
+    await withHarness(
+      async (h) => {
+        const body = pngBody(300);
+        const { ctx, session } = await openSession(h, body);
+        await uploadAll(ctx, session, body, [4]);
+
+        clock.current = 1_000 + 7 * 60 * 60 * 1000;
+        const result = await reapExpiredUploads(h.orm, h.storage, {
+          now: clock.current,
+        });
+        assert.deepEqual(result, {
+          closedSessions: 1,
+          removedObjects: 4,
+          removedRows: 1,
+        });
+        assert.equal((await h.storage.list(`tmp/${session.uploadId}/`)).length, 0);
+        await assert.rejects(
+          () => getAttachment(ctx, session.attachmentId),
+          QlNotFoundError,
+        );
+      },
+      { clock: () => clock.current, databaseUrl: postgresUrl },
+    );
+
+    await withHarness(
+      async (h) => {
+        const ctx = h.context();
+        await assert.rejects(
+          () =>
+            createUploadSession(ctx, {
+              name: "big.png",
+              mimeType: "image/png",
+              kind: "media",
+              sizeBytes: 300,
+            }),
+          QuotaReachedError,
+        );
+        assert.deepEqual(await listAttachments(ctx), []);
+      },
+      { databaseUrl: postgresUrl, policy: { quotaBytes: 200 } },
+    );
+  });
+}

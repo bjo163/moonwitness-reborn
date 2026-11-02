@@ -133,6 +133,56 @@ export const views: QlViewDefinition[] = [
     ],
   },
   {
+    // Track 05. A reciter is authorable metadata — name, style, licence — and
+    // the licence column is why the form exists at all: an attribution has to
+    // be recorded next to the voice it covers.
+    name: "corpus.reciter.list",
+    model: "corpus.reciter",
+    type: "list",
+    fields: [
+      "slug",
+      "name_translit",
+      "name_arabic",
+      "recitation_style",
+      "license_type",
+      "is_active",
+      "updated_at",
+    ],
+  },
+  {
+    // `audio_base_url` is deliberately absent from the form: the read path
+    // addresses clips through `corpus.audio_segment.audio_file_url`, so a base
+    // URL typed here would be a second, unused source of truth.
+    name: "corpus.reciter.form",
+    model: "corpus.reciter",
+    type: "form",
+    fields: [
+      "slug",
+      "name_translit",
+      "name_arabic",
+      "recitation_style",
+      "license_type",
+      "is_active",
+    ],
+  },
+  {
+    // List only, no form: millisecond boundaries are the output of aligning a
+    // real recording to the text, not something to type by hand. A hand-made
+    // timeline is exactly the fabricated synchronisation this track removed.
+    name: "corpus.audio_segment.list",
+    model: "corpus.audio_segment",
+    type: "list",
+    fields: [
+      "reciter_slug",
+      "surah_number",
+      "ayah_number",
+      "start_ms",
+      "end_ms",
+      "audio_file_url",
+      "updated_at",
+    ],
+  },
+  {
     name: "corpus.term.list",
     model: "corpus.term",
     type: "list",
