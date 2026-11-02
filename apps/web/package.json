@@ -7,7 +7,7 @@
     "build:app": "next build && node scripts/record-bundle-budget-build.mjs",
     "start": "next start --port 3001",
     "size": "node scripts/check-bundle-budget.mjs",
-    "test": "tsx --test src/features/assistant/assistant-evidence.test.ts && node --test scripts/check-bundle-budget.test.mjs",
+    "test": "tsx --test src/features/assistant/assistant-evidence.test.ts src/features/corpus/spatial-viewport.test.ts && node --test scripts/check-bundle-budget.test.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

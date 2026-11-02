@@ -91,7 +91,12 @@ interface JsonLine {
   readonly juz?: number;
 }
 
-function sha256(text: string): string {
+/**
+ * The one canonicalisation used for both `corpus.passage.text_checksum` at
+ * import time and `proof-service` verification, so a verifier can never
+ * disagree with an importer over how a verse is hashed.
+ */
+export function sha256(text: string): string {
   return createHash("sha256").update(text, "utf8").digest("hex");
 }
 

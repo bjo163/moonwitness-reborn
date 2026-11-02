@@ -31,6 +31,10 @@
       "types": "./dist/services/reader-service.d.ts",
       "import": "./dist/services/reader-service.js"
     },
+    "./services/proof-service": {
+      "types": "./dist/services/proof-service.d.ts",
+      "import": "./dist/services/proof-service.js"
+    },
     "./services/import-service": {
       "types": "./dist/services/import-service.d.ts",
       "import": "./dist/services/import-service.js"

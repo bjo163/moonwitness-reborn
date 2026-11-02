@@ -18,14 +18,14 @@ export type ModelProviderFactory = (
 export interface FallbackProviderOptions {
   timeoutMs?: number;
   maxRetries?: number;
-  onAuditLog?: (event: {
+  onAuditLog?(event: {
     providerId: string;
     providerName: string;
     attempt: number;
     success: boolean;
     latencyMs: number;
     error?: string;
-  }) => void;
+  }): void;
 }
 
 export function createFallbackProvider(
