@@ -9,6 +9,7 @@ import type { QlModelDefinition } from "ql_orm";
 export const searchIndexEntryModel: QlModelDefinition = {
   name: "search.index_entry",
   description: "Inverted index entries for full-text search across authorized corpus and research models",
+  tableName: "search_index_entry",
   ownerField: "owner_id",
   fields: {
     id: {
@@ -34,7 +35,7 @@ export const searchIndexEntryModel: QlModelDefinition = {
     weight: {
       type: "integer",
       required: true,
-      defaultValue: 1,
+      default: 1,
     },
     snippet: {
       type: "text",
