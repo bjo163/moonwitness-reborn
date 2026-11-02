@@ -308,3 +308,30 @@ void test("review queue fails closed at the bounded history limit", async () => 
     },
   );
 });
+
+void test("witness.statement is registered in ql_research and validates transmission chain", async () => {
+  await withResearchDb(async ({ orm }) => {
+    const record = await orm.createRecordForService("witness.statement", {
+      canonical_id: "mw:witness:hadith-jibril-umar",
+      witness_name: "Umar ibn al-Khattab",
+      person_id: "mw:person:umar",
+      source_artifact_id: "mw:source:muslim-sahih-1",
+      statement: "While we were one day sitting with the Messenger of Allah, there appeared before us a man with very white clothing and very black hair...",
+      time_context: "Medina, late prophetic era",
+      place_context: "Prophet's Mosque, Medina",
+      transmission_chain: "Yahya ibn Ya'mar -> Abdullah ibn Umar -> Umar ibn al-Khattab",
+      chain_of_custody: "Transmitted via verified continuous isnad (Muttasil)",
+      has_broken_chain: false,
+      reliability_assessment: "corroborated",
+      consent_status: "public_tradition",
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+    assert.ok(record.id);
+
+    const found = await orm.findOneByService("witness.statement", { id: record.id });
+    assert.equal(found?.["witness_name"], "Umar ibn al-Khattab");
+    assert.equal(found?.["has_broken_chain"], false);
+    assert.equal(found?.["reliability_assessment"], "corroborated");
+  });
+});
