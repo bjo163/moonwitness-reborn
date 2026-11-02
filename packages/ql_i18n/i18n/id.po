@@ -3007,3 +3007,183 @@ msgstr "Administrasi dan operasional."
 msgctxt "web:landing.footerValues"
 msgid "Iman · Pengetahuan · Harmoni · Keabadian"
 msgstr "Iman · Pengetahuan · Harmoni · Keabadian"
+
+msgctxt "web:landing.m3Eyebrow"
+msgid "Gerakan 03 · Penjelajahan"
+msgstr "Gerakan 03 · Penjelajahan"
+
+msgctxt "web:landing.m3Title"
+msgid "Pintu Menuju Khazanah Pengetahuan"
+msgstr "Pintu Menuju Khazanah Pengetahuan"
+
+msgctxt "web:landing.m3Description"
+msgid "Temukan sumber naskah, garis waktu peristiwa, korelasi entitas, dan catatan penelitian yang terverifikasi."
+msgstr "Temukan sumber naskah, garis waktu peristiwa, korelasi entitas, dan catatan penelitian yang terverifikasi."
+
+msgctxt "web:landing.m3CorpusTitle"
+msgid "Korpus & Naskah Wahyu"
+msgstr "Korpus & Naskah Wahyu"
+
+msgctxt "web:landing.m3CorpusDesc"
+msgid "Teks Al-Quran, terjemahan antar-bahasa, dan rekaman transmisi kanonik."
+msgstr "Teks Al-Quran, terjemahan antar-bahasa, dan rekaman transmisi kanonik."
+
+msgctxt "web:landing.m3ResearchTitle"
+msgid "Laboratorium & Pembuktian"
+msgstr "Laboratorium & Pembuktian"
+
+msgctxt "web:landing.m3ResearchDesc"
+msgid "Penelusuran varian bacaan, leksikografi, dan analisis kritis terhadap klaim."
+msgstr "Penelusuran varian bacaan, leksikografi, dan analisis kritis terhadap klaim."
+
+msgctxt "web:landing.m3ModelsTitle"
+msgid "Arsitektur Entitas Pengetahuan"
+msgstr "Arsitektur Entitas Pengetahuan"
+
+msgctxt "web:landing.m3ModelsDesc"
+msgid "Struktur data model domain yang saling terhubung dalam ekosistem."
+msgstr "Struktur data model domain yang saling terhubung dalam ekosistem."
+
+msgctxt "web:landing.m4Eyebrow"
+msgid "Gerakan 04 · Suara MoonWitness"
+msgstr "Gerakan 04 · Suara MoonWitness"
+
+msgctxt "web:landing.m4Title"
+msgid "Transmisi Terpilih"
+msgstr "Transmisi Terpilih"
+
+msgctxt "web:landing.m4Description"
+msgid "Menghadirkan suara naratif dan hikmah yang menghubungkan masa lalu, kini, dan keabadian."
+msgstr "Menghadirkan suara naratif dan hikmah yang menghubungkan masa lalu, kini, dan keabadian."
+
+msgctxt "web:landing.m4FeaturedTitle"
+msgid "Pintu Pembuka Segala Hikmah"
+msgstr "Pintu Pembuka Segala Hikmah"
+
+msgctxt "web:landing.m4FeaturedSource"
+msgid "Surah Al-Fatihah (1:1-7) · Transmisi Utama"
+msgstr "Surah Al-Fatihah (1:1-7) · Transmisi Utama"
+
+msgctxt "web:landing.m4FeaturedExcerpt"
+msgid "Dengan nama Allah Yang Maha Pengasih, Maha Penyayang. Segala puji bagi Allah, Tuhan semesta alam. Tunjukilah kami jalan yang lurus."
+msgstr "Dengan nama Allah Yang Maha Pengasih, Maha Penyayang. Segala puji bagi Allah, Tuhan semesta alam. Tunjukilah kami jalan yang lurus."
+
+msgctxt "web:landing.m4ReadAction"
+msgid "Buka Naskah Lengkap"
+msgstr "Buka Naskah Lengkap"
+
+msgctxt "web:landing.m4ProvenanceLabel"
+msgid "Transmisi Wahyu Sahih"
+msgstr "Transmisi Wahyu Sahih"
+
+msgctxt "web:landing.m5Eyebrow"
+msgid "Gerakan 05 · Penemuan"
+msgstr "Gerakan 05 · Penemuan"
+
+msgctxt "web:landing.m5Title"
+msgid "Jelajahi Berdasarkan Konteks"
+msgstr "Jelajahi Berdasarkan Konteks"
+
+msgctxt "web:landing.m5Description"
+msgid "Pencarian jujur tanpa manipulasi algoritma rekomendasi semu. Akses langsung ke cabang ilmu dan topik."
+msgstr "Pencarian jujur tanpa manipulasi algoritma rekomendasi semu. Akses langsung ke cabang ilmu dan topik."
+
+msgctxt "web:landing.m5TopicFaith"
+msgid "Tauhid & Keimanan"
+msgstr "Tauhid & Keimanan"
+
+msgctxt "web:landing.m5TopicHistory"
+msgid "Garis Waktu & Peristiwa"
+msgstr "Garis Waktu & Peristiwa"
+
+msgctxt "web:landing.m5TopicWisdom"
+msgid "Hukum & Kebijaksanaan"
+msgstr "Hukum & Kebijaksanaan"
+
+msgctxt "web:landing.m5TopicCosmos"
+msgid "Penciptaan & Alam Semesta"
+msgstr "Penciptaan & Alam Semesta"
+
+msgctxt "web:landing.m6Eyebrow"
+msgid "Gerakan 06 · Komunitas"
+msgstr "Gerakan 06 · Komunitas"
+
+msgctxt "web:landing.m6Title"
+msgid "Dock: Pelabuhan Kontribusi"
+msgstr "Dock: Pelabuhan Kontribusi"
+
+msgctxt "web:landing.m6Description"
+msgid "Ruang kolaborasi bagi para pencari kebenaran, peneliti, dan penggiat kebaikan. Partisipasi bermakna yang berorientasi pada amal nyata."
+msgstr "Ruang kolaborasi bagi para pencari kebenaran, peneliti, dan penggiat kebaikan. Partisipasi bermakna yang berorientasi pada amal nyata."
+
+msgctxt "web:landing.m6Pillar1"
+msgid "Kebenaran di Atas Opini"
+msgstr "Kebenaran di Atas Opini"
+
+msgctxt "web:landing.m6Pillar1Desc"
+msgid "Diskusi berlandaskan rujukan primer dan adab ilmu yang santun."
+msgstr "Diskusi berlandaskan rujukan primer dan adab ilmu yang santun."
+
+msgctxt "web:landing.m6Pillar2"
+msgid "Tanggung Jawab Pribadi"
+msgstr "Tanggung Jawab Pribadi"
+
+msgctxt "web:landing.m6Pillar2Desc"
+msgid "Setiap kontribusi dicatat dan dipertanggungjawabkan dengan integritas."
+msgstr "Setiap kontribusi dicatat dan dipertanggungjawabkan dengan integritas."
+
+msgctxt "web:landing.m6DockAction"
+msgid "Masuk ke Dock Community"
+msgstr "Masuk ke Dock Community"
+
+msgctxt "web:landing.m7Eyebrow"
+msgid "Gerakan 07 · Langkah Anda"
+msgstr "Gerakan 07 · Langkah Anda"
+
+msgctxt "web:landing.m7Title"
+msgid "Setiap Jiwa Memiliki Perjalanannya"
+msgstr "Setiap Jiwa Memiliki Perjalanannya"
+
+msgctxt "web:landing.m7Description"
+msgid "A-L-L-A-H.COM membuka akses publik tanpa paksaan membuat akun. Masuklah ketika Anda siap menyimpan catatan, meriset, atau mengelola sistem."
+msgstr "A-L-L-A-H.COM membuka akses publik tanpa paksaan membuat akun. Masuklah ketika Anda siap menyimpan catatan, meriset, atau mengelola sistem."
+
+msgctxt "web:landing.m7AnonTitle"
+msgid "Penjelajah Bebas"
+msgstr "Penjelajah Bebas"
+
+msgctxt "web:landing.m7AnonDesc"
+msgid "Akses bacaan, terjemahan, dan arsip publik secara penuh dan transparan."
+msgstr "Akses bacaan, terjemahan, dan arsip publik secara penuh dan transparan."
+
+msgctxt "web:landing.m7MemberTitle"
+msgid "Pribadi & Peneliti Terdaftar"
+msgstr "Pribadi & Peneliti Terdaftar"
+
+msgctxt "web:landing.m7MemberDesc"
+msgid "Simpan telaah penelitian, hubungkan model AI pribadi di Cockpit, dan berikan kontribusi."
+msgstr "Simpan telaah penelitian, hubungkan model AI pribadi di Cockpit, dan berikan kontribusi."
+
+msgctxt "web:landing.m8Eyebrow"
+msgid "Gerakan 08 · Muara & Kepulangan"
+msgstr "Gerakan 08 · Muara & Kepulangan"
+
+msgctxt "web:landing.m8Title"
+msgid "Hanya Engkau. Amalmu. Dan ALLAH."
+msgstr "Hanya Engkau. Amalmu. Dan ALLAH."
+
+msgctxt "web:landing.m8ClosingQuote"
+msgid "Dunia adalah ladang pembelajaran dan pembuktian. Tidak ada yang luput dari perhitungan, dan setiap cahaya kebaikan akan menemukan balasannya."
+msgstr "Dunia adalah ladang pembelajaran dan pembuktian. Tidak ada yang luput dari perhitungan, dan setiap cahaya kebaikan akan menemukan balasannya."
+
+msgctxt "web:landing.m8EcosystemConstitution"
+msgid "Konstitusi Ekosistem"
+msgstr "Konstitusi Ekosistem"
+
+msgctxt "web:landing.m8Privacy"
+msgid "Privasi & Hak Asasi"
+msgstr "Privasi & Hak Asasi"
+
+msgctxt "web:landing.m8Terms"
+msgid "Etika & Ketentuan"
+msgstr "Etika & Ketentuan"

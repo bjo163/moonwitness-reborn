@@ -80,3 +80,5 @@ export {
 export { cn } from "./lib/utils.js";
 export { HeroStage, type HeroStageProps } from "./composites/hero-stage.js";
 export { PortalCard, type PortalCardProps } from "./composites/portal-card.js";
+export { TransmissionCard, type TransmissionCardProps } from "./composites/transmission-card.js";
+export { SpatialRegion, type SpatialRegionProps } from "./composites/spatial-region.js";

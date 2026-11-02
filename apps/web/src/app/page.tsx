@@ -12,12 +12,14 @@ import {
   Alert,
   Badge,
   Button,
+  HeroStage,
   MetricList,
   MetricRow,
-  HeroStage,
   NavLink,
   PortalCard,
   SidebarBrand,
+  SpatialRegion,
+  TransmissionCard,
 } from "@moonwitness/ui";
 import {
   ArrowRight,
@@ -26,10 +28,17 @@ import {
   ChevronDown,
   ChevronRight,
   Compass,
+  FileText,
+  Globe,
   KeyRound,
   Landmark,
+  Layers,
+  Lock,
+  Microscope,
   Moon,
   Plug,
+  Scroll,
+  Shield,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -162,7 +171,7 @@ export default function LandingPage() {
     {
       title: "Dock",
       description: copy.landing.portalDock,
-      href: "#product-direction",
+      href: "#community-dock",
       icon: <Users aria-hidden="true" size={22} />,
       proposed: true,
     },
@@ -179,8 +188,12 @@ export default function LandingPage() {
       icon: <Landmark aria-hidden="true" size={22} />,
     },
   ];
+
   return (
     <main className="ql-hud-app min-h-dvh">
+      {/* =========================================================================
+          MOVEMENT 01: ARRIVAL / THE GATE (HeroStage)
+         ========================================================================= */}
       <HeroStage imageSrc="/hero-empire.jpg">
         <header className="relative mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-5 py-4 md:px-10">
           <SidebarBrand
@@ -195,16 +208,11 @@ export default function LandingPage() {
             <NavLink href="/" active>
               {copy.landing.navHome}
             </NavLink>
-            <NavLink href="#portals">{copy.landing.navPortals}</NavLink>
-            <NavLink href="#ecosystem-context">
-              {copy.landing.navEcosystem}
-            </NavLink>
-            <NavLink href="#product-direction">
-              {copy.landing.navJourney}
-            </NavLink>
-            <NavLink href="#project-progress">
-              {copy.landing.navProgress}
-            </NavLink>
+            <NavLink href="#the-universe">{copy.landing.navPortals}</NavLink>
+            <NavLink href="#explore-knowledge">Explore</NavLink>
+            <NavLink href="#transmissions">Transmissions</NavLink>
+            <NavLink href="#community-dock">Dock</NavLink>
+            <NavLink href="#your-journey">Journey</NavLink>
           </nav>
           <div className="flex items-center gap-2">
             <LocaleSwitcher
@@ -256,8 +264,11 @@ export default function LandingPage() {
           </blockquote>
         </div>
 
+        {/* =========================================================================
+            MOVEMENT 02: THE UNIVERSE (Portal Cards Grid)
+           ========================================================================= */}
         <div
-          id="portals"
+          id="the-universe"
           className="relative mx-auto w-full max-w-7xl px-5 pb-5 md:px-10"
         >
           <ul className="ql-portal-grid" aria-label={copy.landing.portalsLabel}>
@@ -279,7 +290,7 @@ export default function LandingPage() {
               {copy.landing.footerValues}
             </p>
             <Link
-              href="#ecosystem-context"
+              href="#explore-knowledge"
               className="inline-flex min-h-11 items-center gap-2 px-2 text-xs font-semibold tracking-[0.18em] text-acid uppercase underline-offset-4 hover:underline"
             >
               {copy.landing.ecosystemLinkLabel}
@@ -289,68 +300,273 @@ export default function LandingPage() {
         </div>
       </HeroStage>
 
-      <section
-        id="ecosystem-context"
-        className="mx-auto w-full max-w-7xl px-5 py-14 md:px-10 md:py-20"
-        aria-labelledby="ecosystem-context-title"
+      {/* =========================================================================
+          MOVEMENT 03: EXPLORE (Knowledge Treasury & Paths)
+         ========================================================================= */}
+      <SpatialRegion
+        id="explore-knowledge"
+        eyebrow={copy.landing.m3Eyebrow}
+        title={copy.landing.m3Title}
+        description={copy.landing.m3Description}
       >
-        <div className="grid gap-4 md:grid-cols-[0.8fr_1.2fr] md:gap-8">
-          <h2
-            id="ecosystem-context-title"
-            className="ql-display max-w-md text-3xl leading-tight text-ink md:text-4xl"
+        <div className="grid gap-6 md:grid-cols-3">
+          <Link
+            href="/corpus"
+            className="group relative flex flex-col justify-between border border-hairline bg-panel p-6 transition-all hover:border-acid"
           >
-            {copy.landing.ecosystemContextTitle}
-          </h2>
-          <p className="max-w-3xl text-sm leading-7 text-ink-soft md:text-base">
-            {copy.landing.ecosystemContext}
-          </p>
-        </div>
-      </section>
-
-      <section
-        id="product-direction"
-        className="mx-auto w-full max-w-7xl border-t border-hairline px-5 py-12 md:px-10 md:py-16"
-        aria-labelledby="product-direction-title"
-      >
-        <div className="grid gap-8 md:grid-cols-[0.85fr_1.15fr]">
-          <div>
-            <div className="flex items-center gap-3">
-              <h2
-                id="product-direction-title"
-                className="ql-display text-3xl leading-tight text-ink md:text-4xl"
-              >
-                {copy.landing.productDirection}
-              </h2>
-              <Badge variant="outline">{copy.common.statusProposed}</Badge>
+            <div>
+              <div className="flex size-10 items-center justify-center border border-hairline-strong bg-panel-edge text-acid">
+                <Scroll aria-hidden="true" size={20} />
+              </div>
+              <h3 className="ql-display mt-5 text-2xl text-ink group-hover:text-acid">
+                {copy.landing.m3CorpusTitle}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                {copy.landing.m3CorpusDesc}
+              </p>
             </div>
-            <p className="mt-4 max-w-md text-sm leading-6 text-muted">
-              {copy.landing.journeyNote}
+            <div className="mt-6 flex items-center gap-2 text-xs font-semibold tracking-wider text-acid uppercase">
+              <span>Buka Korpus</span>
+              <span aria-hidden="true">&rarr;</span>
+            </div>
+          </Link>
+
+          <Link
+            href="/research"
+            className="group relative flex flex-col justify-between border border-hairline bg-panel p-6 transition-all hover:border-acid"
+          >
+            <div>
+              <div className="flex size-10 items-center justify-center border border-hairline-strong bg-panel-edge text-acid">
+                <Microscope aria-hidden="true" size={20} />
+              </div>
+              <h3 className="ql-display mt-5 text-2xl text-ink group-hover:text-acid">
+                {copy.landing.m3ResearchTitle}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                {copy.landing.m3ResearchDesc}
+              </p>
+            </div>
+            <div className="mt-6 flex items-center gap-2 text-xs font-semibold tracking-wider text-acid uppercase">
+              <span>Buka Penelitian</span>
+              <span aria-hidden="true">&rarr;</span>
+            </div>
+          </Link>
+
+          <Link
+            href="/models"
+            className="group relative flex flex-col justify-between border border-hairline bg-panel p-6 transition-all hover:border-acid"
+          >
+            <div>
+              <div className="flex size-10 items-center justify-center border border-hairline-strong bg-panel-edge text-acid">
+                <Layers aria-hidden="true" size={20} />
+              </div>
+              <h3 className="ql-display mt-5 text-2xl text-ink group-hover:text-acid">
+                {copy.landing.m3ModelsTitle}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                {copy.landing.m3ModelsDesc}
+              </p>
+            </div>
+            <div className="mt-6 flex items-center gap-2 text-xs font-semibold tracking-wider text-acid uppercase">
+              <span>Buka Model</span>
+              <span aria-hidden="true">&rarr;</span>
+            </div>
+          </Link>
+        </div>
+      </SpatialRegion>
+
+      {/* =========================================================================
+          MOVEMENT 04: TRANSMISSIONS (Voice of MoonWitness)
+         ========================================================================= */}
+      <SpatialRegion
+        id="transmissions"
+        eyebrow={copy.landing.m4Eyebrow}
+        title={copy.landing.m4Title}
+        description={copy.landing.m4Description}
+      >
+        <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr]">
+          <TransmissionCard
+            badge="Transmisi 001"
+            title={copy.landing.m4FeaturedTitle}
+            source={copy.landing.m4FeaturedSource}
+            excerpt={copy.landing.m4FeaturedExcerpt}
+            provenanceLabel={copy.landing.m4ProvenanceLabel}
+            readActionLabel={copy.landing.m4ReadAction}
+            href="/corpus"
+            className="border-hairline-strong shadow-lg"
+          />
+
+          <div className="flex flex-col justify-between border border-hairline bg-panel-edge/80 p-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-acid">
+                Prinsip Transmisi
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+                MoonWitness menjaga agar setiap kutipan menyertakan identitas sumber,
+                edisi, dan tingkat verifikasi secara transparan. Tidak ada fabrikasi klaim
+                keagamaan maupun penulisan firman secara sembarangan.
+              </p>
+            </div>
+            <div className="mt-6 border-t border-hairline-soft pt-4">
+              <Link
+                href="/corpus"
+                className="inline-flex items-center gap-2 text-xs font-medium text-acid underline-offset-4 hover:underline"
+              >
+                <span>Pelajari Metodologi Penelusuran Sumber</span>
+                <ChevronRight aria-hidden="true" size={14} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </SpatialRegion>
+
+      {/* =========================================================================
+          MOVEMENT 05: DISCOVER (Context & Topical Pillars)
+         ========================================================================= */}
+      <SpatialRegion
+        id="discover"
+        eyebrow={copy.landing.m5Eyebrow}
+        title={copy.landing.m5Title}
+        description={copy.landing.m5Description}
+      >
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <Link
+            href="/corpus"
+            className="flex flex-col items-center justify-center border border-hairline bg-panel p-6 text-center transition-all hover:border-acid hover:bg-panel-raised"
+          >
+            <Globe aria-hidden="true" size={24} className="text-acid" />
+            <span className="mt-3 text-sm font-semibold text-ink">
+              {copy.landing.m5TopicFaith}
+            </span>
+          </Link>
+
+          <Link
+            href="/research"
+            className="flex flex-col items-center justify-center border border-hairline bg-panel p-6 text-center transition-all hover:border-acid hover:bg-panel-raised"
+          >
+            <Scroll aria-hidden="true" size={24} className="text-acid" />
+            <span className="mt-3 text-sm font-semibold text-ink">
+              {copy.landing.m5TopicHistory}
+            </span>
+          </Link>
+
+          <Link
+            href="/workflow"
+            className="flex flex-col items-center justify-center border border-hairline bg-panel p-6 text-center transition-all hover:border-acid hover:bg-panel-raised"
+          >
+            <FileText aria-hidden="true" size={24} className="text-acid" />
+            <span className="mt-3 text-sm font-semibold text-ink">
+              {copy.landing.m5TopicWisdom}
+            </span>
+          </Link>
+
+          <Link
+            href="/models"
+            className="flex flex-col items-center justify-center border border-hairline bg-panel p-6 text-center transition-all hover:border-acid hover:bg-panel-raised"
+          >
+            <Sparkles aria-hidden="true" size={24} className="text-acid" />
+            <span className="mt-3 text-sm font-semibold text-ink">
+              {copy.landing.m5TopicCosmos}
+            </span>
+          </Link>
+        </div>
+      </SpatialRegion>
+
+      {/* =========================================================================
+          MOVEMENT 06: COMMUNITY (Dock Guidelines & Ethos)
+         ========================================================================= */}
+      <SpatialRegion
+        id="community-dock"
+        eyebrow={copy.landing.m6Eyebrow}
+        title={copy.landing.m6Title}
+        description={copy.landing.m6Description}
+        actions={
+          <Badge variant="outline">{copy.common.statusProposed}</Badge>
+        }
+      >
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="border border-hairline bg-panel p-6 md:p-8">
+            <h3 className="ql-display text-2xl text-ink">
+              {copy.landing.m6Pillar1}
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-muted">
+              {copy.landing.m6Pillar1Desc}
             </p>
           </div>
-          <ol className="grid content-start gap-x-8 sm:grid-cols-2">
-            {copy.landing.journey.map((step, index) => (
-              <li
-                key={step}
-                className="flex min-h-11 items-center gap-4 border-t border-hairline-soft py-2.5"
-              >
-                <span className="w-6 shrink-0 text-xs tabular-nums text-acid-muted">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className="text-sm font-medium text-ink-soft">{step}</span>
-                {index === 0 && (
-                  <BookOpenCheck
-                    aria-hidden="true"
-                    size={15}
-                    className="ml-auto text-acid"
-                  />
-                )}
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
 
-      {groupedSections.length > 0 ? (
+          <div className="border border-hairline bg-panel p-6 md:p-8">
+            <h3 className="ql-display text-2xl text-ink">
+              {copy.landing.m6Pillar2}
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-muted">
+              {copy.landing.m6Pillar2Desc}
+            </p>
+          </div>
+        </div>
+      </SpatialRegion>
+
+      {/* =========================================================================
+          MOVEMENT 07: YOUR JOURNEY (Open vs. Member Access)
+         ========================================================================= */}
+      <SpatialRegion
+        id="your-journey"
+        eyebrow={copy.landing.m7Eyebrow}
+        title={copy.landing.m7Title}
+        description={copy.landing.m7Description}
+      >
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="flex flex-col justify-between border border-hairline bg-panel p-6 md:p-8">
+            <div>
+              <span className="inline-flex size-8 items-center justify-center border border-hairline-strong text-acid">
+                <Globe aria-hidden="true" size={16} />
+              </span>
+              <h3 className="ql-display mt-4 text-2xl text-ink">
+                {copy.landing.m7AnonTitle}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                {copy.landing.m7AnonDesc}
+              </p>
+            </div>
+            <div className="mt-6 pt-4 border-t border-hairline-soft">
+              <Link
+                href="/corpus"
+                className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-acid underline-offset-4 hover:underline"
+              >
+                <span>Mulai Membaca Publik</span>
+                <span aria-hidden="true">&rarr;</span>
+              </Link>
+            </div>
+          </div>
+
+          <div className="flex flex-col justify-between border border-acid/40 bg-panel-raised p-6 md:p-8">
+            <div>
+              <span className="inline-flex size-8 items-center justify-center border border-acid text-acid">
+                <Lock aria-hidden="true" size={16} />
+              </span>
+              <h3 className="ql-display mt-4 text-2xl text-ink">
+                {copy.landing.m7MemberTitle}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                {copy.landing.m7MemberDesc}
+              </p>
+            </div>
+            <div className="mt-6 pt-4 border-t border-hairline-soft">
+              <Link
+                href={`/auth?mode=login&locale=${locale}`}
+                className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-acid underline-offset-4 hover:underline"
+              >
+                <span>{copy.landing.login}</span>
+                <span aria-hidden="true">&rarr;</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </SpatialRegion>
+
+      {/* =========================================================================
+          CATALOG SECTIONS (Existing Model & Ecosystem Views)
+         ========================================================================= */}
+      {groupedSections.length > 0 &&
         groupedSections.map((group) => (
           <section
             key={group.section}
@@ -416,100 +632,38 @@ export default function LandingPage() {
               </ul>
             </div>
           </section>
-        ))
-      ) : (
-        <section
-          className="mx-auto w-full max-w-7xl border-t border-hairline px-5 py-12 md:px-10 md:py-16"
-          aria-labelledby="current-foundation-title"
-        >
-          <div className="grid gap-8 md:grid-cols-[0.85fr_1.15fr]">
-            <div>
-              <h2
-                id="current-foundation-title"
-                className="ql-display max-w-md text-3xl leading-tight text-ink md:text-4xl"
-              >
-                {copy.landing.currentFoundation}
-              </h2>
-              <p className="mt-4 max-w-md text-sm leading-6 text-muted">
-                {copy.landing.currentFoundationDescription}
-              </p>
-            </div>
-            <ul className="grid content-start gap-x-8 sm:grid-cols-2">
-              <li className="flex items-center gap-3 border-t border-hairline py-4 text-sm text-ink-soft">
-                <Sparkles aria-hidden="true" size={17} className="text-acid" />
-                {copy.landing.foundationChat}
-              </li>
-              <li className="flex items-center gap-3 border-t border-hairline py-4 text-sm text-ink-soft">
-                <Boxes aria-hidden="true" size={17} className="text-acid" />
-                {copy.landing.foundationModels}
-              </li>
-              <li className="flex items-center gap-3 border-t border-hairline py-4 text-sm text-ink-soft">
-                <KeyRound aria-hidden="true" size={17} className="text-acid" />
-                {copy.landing.foundationProviders}
-              </li>
-              <li className="flex items-center gap-3 border-t border-hairline py-4 text-sm text-ink-soft">
-                <Plug aria-hidden="true" size={17} className="text-acid" />
-                {copy.landing.foundationConnectors}
-              </li>
-            </ul>
-          </div>
-        </section>
-      )}
+        ))}
 
-      <section
-        id="project-progress"
-        className="mx-auto w-full max-w-7xl border-t border-hairline px-5 py-10 md:px-10 md:py-12"
-        aria-labelledby="project-progress-title"
+      {/* =========================================================================
+          MOVEMENT 08: THE RETURN / CLOSING
+         ========================================================================= */}
+      <footer
+        id="the-return"
+        className="mx-auto w-full max-w-7xl border-t border-hairline px-5 py-16 md:px-10 md:py-24"
       >
-        <div className="grid gap-5 md:grid-cols-[0.8fr_1.2fr] md:gap-8">
-          <div>
-            <h2
-              id="project-progress-title"
-              className="ql-display max-w-md text-3xl leading-tight text-ink md:text-4xl"
-            >
-              {copy.landing.progressTitle}
-            </h2>
-            <p className="mt-3 max-w-md text-sm leading-6 text-muted">
-              {copy.landing.progressDescription}
-            </p>
-          </div>
-          <div>
-            {progressLoading && (
-              <p role="status" className="text-sm text-ink-soft">
-                {copy.landing.progressLoading}
-              </p>
-            )}
-            {progressError && (
-              <Alert variant="error">{copy.landing.progressError}</Alert>
-            )}
-            {progressSummary && (
-              <>
-                <MetricList className="grid gap-x-6 border-y border-hairline sm:grid-cols-3">
-                  <MetricRow
-                    label={copy.landing.progressDone}
-                    value={`${progressSummary.states.done} / ${progressSummary.total}`}
-                  />
-                  <MetricRow
-                    label={copy.landing.progressReady}
-                    value={progressSummary.readyCount}
-                  />
-                  <MetricRow
-                    label={copy.landing.progressBlocked}
-                    value={progressSummary.states.blocked}
-                    divided={false}
-                  />
-                </MetricList>
-                <p className="mt-3 text-xs leading-5 text-muted">
-                  {copy.landing.progressNote}
-                </p>
-              </>
-            )}
+        <div className="flex flex-col items-center text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-acid">
+            {copy.landing.m8Eyebrow}
+          </p>
+          <h2 className="ql-display mt-4 text-3xl font-semibold text-ink md:text-5xl">
+            {copy.landing.m8Title}
+          </h2>
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink-soft italic">
+            &ldquo;{copy.landing.m8ClosingQuote}&rdquo;
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-6 text-xs font-medium tracking-wider text-muted">
+            <span>{copy.landing.m8EcosystemConstitution}</span>
+            <span>&bull;</span>
+            <span>{copy.landing.m8Privacy}</span>
+            <span>&bull;</span>
+            <span>{copy.landing.m8Terms}</span>
           </div>
         </div>
-      </section>
 
-      <footer className="mx-auto flex w-full max-w-7xl border-t border-hairline px-5 py-6 text-xs leading-5 text-muted md:px-10">
-        {copy.landing.footer}
+        <div className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-hairline-soft pt-8 text-xs text-muted">
+          <p>{copy.landing.footer}</p>
+          <p className="font-mono text-acid-muted">A-L-L-A-H.COM · EST. 2026</p>
+        </div>
       </footer>
     </main>
   );

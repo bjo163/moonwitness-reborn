@@ -14,6 +14,8 @@ import {
   PageHeader,
   PortalCard,
   SectionGrid,
+  SpatialRegion,
+  TransmissionCard,
   SidePanel,
   SidebarBrand,
   SidebarFooter,
@@ -374,4 +376,38 @@ void test("PortalCard is one link named by its title and carries description and
   const plain = render(<PortalCard description="d" href="/x" title="T" />);
   assert.doesNotMatch(plain, /ql-portal-card__icon/);
   assert.doesNotMatch(plain, /\(/);
+});
+void test("TransmissionCard renders title, excerpt and provenance", () => {
+  const markup = render(
+    <TransmissionCard
+      excerpt="When the moon rises, messages are shared."
+      href="/corpus/quran-en/1"
+      provenanceLabel="Verified Revelation"
+      readActionLabel="Read Chapter"
+      source="Surah Al-Fatihah"
+      title="The Opening"
+    />,
+  );
+  assert.match(markup, /The Opening/);
+  assert.match(markup, /Surah Al-Fatihah/);
+  assert.match(markup, /Verified Revelation/);
+  assert.match(markup, /Read Chapter/);
+  assertNoOwnColours(markup, "TransmissionCard");
+});
+
+void test("SpatialRegion renders heading, eyebrow and children", () => {
+  const markup = render(
+    <SpatialRegion
+      eyebrow="Movement 03"
+      id="explore-region"
+      title="Explore the Knowledge"
+    >
+      <p>Inner content</p>
+    </SpatialRegion>,
+  );
+  assert.match(markup, /id="explore-region"/);
+  assert.match(markup, /Movement 03/);
+  assert.match(markup, /Explore the Knowledge/);
+  assert.match(markup, /Inner content/);
+  assertNoOwnColours(markup, "SpatialRegion");
 });
