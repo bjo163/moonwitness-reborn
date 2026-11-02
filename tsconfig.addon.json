@@ -8,6 +8,7 @@
   },
   "include": [
     "${configDir}/__manifest__.ts",
+    "${configDir}/__manifest__.test.ts",
     "${configDir}/models/**/*.ts",
     "${configDir}/services/**/*.ts",
     "${configDir}/views/**/*.ts"
