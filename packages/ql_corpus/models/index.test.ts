@@ -825,7 +825,7 @@ void test("UNILEX ontology models corpus.term and corpus.concept are registered 
     ],
     async (orm) => {
       // Test corpus.term creation
-      const termId = await orm.createByService("corpus.term", {
+      const termRecord = await orm.createForService("corpus.term", undefined, {
         canonical_id: "mw:term:rahmah",
         term: "رَحْمَة",
         lemma: "ر ح م",
@@ -837,14 +837,14 @@ void test("UNILEX ontology models corpus.term and corpus.concept are registered 
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
-      assert.ok(termId);
+      assert.ok(termRecord.id);
 
-      const retrievedTerm = await orm.findByIdByService("corpus.term", termId);
+      const retrievedTerm = await orm.findOneByService("corpus.term", { id: termRecord.id });
       assert.equal(retrievedTerm?.["term"], "رَحْمَة");
       assert.equal(retrievedTerm?.["primary_locale"], "ar");
 
       // Test corpus.concept creation
-      const conceptId = await orm.createByService("corpus.concept", {
+      const conceptRecord = await orm.createForService("corpus.concept", undefined, {
         canonical_id: "mw:concept:divine_mercy",
         name: "Divine Mercy",
         category: "theology",
@@ -856,9 +856,9 @@ void test("UNILEX ontology models corpus.term and corpus.concept are registered 
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
-      assert.ok(conceptId);
+      assert.ok(conceptRecord.id);
 
-      const retrievedConcept = await orm.findByIdByService("corpus.concept", conceptId);
+      const retrievedConcept = await orm.findOneByService("corpus.concept", { id: conceptRecord.id });
       assert.equal(retrievedConcept?.["name"], "Divine Mercy");
       assert.equal(retrievedConcept?.["is_deprecated"], false);
     },
