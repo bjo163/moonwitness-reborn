@@ -210,6 +210,56 @@ const manifest: QlAddonManifest = {
       create: false,
       unlink: false,
     },
+    // corpus.term — UNILEX ontology terms
+    {
+      model: "corpus.term",
+      group: "user",
+      read: true,
+      write: false,
+      create: false,
+      unlink: false,
+    },
+    {
+      model: "corpus.term",
+      group: "operator",
+      read: true,
+      write: true,
+      create: true,
+      unlink: false,
+    },
+    {
+      model: "corpus.term",
+      group: "admin",
+      read: true,
+      write: true,
+      create: true,
+      unlink: true,
+    },
+    // corpus.concept — UNILEX ontology concepts
+    {
+      model: "corpus.concept",
+      group: "user",
+      read: true,
+      write: false,
+      create: false,
+      unlink: false,
+    },
+    {
+      model: "corpus.concept",
+      group: "operator",
+      read: true,
+      write: true,
+      create: true,
+      unlink: false,
+    },
+    {
+      model: "corpus.concept",
+      group: "admin",
+      read: true,
+      write: true,
+      create: true,
+      unlink: true,
+    },
     // Lexical frequencies are operator-facing research inputs, not a public
     // scripture surface. Human assessments belong to ql_research. QlOrm also
     // checks read access to every declared source before invoking computation.

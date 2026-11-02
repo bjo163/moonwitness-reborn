@@ -134,3 +134,83 @@
   --ql-ui-font-mono: var(--font-mono);
   --ql-ui-font-sans: var(--font-sans);
 }
+
+/*
+ * Adaptive Theme Layer (Light Theme & High Contrast Support)
+ * Activates when data-theme="light" is set on the document element.
+ */
+:root[data-theme="light"],
+[data-theme="light"] {
+  --color-ink: #111713;
+  --color-ink-soft: #2a342a;
+  --color-muted: #536150;
+  --color-muted-dim: #6d7d69;
+  --color-panel: #ffffff;
+  --color-panel-raised: #f7faf6;
+  --color-panel-deep: #eef3ec;
+  --color-panel-deeper: #e5ece2;
+  --color-panel-edge: #d8e2d4;
+  --color-panel-well: #f0f5ee;
+  --color-hairline: #ccd8c8;
+  --color-hairline-soft: #dce5d8;
+  --color-hairline-strong: #b5c4b0;
+  --color-acid: #557811;
+  --color-acid-dark: #3f590b;
+  --color-acid-muted: #6e8a32;
+  --color-acid-shadow: #8fa855;
+  --color-danger: #c52820;
+  --color-success: #15803d;
+  --color-warning: #b45309;
+  --color-void: #ffffff;
+
+  --ql-on-acid: #ffffff;
+  --ql-button-secondary-border: #a4b89a;
+  --ql-button-secondary-bg: #eaf1e7;
+  --ql-button-secondary-bg-hover: #dce7d7;
+  --ql-button-ghost-bg-hover: #eaf1e7;
+  --ql-button-danger-border: #f0a39e;
+  --ql-button-danger-bg: #fdf2f1;
+  --ql-input-placeholder: #7c8a79;
+  --ql-field-ink: #18221a;
+  --ql-card-shadow: #d1ded0;
+  --ql-alert-error-border: #f5b5b0;
+  --ql-alert-error-bg: #fdf3f2;
+  --ql-alert-error-ink: #991b1b;
+  --ql-badge-default-border: #b8cbb3;
+  --ql-badge-default-bg: #eef5eb;
+  --ql-hud-panel: #ffffff;
+  --ql-nav-active-border: #a4bba0;
+  --ql-nav-active-bg: #e6f0e4;
+  --ql-hud-topbar-border: #d0ded0;
+  --ql-hud-user-border: #b0c4ac;
+  --ql-hud-user-bg: #edf5eb;
+  --ql-hud-user-ink: #162217;
+  --ql-hud-user-shadow: #dce5da;
+  --ql-hud-assistant-border: #a4ba9c;
+  --ql-hud-assistant-bg: #e7f2e4;
+  --ql-hud-composer-border: #b5c7b1;
+  --ql-hud-composer-border-focus: #557811;
+  --ql-hud-status-border: #bccab9;
+  --ql-hud-status-bg: #eef5eb;
+  --ql-hud-status-ink: #2d451f;
+  --ql-hud-auth-bg: #f8faf7;
+  --ql-hud-auth-card-border: #b8ccb3;
+  --ql-hud-auth-card-shadow: #cbd9c8;
+
+  --ql-hud-grid-line: rgba(50, 75, 40, 0.05);
+  --ql-hud-auth-grid-line: rgba(50, 75, 40, 0.06);
+  --ql-table-row-border: rgba(180, 198, 175, 0.65);
+  --ql-table-row-hover: rgba(85, 120, 17, 0.06);
+  --ql-hud-app-glow: rgba(85, 120, 17, 0.05);
+  --ql-backdrop: rgba(15, 20, 16, 0.45);
+  --ql-scanline: rgba(0, 0, 0, 0.01);
+  --ql-hud-sidebar-tint: rgba(85, 120, 17, 0.04);
+  --ql-hud-topbar-bg: rgba(255, 255, 255, 0.88);
+  --ql-hud-composer-bg: rgba(255, 255, 255, 0.98);
+  --ql-hud-composer-sheen: rgba(85, 120, 17, 0.05);
+  --ql-hud-auth-glow: rgba(85, 120, 17, 0.08);
+  --ql-hud-auth-card-tint: rgba(85, 120, 17, 0.03);
+  --ql-hud-auth-card-glow: rgba(85, 120, 17, 0.05);
+  --ql-side-panel-tint: rgba(85, 120, 17, 0.03);
+  --ql-side-panel-shadow: rgba(0, 0, 0, 0.15);
+}
