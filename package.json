@@ -5,7 +5,7 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "build": "pnpm lint && turbo run build",
+    "build": "turbo run build && pnpm lint",
     "dev": "turbo run dev",
     "lint": "eslint apps packages",
     "test": "turbo run test --concurrency=1",
