@@ -43,3 +43,12 @@ export async function runAgent(
 
   return provider.generate(messages);
 }
+
+export { calculateMetrics, judgeResponse } from "./evaluator.js";
+export type {
+  ClassificationCounts,
+  EvaluationItem,
+  EvaluationJudgment,
+  JudgmentCriteria,
+  MetricScores,
+} from "./evaluator.js";

@@ -8,6 +8,12 @@ export interface SidebarTriggerProps {
   onOpenSidebar(): void;
   /** Accessible name — every screen passes its own locale string. */
   label: string;
+  /**
+   * DOM id of the drawer this trigger controls, mirroring
+   * `WorkspaceTemplate`'s `sidebarId`. Defaults to `"ql-workspace-sidebar"`
+   * so a single workspace per page needs no prop.
+   */
+  sidebarId?: string;
   className?: string;
 }
 
@@ -33,11 +39,12 @@ export function SidebarTrigger({
   sidebarOpen,
   onOpenSidebar,
   label,
+  sidebarId = "ql-workspace-sidebar",
   className,
 }: SidebarTriggerProps) {
   return (
     <Button
-      aria-controls="ql-workspace-sidebar"
+      aria-controls={sidebarId}
       aria-expanded={sidebarOpen}
       aria-label={label}
       className={cn("ql-sidebar-trigger", className)}

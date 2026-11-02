@@ -47,6 +47,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiErrorMessage } from "../locale/api-error-message";
 import { useTranslationCatalog } from "../locale/translation-catalog";
 import { useLocalePreference } from "../locale/use-locale-preference";
@@ -160,6 +161,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -371,7 +373,7 @@ export default function DnsWorkspace({ connectorId }: { connectorId: string }) {
   async function logout() {
     try {
       await moonClient.logout();
-      window.location.href = "/command-center";
+      router.replace("/auth");
     } catch (logoutError) {
       setError(apiErrorMessage(logoutError, t));
     }
