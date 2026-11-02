@@ -549,3 +549,35 @@ void test("research.correlation is registered in ql_research and validates relat
     },
   );
 });
+
+void test("character.canon is registered in ql_research and preserves canon status", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+      researchManifest,
+    ],
+    async (orm) => {
+      const char = await orm.createRecordForService("character.canon", {
+        canonical_id: "mw:char:tariq-ibn-ziyad",
+        name: "Tariq ibn Ziyad",
+        alias: "Conqueror of Hispania",
+        canon_status: "historical_reference",
+        backstory_summary: "Umayyad commander who led the conquest of the Iberian Peninsula in 711 CE.",
+        motivation: "Strategic and civil expansion of the realm, defense of regional allies.",
+        historical_anchor_id: "mw:person:tariq-ibn-ziyad",
+        lore_constraints: "Must strictly adhere to classical chronicles without dramatized historical distortion.",
+        creative_owner_id: "mw:studio:canon-core",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      assert.ok(char.id);
+
+      const found = await orm.findOneByService("character.canon", { id: char.id });
+      assert.equal(found?.["name"], "Tariq ibn Ziyad");
+      assert.equal(found?.["canon_status"], "historical_reference");
+    },
+  );
+});
