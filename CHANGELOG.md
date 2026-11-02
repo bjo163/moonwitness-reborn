@@ -15,6 +15,22 @@ Daftar rilis MoonWitness. Tiap bagian ditulis oleh workflow Release saat rilis d
 - **Fitur produk — CAB + Project Management (MW-ADR-017, workstream MW-0550)**: addon baru `ql_workflow` (packages/ql_workflow) dengan empat model (`workflow.project`, `workflow.task`, `workflow.change`, `workflow.transition`). State machine DRAFT→SUBMITTED→IN_REVIEW→APPROVED→PUBLISHED + CHANGES_REQUESTED/REJECTED/WITHDRAWN/SUPERSEDED diimplementasikan **verbatim** dari `spesifikasi workflow dan publishing di GitHub Wiki`; tidak ada state tambahan yang di-re-design. Bypass-lockdown ditegakkan lewat ACL `write:false, create:false` pada `workflow.change` sehingga PATCH generik `/models/workflow.change` tidak bisa mengubah `state` — satu-satunya jalur mutasi adalah endpoint `/workflow/changes/:id/transition` dengan guard "submitter cannot approve their own work" dan "no duplicate active review" (lihat kontrak workflow di GitHub Wiki). Reviewer group reuse `admin`/`operator` dari `ROLE_CATALOG` yang sudah ada; role `reviewer` baru dan `ql_ops`/`ql_publication` secara eksplisit ditunda. Moonclient dapat blok `workflow` sibling baru di `apiRoutes` (route `/workflow/queue`, `/workflow/changes/:id/transition`, `/workflow/changes/:id/transitions`) + DTO `WorkflowChangeDto`/`WorkflowTransitionDto`/`TransitionRequestDto`/`TransitionResponseDto`; scanner credential test moonclient tetap hijau. API boundary: satu fungsi `handleWorkflowRequest` mengikuti pola `handleConnectorRequest` + satu blok `if` pada dispatcher `server.ts`, `handleRequestError` tidak disentuh. Web: satu layar `/workflow` dengan `WorkspaceTemplate` + `DataTable` + `Card`; nav-link dan card di-dashboard di-gate oleh probe `moonClient.listModels()` — hapus satu baris bootstrap di `apps/api/src/index.ts` = semua permukaan (route, model, nav) hilang bareng, tanpa perlu subsystem feature-flag. PM tracker (`workflow.project`/`workflow.task`) muncul otomatis di workspace `/models` view-driven; nol kode UI baru untuk tracker.
 
 <!-- bagian rilis -->
+## v0.2.10 — 2026-11-02
+
+- build(web): record size budget baseline for attachment and corpus-verify routes (fbe34b8)
+- feat(corpus): add ayah proof/verification endpoints and QlOrm storage driver (a1c7bf8)
+- feat(attachment): complete QlOrm attachment management (Fase 0-4) and fix CI lint (1a4a916)
+- feat(attachment): include ql_attachment addon and HTTP endpoints in build (d987d51)
+- feat(batch6): complete track 30 spatial viewport testing and finalize 30 strategic tracks (1c0382a)
+- feat(batch6): complete tracks 27-29 strict typing, bundle budget, and workflow state machine matrix (63693e9)
+- feat(batch5): implement tracks 16-22, 24, 25 community governance, sanad review, and telemetry (ef69870)
+- chore(web): untrack generated .next-i18n-preview build output (MW-1256) (b364737)
+- fix(api): type community filters and import createHash (batch4 build) (b019089)
+- fix(lockfile): record tsx devDependency for types and ql_corpus (MW-1264) (697166e)
+- feat(batch5): implement harbor governance, telemetry and operability (tracks 16-22, 24-25) (2226104)
+- chore(conventions): enforce role-aware package script and export contracts (MW-1264) (58db03c)
+- feat(batch4): implement cognitive AI and grounded reasoning engine (tracks 06-10) (9c4ec4a)
+
 ## v0.2.9 — 2026-11-02
 
 - fix(batch3): restore deleted ql_search tests and bind audio stream segments in QuranReader (bbb96ea)
