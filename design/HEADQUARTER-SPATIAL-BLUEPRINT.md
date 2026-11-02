@@ -404,3 +404,21 @@ Prepared after inspecting the `dev` branch of `bjo163/moonwitness-reborn` on 202
 - `packages/ui/package.json`
 
 This source snapshot is informational. Re-check current files and project guidance before implementation because the branch may evolve.
+
+
+---
+
+## Related design documents
+
+This blueprint is part of the shared design foundation. Read it together with:
+
+- [Design library index](./README.md)
+- [Product vision](./VISION.md)
+- [Information architecture](./INFORMATION-ARCHITECTURE.md)
+- [User journeys](./USER-JOURNEY.md)
+- [Design DNA](./DESIGN-DNA.md)
+- [Design token contract](./DESIGN-TOKENS.md)
+- [A-L-L-A-H.COM Home blueprint](./HOME-BLUEPRINT.md)
+- [Mockup specification and review gates](./MOCKUP-SPEC.md)
+
+The Headquarter experience must preserve the product boundaries and shared visual, accessibility, data-provenance, and implementation constraints defined by those documents.

@@ -15,6 +15,18 @@ Daftar rilis MoonWitness. Tiap bagian ditulis oleh workflow Release saat rilis d
 - **Fitur produk — CAB + Project Management (MW-ADR-017, workstream MW-0550)**: addon baru `ql_workflow` (packages/ql_workflow) dengan empat model (`workflow.project`, `workflow.task`, `workflow.change`, `workflow.transition`). State machine DRAFT→SUBMITTED→IN_REVIEW→APPROVED→PUBLISHED + CHANGES_REQUESTED/REJECTED/WITHDRAWN/SUPERSEDED diimplementasikan **verbatim** dari `spesifikasi workflow dan publishing di GitHub Wiki`; tidak ada state tambahan yang di-re-design. Bypass-lockdown ditegakkan lewat ACL `write:false, create:false` pada `workflow.change` sehingga PATCH generik `/models/workflow.change` tidak bisa mengubah `state` — satu-satunya jalur mutasi adalah endpoint `/workflow/changes/:id/transition` dengan guard "submitter cannot approve their own work" dan "no duplicate active review" (lihat kontrak workflow di GitHub Wiki). Reviewer group reuse `admin`/`operator` dari `ROLE_CATALOG` yang sudah ada; role `reviewer` baru dan `ql_ops`/`ql_publication` secara eksplisit ditunda. Moonclient dapat blok `workflow` sibling baru di `apiRoutes` (route `/workflow/queue`, `/workflow/changes/:id/transition`, `/workflow/changes/:id/transitions`) + DTO `WorkflowChangeDto`/`WorkflowTransitionDto`/`TransitionRequestDto`/`TransitionResponseDto`; scanner credential test moonclient tetap hijau. API boundary: satu fungsi `handleWorkflowRequest` mengikuti pola `handleConnectorRequest` + satu blok `if` pada dispatcher `server.ts`, `handleRequestError` tidak disentuh. Web: satu layar `/workflow` dengan `WorkspaceTemplate` + `DataTable` + `Card`; nav-link dan card di-dashboard di-gate oleh probe `moonClient.listModels()` — hapus satu baris bootstrap di `apps/api/src/index.ts` = semua permukaan (route, model, nav) hilang bareng, tanpa perlu subsystem feature-flag. PM tracker (`workflow.project`/`workflow.task`) muncul otomatis di workspace `/models` view-driven; nol kode UI baru untuk tracker.
 
 <!-- bagian rilis -->
+## v0.2.5 — 2026-11-02
+
+- docs(design): connect Headquarter blueprint to design library (362361a)
+- docs(design): define visual mockup sequence and review gates (377ff6a)
+- docs(design): define A-L-L-A-H.COM Home experience blueprint (b02230f)
+- docs(design): document semantic design token contract (e85c99d)
+- docs(design): define visual and interaction design DNA (9cc80e9)
+- docs(design): specify public and member user journeys (1b99b71)
+- docs(design): define ecosystem information architecture (3644552)
+- docs(design): define A-L-L-A-H.COM product vision (04fc670)
+- docs(design): add design documentation index (5dc3123)
+
 ## v0.2.4 — 2026-11-02
 
 - docs(design): add Headquarter spatial command center blueprint (80c691d)
