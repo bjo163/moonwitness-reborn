@@ -3,6 +3,7 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from "node:http";
+import { createHash } from "node:crypto";
 import {
   runAgent,
   runGroundedAgent,
@@ -78,6 +79,7 @@ import {
   QlValidationError,
   type QlOrm,
   type QlRecord,
+  type QlServiceValue,
 } from "ql_orm";
 import {
   normalizeProviderBaseUrl,
@@ -2647,7 +2649,7 @@ export function createApiServer(
       if (pathname === apiRoutes.community.covenants && method === "GET") {
         const url = new URL(request.url ?? "/", "http://localhost");
         const version = url.searchParams.get("version");
-        const filters: Record<string, unknown> = {};
+        const filters: Record<string, QlServiceValue> = {};
         if (version) filters.covenant_version = version;
         const rows = await orm.findManyByService(
           "workflow.covenant_signature",
@@ -2794,7 +2796,7 @@ export function createApiServer(
       if (pathname === apiRoutes.community.deedsLedger && method === "GET") {
         const url = new URL(request.url ?? "/", "http://localhost");
         const kind = url.searchParams.get("kind");
-        const filters: Record<string, unknown> = {};
+        const filters: Record<string, QlServiceValue> = {};
         if (kind) filters.deed_kind = kind;
         const deeds = await orm.findManyByService(
           "community.beneficial_deed",
