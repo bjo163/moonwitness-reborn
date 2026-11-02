@@ -6,15 +6,12 @@ import {
   type AuthUserDto,
   type LandingViewItemDto,
   type LandingViewSection,
-  type ProjectProgressSummaryDto,
 } from "@moonwitness/moonclient";
 import {
   Alert,
   Badge,
   Button,
   HeroStage,
-  MetricList,
-  MetricRow,
   NavLink,
   PortalCard,
   SidebarBrand,
@@ -23,22 +20,18 @@ import {
 } from "@moonwitness/ui";
 import {
   ArrowRight,
-  BookOpenCheck,
   Boxes,
   ChevronDown,
   ChevronRight,
   Compass,
   FileText,
   Globe,
-  KeyRound,
   Landmark,
   Layers,
   Lock,
   Microscope,
   Moon,
-  Plug,
   Scroll,
-  Shield,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -84,10 +77,6 @@ export default function LandingPage() {
   const [user, setUser] = useState<AuthUserDto | null | undefined>(undefined);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [landingItems, setLandingItems] = useState<LandingViewItemDto[]>([]);
-  const [progressSummary, setProgressSummary] =
-    useState<ProjectProgressSummaryDto | null>(null);
-  const [progressError, setProgressError] = useState(false);
-  const [progressLoading, setProgressLoading] = useState(true);
   const { locale, changeLocale, saving, error: localeError } =
     useLocalePreference(user);
   const copy = useMessages();
@@ -123,17 +112,6 @@ export default function LandingPage() {
       })
       .catch(() => {
         if (!cancelled) setLandingItems([]);
-      });
-    void moonClient
-      .projectProgressSummary()
-      .then((summary) => {
-        if (!cancelled) setProgressSummary(summary);
-      })
-      .catch(() => {
-        if (!cancelled) setProgressError(true);
-      })
-      .finally(() => {
-        if (!cancelled) setProgressLoading(false);
       });
     return () => {
       cancelled = true;
