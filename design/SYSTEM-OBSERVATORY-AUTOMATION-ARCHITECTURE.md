@@ -150,7 +150,7 @@ The repository's existing TypeScript / Node.js workspace remains the implementat
 | Domain persistence | QlOrm models in `ql_*` addons |
 | Database | Existing configured QlOrm database; preserve SQLite-first compatibility where supported |
 | Browser automation | Playwright in a separately managed worker/process with isolated browser contexts |
-| Agent execution | Existing `@moonwitness/agent-runtime`; optional OpenClaw adapter |
+| Intelligence runtime | Native MoonWitness-owned ARSY runtime, evolving the existing `@moonwitness/agent-runtime` package |
 | Model access | Existing `ql_ai` / provider contracts, including OpenAI-compatible providers where supported |
 | Scheduling | Durable database-backed scheduler/dispatcher first |
 | Queue | Database-backed persistent jobs first; add Redis/BullMQ only when measured throughput or locking requirements justify it |
