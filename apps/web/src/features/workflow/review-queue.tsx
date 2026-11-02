@@ -119,6 +119,16 @@ const actionVariants: Partial<
 
 export default function ReviewQueue() {
   const router = useRouter();
+
+  async function logout() {
+    setError(null);
+    try {
+      await moonClient.logout();
+      router.replace("/auth");
+    } catch (logoutError) {
+      setError(apiErrorMessage(logoutError, t));
+    }
+  }
   const [user, setUser] = useState<AuthUser | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [queueLoading, setQueueLoading] = useState(false);
@@ -305,9 +315,7 @@ export default function ReviewQueue() {
           ]}
           logout={{
             label: copy.common.logout,
-            onLogout: () => {
-              void moonClient.logout().then(() => router.replace("/auth"));
-            },
+            onLogout: () => void logout(),
           }}
           navLabel={copy.common.mainNavigation}
           onCloseSidebar={() => setSidebarOpen(false)}

@@ -211,6 +211,7 @@ export default function UserAdminPage() {
               href: "/command-center/chat",
               label: t("web.adminUsers.backToChat"),
               icon: <ArrowLeft aria-hidden="true" size={16} />,
+            onSelect: () => setSidebarOpen(false),
             },
           ]}
           logout={{ label: t("web.common.logout"), onLogout: () => void logout() }}

@@ -324,4 +324,14 @@ void test("SidebarTrigger links the hamburger to the drawer via aria-controls an
     />,
   );
   assert.match(open, /aria-expanded="true"/);
+
+  const renamed = render(
+    <SidebarTrigger
+      label="Open menu"
+      onOpenSidebar={() => undefined}
+      sidebarId="ql-secondary-workspace-sidebar"
+      sidebarOpen={false}
+    />,
+  );
+  assert.match(renamed, /aria-controls="ql-secondary-workspace-sidebar"/);
 });

@@ -78,6 +78,16 @@ function stageLabel(
 
 export default function CorpusShelf() {
   const router = useRouter();
+
+  async function logout() {
+    setError(null);
+    try {
+      await moonClient.logout();
+      router.replace("/auth");
+    } catch (logoutError) {
+      setError(apiErrorMessage(logoutError, t));
+    }
+  }
   const copy = useMessages();
   const { t } = useTranslationCatalog();
   const [user, setUser] = useState<AuthUser | null | undefined>(undefined);
@@ -182,9 +192,7 @@ export default function CorpusShelf() {
           ]}
           logout={{
             label: copy.common.logout,
-            onLogout: () => {
-              void moonClient.logout().then(() => router.replace("/auth"));
-            },
+            onLogout: () => void logout(),
           }}
           navLabel={copy.common.mainNavigation}
           onCloseSidebar={() => setSidebarOpen(false)}
