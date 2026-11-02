@@ -6,6 +6,7 @@ import { views } from "./views/index.js";
 const manifest: QlAddonManifest = {
   name: "ql_i18n",
   version: "1.0.0",
+  category: "system",
   description: "Katalog bahasa, terjemahan UI, dan alur review.",
   depends: ["ql_base", "ql_auth"],
   models,

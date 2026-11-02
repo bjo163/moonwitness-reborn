@@ -3,6 +3,7 @@
 import {
   MoonClientError,
   moonClient,
+  type AddonCategory,
   type AuthUserDto as AuthUser,
   type ModelFieldDto as ModelField,
   type ModelMetadataDto as ModelMetadata,
@@ -54,10 +55,70 @@ import {
 } from "../locale/translation-catalog";
 import { useLocalePreference } from "../locale/use-locale-preference";
 
+const CATEGORY_ORDER: readonly AddonCategory[] = [
+  "knowledge",
+  "research",
+  "intelligence",
+  "workflow",
+  "integration",
+  "system",
+];
+
+const CATEGORY_LABEL_KEYS: Record<AddonCategory, UiMessageKey> = {
+  knowledge: "web.models.categories.knowledge",
+  research: "web.models.categories.research",
+  intelligence: "web.models.categories.intelligence",
+  workflow: "web.models.categories.workflow",
+  integration: "web.models.categories.integration",
+  system: "web.models.categories.system",
+};
+
+function inferCategory(model: ModelMetadata): AddonCategory {
+  if (model.category) return model.category;
+  const { name } = model;
+  if (name.startsWith("corpus.") || name.startsWith("source.")) {
+    return "knowledge";
+  }
+  if (
+    name.startsWith("research.") ||
+    name.startsWith("witness.") ||
+    name.startsWith("story.") ||
+    name.startsWith("event.") ||
+    name.startsWith("person.") ||
+    name.startsWith("law.") ||
+    name.startsWith("mizan.") ||
+    name.startsWith("character.") ||
+    name.startsWith("studio.")
+  ) {
+    return "research";
+  }
+  if (name.startsWith("ai.") || name.startsWith("chat.")) return "intelligence";
+  if (name.startsWith("workflow.")) return "workflow";
+  if (name.startsWith("integration.") || name.startsWith("cloudflare.")) {
+    return "integration";
+  }
+  return "system";
+}
+
+function humanizeModelName(modelName: string): string {
+  return modelName
+    .split(/[._]/g)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function resolveModelLabel(
+  model: ModelMetadata,
+  tm: (key: string, fallback: string) => string,
+): string {
+  return translateMetadata(model.labelKey, humanizeModelName(model.name), tm);
+}
+
 function fieldLabel(
   name: string,
   metadataKey: string,
-  t: (key: UiMessageKey) => string,
+  _t: (key: UiMessageKey) => string,
   tm: (key: string, fallback: string) => string,
 ): string {
   const suffix = name
@@ -95,6 +156,7 @@ export default function ModelWorkspace() {
   const { t, tm } = useTranslationCatalog();
   const [models, setModels] = useState<ModelMetadata[]>([]);
   const [modelName, setModelName] = useState("");
+  const [codeMode, setCodeMode] = useState(false);
   const [records, setRecords] = useState<ModelRecord[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<ModelRecord | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -109,16 +171,7 @@ export default function ModelWorkspace() {
 
   const selectedModel = models.find((model) => model.name === modelName);
   const modelLabel = selectedModel
-    ? translateMetadata(
-        selectedModel.labelKey,
-        fieldLabel(
-        selectedModel.name.split(".").pop() ?? selectedModel.name,
-        selectedModel.labelKey,
-        t,
-        tm,
-        ),
-        tm,
-      )
+    ? resolveModelLabel(selectedModel, tm)
     : t("web.models.addonModels");
   const modelDescription = selectedModel
     ? translateMetadata(
@@ -127,6 +180,15 @@ export default function ModelWorkspace() {
         tm,
       )
     : t("web.models.chooseModel");
+  const groupedModels = useMemo(
+    () =>
+      CATEGORY_ORDER.map((category) => ({
+        category,
+        label: t(CATEGORY_LABEL_KEYS[category]),
+        items: models.filter((model) => inferCategory(model) === category),
+      })).filter((group) => group.items.length > 0),
+    [models, t],
+  );
   const listView = selectedModel?.views.find((view) => view.type === "list");
   const formView = selectedModel?.views.find((view) => view.type === "form");
   const formFields = useMemo(
@@ -166,7 +228,14 @@ export default function ModelWorkspace() {
         if (cancelled) return;
         setUser(session.user);
         setModels(metadata.models);
-        setModelName(metadata.models[0]?.name ?? "");
+        const requested = new URLSearchParams(window.location.search).get(
+          "model",
+        );
+        const initialModel =
+          requested && metadata.models.some((item) => item.name === requested)
+            ? requested
+            : (metadata.models[0]?.name ?? "");
+        setModelName(initialModel);
       } catch (requestError) {
         if (!cancelled) {
           if (!(requestError instanceof MoonClientError && requestError.status === 401)) {
@@ -345,6 +414,7 @@ export default function ModelWorkspace() {
       sidebar={
         <WorkspaceSidebar
           brandIcon={<Boxes aria-hidden="true" size={18} />}
+          className="flex-none"
           closeLabel={t("web.common.closeMenu")}
           identity={{ name: user.name, subtitle: user.email }}
           items={[
@@ -352,37 +422,43 @@ export default function ModelWorkspace() {
               href: "/command-center",
               label: t("web.models.aiWorkspace"),
               icon: <ArrowLeft aria-hidden="true" size={16} />,
-            onSelect: () => setSidebarOpen(false),
+              onSelect: () => setSidebarOpen(false),
             },
             {
               href: "/providers",
               label: t("web.models.providers"),
               icon: <KeyRound aria-hidden="true" size={16} />,
-            onSelect: () => setSidebarOpen(false),
+              onSelect: () => setSidebarOpen(false),
             },
           ]}
           logout={{ label: t("web.common.logout"), onLogout: () => void logout() }}
           navLabel={t("web.models.title")}
           onCloseSidebar={() => setSidebarOpen(false)}
         >
-          <NavSectionLabel>{t("web.models.addonModels")}</NavSectionLabel>
           <OptionNav label={t("web.models.addonModels")}>
-            {models.map((model) => (
-              <ListOption
-                key={model.name}
-                onSelect={() => {
-                  setModelName(model.name);
-                  setSelectedRecord(null);
-                  setFormOpen(false);
-                  setSidebarOpen(false);
-                  setError(null);
-                }}
-                selected={modelName === model.name}
-                variant="nav"
-              >
-                <Boxes aria-hidden="true" size={15} />
-                {model.name}
-              </ListOption>
+            {groupedModels.map((group) => (
+              <div key={group.category}>
+                <NavSectionLabel>{group.label}</NavSectionLabel>
+                {group.items.map((model) => (
+                  <ListOption
+                    key={model.name}
+                    onSelect={() => {
+                      setModelName(model.name);
+                      setSelectedRecord(null);
+                      setFormOpen(false);
+                      setSidebarOpen(false);
+                      setError(null);
+                    }}
+                    selected={modelName === model.name}
+                    variant="nav"
+                  >
+                    <Boxes aria-hidden="true" size={15} />
+                    <span className="truncate">
+                      {codeMode ? model.name : resolveModelLabel(model, tm)}
+                    </span>
+                  </ListOption>
+                ))}
+              </div>
             ))}
           </OptionNav>
         </WorkspaceSidebar>
@@ -400,7 +476,22 @@ export default function ModelWorkspace() {
               <div className="text-xs text-muted">{t("web.models.dataViews")}</div>
             </div>
           </div>
-          <Badge variant="outline">{selectedModel?.name ?? t("web.models.noModel")}</Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant={codeMode ? "secondary" : "ghost"}
+              onClick={() => setCodeMode((current) => !current)}
+            >
+              {codeMode ? t("web.models.humanMode") : t("web.models.codeMode")}
+            </Button>
+            <Badge variant="outline">
+              {selectedModel
+                ? selectedModel.addon
+                  ? `${selectedModel.addon} · ${selectedModel.name}`
+                  : selectedModel.name
+                : t("web.models.noModel")}
+            </Badge>
+          </div>
         </>
       }
     >

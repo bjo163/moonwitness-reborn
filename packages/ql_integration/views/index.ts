@@ -22,6 +22,20 @@ export const views: QlViewDefinition[] = [
     fields: ["kind", "label", "enabled"],
   },
   {
+    name: "integration.connector.landing",
+    model: "integration.connector",
+    type: "landing",
+    fields: ["kind", "label", "enabled", "verify_status"],
+    landing: {
+      section: "foundation",
+      sequence: 40,
+      href: "/connectors",
+      status: "available",
+      titleKey: "web.landing.views.integration_connector.title",
+      descriptionKey: "web.landing.views.integration_connector.description",
+    },
+  },
+  {
     name: "integration.audit.list",
     model: "integration.audit",
     type: "list",

@@ -873,3 +873,43 @@ void test("unknown routes return 404", async () => {
     code: "RESOURCE_NOT_FOUND",
   });
 });
+
+
+void test("GET /models exposes addon and category metadata and GET /public/landing returns declarative landing views", async () => {
+  const cookie = await register("landing-catalog@example.com");
+  const modelsRes = await fetch(`${address}/models`, {
+    headers: { cookie },
+  });
+  assert.equal(modelsRes.status, 200);
+  const { models } = (await modelsRes.json()) as {
+    models: {
+      name: string;
+      addon?: string;
+      category?: string;
+      views: { type: string }[];
+    }[];
+  };
+  const partnerModel = models.find((m) => m.name === "res.partner");
+  assert.ok(partnerModel);
+  assert.equal(partnerModel.addon, "ql_base");
+  assert.equal(partnerModel.category, "system");
+  assert.equal(
+    models.some((m) => m.views.some((v) => v.type === "landing")),
+    false,
+  );
+
+  const landingRes = await fetch(`${address}/public/landing`);
+  assert.equal(landingRes.status, 200);
+  const { items } = (await landingRes.json()) as {
+    items: {
+      name: string;
+      model: string;
+      addon: string;
+      section: string;
+      href: string;
+    }[];
+  };
+  assert.ok(items.some((item) => item.name === "chat.conversation.landing"));
+  assert.ok(items.some((item) => item.name === "ai.provider.landing"));
+  assert.ok(items.every((item) => item.href.startsWith("/")));
+});

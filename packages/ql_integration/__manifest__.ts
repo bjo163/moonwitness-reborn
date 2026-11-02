@@ -5,6 +5,7 @@ import { views } from "./views/index.js";
 const manifest: QlAddonManifest = {
   name: "ql_integration",
   version: "1.0.0",
+  category: "integration",
   description: "Registry konektor eksternal dan jejak audit aksi lintas layanan.",
   depends: ["ql_base", "ql_auth"],
   models,

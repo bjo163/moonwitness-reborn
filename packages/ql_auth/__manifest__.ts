@@ -5,6 +5,7 @@ import { models } from "./models/index.js";
 const manifest: QlAddonManifest = {
   name: "ql_auth",
   version: "1.0.0",
+  category: "system",
   description: "Akun pengguna dan autentikasi sesi.",
   depends: ["ql_base"],
   models,

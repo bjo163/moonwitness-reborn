@@ -6,6 +6,7 @@ import { views } from "./views/index.js";
 const manifest: QlAddonManifest = {
   name: "ql_geo",
   version: "1.0.0",
+  category: "system",
   description: "Referensi geografis bersama, dimulai dari katalog negara.",
   depends: ["ql_base"],
   models,

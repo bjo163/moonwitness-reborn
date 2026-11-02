@@ -36,6 +36,7 @@ import { views } from "./views/index.js";
 const manifest: QlAddonManifest = {
   name: "ql_corpus",
   version: "1.0.0",
+  category: "knowledge",
   description:
     "RGBL corpus layer: work, edition, passage, dan annotation; authority di level storage menegakkan canon text-vs-commentary.",
   depends: ["ql_base", "ql_auth", "ql_source"],

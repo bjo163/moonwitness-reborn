@@ -42,6 +42,20 @@ export const views: QlViewDefinition[] = [
     ],
   },
   {
+    name: "source.artifact.landing",
+    model: "source.artifact",
+    type: "landing",
+    fields: ["canonical_id", "title", "kind", "publisher", "lifecycle_stage"],
+    landing: {
+      section: "knowledge",
+      sequence: 30,
+      href: "/models?model=source.artifact",
+      status: "available",
+      titleKey: "web.landing.views.source_artifact.title",
+      descriptionKey: "web.landing.views.source_artifact.description",
+    },
+  },
+  {
     name: "source.version.list",
     model: "source.version",
     type: "list",

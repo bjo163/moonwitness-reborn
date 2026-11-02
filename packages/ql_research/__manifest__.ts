@@ -5,6 +5,7 @@ import { views } from "./views/index.js";
 const manifest: QlAddonManifest = {
   name: "ql_research",
   version: "1.0.0",
+  category: "research",
   description:
     "Versioned research assessments, witness statements, story narratives, event records, person profiles, law instruments, mizan assessments, research correlations, character canon, character classifications, character appearances, and studio artifacts.",
   depends: ["ql_base", "ql_auth", "ql_source", "ql_corpus"],

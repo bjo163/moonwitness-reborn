@@ -5,6 +5,7 @@ import { views } from "./views/index.js";
 const manifest: QlAddonManifest = {
   name: "ql_ai",
   version: "1.0.0",
+  category: "intelligence",
   description: "Provider model, gateway routing, dan pengaturan AI MoonWitness.",
   depends: ["ql_base"],
   models,
