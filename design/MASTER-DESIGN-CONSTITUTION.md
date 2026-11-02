@@ -50,9 +50,10 @@ The world is monumental, celestial, architectural, editorial, and restrained. It
 
 ### Color authority
 - Existing Moon UI semantic tokens are authoritative.
-- Acid green remains a restrained interaction accent.
-- Brass/gold may appear as material/light, not as a competing success or warning color.
-- Obsidian/ink and muted surfaces provide depth without reducing readability.
+- The current Moon UI accent token family (`acid`, `acid-dark`, `acid-muted`, `acid-shadow`) is visually Antique Gold in the current token implementation; the historical token name does not mean the rendered accent is green.
+- The approved direction is Cosmic Ivory & Antique Gold over a deep indigo / obsidian night environment, with a parchment / bronze light-theme counterpart.
+- Gold may carry brand and interaction emphasis through the existing semantic accent tokens; it must not be reused as success, warning, or danger status.
+- Obsidian/indigo surfaces and warm ivory text provide depth while preserving readable contrast.
 - Any new semantic color requires a documented proposal and token review.
 
 ### Shape and composition
