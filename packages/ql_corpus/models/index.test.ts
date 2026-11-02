@@ -825,7 +825,7 @@ void test("UNILEX ontology models corpus.term and corpus.concept are registered 
     ],
     async (orm) => {
       // Test corpus.term creation
-      const termRecord = await orm.createForService("corpus.term", undefined, {
+      const termRecord = await orm.createRecordForService("corpus.term", {
         canonical_id: "mw:term:rahmah",
         term: "رَحْمَة",
         lemma: "ر ح م",
@@ -844,7 +844,7 @@ void test("UNILEX ontology models corpus.term and corpus.concept are registered 
       assert.equal(retrievedTerm?.["primary_locale"], "ar");
 
       // Test corpus.concept creation
-      const conceptRecord = await orm.createForService("corpus.concept", undefined, {
+      const conceptRecord = await orm.createRecordForService("corpus.concept", {
         canonical_id: "mw:concept:divine_mercy",
         name: "Divine Mercy",
         category: "theology",
