@@ -446,3 +446,38 @@ void test("person.profile is registered in ql_research and validates role attrib
     },
   );
 });
+
+void test("law.instrument is registered in ql_research and validates jurisdiction boundaries", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+      researchManifest,
+    ],
+    async (orm) => {
+      const law = await orm.createRecordForService("law.instrument", {
+        canonical_id: "mw:law:medina-charter",
+        title: "Charter of Medina",
+        jurisdiction: "islamic_classical",
+        instrument_type: "treaty",
+        issuing_authority: "Prophet Muhammad",
+        promulgation_date: "622 CE",
+        operative_scope: "Constitutional pact establishing rights and duties for Medina communities",
+        summary: "Historical pact establishing mutual cooperation and defense in Medina.",
+        source_reference: "Sirat Rasul Allah, Ibn Ishaq",
+        is_binding: true,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      assert.ok(law.id);
+
+      const found = await orm.findOneByService("law.instrument", { id: law.id });
+      assert.equal(found?.["title"], "Charter of Medina");
+      assert.equal(found?.["jurisdiction"], "islamic_classical");
+      assert.equal(found?.["instrument_type"], "treaty");
+      assert.equal(found?.["is_binding"], true);
+    },
+  );
+});
