@@ -198,7 +198,7 @@ export function moonwitnessConfig({
     );
   }
 
-  /** @type {import("typescript-eslint").ConfigWithExtends["rules"]} */
+  /** @type {import("eslint").Linter.RulesRecord} */
   const cleanCodeRules = {
     "@typescript-eslint/consistent-type-imports": [
       "error",
@@ -248,11 +248,11 @@ export function moonwitnessConfig({
     "prefer-arrow-callback": "warn",
     "prefer-template": "error",
   };
-  // Next's declarations widen each valid rule severity to `string`.
+  // Next's declarations widen each valid rule severity to `string`, which is
+  // then rejected by ESLint's `RulesRecord`; re-narrow it at this boundary.
+  /** @type {import("eslint").Linter.RulesRecord} */
   const nextRecommendedRules =
-    /** @type {import("typescript-eslint").ConfigWithExtends["rules"]} */ (
-      nextPlugin.configs.recommended.rules
-    );
+    /** @type {never} */ (nextPlugin.configs.recommended.rules);
 
   return tseslint.config(
     js.configs.recommended,
