@@ -9,7 +9,7 @@
 - Kontrak request/response, route, dan SDK komunikasi API wajib berada di `@moonwitness/moonclient`.
 - Semua komunikasi HTTP aplikasi web (`apps/web`) wajib memakai instance `moonClient`; jangan memakai `fetch`, XMLHttpRequest, atau klien transport lain di aplikasi. Utility developer mandiri di luar `apps/web` boleh memakai HTTP same-origin hanya ke server loopback miliknya sendiri.
 - API memakai DTO dan route bersama dari `@moonwitness/moonclient`; jangan menduplikasi path endpoint di server.
-- Aturan lint workspace dipusatkan di `eslint.config.mjs`. Build, lint, typecheck, tes, dan budget web dijalankan sebagai gate utama melalui GitHub Actions, namun agent diperbolehkan menjalankan build/test secara lokal bila diperlukan untuk verifikasi atau sinkronisasi artefak build lokal.
+- Aturan lint workspace dipusatkan di `eslint.config.mjs`. Build, lint, typecheck, tes, dan budget web dijalankan sebagai gate utama melalui GitHub Actions.
 
 ## Data dan keamanan
 
@@ -43,10 +43,11 @@
 - Sebelum mengedit, telusuri pemilik fitur, pola terdekat, kontrak bersama, dan tes yang sudah ada. Ubah sesedikit mungkin file untuk menyelesaikan akar masalah; jangan menyapu perubahan pengguna yang tidak terkait.
 - Jaga setiap perubahan tetap terketik, dengan validasi dan error yang eksplisit. Jangan menyamarkan kegagalan memakai fallback sukses, catch luas, atau cast tipe yang tidak aman.
 - Tambahkan atau sesuaikan tes pada boundary yang berubah. Untuk perubahan UI, pertahankan state loading/error/empty dan interaksi yang terdampak; untuk katalog i18n, jaga konsistensi key `id`/`en`.
-- Boleh menjalankan build, lint, typecheck, atau test secara lokal untuk verifikasi dan sinkronisasi workspace. Namun rilis kanonik tetap mengikuti hasil verifikasi GitHub Actions untuk SHA yang tepat. Tanpa run yang cocok dan sukses di GitHub Actions, status gate rilis dilaporkan sebagai pending, bukan PASS.
+- Rilis kanonik tetap mengikuti hasil verifikasi GitHub Actions untuk SHA yang tepat. Tanpa run yang cocok dan sukses di GitHub Actions, status gate rilis dilaporkan sebagai pending, bukan PASS.
 - Urutan otoritatif GitHub Actions berada di `.github/workflows/ci.yml`: build, lint type-aware, typecheck, test, lalu budget web. Bedakan error lint dari warning dan jangan menyatakan workflow lulus tanpa hasil run yang diamati.
 - Untuk perubahan tata kelola Issues/Wiki, verifikasi Issue, label, dan dokumentasi langsung pada sumber kanonis GitHub Issues/Wiki menggunakan skill GitHub Issues. Requirement audit gates lokal sudah dipensiunkan; jangan menambahkan kembali salinan snapshot atau script lokal sebagai sumber status.
 - Pecah pekerjaan paralel hanya untuk bagian yang benar-benar independen dan file/interface yang tidak tumpang tindih. Beri tiap worker lingkup serta kriteria selesai yang jelas; satu integrator menangani kontrak bersama dan menjalankan validasi akhir.
+- Alur branch: `dev` adalah branch kerja harian dan menerima `git push origin dev` langsung; jangan membuka pull request untuk memasukkan pekerjaan ke `dev` dan jangan menjadikan `dev` sebagai branch yang butuh gerbang tambahan. Branch default repo adalah `main`, tetapi `main` hanya garis rilis: masuknya lewat pull request `dev` → `main` yang dibuka workflow Release (`.github/workflows/release.yml`) dan dijaga status check `validate` dengan `enforce_admins`. Jangan mengubah default branch atau proteksi `main`/`dev` tanpa perintah eksplisit pengguna.
 - Jangan commit, push, mengubah konfigurasi GitHub, atau menjalankan deployment kecuali diminta secara eksplisit.
 
 ## Kustomisasi agent

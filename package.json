@@ -5,11 +5,12 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "build": "pnpm lint && turbo run build",
+    "build": "turbo run build && pnpm lint",
     "dev": "turbo run dev",
     "lint": "eslint apps packages",
     "test": "turbo run test --concurrency=1",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "verify:package-conventions": "node scripts/verify-package-conventions.mjs"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",

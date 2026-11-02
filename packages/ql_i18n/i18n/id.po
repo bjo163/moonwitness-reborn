@@ -600,6 +600,62 @@ msgctxt "web:assistant.sendHint"
 msgid "Enter untuk kirim · Shift + Enter untuk baris baru"
 msgstr "Enter untuk kirim · Shift + Enter untuk baris baru"
 
+msgctxt "web:assistant.groundedEvidence"
+msgid "Berbasis sumber yang diambil"
+msgstr "Berbasis sumber yang diambil"
+
+msgctxt "web:assistant.insufficientEvidence"
+msgid "Bukti yang tersedia belum cukup"
+msgstr "Bukti yang tersedia belum cukup"
+
+msgctxt "web:assistant.legacyEvidence"
+msgid "Rujukan belum diverifikasi"
+msgstr "Rujukan belum diverifikasi"
+
+msgctxt "web:assistant.citationsTitle"
+msgid "Rujukan yang digunakan"
+msgstr "Rujukan yang digunakan"
+
+msgctxt "web:assistant.sourceEdition"
+msgid "Edisi sumber"
+msgstr "Edisi sumber"
+
+msgctxt "web:assistant.locale"
+msgid "Bahasa"
+msgstr "Bahasa"
+
+msgctxt "web:assistant.passageAuthority"
+msgid "Otoritas teks"
+msgstr "Otoritas teks"
+
+msgctxt "web:assistant.editionAuthority"
+msgid "Otoritas edisi"
+msgstr "Otoritas edisi"
+
+msgctxt "web:assistant.attribution"
+msgid "Atribusi"
+msgstr "Atribusi"
+
+msgctxt "web:assistant.publisher"
+msgid "Penerbit"
+msgstr "Penerbit"
+
+msgctxt "web:assistant.verseLocator"
+msgid "Ayat"
+msgstr "Ayat"
+
+msgctxt "web:assistant.openSource"
+msgid "Buka di pembaca korpus"
+msgstr "Buka di pembaca korpus"
+
+msgctxt "web:assistant.noCitationMetadata"
+msgid "Metadata rujukan tidak tersedia."
+msgstr "Metadata rujukan tidak tersedia."
+
+msgctxt "web:assistant.metadataUnavailable"
+msgid "Tidak dicantumkan"
+msgstr "Tidak dicantumkan"
+
 msgctxt "web:workflow.navLabel"
 msgid "Antrean review"
 msgstr "Antrean review"
@@ -2912,6 +2968,10 @@ msgctxt "web:landing.views.workflow_change.title"
 msgid "Antrean Review & Tata Kelola CAB"
 msgstr "Antrean Review & Tata Kelola CAB"
 
+msgctxt "chat:insufficientEvidence"
+msgid "Saya belum menemukan bukti yang cukup dan dapat digunakan untuk menjawab."
+msgstr "Saya belum menemukan bukti yang cukup dan dapat digunakan untuk menjawab."
+
 msgctxt "web:landing.views.workflow_change.description"
 msgid "Kelola usulan perubahan, persetujuan berjenjang, dan jejak transisi audit."
 msgstr "Kelola usulan perubahan, persetujuan berjenjang, dan jejak transisi audit."
@@ -2980,6 +3040,22 @@ msgctxt "web:landing.navJourney"
 msgid "Perjalanan"
 msgstr "Perjalanan"
 
+msgctxt "web:landing.navExplore"
+msgid "Jelajahi"
+msgstr "Jelajahi"
+
+msgctxt "web:landing.navTransmissions"
+msgid "Transmisi"
+msgstr "Transmisi"
+
+msgctxt "web:landing.navDock"
+msgid "Dok"
+msgstr "Dok"
+
+msgctxt "web:landing.m8FooterReflectionSource"
+msgid "Refleksi Proyek A-L-L-A-H.COM"
+msgstr "Refleksi Proyek A-L-L-A-H.COM"
+
 msgctxt "web:landing.navProgress"
 msgid "Kemajuan"
 msgstr "Kemajuan"
@@ -3007,3 +3083,447 @@ msgstr "Administrasi dan operasional."
 msgctxt "web:landing.footerValues"
 msgid "Iman · Pengetahuan · Harmoni · Keabadian"
 msgstr "Iman · Pengetahuan · Harmoni · Keabadian"
+
+msgctxt "web:landing.m3Eyebrow"
+msgid "Gerakan 03 · Penjelajahan"
+msgstr "Gerakan 03 · Penjelajahan"
+
+msgctxt "web:landing.m3Title"
+msgid "Pintu Menuju Khazanah Pengetahuan"
+msgstr "Pintu Menuju Khazanah Pengetahuan"
+
+msgctxt "web:landing.m3Description"
+msgid "Temukan sumber naskah, garis waktu peristiwa, korelasi entitas, dan catatan penelitian yang terverifikasi."
+msgstr "Temukan sumber naskah, garis waktu peristiwa, korelasi entitas, dan catatan penelitian yang terverifikasi."
+
+msgctxt "web:landing.m3CorpusTitle"
+msgid "Korpus & Naskah Wahyu"
+msgstr "Korpus & Naskah Wahyu"
+
+msgctxt "web:landing.m3CorpusDesc"
+msgid "Teks Al-Quran, terjemahan antar-bahasa, dan rekaman transmisi kanonik."
+msgstr "Teks Al-Quran, terjemahan antar-bahasa, dan rekaman transmisi kanonik."
+
+msgctxt "web:landing.m3ResearchTitle"
+msgid "Laboratorium & Pembuktian"
+msgstr "Laboratorium & Pembuktian"
+
+msgctxt "web:landing.m3ResearchDesc"
+msgid "Penelusuran varian bacaan, leksikografi, dan analisis kritis terhadap klaim."
+msgstr "Penelusuran varian bacaan, leksikografi, dan analisis kritis terhadap klaim."
+
+msgctxt "web:landing.m3ModelsTitle"
+msgid "Arsitektur Entitas Pengetahuan"
+msgstr "Arsitektur Entitas Pengetahuan"
+
+msgctxt "web:landing.m3ModelsDesc"
+msgid "Struktur data model domain yang saling terhubung dalam ekosistem."
+msgstr "Struktur data model domain yang saling terhubung dalam ekosistem."
+
+msgctxt "web:landing.m4Eyebrow"
+msgid "Gerakan 04 · Suara MoonWitness"
+msgstr "Gerakan 04 · Suara MoonWitness"
+
+msgctxt "web:landing.m4Title"
+msgid "Transmisi Terpilih"
+msgstr "Transmisi Terpilih"
+
+msgctxt "web:landing.m4Description"
+msgid "Menghadirkan suara naratif dan hikmah yang menghubungkan masa lalu, kini, dan keabadian."
+msgstr "Menghadirkan suara naratif dan hikmah yang menghubungkan masa lalu, kini, dan keabadian."
+
+msgctxt "web:landing.m4FeaturedTitle"
+msgid "Pintu Pembuka Segala Hikmah"
+msgstr "Pintu Pembuka Segala Hikmah"
+
+msgctxt "web:landing.m4FeaturedSource"
+msgid "Surah Al-Fatihah (1:1-7) · Transmisi Utama"
+msgstr "Surah Al-Fatihah (1:1-7) · Transmisi Utama"
+
+msgctxt "web:landing.m4FeaturedExcerpt"
+msgid "Dengan nama Allah Yang Maha Pengasih, Maha Penyayang. Segala puji bagi Allah, Tuhan semesta alam. Tunjukilah kami jalan yang lurus."
+msgstr "Dengan nama Allah Yang Maha Pengasih, Maha Penyayang. Segala puji bagi Allah, Tuhan semesta alam. Tunjukilah kami jalan yang lurus."
+
+msgctxt "web:landing.m4ReadAction"
+msgid "Buka Naskah Lengkap"
+msgstr "Buka Naskah Lengkap"
+
+msgctxt "web:landing.m4ProvenanceLabel"
+msgid "Terjemahan Kemenag RI"
+msgstr "Terjemahan Kemenag RI"
+
+msgctxt "web:landing.m5Eyebrow"
+msgid "Gerakan 05 · Penemuan"
+msgstr "Gerakan 05 · Penemuan"
+
+msgctxt "web:landing.m5Title"
+msgid "Jelajahi Berdasarkan Konteks"
+msgstr "Jelajahi Berdasarkan Konteks"
+
+msgctxt "web:landing.m5Description"
+msgid "Pencarian jujur tanpa manipulasi algoritma rekomendasi semu. Akses langsung ke cabang ilmu dan topik."
+msgstr "Pencarian jujur tanpa manipulasi algoritma rekomendasi semu. Akses langsung ke cabang ilmu dan topik."
+
+msgctxt "web:landing.m5TopicFaith"
+msgid "Tauhid & Keimanan"
+msgstr "Tauhid & Keimanan"
+
+msgctxt "web:landing.m5TopicHistory"
+msgid "Garis Waktu & Peristiwa"
+msgstr "Garis Waktu & Peristiwa"
+
+msgctxt "web:landing.m5TopicWisdom"
+msgid "Hukum & Kebijaksanaan"
+msgstr "Hukum & Kebijaksanaan"
+
+msgctxt "web:landing.m5TopicCosmos"
+msgid "Penciptaan & Alam Semesta"
+msgstr "Penciptaan & Alam Semesta"
+
+msgctxt "web:landing.m6Eyebrow"
+msgid "Gerakan 06 · Komunitas"
+msgstr "Gerakan 06 · Komunitas"
+
+msgctxt "web:landing.m6Title"
+msgid "Dock: Pelabuhan Kontribusi"
+msgstr "Dock: Pelabuhan Kontribusi"
+
+msgctxt "web:landing.m6Description"
+msgid "Ruang kolaborasi bagi para pencari kebenaran, peneliti, dan penggiat kebaikan. Partisipasi bermakna yang berorientasi pada amal nyata."
+msgstr "Ruang kolaborasi bagi para pencari kebenaran, peneliti, dan penggiat kebaikan. Partisipasi bermakna yang berorientasi pada amal nyata."
+
+msgctxt "web:landing.m6Pillar1"
+msgid "Kebenaran di Atas Opini"
+msgstr "Kebenaran di Atas Opini"
+
+msgctxt "web:landing.m6Pillar1Desc"
+msgid "Diskusi berlandaskan rujukan primer dan adab ilmu yang santun."
+msgstr "Diskusi berlandaskan rujukan primer dan adab ilmu yang santun."
+
+msgctxt "web:landing.m6Pillar2"
+msgid "Tanggung Jawab Pribadi"
+msgstr "Tanggung Jawab Pribadi"
+
+msgctxt "web:landing.m6Pillar2Desc"
+msgid "Dirancang agar setiap kontribusi dapat dicatat dan dipertanggungjawabkan secara transparan."
+msgstr "Dirancang agar setiap kontribusi dapat dicatat dan dipertanggungjawabkan secara transparan."
+
+msgctxt "web:landing.m6DockAction"
+msgid "Masuk ke Dock Community"
+msgstr "Masuk ke Dock Community"
+
+msgctxt "web:landing.m7Eyebrow"
+msgid "Gerakan 07 · Langkah Anda"
+msgstr "Gerakan 07 · Langkah Anda"
+
+msgctxt "web:landing.m7Title"
+msgid "Setiap Jiwa Memiliki Perjalanannya"
+msgstr "Setiap Jiwa Memiliki Perjalanannya"
+
+msgctxt "web:landing.m7Description"
+msgid "A-L-L-A-H.COM membuka akses publik tanpa paksaan membuat akun. Masuklah ketika Anda siap menyimpan catatan, meriset, atau mengelola sistem."
+msgstr "A-L-L-A-H.COM membuka akses publik tanpa paksaan membuat akun. Masuklah ketika Anda siap menyimpan catatan, meriset, atau mengelola sistem."
+
+msgctxt "web:landing.m7AnonTitle"
+msgid "Penjelajah Bebas"
+msgstr "Penjelajah Bebas"
+
+msgctxt "web:landing.m7AnonDesc"
+msgid "Akses bacaan, terjemahan, dan arsip publik secara penuh dan transparan."
+msgstr "Akses bacaan, terjemahan, dan arsip publik secara penuh dan transparan."
+
+msgctxt "web:landing.m7MemberTitle"
+msgid "Pribadi & Peneliti Terdaftar"
+msgstr "Pribadi & Peneliti Terdaftar"
+
+msgctxt "web:landing.m7MemberDesc"
+msgid "Akses Korpus Al-Qur'an dan ruang asisten AI di Cockpit. Fitur simpan penelitian dan integrasi model sedang dalam pengembangan."
+msgstr "Akses Korpus Al-Qur'an dan ruang asisten AI di Cockpit. Fitur simpan penelitian dan integrasi model sedang dalam pengembangan."
+
+msgctxt "web:landing.m8Eyebrow"
+msgid "Gerakan 08 · Muara & Kepulangan"
+msgstr "Gerakan 08 · Muara & Kepulangan"
+
+msgctxt "web:landing.m8Title"
+msgid "Hanya Engkau. Amalmu. Dan ALLAH."
+msgstr "Hanya Engkau. Amalmu. Dan ALLAH."
+
+msgctxt "web:landing.m8ClosingQuote"
+msgid "Dunia adalah ladang pembelajaran dan pembuktian. Tidak ada yang luput dari perhitungan, dan setiap cahaya kebaikan akan menemukan balasannya."
+msgstr "Dunia adalah ladang pembelajaran dan pembuktian. Tidak ada yang luput dari perhitungan, dan setiap cahaya kebaikan akan menemukan balasannya."
+
+msgctxt "web:landing.m8EcosystemConstitution"
+msgid "Konstitusi Ekosistem"
+msgstr "Konstitusi Ekosistem"
+
+msgctxt "web:landing.m8Privacy"
+msgid "Privasi & Hak Asasi"
+msgstr "Privasi & Hak Asasi"
+
+msgctxt "web:landing.m8Terms"
+msgid "Etika & Ketentuan"
+msgstr "Etika & Ketentuan"
+
+msgctxt "web:dashboard.hqTitle"
+msgid "Headquarter Spasial"
+msgstr "Headquarter Spasial"
+
+msgctxt "web:dashboard.hqSubtitle"
+msgid "Pusat Komando & Observatorium Ekosistem"
+msgstr "Pusat Komando & Observatorium Ekosistem"
+
+msgctxt "web:dashboard.hqArrivalGreeting"
+msgid "Gerbang Otoritas Terbuka"
+msgstr "Gerbang Otoritas Terbuka"
+
+msgctxt "web:dashboard.hqArrivalDesc"
+msgid "Selamat datang di ruang kendali A-L-L-A-H.COM. Enam region operasional siap untuk koordinasi, riset, dan pengawasan."
+msgstr "Selamat datang di ruang kendali A-L-L-A-H.COM. Enam region operasional siap untuk koordinasi, riset, dan pengawasan."
+
+msgctxt "web:dashboard.hqRegion1Title"
+msgid "01 · Command Deck"
+msgstr "01 · Command Deck"
+
+msgctxt "web:dashboard.hqRegion1Desc"
+msgid "Orientasi aktivitas ekosistem, prioritas terkini, dan akses cepat ke seluruh instrumen."
+msgstr "Orientasi aktivitas ekosistem, prioritas terkini, dan akses cepat ke seluruh instrumen."
+
+msgctxt "web:dashboard.hqRegion2Title"
+msgid "02 · Identitas & Akses"
+msgstr "02 · Identitas & Akses"
+
+msgctxt "web:dashboard.hqRegion2Desc"
+msgid "Pengelolaan akun, audit peran hak akses, dan kepatuhan privasi pengguna."
+msgstr "Pengelolaan akun, audit peran hak akses, dan kepatuhan privasi pengguna."
+
+msgctxt "web:dashboard.hqRegion3Title"
+msgid "03 · Kendali Misi (Mission Control)"
+msgstr "03 · Kendali Misi (Mission Control)"
+
+msgctxt "web:dashboard.hqRegion3Desc"
+msgid "Papan status tugas MW, milestone ekosistem, dan pelacakan kemajuan terverifikasi."
+msgstr "Papan status tugas MW, milestone ekosistem, dan pelacakan kemajuan terverifikasi."
+
+msgctxt "web:dashboard.hqRegion4Title"
+msgid "04 · Khazanah & Intelijensi (Knowledge)"
+msgstr "04 · Khazanah & Intelijensi (Knowledge)"
+
+msgctxt "web:dashboard.hqRegion4Desc"
+msgid "Pusat penelitian leksikografi, provider model AI, dan korelasi grafis entitas."
+msgstr "Pusat penelitian leksikografi, provider model AI, dan korelasi grafis entitas."
+
+msgctxt "web:dashboard.hqRegion5Title"
+msgid "05 · Semesta & Transmisi"
+msgstr "05 · Semesta & Transmisi"
+
+msgctxt "web:dashboard.hqRegion5Desc"
+msgid "Kurasi narasi MoonWitness, antrean tinjauan naskah, dan verifikasi publikasi."
+msgstr "Kurasi narasi MoonWitness, antrean tinjauan naskah, dan verifikasi publikasi."
+
+msgctxt "web:dashboard.hqRegion6Title"
+msgid "06 · Observatorium Sistem"
+msgstr "06 · Observatorium Sistem"
+
+msgctxt "web:dashboard.hqRegion6Desc"
+msgid "Pemantauan status konektor eksternal, konfigurasi DNS, dan kesehatan layanan loopback."
+msgstr "Pemantauan status konektor eksternal, konfigurasi DNS, dan kesehatan layanan loopback."
+
+msgctxt "web:community.commTitle"
+msgid "Dock · Pelabuhan Komunitas"
+msgstr "Dock · Pelabuhan Komunitas"
+
+msgctxt "web:community.commSubtitle"
+msgid "Ruang Kolaborasi & Kontribusi Ekosistem A-L-L-A-H.COM"
+msgstr "Ruang Kolaborasi & Kontribusi Ekosistem A-L-L-A-H.COM"
+
+msgctxt "web:community.commHero"
+msgid "Kebenaran di Atas Opini. Amal Nyata di Atas Klaim."
+msgstr "Kebenaran di Atas Opini. Amal Nyata di Atas Klaim."
+
+msgctxt "web:community.commDesc"
+msgid "Dock adalah pelabuhan partisipasi tempat para peneliti, penggiat ilmu, dan pencari kebenaran berhimpun untuk mengkaji sumber dan berkontribusi secara bertanggung jawab."
+msgstr "Dock adalah pelabuhan partisipasi tempat para peneliti, penggiat ilmu, dan pencari kebenaran berhimpun untuk mengkaji sumber dan berkontribusi secara bertanggung jawab."
+
+msgctxt "web:community.commGuidelinesTitle"
+msgid "Etika & Pedoman Partisipasi"
+msgstr "Etika & Pedoman Partisipasi"
+
+msgctxt "web:community.commGuideline1"
+msgid "Integritas Rujukan"
+msgstr "Integritas Rujukan"
+
+msgctxt "web:community.commGuideline1Desc"
+msgid "Setiap gagasan atau klaim wajib menyertakan rujukan primer yang dapat diperiksa bersama."
+msgstr "Setiap gagasan atau klaim wajib menyertakan rujukan primer yang dapat diperiksa bersama."
+
+msgctxt "web:community.commGuideline2"
+msgid "Adab Diskusi & Kerendahan Hati"
+msgstr "Adab Diskusi & Kerendahan Hati"
+
+msgctxt "web:community.commGuideline2Desc"
+msgid "Menghormati martabat sesama manusia, menghindari debat kusir tanpa dalil, dan senantiasa mencari kebenaran."
+msgstr "Menghormati martabat sesama manusia, menghindari debat kusir tanpa dalil, dan senantiasa mencari kebenaran."
+
+msgctxt "web:community.commGuideline3"
+msgid "Akuntabilitas Amal"
+msgstr "Akuntabilitas Amal"
+
+msgctxt "web:community.commGuideline3Desc"
+msgid "Kontribusi diarahkan pada kemanfaatan nyata bagi umat dan kemanusiaan, bukan popularitas semu."
+msgstr "Kontribusi diarahkan pada kemanfaatan nyata bagi umat dan kemanusiaan, bukan popularitas semu."
+
+msgctxt "web:community.commCirclesTitle"
+msgid "Lingkaran Kajian & Minat"
+msgstr "Lingkaran Kajian & Minat"
+
+msgctxt "web:community.commCircle1"
+msgid "Kajian Naskah & Tarikh"
+msgstr "Kajian Naskah & Tarikh"
+
+msgctxt "web:community.commCircle2"
+msgid "Etika Teknologi & AI"
+msgstr "Etika Teknologi & AI"
+
+msgctxt "web:community.commCircle3"
+msgid "Karya Kreatif & Narasi"
+msgstr "Karya Kreatif & Narasi"
+
+msgctxt "web:community.commActionRegister"
+msgid "Daftar Kontributor Dock"
+msgstr "Daftar Kontributor Dock"
+msgctxt "web:common.skipToContent"
+msgid "Lewati ke konten utama"
+msgstr "Lewati ke konten utama"
+
+msgctxt "web:landing.m3DirectoryAria"
+msgid "Direktori pengetahuan"
+msgstr "Direktori pengetahuan"
+
+msgctxt "web:landing.m4PrincipleTitle"
+msgid "Prinsip Transmisi"
+msgstr "Prinsip Transmisi"
+
+msgctxt "web:landing.m4PrincipleBody"
+msgid "MoonWitness menjaga agar setiap kutipan menyertakan identitas sumber, edisi, dan tingkat verifikasi secara transparan. Tidak ada fabrikasi klaim keagamaan maupun penulisan firman secara sembarangan."
+msgstr "MoonWitness menjaga agar setiap kutipan menyertakan identitas sumber, edisi, dan tingkat verifikasi secara transparan. Tidak ada fabrikasi klaim keagamaan maupun penulisan firman secara sembarangan."
+
+msgctxt "web:landing.m4MethodologyAction"
+msgid "Pelajari Metodologi Penelusuran Sumber"
+msgstr "Pelajari Metodologi Penelusuran Sumber"
+
+msgctxt "web:landing.m5TopicsAria"
+msgid "Topik pengetahuan"
+msgstr "Topik pengetahuan"
+
+msgctxt "web:landing.m7AnonAction"
+msgid "Mulai Membaca Publik"
+msgstr "Mulai Membaca Publik"
+
+msgctxt "web:landing.m2AdminRestricted"
+msgid "Akses Terbatas"
+msgstr "Akses Terbatas"
+
+msgctxt "web:community.commCirclesHeading"
+msgid "Bergabung dalam Lingkaran Telaah"
+msgstr "Bergabung dalam Lingkaran Telaah"
+
+msgctxt "web:community.commCircleLabel"
+msgid "Lingkaran"
+msgstr "Lingkaran"
+
+msgctxt "web:community.commFooterSubtitle"
+msgid "Pangkalan Kolaborasi Komunitas"
+msgstr "Pangkalan Kolaborasi Komunitas"
+
+msgctxt "web:community.commNavHome"
+msgid "Beranda"
+msgstr "Beranda"
+
+msgctxt "web:community.commNavCorpus"
+msgid "Korpus"
+msgstr "Korpus"
+
+msgctxt "web:community.commNavWorkspace"
+msgid "Headquarter"
+msgstr "Headquarter"
+
+msgctxt "web:dashboard.hqWorldCoreTitle"
+msgid "World Core & Poros Spasial"
+msgstr "World Core & Poros Spasial"
+
+msgctxt "web:dashboard.hqIntelFeedTitle"
+msgid "Status Kesiapan Ekosistem"
+msgstr "Status Kesiapan Ekosistem"
+
+msgctxt "web:dashboard.hqMissionStripTitle"
+msgid "Pelacak Tugas Nyata"
+msgstr "Pelacak Tugas Nyata"
+
+msgctxt "web:dashboard.hqIdentityFrameTitle"
+msgid "Batas Wilayah Kerja & Otoritas"
+msgstr "Batas Wilayah Kerja & Otoritas"
+
+msgctxt "web:dashboard.hqRegionAll"
+msgid "Tampilkan Semua Region"
+msgstr "Tampilkan Semua Region"
+
+msgctxt "web:dashboard.hqRegionLabel"
+msgid "Region"
+msgstr "Region"
+
+msgctxt "web:common.themeToLight"
+msgid "Switch to light theme"
+msgstr "Beralih ke tema terang"
+
+msgctxt "web:common.themeToDark"
+msgid "Switch to dark theme"
+msgstr "Beralih ke tema gelap"
+
+msgctxt "web:common.searchAction"
+msgid "Search"
+msgstr "Pencarian"
+
+msgctxt "web:landing.heroEst"
+msgid "A-L-L-A-H EMPIRE · EST. 2026"
+msgstr "A-L-L-A-H EMPIRE · EST. 2026"
+
+msgctxt "web:landing.navDiscover"
+msgid "Discover"
+msgstr "Temukan"
+
+msgctxt "web:landing.portalHqRestricted"
+msgid "Restricted"
+msgstr "Terbatas"
+
+msgctxt "web:landing.scrollCue"
+msgid "Explore More"
+msgstr "Jelajahi Lebih Lanjut"
+
+msgctxt "web:common.searchPlaceholder"
+msgid "Search surah, transmission, or knowledge..."
+msgstr "Cari surah, transmisi, atau pengetahuan..."
+
+msgctxt "web:common.searchPrompt"
+msgid "Press ESC to close. Type to search."
+msgstr "Tekan ESC untuk menutup. Ketik untuk mencari."
+
+msgctxt "web:common.quickLinks"
+msgid "Quick Links"
+msgstr "Tautan Cepat"
+
+msgctxt "web:corpus.zenModeToggle"
+msgid "Mode Hening"
+msgstr "Mode Hening"
+
+msgctxt "web:corpus.exitZenMode"
+msgid "Kembali dari Mode Hening (Esc)"
+msgstr "Kembali dari Mode Hening (Esc)"
+
+msgctxt "web:common.chimeToggleActive"
+msgid "Suara Harmoni Aktif"
+msgstr "Suara Harmoni Aktif"
+
+msgctxt "web:common.chimeToggleMuted"
+msgid "Suara Harmoni Senyap"
+msgstr "Suara Harmoni Senyap"
+

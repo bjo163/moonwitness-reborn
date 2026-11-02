@@ -6,7 +6,7 @@ const manifest: QlAddonManifest = {
   version: "1.0.0",
   category: "intelligence",
   description: "Search indexing and query capabilities across authorized corpus and research models.",
-  depends: ["ql_base", "ql_auth", "ql_corpus", "ql_research"],
+  depends: ["ql_base", "ql_auth", "ql_source", "ql_corpus", "ql_research"],
   models,
   access: [
     {

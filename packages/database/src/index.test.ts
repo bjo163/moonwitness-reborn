@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createQlOrm } from "ql_orm";
+import { createQlOrm, QlAccessError } from "ql_orm";
 import authManifest from "ql_auth/__manifest__";
 import baseManifest from "ql_base/__manifest__";
 import chatManifest from "ql_chat/__manifest__";
@@ -14,6 +14,7 @@ async function createStore() {
   ]);
   return {
     store: createConversationStore(runtime.orm),
+    orm: runtime.orm,
     close: runtime.close,
   };
 }
@@ -103,6 +104,114 @@ void test("conversation store persists ordered messages and deletes cascaded row
     );
     assert.deepEqual(await store.getMessages(conversation.id, user.id), []);
     assert.equal(userMessage.conversationId, conversation.id);
+  } finally {
+    store.close();
+    close();
+  }
+});
+
+void test("citation references persist with assistant messages and stay owner-scoped", async () => {
+  const { store, orm, close } = await createStore();
+  try {
+    const user = await store.createUser({
+      name: "Citation Owner",
+      email: "citation-owner@example.com",
+      passwordHash: "scrypt$salt$hash",
+    });
+    const otherUser = await store.createUser({
+      name: "Other User",
+      email: "citation-other@example.com",
+      passwordHash: "scrypt$salt$hash",
+    });
+    const conversation = await store.createConversation(user.id);
+    const citation = {
+      evidenceId: "passage-01",
+      editionId: "edition-01",
+      editionKey: "mw:work:quran|en|translation",
+      surah: 2,
+      ayah: 255,
+    };
+
+    const saved = await store.addMessage(
+      conversation.id,
+      user.id,
+      "assistant",
+      "Grounded response.",
+      { groundingStatus: "grounded", citations: [citation] },
+    );
+    const insufficient = await store.addMessage(
+      conversation.id,
+      user.id,
+      "assistant",
+      "There is not enough evidence.",
+      { groundingStatus: "insufficient_evidence" },
+    );
+    await orm.createRecordForService("chat.message", {
+      conversation_id: conversation.id,
+      role: "assistant",
+      content: "Pre-grounding history.",
+      created_at: new Date(),
+    });
+
+    assert.equal(saved.groundingStatus, "grounded");
+    assert.deepEqual(saved.citations, [citation]);
+    assert.deepEqual(insufficient.citations, []);
+    const messages = await store.getMessages(conversation.id, user.id);
+    assert.deepEqual(
+      messages.map(({ groundingStatus, citations }) => ({
+        groundingStatus,
+        citations,
+      })),
+      [
+        { groundingStatus: "grounded", citations: [citation] },
+        { groundingStatus: "insufficient_evidence", citations: [] },
+        { groundingStatus: "legacy", citations: [] },
+      ],
+    );
+    assert.deepEqual(await store.getMessages(conversation.id, otherUser.id), []);
+    await assert.rejects(
+      orm.findMany("chat.citation", {
+        id: otherUser.id,
+        groups: ["user"],
+      }),
+      QlAccessError,
+    );
+
+    const citationRecords = await orm.findManyByService(
+      "chat.citation",
+      { owner_id: user.id, conversation_id: conversation.id },
+    );
+    assert.equal(citationRecords.length, 1);
+    assert.equal("text" in (citationRecords[0] ?? {}), false);
+    const userContext = { id: otherUser.id, groups: ["user"] };
+    const citationId = String(citationRecords[0]?.id ?? "");
+    await assert.rejects(
+      orm.create("chat.citation", userContext, {}),
+      QlAccessError,
+    );
+    await assert.rejects(
+      orm.update("chat.citation", userContext, citationId, {
+        edition_key: "changed",
+      }),
+      QlAccessError,
+    );
+    await assert.rejects(
+      orm.delete("chat.citation", userContext, citationId),
+      QlAccessError,
+    );
+
+    assert.equal(
+      await store.deleteConversation(conversation.id, otherUser.id),
+      false,
+    );
+    assert.equal(await store.deleteConversation(conversation.id, user.id), true);
+    assert.deepEqual(
+      await orm.findManyByService("chat.citation", {
+        owner_id: user.id,
+        conversation_id: conversation.id,
+      }),
+      [],
+    );
   } finally {
     store.close();
     close();

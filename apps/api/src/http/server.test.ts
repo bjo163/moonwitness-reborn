@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { after, before, test } from "node:test";
 import type { AgentMessage, ModelProvider } from "@moonwitness/agent-runtime";
 import {
@@ -12,6 +13,7 @@ import authManifest from "ql_auth/__manifest__";
 import baseManifest from "ql_base/__manifest__";
 import chatManifest from "ql_chat/__manifest__";
 import corpusManifest from "ql_corpus/__manifest__";
+import { publishEdition } from "ql_corpus/services/corpus-service";
 import sourceManifest from "ql_source/__manifest__";
 import researchManifest from "ql_research/__manifest__";
 import searchManifest from "ql_search/__manifest__";
@@ -529,10 +531,16 @@ void test("conversation and partner data are isolated to the authenticated user"
     { headers: { cookie: ownerCookie } },
   );
   const { messages } = (await messagesResponse.json()) as {
-    messages: Array<{ role: string; content: string }>;
+    messages: Array<{
+      role: string;
+      content: string;
+      groundingStatus?: string;
+    }>;
   };
   assert.equal(messages.length, 4);
   assert.equal(messages[0].content, "Hello.");
+  assert.equal(messages[1].groundingStatus, "legacy");
+  assert.equal(messages[3].groundingStatus, "legacy");
 
   const otherConversations = await fetch(`${address}/conversations`, {
     headers: { cookie: otherCookie },
@@ -975,3 +983,161 @@ void test("GET /search queries search.index_entry securely with owner isolation"
   assert.equal(data.results[0].targetModel, "story.narrative");
 });
 
+void test("GET /search never returns corpus passage snippets", async () => {
+  const cookie = await register("corpus-search-snippet@example.com");
+  const user = await store.getUserByEmail(
+    "corpus-search-snippet@example.com",
+  );
+  assert.ok(user);
+  await orm.createRecordForService("search.index_entry", {
+    target_model: "corpus.passage",
+    target_id: "fixture-passage",
+    token: "cahaya",
+    weight: 1,
+    snippet: "fixture passage text that must not be returned",
+    owner_id: user.id,
+    created_at: new Date(),
+    updated_at: new Date(),
+  });
+
+  const response = await fetch(`${address}/search?q=cahaya`, {
+    headers: { cookie },
+  });
+  assert.equal(response.status, 200);
+  const data = (await response.json()) as {
+    results: Array<Record<string, unknown>>;
+  };
+  assert.equal(data.results.length, 1);
+  assert.equal(data.results[0]?.targetModel, "corpus.passage");
+  assert.equal("snippet" in (data.results[0] ?? {}), false);
+});
+
+void test("POST /search/corpus-index is admin-only and indexes a published edition", async () => {
+  const memberCookie = await register("reindex-member@example.com");
+  const member = await store.getUserByEmail("reindex-member@example.com");
+  assert.ok(member);
+  await orm.updateRecordsForService(
+    "res.users",
+    { id: member.id },
+    { role: "member" },
+  );
+  const denied = await fetch(
+    `${address}${apiRoutes.search.reindexCorpus}`,
+    {
+      method: "POST",
+      headers: {
+        cookie: memberCookie,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ editionKey: "mw:api:translation-en" }),
+    },
+  );
+  assert.equal(denied.status, 403);
+
+  const adminCookie = await register("reindex-admin@example.com");
+  const admin = await store.getUserByEmail("reindex-admin@example.com");
+  assert.ok(admin);
+  await orm.updateRecordsForService(
+    "res.users",
+    { id: admin.id },
+    { role: "admin" },
+  );
+
+  const work = await orm.createRecordForService("corpus.work", {
+    canonical_id: "mw:work:api-search-index-test",
+    title: "Test Qur'an",
+    work_kind: "revelation",
+    primary_locale: "ar",
+  });
+  const artifact = await orm.createRecordForService("source.artifact", {
+    canonical_id: "mw:artifact:api-search-index-test",
+    title: "Synthetic API fixture",
+    kind: "translation_source",
+    owner_id: "api-test-owner",
+  });
+  const version = await orm.createRecordForService("source.version", {
+    artifact_id: String(artifact.id),
+    version_key: `${String(artifact.id)}@fixture`,
+    release_label: "fixture",
+    row_count_expected: 1,
+    acquired_at: new Date(),
+    method: "unit-test",
+    owner_id: "api-test-owner",
+  });
+  const displayRights = await orm.createRecordForService("source.rights", {
+    version_id: String(version.id),
+    rights_key: `${String(version.id)}|display`,
+    action: "display",
+    rights_status: "cleared",
+    attribution_text: "Synthetic API fixture",
+    owner_id: "api-test-owner",
+  });
+  await orm.createRecordForService("source.rights", {
+    version_id: String(version.id),
+    rights_key: `${String(version.id)}|index`,
+    action: "index",
+    rights_status: "cleared",
+    attribution_text: "Synthetic API fixture",
+    owner_id: "api-test-owner",
+  });
+  await orm.createRecordForService("source.rights", {
+    version_id: String(version.id),
+    rights_key: `${String(version.id)}|transform`,
+    action: "transform",
+    rights_status: "cleared",
+    attribution_text: "Synthetic API fixture",
+    owner_id: "api-test-owner",
+  });
+  const editionKey = "mw:api:translation-en";
+  const edition = await orm.createRecordForService("corpus.edition", {
+    canonical_id: "mw:edition:api-search-index-test",
+    work_id: String(work.id),
+    source_version_id: String(version.id),
+    rights_id: String(displayRights.id),
+    edition_key: editionKey,
+    authority: "translation",
+    locale: "en",
+    attribution_text: "Synthetic API fixture",
+    publisher: "Unit test",
+    imported_row_count: 1,
+  });
+  const text = "light guidance";
+  await orm.createRecordForService("corpus.passage", {
+    canonical_id: "mw:passage:api-search-index-test:1:1",
+    edition_id: String(edition.id),
+    work_id: String(work.id),
+    authority: "translation",
+    locator: "1:1",
+    passage_key: `${String(edition.id)}|1:1`,
+    surah: 1,
+    ayah: 1,
+    row_kind: "ayah",
+    text,
+    text_checksum: createHash("sha256").update(text, "utf8").digest("hex"),
+    ordinal: 1,
+    import_run_id: "api-search-index-test",
+  });
+  await publishEdition(
+    orm,
+    { id: admin.id, groups: ["admin"] },
+    editionKey,
+  );
+
+  const response = await fetch(
+    `${address}${apiRoutes.search.reindexCorpus}`,
+    {
+      method: "POST",
+      headers: {
+        cookie: adminCookie,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ editionKey }),
+    },
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    editionKey,
+    passageCount: 1,
+    indexEntryCount: 2,
+  });
+});

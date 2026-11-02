@@ -15,7 +15,7 @@ import {
   DataTable,
   EmptyState,
   LoadingScreen,
-  PageHeader,
+  SanctuaryHeader,
   SectionGrid,
   SidebarTrigger,
   WorkspaceSidebar,
@@ -212,12 +212,12 @@ export default function CorpusShelf() {
       }
     >
       <div className="flex-1 overflow-y-auto">
+        <SanctuaryHeader
+          eyebrow="MoonWitness · Corpus"
+          title={shelfLabel}
+          description={t("web.corpus.shelfDescription")}
+        />
         <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-10 md:py-12">
-          <PageHeader
-            description={t("web.corpus.shelfDescription")}
-            title={shelfLabel}
-          />
-
           {error && (
             <Alert variant="error" className="mt-6">
               {error}

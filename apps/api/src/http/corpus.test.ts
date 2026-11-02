@@ -5,15 +5,18 @@ import { createConversationStore, type ConversationStore } from "@moonwitness/da
 import {
   apiRoutes,
   type AuthResponseDto,
+  type ConversationMessagesResponseDto,
   type CorpusEditionListResponseDto,
   type CorpusSurahResponseDto,
 } from "@moonwitness/moonclient";
 import { createQlOrm, type QlOrm } from "ql_orm";
 import authManifest from "ql_auth/__manifest__";
 import baseManifest from "ql_base/__manifest__";
+import chatManifest from "ql_chat/__manifest__";
 import corpusManifest from "ql_corpus/__manifest__";
 import sourceManifest from "ql_source/__manifest__";
 import { publishEdition } from "ql_corpus/services/corpus-service";
+import { _resetRightsCacheForTests } from "ql_corpus/services/reader-service";
 import { createApiServer } from "./server.js";
 
 const testPassword = "correct horse battery staple";
@@ -140,6 +143,7 @@ before(async () => {
   const runtime = await createQlOrm("file::memory:", [
     baseManifest,
     authManifest,
+    chatManifest,
     sourceManifest,
     corpusManifest,
   ]);
@@ -250,6 +254,105 @@ void test("reading a staged edition (or one without cleared rights) is refused a
   assert.equal(reply.status, 403, reply.text);
   // The 403 response must not contain passage text; the deny is real.
   assert.equal(/sample-translation/.test(reply.text), false);
+});
+
+void test("conversation history revalidates citations before returning display metadata", async () => {
+  const owner = await store.getUserByEmail(ownerEmail);
+  assert.ok(owner);
+  const eligibleEdition = await orm.findOneByService("corpus.edition", {
+    edition_key: publishedEditionKey,
+  });
+  const stagedEdition = await orm.findOneByService("corpus.edition", {
+    edition_key: publishableEditionKey,
+  });
+  assert.ok(eligibleEdition);
+  assert.ok(stagedEdition);
+  const eligiblePassage = await orm.findOneByService("corpus.passage", {
+    passage_key: `${String(eligibleEdition.id)}|1:1`,
+  });
+  const stagedPassage = await orm.findOneByService("corpus.passage", {
+    passage_key: `${String(stagedEdition.id)}|1:1`,
+  });
+  assert.ok(eligiblePassage);
+  assert.ok(stagedPassage);
+  const conversation = await store.createConversation(owner.id);
+  await store.addMessage(
+    conversation.id,
+    owner.id,
+    "assistant",
+    "A response with a cited passage.",
+    {
+      groundingStatus: "grounded",
+      citations: [
+        {
+          evidenceId: String(eligiblePassage.id),
+          editionId: String(eligibleEdition.id),
+          editionKey: publishedEditionKey,
+          surah: 1,
+          ayah: 1,
+        },
+      ],
+    },
+  );
+  await store.addMessage(
+    conversation.id,
+    owner.id,
+    "assistant",
+    "A response with a staged citation.",
+    {
+      groundingStatus: "grounded",
+      citations: [
+        {
+          evidenceId: String(stagedPassage.id),
+          editionId: String(stagedEdition.id),
+          editionKey: publishableEditionKey,
+          surah: 1,
+          ayah: 1,
+        },
+      ],
+    },
+  );
+  await store.addMessage(
+    conversation.id,
+    owner.id,
+    "assistant",
+    "There is not enough evidence.",
+    { groundingStatus: "insufficient_evidence" },
+  );
+
+  const history = await api<ConversationMessagesResponseDto>(
+    apiRoutes.conversations.messages(conversation.id),
+  );
+  assert.equal(history.status, 200, history.text);
+  assert.equal(history.body.messages[0]?.groundingStatus, "grounded");
+  assert.equal(
+    history.body.messages[0]?.citations?.[0]?.evidenceId,
+    String(eligiblePassage.id),
+  );
+  assert.equal(history.body.messages[1]?.groundingStatus, "legacy");
+  assert.equal(history.body.messages[1]?.citations, undefined);
+  assert.equal(
+    history.body.messages[2]?.groundingStatus,
+    "insufficient_evidence",
+  );
+  assert.equal(history.text.includes("sample-revelation_verbatim"), false);
+
+  await orm.updateRecordsForService(
+    "source.rights",
+    {
+      version_id: String(eligibleEdition.source_version_id),
+      action: "display",
+    },
+    { rights_status: "under_review" },
+  );
+  _resetRightsCacheForTests();
+
+  const revokedHistory = await api<ConversationMessagesResponseDto>(
+    apiRoutes.conversations.messages(conversation.id),
+  );
+  assert.equal(revokedHistory.status, 200, revokedHistory.text);
+  assert.equal(revokedHistory.body.messages[0]?.groundingStatus, "legacy");
+  assert.equal(revokedHistory.body.messages[0]?.citations, undefined);
 });
 
 void test("out-of-range surah and ayah are rejected before the service is reached", async () => {

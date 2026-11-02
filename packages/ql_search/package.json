@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "tsx --test models/index.test.ts",
+    "test": "tsx --test models/index.test.ts services/search-indexing-service.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
@@ -27,6 +27,7 @@
     "ql_auth": "workspace:*",
     "ql_base": "workspace:*",
     "ql_corpus": "workspace:*",
+    "ql_source": "workspace:*",
     "ql_orm": "workspace:*",
     "ql_research": "workspace:*"
   }

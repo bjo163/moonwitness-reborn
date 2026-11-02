@@ -19,14 +19,21 @@ The existing `packages/ui/styles/tokens.css` is the single source of truth for s
 | Brand accent | `acid`, `acid-dark`, `acid-muted`, `acid-shadow` | Focus, primary action, selected state |
 | Semantic status | `success`, `warning`, `danger` | Actual state feedback |
 | Base | `void` | Deep environmental base |
-| Typography | `font-sans`, `font-mono` | Editorial/UI and technical metadata |
+| Typography | `font-sans`, `font-display`, `font-mono` | Interface/body, selected editorial display, and technical metadata |
 | Elevation | `shadow-hud`, `shadow-hud-sm` | Existing hard-edge elevation treatment |
 
-These names are verified in the current token file. Use the exact exported names and existing CSS variable contract.
+These names are verified in the current token file. Use the exact exported names and existing CSS variable contract. The accent names are historical API names: `acid` currently renders Antique Gold, not acid green.
 
-## 3. Existing light theme
+## 3. Current approved palette and themes
 
-The token file includes a `data-theme="light"` adaptive layer. New experiences must not silently hard-code dark-only colors. Home may open with a cinematic dark scene as a deliberate editorial choice, but readable content and shared application components must remain compatible with the supported theme strategy.
+The current token implementation identifies the direction as **Empire of the Light / Cosmic Ivory & Antique Gold**.
+
+- Dark theme: deep indigo night and obsidian foundations, warm ivory primary text, muted lavender-grey supporting text, and Antique Gold interaction emphasis.
+- Light theme: parchment / warm ivory surfaces, deep ink text, and bronze/gold interaction emphasis.
+- `acid` is a legacy semantic token name. Its current rendered value is gold; do not describe the current palette as acid-green.
+- Home may open with a cinematic dark scene as a deliberate editorial choice, but readable content and shared application components must remain compatible with the supported theme strategy.
+
+The token file includes a `data-theme="light"` adaptive layer. New experiences must not silently hard-code dark-only colors.
 
 Theme switching behavior must be consistent with the current application preference contract. Do not invent a second theme state.
 
@@ -44,18 +51,19 @@ Do not promote every component variable into a general-purpose Tailwind color. T
 | Public scene / deep backdrop | `void`, `panel-deep`, `panel-deeper` |
 | Reading surface | `panel`, `panel-raised` |
 | Dividers and architecture edges | `hairline`, `hairline-soft`, `hairline-strong` |
-| Primary interactive moment | `acid` with readable foreground |
+| Primary interactive moment | Antique Gold via `acid` with the approved readable foreground |
 | Secondary selected state | `acid-dark`, `acid-muted` where contrast is valid |
 | Success / warning / danger | semantic status tokens only |
 | Technical identifiers | `font-mono` |
 | Editorial and navigation | `font-sans` |
 
-Brass/gold in the art direction is a material or imagery treatment, not permission to add an arbitrary UI status color. Any new semantic color requires a proposal, contrast evidence, dark/light mapping, and token tests.
+Antique Gold is already an approved brand/interaction accent through the existing semantic token family; do not add a parallel gold palette or use it to communicate success, warning, or danger. Any new semantic color requires a proposal, contrast evidence, dark/light mapping, and token tests.
 
 ## 6. Typography contract
 
-- Use the existing sans family for headings, paragraphs, navigation, and controls unless a reviewed type direction justifies a system-level change.
-- Use monospace for genuine technical metadata only.
+- Use the existing Inter-based `font-sans` for paragraphs, navigation, and controls.
+- Use the existing Cormorant Garamond `font-display` selectively for editorial/monumental headings.
+- Use Cascadia Code / `font-mono` for genuine technical metadata only.
 - Use a responsive type scale; avoid fixed desktop-sized headings on mobile.
 - Long-form content must prioritize line length, leading, paragraph rhythm, and language-specific wrapping.
 - Keep heading levels semantic and sequential.

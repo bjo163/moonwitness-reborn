@@ -22,6 +22,10 @@ export function HeroStage({ imageSrc, children, className }: HeroStageProps) {
         aria-hidden="true"
         className="ql-hero__media absolute inset-0 size-full"
         src={imageSrc}
+        width={1920}
+        height={1080}
+        fetchPriority="high"
+        decoding="async"
       />
       <div aria-hidden="true" className="ql-hero__veil" />
       {children}

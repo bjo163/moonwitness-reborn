@@ -284,6 +284,9 @@ importers:
 
   packages/ql_ai:
     dependencies:
+      ql_base:
+        specifier: workspace:*
+        version: link:../ql_base
       ql_orm:
         specifier: workspace:*
         version: link:../ql-orm
@@ -302,6 +305,9 @@ importers:
 
   packages/ql_chat:
     dependencies:
+      ql_auth:
+        specifier: workspace:*
+        version: link:../ql_auth
       ql_orm:
         specifier: workspace:*
         version: link:../ql-orm
@@ -409,6 +415,9 @@ importers:
       ql_research:
         specifier: workspace:*
         version: link:../ql_research
+      ql_source:
+        specifier: workspace:*
+        version: link:../ql_source
 
   packages/ql_source:
     dependencies:

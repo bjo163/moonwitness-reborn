@@ -20,6 +20,10 @@ import { gzipSync } from "node:zlib";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  assertBundleBudgetBuildUnchanged,
+  bundleChunkPaths as chunkPaths,
+} from "./bundle-budget-artifact.mjs";
 
 const appDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const budgetPath = join(appDir, ".size-budget.json");
@@ -27,27 +31,19 @@ const budgetPath = join(appDir, ".size-budget.json");
 // in a scratch directory without disturbing a dev server already writing to
 // `.next`.
 const distDir = process.env.NEXT_DIST_DIR ?? ".next";
-const manifestPath = join(appDir, distDir, "app-build-manifest.json");
+const distPath = resolve(appDir, distDir);
+const manifestPath = join(distPath, "app-build-manifest.json");
 const update = process.argv.includes("--update");
 
 const budget = JSON.parse(readFileSync(budgetPath, "utf8"));
 
-/**
- * Manifest values are either a flat array of chunk paths or an object with an
- * `initial`/`js` list, depending on the Next channel. Paths are relative to
- * `.next`, and a dev build also lists CSS and non-JS assets.
- */
-function chunkPaths(entry) {
-  if (Array.isArray(entry)) return entry;
-  if (entry && typeof entry === "object") {
-    return [...(entry.initial ?? []), ...(entry.js ?? [])];
-  }
-  return [];
-}
-
 function gzippedKb(relativePath) {
-  const file = join(appDir, distDir, relativePath);
-  if (!existsSync(file)) return 0;
+  const file = join(distPath, relativePath);
+  if (!existsSync(file)) {
+    throw new Error(
+      `Production build is missing JS chunk '${relativePath}'. Rebuild before checking sizes.`,
+    );
+  }
   return gzipSync(readFileSync(file), { level: 9 }).length / 1024;
 }
 
@@ -73,16 +69,9 @@ if (!existsSync(manifestPath)) {
   process.exit(1);
 }
 
-// `BUILD_ID` and `required-server-files.json` are written only by `next build`,
-// so they prove the directory is not a pure `next dev` artefact. They do NOT
-// prove it is current: a dev server that runs afterwards rewrites chunk files
-// while leaving both markers in place (observed as 13 of 16 routes and an
-// inflated 242 kB for /providers). The stale-manifest case is caught by the
-// "removed route" failure below rather than by a filesystem heuristic, because
-// `cache/webpack` turns out to exist in production builds too.
 if (
-  !existsSync(join(appDir, distDir, "BUILD_ID")) ||
-  !existsSync(join(appDir, distDir, "required-server-files.json"))
+  !existsSync(join(distPath, "BUILD_ID")) ||
+  !existsSync(join(distPath, "required-server-files.json"))
 ) {
   console.error(
     `${distDir} is not a production build.\n` +
@@ -92,24 +81,8 @@ if (
   process.exit(1);
 }
 
-// `--update` records the `BUILD_ID` alongside the sizes so the next check can
-// tell a fresh build from a stale one even when every route name matches. A dev
-// server that later rewrites chunks under the same route set can otherwise slip
-// past the "route missing" check while inflating the reported KB (MW-0584).
-const currentBuildId = readFileSync(join(appDir, distDir, "BUILD_ID"), "utf8").trim();
-if (
-  !update &&
-  typeof budget.buildId === "string" &&
-  budget.buildId !== currentBuildId
-) {
-  console.error(
-    `${distDir} build id ${currentBuildId} does not match the baseline id ${budget.buildId}.\n` +
-      `A dev server may have rewritten this build directory after the baseline was recorded.\n` +
-      `Run \`NEXT_DIST_DIR=${distDir} pnpm --filter @moonwitness/web build\` before checking, or\n` +
-      `\`pnpm --filter @moonwitness/web size --update\` to intentionally re-record the baseline.`,
-  );
-  process.exit(1);
-}
+// Detect dev-server rewrites of manifests or measured chunks after production build.
+assertBundleBudgetBuildUnchanged(distPath);
 
 const measured = measuredFirstLoad();
 const baseline = budget.routes ?? {};
@@ -155,13 +128,13 @@ if (update) {
   writeFileSync(
     budgetPath,
     JSON.stringify(
-      { ...budget, routes: nextBaseline, buildId: currentBuildId },
+      { ...budget, routes: nextBaseline },
       null,
       2,
     ) + "\n",
   );
   console.log(
-    `Baseline recorded for ${Object.keys(nextBaseline).length} routes (build ${currentBuildId}).`,
+    `Baseline recorded for ${Object.keys(nextBaseline).length} routes.`,
   );
 } else {
   console.log(

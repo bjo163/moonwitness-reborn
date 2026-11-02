@@ -19,6 +19,11 @@ import {
   SidebarNav,
   SidebarTrigger,
   WorkspaceSidebar,
+  HolographicOrbitDeck,
+  ChimeToggle,
+  AdaptiveHudShell,
+  AmbientAtmosphere,
+  SanctuaryZenStage,
   type SidebarNavItem,
 } from "../src/index.js";
 import { assertNoOwnColours, render } from "./render-helpers.js";
@@ -86,6 +91,33 @@ const classNameContract: readonly [string, RegExp, (className: string) => ReactN
       label="Open menu"
       onOpenSidebar={() => undefined}
       sidebarOpen={false}
+    />
+  )],
+  ["HolographicOrbitDeck", /ql-holographic-orbit-deck/, (c) => (
+    <HolographicOrbitDeck
+      className={c}
+      regions={[]}
+      activeRegionId="revelation"
+      onSelectRegion={() => undefined}
+    />
+  )],
+  ["ChimeToggle", /ql-chime-toggle/, (c) => (
+    <ChimeToggle className={c} enabled={false} label="Audio" onToggle={() => undefined} />
+  )],
+  ["AdaptiveHudShell", /ql-adaptive-hud-shell/, (c) => (
+    <AdaptiveHudShell className={c} panes={[]} />
+  )],
+  ["AmbientAtmosphere", /ql-ambient-atmosphere/, (c) => (
+    <AmbientAtmosphere className={c} density="subtle" />
+  )],
+  ["SanctuaryZenStage", /ql-sanctuary-zen-stage/, (c) => (
+    <SanctuaryZenStage
+      className={c}
+      arabicText="بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"
+      citation="Al-Fatihah 1:1"
+      surahNumber={1}
+      ayahNumber={1}
+      onExit={() => undefined}
     />
   )],
 ];

@@ -5,16 +5,23 @@ import {
 } from "node:http";
 import {
   runAgent,
+  runGroundedAgent,
   type AgentRequest,
   type ModelProvider,
   type OpenAICompatibleProviderOptions,
 } from "@moonwitness/agent-runtime";
-import type { ConversationStore, User } from "@moonwitness/database";
+import type {
+  CitationReference,
+  ConversationStore,
+  Message,
+  User,
+} from "@moonwitness/database";
 import {
   apiRoutes,
   type AdminUserDto,
   type AdminUserListResponseDto,
   type AuthResponseDto,
+  type ChatCitationDto,
   type ChatMessageDto,
   type ChatRequestDto,
   type ChatResponseDto,
@@ -60,6 +67,8 @@ import {
   type UiLanguageDto,
   type SearchQueryResponseDto,
   type SearchResultItemDto,
+  type ReindexCorpusSearchIndexRequestDto,
+  type ReindexCorpusSearchIndexResponseDto,
 } from "@moonwitness/moonclient";
 import {
   QlAccessError,
@@ -98,6 +107,10 @@ import {
   publishEdition,
   withdrawEdition,
 } from "ql_corpus/services/corpus-service";
+import {
+  indexCorpusEdition,
+  searchCorpusPassages,
+} from "ql_search/services/search-indexing-service";
 import {
   readSurahWindow,
   readVerse,
@@ -185,15 +198,94 @@ function conversationDto(
   };
 }
 
-function messageDto(
-  message: Awaited<ReturnType<ConversationStore["addMessage"]>>,
-): ChatMessageDto {
-  return {
+function isPassageKind(value: string): value is PassageKindDto {
+  return PASSAGE_KINDS.some((kind) => kind === value);
+}
+
+async function insufficientEvidenceReply(
+  orm: QlOrm,
+  locale: UiLocale,
+): Promise<string> {
+  const translation = (
+    await getPublishedCatalog(orm, locale, "chat")
+  ).find(({ key }) => key === "insufficientEvidence");
+  if (!translation?.value.trim()) {
+    throw new Error(
+      `Published insufficient-evidence copy is missing for locale '${locale}'.`,
+    );
+  }
+  return translation.value;
+}
+
+async function revalidateCitation(
+  orm: QlOrm,
+  citation: CitationReference,
+): Promise<ChatCitationDto | undefined> {
+  try {
+    const passage = await readVerse(
+      orm,
+      citation.editionKey,
+      citation.surah,
+      citation.ayah,
+    );
+    if (
+      passage.id !== citation.evidenceId ||
+      passage.edition_id !== citation.editionId
+    ) {
+      return undefined;
+    }
+    if (
+      !isPassageKind(passage.authority) ||
+      !isPassageKind(passage.edition_authority)
+    ) {
+      throw new Error("Stored corpus citation has an unsupported authority.");
+    }
+    return {
+      evidenceId: passage.id,
+      editionId: passage.edition_id,
+      editionKey: citation.editionKey,
+      authority: passage.authority,
+      editionAuthority: passage.edition_authority,
+      locale: passage.edition_locale,
+      publisher: passage.edition_publisher,
+      attribution: passage.edition_attribution_text,
+      locator: passage.locator,
+      surah: passage.surah,
+      ayah: passage.ayah,
+    };
+  } catch (error) {
+    if (error instanceof QlAccessError || error instanceof QlNotFoundError) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+async function messageDto(
+  orm: QlOrm,
+  message: Message,
+): Promise<ChatMessageDto> {
+  const dto: ChatMessageDto = {
     id: message.id,
     role: message.role,
     content: message.content,
     createdAt: message.createdAt.toISOString(),
   };
+  if (message.role !== "assistant") return dto;
+
+  const groundingStatus = message.groundingStatus ?? "legacy";
+  if (groundingStatus !== "grounded") {
+    return { ...dto, groundingStatus };
+  }
+  const citations = (
+    await Promise.all(
+      message.citations.map((citation) => revalidateCitation(orm, citation)),
+    )
+  ).filter((citation): citation is ChatCitationDto => citation !== undefined);
+  if (citations.length === 0) {
+    return { ...dto, groundingStatus: "legacy" };
+  }
+  return { ...dto, groundingStatus, citations };
 }
 
 class RequestError extends Error {
@@ -408,7 +500,7 @@ function parseTranslationAiDraft(
 }
 
 function parseAgentRequest(body: unknown): AgentRequest & ChatRequestDto {
-  const { input, instructions, conversationId } = parseObject(body);
+  const { input, instructions, conversationId, grounding } = parseObject(body);
   if (typeof input !== "string" || !input.trim()) {
     throw new RequestError("Field 'input' must be a non-empty string.", 400);
   }
@@ -430,10 +522,14 @@ function parseAgentRequest(body: unknown): AgentRequest & ChatRequestDto {
   ) {
     throw new RequestError("Field 'instructions' is too long.", 400);
   }
+  if (grounding !== undefined && grounding !== "grounded") {
+    throw new RequestError("Field 'grounding' must be 'grounded'.", 400);
+  }
   return {
     input,
     conversationId,
     ...(typeof instructions === "string" ? { instructions } : {}),
+    ...(grounding === "grounded" ? { grounding } : {}),
   };
 }
 
@@ -2716,9 +2812,10 @@ export function createApiServer(
           sendJson(response, 404, { error: "Conversation not found." });
           return;
         }
+        const messages = await store.getMessages(conversationId, user.id);
         sendJson(response, 200, {
-          messages: (await store.getMessages(conversationId, user.id)).map(
-            messageDto,
+          messages: await Promise.all(
+            messages.map((message) => messageDto(orm, message)),
           ),
         });
       } catch (error) {
@@ -2746,6 +2843,44 @@ export function createApiServer(
       return;
     }
 
+
+    if (
+      request.method === "POST" &&
+      pathname === apiRoutes.search.reindexCorpus
+    ) {
+      const user = await requireAuthenticatedUser(request, response, store);
+      if (!user) return;
+      try {
+        requireGroup(user, "admin");
+        const input = parseObject(await readJsonBody(request));
+        if (
+          Object.keys(input).some((key) => key !== "editionKey") ||
+          typeof input.editionKey !== "string" ||
+          !input.editionKey.trim() ||
+          input.editionKey !== input.editionKey.trim() ||
+          input.editionKey.length > 160
+        ) {
+          throw new RequestError(
+            "Field 'editionKey' must be a non-empty string of at most 160 characters.",
+            400,
+          );
+        }
+        const requestDto: ReindexCorpusSearchIndexRequestDto = {
+          editionKey: input.editionKey,
+        };
+        const result = await indexCorpusEdition(
+          orm,
+          userContext(user),
+          requestDto.editionKey,
+        );
+        sendJson(response, 200, {
+          ...result,
+        } satisfies ReindexCorpusSearchIndexResponseDto);
+      } catch (error) {
+        handleRequestError(response, error);
+      }
+      return;
+    }
 
     if (request.method === "GET" && pathname === apiRoutes.search.query) {
       const user = await requireAuthenticatedUser(request, response, store);
@@ -2795,7 +2930,9 @@ export function createApiServer(
               targetId: targetIdVal,
               token: tokenVal,
               weight: weightVal,
-              snippet: snippetVal,
+              ...(targetModelVal === "corpus.passage" || snippetVal === undefined
+                ? {}
+                : { snippet: snippetVal }),
             };
           })
           .sort((a: SearchResultItemDto, b: SearchResultItemDto) => b.weight - a.weight)
@@ -2816,40 +2953,6 @@ export function createApiServer(
       const user = await requireAuthenticatedUser(request, response, store);
       if (!user) return;
       try {
-        const configuredProviders = (
-          await orm.findManyForService("ai.provider", user.id)
-        )
-          .map(toStoredProvider)
-          .sort((left, right) => left.priority - right.priority)
-          .filter(({ enabled }) => enabled)
-          .map(({ id, name, base_url, model, encrypted_api_key }) => {
-            if (!options.encryptionKey) {
-              throw new RequestError(
-                "Provider credentials cannot be decrypted; configure PROVIDER_ENCRYPTION_KEY.",
-                503,
-              );
-            }
-            return {
-              id,
-              name,
-              config: {
-                apiKey: decryptProviderSecret(
-                  encrypted_api_key,
-                  options.encryptionKey,
-                ),
-                baseUrl: base_url,
-                model,
-              } satisfies OpenAICompatibleProviderOptions,
-            };
-          });
-        const chatProvider = configuredProviders.length
-          ? createFallbackProvider(configuredProviders, options.providerFactory)
-          : provider;
-        if (!chatProvider) {
-          request.resume();
-          sendJson(response, 503, { error: "No model provider is configured." });
-          return;
-        }
         const agentRequest = parseAgentRequest(await readJsonBody(request));
         const conversation = await store.getConversation(
           agentRequest.conversationId,
@@ -2864,6 +2967,181 @@ export function createApiServer(
           user.id,
           HISTORY_LIMIT,
         );
+
+        const resolveChatProvider = async (): Promise<
+          ModelProvider | undefined
+        > => {
+          const configuredProviders = (
+            await orm.findManyForService("ai.provider", user.id)
+          )
+            .map(toStoredProvider)
+            .sort((left, right) => left.priority - right.priority)
+            .filter(({ enabled }) => enabled)
+            .map(({ id, name, base_url, model, encrypted_api_key }) => {
+              if (!options.encryptionKey) {
+                throw new RequestError(
+                  "Provider credentials cannot be decrypted; configure PROVIDER_ENCRYPTION_KEY.",
+                  503,
+                );
+              }
+              return {
+                id,
+                name,
+                config: {
+                  apiKey: decryptProviderSecret(
+                    encrypted_api_key,
+                    options.encryptionKey,
+                  ),
+                  baseUrl: base_url,
+                  model,
+                } satisfies OpenAICompatibleProviderOptions,
+              };
+            });
+          return configuredProviders.length
+            ? createFallbackProvider(
+                configuredProviders,
+                options.providerFactory,
+              )
+            : provider;
+        };
+
+        if (agentRequest.grounding === "grounded") {
+          const candidates = await searchCorpusPassages(
+            orm,
+            agentRequest.input.trim(),
+            user.preferredLocale,
+          );
+          const persistInsufficientEvidence = async (reply: string) => {
+            await store.addMessage(
+              agentRequest.conversationId,
+              user.id,
+              "assistant",
+              reply,
+              { groundingStatus: "insufficient_evidence" },
+            );
+            sendJson(response, 200, {
+              reply,
+              groundingStatus: "insufficient_evidence",
+              citations: [],
+            } satisfies ChatResponseDto);
+          };
+          if (candidates.length === 0) {
+            await store.addMessage(
+              agentRequest.conversationId,
+              user.id,
+              "user",
+              agentRequest.input.trim(),
+            );
+            await persistInsufficientEvidence(
+              await insufficientEvidenceReply(orm, user.preferredLocale),
+            );
+            return;
+          }
+          const chatProvider = await resolveChatProvider();
+          if (!chatProvider) {
+            request.resume();
+            sendJson(response, 503, {
+              error: "No model provider is configured.",
+            });
+            return;
+          }
+          await store.addMessage(
+            agentRequest.conversationId,
+            user.id,
+            "user",
+            agentRequest.input.trim(),
+          );
+
+          let groundedResult: Awaited<
+            ReturnType<typeof runGroundedAgent>
+          >;
+          try {
+            groundedResult = await runGroundedAgent(chatProvider, {
+              input: agentRequest.input.trim(),
+              history: history
+                .filter(({ role }) => role === "user")
+                .map(({ role, content }) => ({ role, content })),
+              evidence: candidates.map(({ passage }) => ({
+                id: passage.id,
+                text: passage.text,
+              })),
+            });
+          } catch (error) {
+            console.error("Grounded model provider request failed.", error);
+            sendJson(response, 502, {
+              error: "Grounded model provider request failed.",
+            });
+            return;
+          }
+          if (groundedResult.groundingStatus === "insufficient_evidence") {
+            await persistInsufficientEvidence(groundedResult.reply);
+            return;
+          }
+
+          const candidatesById = new Map<
+            string,
+            (typeof candidates)[number]
+          >();
+          for (const candidate of candidates) {
+            candidatesById.set(candidate.passage.id, candidate);
+          }
+          const citationReferences = groundedResult.citations.map(
+            ({ evidenceId }): CitationReference => {
+              const candidate = candidatesById.get(evidenceId);
+              if (!candidate) {
+                throw new Error(
+                  "Grounded agent returned a citation outside retrieved evidence.",
+                );
+              }
+              return {
+                evidenceId,
+                editionId: candidate.passage.edition_id,
+                editionKey: candidate.editionKey,
+                surah: candidate.passage.surah,
+                ayah: candidate.passage.ayah,
+              };
+            },
+          );
+          const revalidatedCitations = await Promise.all(
+            citationReferences.map((citation) =>
+              revalidateCitation(orm, citation),
+            ),
+          );
+          const citationDtos = revalidatedCitations.filter(
+            (citation): citation is ChatCitationDto =>
+              citation !== undefined,
+          );
+          if (citationDtos.length !== citationReferences.length) {
+            await persistInsufficientEvidence(
+              await insufficientEvidenceReply(orm, user.preferredLocale),
+            );
+            return;
+          }
+
+          await store.addMessage(
+            agentRequest.conversationId,
+            user.id,
+            "assistant",
+            groundedResult.reply,
+            {
+              groundingStatus: "grounded",
+              citations: citationReferences,
+            },
+          );
+          sendJson(response, 200, {
+            reply: groundedResult.reply,
+            groundingStatus: "grounded",
+            citations: citationDtos,
+          } satisfies ChatResponseDto);
+          return;
+        }
+
+        const chatProvider = await resolveChatProvider();
+        if (!chatProvider) {
+          request.resume();
+          sendJson(response, 503, { error: "No model provider is configured." });
+          return;
+        }
         await store.addMessage(
           agentRequest.conversationId,
           user.id,
@@ -2874,7 +3152,10 @@ export function createApiServer(
         let reply: string;
         try {
           reply = await runAgent(chatProvider, {
-            ...agentRequest,
+            input: agentRequest.input,
+            ...(agentRequest.instructions
+              ? { instructions: agentRequest.instructions }
+              : {}),
             history: history.map(({ role, content }) => ({ role, content })),
           });
         } catch (error) {

@@ -1,4 +1,5 @@
-import { uiCatalogs, type UiMessageKey } from "ql_i18n/catalogs";
+import type { UiMessageKey } from "ql_i18n/catalogs";
+import { uiCatalog as idCatalog } from "ql_i18n/catalogs/id";
 import { useMemo } from "react";
 import { useTranslationCatalog } from "./translation-catalog";
 
@@ -23,6 +24,13 @@ export interface AppMessages {
     no: string;
     statusAvailable: string;
     statusProposed: string;
+    skipToContent: string;
+    themeToLight: string;
+    themeToDark: string;
+    searchAction: string;
+    searchPlaceholder: string;
+    searchPrompt: string;
+    quickLinks: string;
   };
   auth: {
     setupTitle: string;
@@ -86,14 +94,120 @@ export interface AppMessages {
     navPortals: string;
     navJourney: string;
     navProgress: string;
+    navExplore: string;
+    navTransmissions: string;
+    navDock: string;
+    navDiscover: string;
+    heroEst: string;
+    portalHqRestricted: string;
+    scrollCue: string;
     portalsLabel: string;
     portalMoonWitness: string;
     portalDock: string;
     portalCockpit: string;
     portalHeadquarter: string;
     footerValues: string;
+    m3Eyebrow: string;
+    m3Title: string;
+    m3Description: string;
+    m3CorpusTitle: string;
+    m3CorpusDesc: string;
+    m3ResearchTitle: string;
+    m3ResearchDesc: string;
+    m3ModelsTitle: string;
+    m3ModelsDesc: string;
+    m4Eyebrow: string;
+    m4Title: string;
+    m4Description: string;
+    m4FeaturedTitle: string;
+    m4FeaturedSource: string;
+    m4FeaturedExcerpt: string;
+    m4ReadAction: string;
+    m4ProvenanceLabel: string;
+    m5Eyebrow: string;
+    m5Title: string;
+    m5Description: string;
+    m5TopicFaith: string;
+    m5TopicHistory: string;
+    m5TopicWisdom: string;
+    m5TopicCosmos: string;
+    m6Eyebrow: string;
+    m6Title: string;
+    m6Description: string;
+    m6Pillar1: string;
+    m6Pillar1Desc: string;
+    m6Pillar2: string;
+    m6Pillar2Desc: string;
+    m6DockAction: string;
+    m7Eyebrow: string;
+    m7Title: string;
+    m7Description: string;
+    m7AnonTitle: string;
+    m7AnonDesc: string;
+    m7MemberTitle: string;
+    m7MemberDesc: string;
+    m8Eyebrow: string;
+    m8Title: string;
+    m8ClosingQuote: string;
+    m8EcosystemConstitution: string;
+    m8Privacy: string;
+    m8Terms: string;
+    m8FooterReflectionSource: string;
+    m3DirectoryAria: string;
+    m4PrincipleTitle: string;
+    m4PrincipleBody: string;
+    m4MethodologyAction: string;
+    m5TopicsAria: string;
+    m7AnonAction: string;
+    m2AdminRestricted: string;
+  };
+  community: {
+    commTitle: string;
+    commSubtitle: string;
+    commHero: string;
+    commDesc: string;
+    commGuidelinesTitle: string;
+    commGuideline1: string;
+    commGuideline1Desc: string;
+    commGuideline2: string;
+    commGuideline2Desc: string;
+    commGuideline3: string;
+    commGuideline3Desc: string;
+    commCirclesTitle: string;
+    commCircle1: string;
+    commCircle2: string;
+    commCircle3: string;
+    commActionRegister: string;
+    commCirclesHeading: string;
+    commCircleLabel: string;
+    commFooterSubtitle: string;
+    commNavHome: string;
+    commNavCorpus: string;
+    commNavWorkspace: string;
   };
   dashboard: {
+    hqTitle: string;
+    hqSubtitle: string;
+    hqArrivalGreeting: string;
+    hqArrivalDesc: string;
+    hqRegion1Title: string;
+    hqRegion1Desc: string;
+    hqRegion2Title: string;
+    hqRegion2Desc: string;
+    hqRegion3Title: string;
+    hqRegion3Desc: string;
+    hqRegion4Title: string;
+    hqRegion4Desc: string;
+    hqRegion5Title: string;
+    hqRegion5Desc: string;
+    hqRegion6Title: string;
+    hqRegion6Desc: string;
+    hqWorldCoreTitle: string;
+    hqIntelFeedTitle: string;
+    hqMissionStripTitle: string;
+    hqIdentityFrameTitle: string;
+    hqRegionAll: string;
+    hqRegionLabel: string;
     greeting: string;
     description: string;
     continueChat: string;
@@ -153,6 +267,20 @@ export interface AppMessages {
     thinking: string;
     newConversationPlaceholder: string;
     sendHint: string;
+    groundedEvidence: string;
+    insufficientEvidence: string;
+    legacyEvidence: string;
+    citationsTitle: string;
+    sourceEdition: string;
+    locale: string;
+    passageAuthority: string;
+    editionAuthority: string;
+    attribution: string;
+    publisher: string;
+    verseLocator: string;
+    openSource: string;
+    noCitationMetadata: string;
+    metadataUnavailable: string;
   };
   workflow: {
     navLabel: string;
@@ -219,7 +347,7 @@ export interface AppMessages {
 }
 
 function isUiMessageKey(value: string): value is UiMessageKey {
-  return Object.hasOwn(uiCatalogs.id, value);
+  return Object.hasOwn(idCatalog, value);
 }
 
 export function useMessages(): AppMessages {
@@ -232,7 +360,7 @@ export function useMessages(): AppMessages {
           const nextPath = [...path, property];
           const relativeKey = nextPath.join(".");
           if (relativeKey === "landing.journey") {
-            return Object.keys(uiCatalogs.id)
+            return Object.keys(idCatalog)
               .filter(isUiMessageKey)
               .filter((key) => /^web\.landing\.journey\.step_\d+$/.test(key))
               .sort((left, right) => {
