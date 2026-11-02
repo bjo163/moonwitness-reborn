@@ -52,5 +52,8 @@
     "ql_base": "workspace:*",
     "ql_orm": "workspace:*",
     "ql_source": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "catalog:"
   }
 }
