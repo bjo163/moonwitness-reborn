@@ -9,7 +9,7 @@
 - Kontrak request/response, route, dan SDK komunikasi API wajib berada di `@moonwitness/moonclient`.
 - Semua komunikasi HTTP aplikasi web (`apps/web`) wajib memakai instance `moonClient`; jangan memakai `fetch`, XMLHttpRequest, atau klien transport lain di aplikasi. Utility developer mandiri di luar `apps/web` boleh memakai HTTP same-origin hanya ke server loopback miliknya sendiri.
 - API memakai DTO dan route bersama dari `@moonwitness/moonclient`; jangan menduplikasi path endpoint di server.
-- Aturan lint workspace dipusatkan di `eslint.config.mjs`. Build, lint, typecheck, tes, dan budget web dijalankan sebagai gate wajib hanya melalui GitHub Actions; agent tidak menjalankannya di lokal.
+- Aturan lint workspace dipusatkan di `eslint.config.mjs`. Build, lint, typecheck, tes, dan budget web dijalankan sebagai gate utama melalui GitHub Actions, namun agent diperbolehkan menjalankan build/test secara lokal bila diperlukan untuk verifikasi atau sinkronisasi artefak build lokal.
 
 ## Data dan keamanan
 
@@ -31,7 +31,7 @@
   - `apps/web/src/app/globals.css` hanya mengimpor preset `@moonwitness/ui`. Token, reset browser, dan gaya `.ql-*` berada di `packages/ui/styles/**`. Hook yang mengakses data sesi/pengguna tetap di `apps/web`.
   - Ikuti MW-ADR-020 dan aturan ESLint: jangan gunakan elemen form mentah, `<style>`, anchor internal mentah, inline `style`, warna arbitrer, atau warna palet default Tailwind di layar web. Gunakan token serta kosakata `.ql-*`/`is-*` yang sudah ada.
   - Pertahankan aksesibilitas nama kontrol, label terlihat, keyboard/focus, reduced motion, kontras, layout responsif, dan state loading/error/empty yang terdampak. Setiap kontrol harus memiliki aksi nyata.
-  - Tambahkan atau sesuaikan tes pada boundary yang berubah; tes komponen UI bersama harus memeriksa perilaku class override dan markup. Jangan menjalankan gate lokal.
+  - Tambahkan atau sesuaikan tes pada boundary yang berubah; tes komponen UI bersama harus memeriksa perilaku class override dan markup. Sinkronkan build lokal sesuai kebutuhan.
 - Letakkan perilaku domain di addon/runtime yang sesuai; API hanya menjadi boundary autentikasi, validasi request, dan pemanggil service.
 - Setiap perubahan addon menyertakan tes manifest/model/ACL yang relevan; eksekusi semua gate hanya melalui GitHub Actions.
 - Perbarui halaman arsitektur di GitHub Wiki saat menambah addon atau mengubah batas tanggung jawab package.
@@ -43,7 +43,7 @@
 - Sebelum mengedit, telusuri pemilik fitur, pola terdekat, kontrak bersama, dan tes yang sudah ada. Ubah sesedikit mungkin file untuk menyelesaikan akar masalah; jangan menyapu perubahan pengguna yang tidak terkait.
 - Jaga setiap perubahan tetap terketik, dengan validasi dan error yang eksplisit. Jangan menyamarkan kegagalan memakai fallback sukses, catch luas, atau cast tipe yang tidak aman.
 - Tambahkan atau sesuaikan tes pada boundary yang berubah. Untuk perubahan UI, pertahankan state loading/error/empty dan interaksi yang terdampak; untuk katalog i18n, jaga konsistensi key `id`/`en`.
-- Jangan menjalankan `pnpm lint`, build, typecheck, test, atau gate kualitas lain secara lokal. Setelah perubahan siap ditinjau, periksa GitHub Actions untuk SHA yang tepat menggunakan GitHub CLI. Tanpa run yang cocok dan sukses, laporkan gate sebagai pending, bukan PASS.
+- Boleh menjalankan build, lint, typecheck, atau test secara lokal untuk verifikasi dan sinkronisasi workspace. Namun rilis kanonik tetap mengikuti hasil verifikasi GitHub Actions untuk SHA yang tepat. Tanpa run yang cocok dan sukses di GitHub Actions, status gate rilis dilaporkan sebagai pending, bukan PASS.
 - Urutan otoritatif GitHub Actions berada di `.github/workflows/ci.yml`: build, lint type-aware, typecheck, test, lalu budget web. Bedakan error lint dari warning dan jangan menyatakan workflow lulus tanpa hasil run yang diamati.
 - Untuk perubahan tata kelola Issues/Wiki, verifikasi Issue, label, dan dokumentasi langsung pada sumber kanonis GitHub Issues/Wiki menggunakan skill GitHub Issues. Requirement audit gates lokal sudah dipensiunkan; jangan menambahkan kembali salinan snapshot atau script lokal sebagai sumber status.
 - Pecah pekerjaan paralel hanya untuk bagian yang benar-benar independen dan file/interface yang tidak tumpang tindih. Beri tiap worker lingkup serta kriteria selesai yang jelas; satu integrator menangani kontrak bersama dan menjalankan validasi akhir.
