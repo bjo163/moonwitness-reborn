@@ -16,6 +16,18 @@ import {
   QlConfigurationError,
   type QlStorageDriver,
 } from "./storage.js";
+import {
+  isAuditFieldName,
+  isBackfillableAuditTimestamp,
+  normalizeModelDefinition,
+} from "./system-fields.js";
+
+export {
+  AUDIT_FIELDS,
+  AUDIT_FIELD_NAMES,
+  type QlAuditFieldName,
+  normalizeModelDefinition,
+} from "./system-fields.js";
 
 export type {
   AddonCategory,
@@ -91,7 +103,7 @@ function isInFilter(value: QlServiceFilter): value is QlInFilter {
     typeof value === "object" &&
     value !== null &&
     !Array.isArray(value) &&
-    Array.isArray((value as QlInFilter).in)
+    Array.isArray(value.in)
   );
 }
 
@@ -197,6 +209,15 @@ export interface QlUserContext {
 
 export interface QlOrmOptions {
   storage?: QlStorageDriver;
+}
+
+/**
+ * Optional actor for service writes. Public writes derive the actor from the
+ * authenticated user; service write paths have no user context unless the
+ * caller passes one.
+ */
+export interface QlAuditOptions {
+  actorId?: string;
 }
 
 export type QlRecord = RecordValues;
@@ -491,6 +512,62 @@ function toDatabaseValue(value: unknown, field: QlFieldDefinition): QlSqlValue {
   throw new Error("Unsupported field value.");
 }
 
+/**
+ * Odoo-style readonly audit fields: public CRUD never accepts a client value
+ * for a public audit field, so the ORM's own stamp is the only source. Private
+ * audit fields are still rejected by the normal private-field guard.
+ */
+function withoutClientAuditFields(
+  model: QlModelDefinition,
+  input: Record<string, unknown>,
+): Record<string, unknown> {
+  const hasPublicAuditField = Object.keys(input).some(
+    (name) => isAuditFieldName(name) && !model.fields[name]?.private,
+  );
+  if (!hasPublicAuditField) return input;
+  const filtered: Record<string, unknown> = {};
+  for (const [name, value] of Object.entries(input)) {
+    if (isAuditFieldName(name) && !model.fields[name]?.private) continue;
+    filtered[name] = value;
+  }
+  return filtered;
+}
+
+function stampCreateAudit(
+  model: QlModelDefinition,
+  values: Record<string, QlSqlValue>,
+  actorId: string | undefined,
+): void {
+  const now = Date.now();
+  if (model.fields.created_at && values.created_at === undefined) {
+    values.created_at = now;
+  }
+  if (model.fields.updated_at && values.updated_at === undefined) {
+    values.updated_at = now;
+  }
+  if (actorId) {
+    if (model.fields.created_by && values.created_by === undefined) {
+      values.created_by = actorId;
+    }
+    if (model.fields.updated_by && values.updated_by === undefined) {
+      values.updated_by = actorId;
+    }
+  }
+}
+
+function stampUpdateAudit(
+  model: QlModelDefinition,
+  values: Record<string, QlSqlValue>,
+  actorId: string | undefined,
+): void {
+  if (model.fields.updated_at && values.updated_at === undefined) {
+    values.updated_at = Date.now();
+  }
+  if (actorId && model.fields.updated_by && values.updated_by === undefined) {
+    values.updated_by = actorId;
+  }
+}
+
 function validateValue(
   model: QlModelDefinition,
   name: string,
@@ -771,7 +848,8 @@ export class QlModelRegistry {
   constructor(manifests: readonly QlAddonManifest[]) {
     this.addons = loadAddons(manifests);
     for (const addon of this.addons) {
-      for (const model of addon.models) {
+      for (const rawModel of addon.models) {
+        const model = normalizeModelDefinition(rawModel);
         if (this.models.has(model.name)) {
           throw new Error(`Duplicate model '${model.name}'.`);
         }
@@ -1233,6 +1311,13 @@ export class QlOrm {
           `ALTER TABLE ${table} ADD COLUMN ${definition}`,
           [],
         );
+        if (isBackfillableAuditTimestamp(name)) {
+          const stampSql = new SqlBuilder(this.connection.driver);
+          await this.connection.execute(
+            `UPDATE ${table} SET ${quoteIdentifier(name)} = ${stampSql.param(Date.now())} WHERE ${quoteIdentifier(name)} IS NULL`,
+            stampSql.args,
+          );
+        }
         if (field.unique) {
           await this.connection.execute(
             `CREATE UNIQUE INDEX IF NOT EXISTS ${quoteIdentifier(`${model.tableName}_${name}_unique`)} ON ${table} (${quoteIdentifier(name)})`,
@@ -1504,13 +1589,15 @@ export class QlOrm {
     this.requireAccess(modelName, user, "create");
     const model = this.registry.getModel(modelName);
     const values: Record<string, QlSqlValue> = { id: randomUUID() };
-    for (const [name, value] of Object.entries(input)) {
+    const payload = withoutClientAuditFields(model, input);
+    for (const [name, value] of Object.entries(payload)) {
       const field = validateValue(model, name, value);
       if (field.private) {
         throw new QlValidationError(`Field '${name}' cannot be written through this API.`);
       }
       values[name] = toDatabaseValue(value, field);
     }
+    stampCreateAudit(model, values, user.id);
     for (const [name, field] of Object.entries(model.fields)) {
       if (isVirtualField(field)) continue;
       if (model.ownerField === name) {
@@ -1556,9 +1643,9 @@ export class QlOrm {
   ): Promise<QlRecord | undefined> {
     this.requireAccess(modelName, user, "write");
     const model = this.registry.getModel(modelName);
-    const assignments: string[] = [];
-    const sql = new SqlBuilder(this.connection.driver);
-    for (const [name, value] of Object.entries(input)) {
+    const payload = withoutClientAuditFields(model, input);
+    const updates: Record<string, QlSqlValue> = {};
+    for (const [name, value] of Object.entries(payload)) {
       if (name === model.ownerField) {
         throw new QlValidationError("Record ownership cannot be changed.");
       }
@@ -1566,11 +1653,16 @@ export class QlOrm {
       if (field.private) {
         throw new QlValidationError(`Field '${name}' cannot be written through this API.`);
       }
-      assignments.push(`${quoteIdentifier(name)} = ${sql.param(toDatabaseValue(value, field))}`);
+      updates[name] = toDatabaseValue(value, field);
     }
-    if (assignments.length === 0) {
+    if (Object.keys(updates).length === 0) {
       throw new QlValidationError("At least one field is required.");
     }
+    stampUpdateAudit(model, updates, user.id);
+    const sql = new SqlBuilder(this.connection.driver);
+    const assignments = Object.entries(updates).map(
+      ([name, value]) => `${quoteIdentifier(name)} = ${sql.param(value)}`,
+    );
     const conditions = [`${quoteIdentifier("id")} = ${sql.param(id)}`];
     if (model.ownerField) {
       conditions.push(
@@ -1793,6 +1885,7 @@ export class QlOrm {
   async createRecordForService(
     modelName: string,
     input: Record<string, unknown>,
+    options: QlAuditOptions = {},
   ): Promise<QlRecord> {
     const model = this.registry.getModel(modelName);
     const values: Record<string, QlSqlValue> = { id: randomUUID() };
@@ -1800,6 +1893,7 @@ export class QlOrm {
       const field = validateValue(model, name, value);
       values[name] = toDatabaseValue(value, field);
     }
+    stampCreateAudit(model, values, options.actorId);
     for (const [name, field] of Object.entries(model.fields)) {
       if (isVirtualField(field)) continue;
       if (field.required && values[name] === undefined) {
@@ -1842,19 +1936,22 @@ export class QlOrm {
     modelName: string,
     filters: Record<string, QlServiceValue>,
     input: Record<string, unknown>,
+    options: QlAuditOptions = {},
   ): Promise<number> {
     const model = this.registry.getModel(modelName);
-    const assignments: string[] = [];
-    const sql = new SqlBuilder(this.connection.driver);
-    for (const [name, value] of Object.entries(input)) {
-      const field = validateValue(model, name, value);
-      assignments.push(
-        `${quoteIdentifier(name)} = ${sql.param(toDatabaseValue(value, field))}`,
-      );
-    }
-    if (assignments.length === 0) {
+    if (Object.keys(input).length === 0) {
       throw new QlValidationError("At least one field is required.");
     }
+    const updates: Record<string, QlSqlValue> = {};
+    for (const [name, value] of Object.entries(input)) {
+      const field = validateValue(model, name, value);
+      updates[name] = toDatabaseValue(value, field);
+    }
+    stampUpdateAudit(model, updates, options.actorId);
+    const sql = new SqlBuilder(this.connection.driver);
+    const assignments = Object.entries(updates).map(
+      ([name, value]) => `${quoteIdentifier(name)} = ${sql.param(value)}`,
+    );
     const conditions: string[] = [];
     for (const [name, value] of Object.entries(filters)) {
       if (name !== "id" && !model.fields[name]) {
@@ -1917,6 +2014,7 @@ export class QlOrm {
     modelName: string,
     ownerId: string,
     input: Record<string, unknown>,
+    options: QlAuditOptions = {},
   ): Promise<QlRecord> {
     const model = this.registry.getModel(modelName);
     if (!model.ownerField) {
@@ -1933,6 +2031,7 @@ export class QlOrm {
       const field = validateValue(model, name, value);
       values[name] = toDatabaseValue(value, field);
     }
+    stampCreateAudit(model, values, options.actorId ?? ownerId);
     for (const [name, field] of Object.entries(model.fields)) {
       if (isVirtualField(field)) continue;
       if (name === model.ownerField) continue;
@@ -1977,25 +2076,28 @@ export class QlOrm {
     ownerId: string,
     id: string,
     input: Record<string, unknown>,
+    options: QlAuditOptions = {},
   ): Promise<QlRecord | undefined> {
     const model = this.registry.getModel(modelName);
     if (!model.ownerField) {
       throw new Error(`Service-owned model '${modelName}' must define ownerField.`);
     }
-    const assignments: string[] = [];
-    const sql = new SqlBuilder(this.connection.driver);
+    if (Object.keys(input).length === 0) {
+      throw new QlValidationError("At least one field is required.");
+    }
+    const updates: Record<string, QlSqlValue> = {};
     for (const [name, value] of Object.entries(input)) {
       if (name === model.ownerField) {
         throw new QlValidationError("Record ownership cannot be changed.");
       }
       const field = validateValue(model, name, value);
-      assignments.push(
-        `${quoteIdentifier(name)} = ${sql.param(toDatabaseValue(value, field))}`,
-      );
+      updates[name] = toDatabaseValue(value, field);
     }
-    if (assignments.length === 0) {
-      throw new QlValidationError("At least one field is required.");
-    }
+    stampUpdateAudit(model, updates, options.actorId ?? ownerId);
+    const sql = new SqlBuilder(this.connection.driver);
+    const assignments = Object.entries(updates).map(
+      ([name, value]) => `${quoteIdentifier(name)} = ${sql.param(value)}`,
+    );
     const conditions = [
       `${quoteIdentifier("id")} = ${sql.param(id)}`,
       `${quoteIdentifier(model.ownerField)} = ${sql.param(ownerId)}`,

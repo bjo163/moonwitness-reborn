@@ -145,9 +145,9 @@ export default function AttachmentsWorkspace() {
         Math.floor(Math.log(Math.max(bytes, 1)) / Math.log(1024)),
       );
       const value = bytes / 1024 ** step;
-      return new Intl.NumberFormat(locale, {
+      return `${new Intl.NumberFormat(locale, {
         maximumFractionDigits: step === 0 ? 0 : 1,
-      }).format(step === 0 ? bytes : value) + ` ${units[step]}`;
+      }).format(step === 0 ? bytes : value)} ${units[step]}`;
     },
     [user?.preferredLocale],
   );

@@ -13,38 +13,34 @@ import {
   LoadingScreen,
   MetricList,
   MetricRow,
-  SidebarTrigger,
-  WorkspaceSidebar,
-  WorkspaceTemplate,
+  WorkspaceShell,
   HolographicOrbitDeck,
   AmbientAtmosphere,
   TelemetryOrbitWidget,
-  type SidebarNavItem,
   type CommandRegionId,
+  type SidebarNavItem,
 } from "@moonwitness/ui";
 import {
+  Activity,
   ArrowRight,
   Boxes,
   ExternalLink,
-  KeyRound,
   Languages,
+  Sparkles,
+  ShieldCheck,
+  Workflow as WorkflowIcon,
+  BookOpen,
   MessageSquare,
   Microscope,
   Plug,
-  ShieldCheck,
-  Sparkles,
-  Workflow as WorkflowIcon,
-  BookOpen,
-  Activity,
+  KeyRound,
   Compass,
   Paperclip,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LocaleSwitcher } from "../locale/locale-switcher";
 import { useMessages } from "../locale/messages";
-import { useLocalePreference } from "../locale/use-locale-preference";
 import { useTranslationCatalog } from "../locale/translation-catalog";
 import { apiErrorMessage } from "../locale/api-error-message";
 
@@ -52,18 +48,16 @@ export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUserDto | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [, setSidebarOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasWorkflow, setHasWorkflow] = useState(false);
   const [hasCorpus, setHasCorpus] = useState(false);
   const [hasResearch, setHasResearch] = useState(false);
   const [projectTracker, setProjectTracker] =
     useState<ProjectTaskListResponseDto | null>(null);
-  const [activeRegion, setActiveRegion] = useState<string>("all");
-  const { locale, changeLocale, saving, error: localeError } =
-    useLocalePreference(user);
-  const { t } = useTranslationCatalog();
+  const [activeRegion, setActiveRegion] = useState("all");
   const copy = useMessages();
+  const { t } = useTranslationCatalog();
 
   useEffect(() => {
     let cancelled = false;
@@ -129,27 +123,17 @@ export default function DashboardPage() {
     };
   }, [router, t]);
 
-  async function logout() {
-    setError(null);
-    try {
-      await moonClient.logout();
-      router.replace("/auth");
-    } catch (logoutError) {
-      setError(apiErrorMessage(logoutError, t));
-    }
-  }
-
   if (loading || !user) {
     return <LoadingScreen error={error} label={copy.common.loading} />;
   }
 
-  const hasConnectors = user.groups.some(
+  const hasConnectors = user?.groups.some(
     (group) => group === "connector" || group === "operator",
-  );
-  const isAdmin = user.groups.includes("admin");
-  const canViewProjectTracker = user.groups.some(
+  ) ?? false;
+  const isAdmin = user?.groups.includes("admin") ?? false;
+  const canViewProjectTracker = user?.groups.some(
     (group) => group === "admin" || group === "operator",
-  );
+  ) ?? false;
   const readyTasks =
     projectTracker?.tasks.filter((task) =>
       projectTracker.readyTaskIds.includes(task.id),
@@ -158,6 +142,14 @@ export default function DashboardPage() {
     projectTracker?.tasks.filter((task) => task.state === "done").length ?? 0;
   const blockedCount =
     projectTracker?.tasks.filter((task) => task.state === "blocked").length ?? 0;
+  const regionsMeta = [
+    { id: "01", title: copy.dashboard.hqRegion1Title, desc: copy.dashboard.hqRegion1Desc, icon: <MessageSquare size={16} /> },
+    { id: "02", title: copy.dashboard.hqRegion2Title, desc: copy.dashboard.hqRegion2Desc, icon: <ShieldCheck size={16} /> },
+    { id: "03", title: copy.dashboard.hqRegion3Title, desc: copy.dashboard.hqRegion3Desc, icon: <Activity size={16} /> },
+    { id: "04", title: copy.dashboard.hqRegion4Title, desc: copy.dashboard.hqRegion4Desc, icon: <Microscope size={16} /> },
+    { id: "05", title: copy.dashboard.hqRegion5Title, desc: copy.dashboard.hqRegion5Desc, icon: <BookOpen size={16} /> },
+    { id: "06", title: copy.dashboard.hqRegion6Title, desc: copy.dashboard.hqRegion6Desc, icon: <Plug size={16} /> },
+  ];
 
   const closeSidebar = () => setSidebarOpen(false);
   const navItems: readonly SidebarNavItem[] = [
@@ -213,7 +205,7 @@ export default function DashboardPage() {
             label: t("web.dashboard.corpusTitle"),
             icon: <BookOpen aria-hidden="true" size={16} />,
             onSelect: closeSidebar,
-          },
+          }
         ]
       : []),
     {
@@ -229,7 +221,7 @@ export default function DashboardPage() {
             label: copy.research.navLabel,
             icon: <Microscope aria-hidden="true" size={16} />,
             onSelect: closeSidebar,
-          },
+          }
         ]
       : []),
     ...(isAdmin
@@ -245,62 +237,19 @@ export default function DashboardPage() {
             label: t("web.translationAdmin.title"),
             icon: <Languages aria-hidden="true" size={16} />,
             onSelect: closeSidebar,
-          },
+          }
         ]
       : []),
   ];
 
-  const regionsMeta = [
-    { id: "01", title: copy.dashboard.hqRegion1Title, desc: copy.dashboard.hqRegion1Desc, icon: <MessageSquare size={16} /> },
-    { id: "02", title: copy.dashboard.hqRegion2Title, desc: copy.dashboard.hqRegion2Desc, icon: <ShieldCheck size={16} /> },
-    { id: "03", title: copy.dashboard.hqRegion3Title, desc: copy.dashboard.hqRegion3Desc, icon: <Activity size={16} /> },
-    { id: "04", title: copy.dashboard.hqRegion4Title, desc: copy.dashboard.hqRegion4Desc, icon: <Microscope size={16} /> },
-    { id: "05", title: copy.dashboard.hqRegion5Title, desc: copy.dashboard.hqRegion5Desc, icon: <BookOpen size={16} /> },
-    { id: "06", title: copy.dashboard.hqRegion6Title, desc: copy.dashboard.hqRegion6Desc, icon: <Plug size={16} /> },
-  ];
-
   return (
-    <WorkspaceTemplate
-      sidebarOpen={sidebarOpen}
-      onCloseSidebar={() => setSidebarOpen(false)}
-      closeLabel={copy.common.closeMenu}
-      sidebar={
-        <WorkspaceSidebar
-          brandIcon={<Sparkles aria-hidden="true" size={16} />}
-          closeLabel={copy.common.closeMenu}
-          identity={{ name: user.name, subtitle: user.email }}
-          items={navItems}
-          logout={{ label: copy.common.logout, onLogout: () => void logout() }}
-          navLabel={copy.dashboard.hqTitle}
-          onCloseSidebar={() => setSidebarOpen(false)}
-        />
-      }
-      header={
-        <>
-          <div className="flex items-center gap-2">
-            <SidebarTrigger
-              label={copy.common.openMenu}
-              onOpenSidebar={() => setSidebarOpen(true)}
-              sidebarOpen={sidebarOpen}
-            />
-            <span className="ql-display text-base font-semibold tracking-wide text-acid">
-              {copy.dashboard.hqTitle}
-            </span>
-            <span className="text-xs text-muted">/ {copy.dashboard.hqSubtitle}</span>
-          </div>
-          <LocaleSwitcher
-            locale={locale}
-            label={copy.common.localeLabel}
-            onChange={(nextLocale) => void changeLocale(nextLocale)}
-            disabled={saving}
-          />
-        </>
-      }
+    <WorkspaceShell
+      items={navItems}
+      identity={{ name: user.name, subtitle: user.email }}
+      closeLabel={t("web.common.closeMenu")}
+      navLabel={t("web.common.mainNavigation")}
     >
       <div className="flex-1 overflow-y-auto">
-        {/* =========================================================================
-            1. IDENTITY FRAME & SPATIAL ARRIVAL (Threshold)
-           ========================================================================= */}
         <section className="relative border-b border-hairline bg-panel-edge px-5 py-8 md:px-10 md:py-12">
           <div className="mx-auto flex w-full max-w-6xl flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
@@ -344,9 +293,9 @@ export default function DashboardPage() {
           {/* Subtle Ambient Canvas in background */}
           <AmbientAtmosphere density="subtle" />
 
-          {(error || localeError) && (
+          {(error) && (
             <Alert variant="error" className="mb-8">
-              {error ?? localeError}
+              {error}
             </Alert>
           )}
 
@@ -590,8 +539,12 @@ export default function DashboardPage() {
               {activeRegion === "02" && (
                 <div className="border border-hairline bg-panel p-6 md:p-8">
                   <span className="font-mono text-xs text-acid">REGION 02 · IDENTITY & ACCESS</span>
-                  <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">{copy.dashboard.hqRegion2Title}</h2>
-                  <p className="mt-2 text-sm text-muted">{copy.dashboard.hqRegion2Desc}</p>
+                  <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">
+                    {copy.dashboard.hqRegion2Title}
+                  </h2>
+                  <p className="mt-2 text-sm text-muted">
+                    {copy.dashboard.hqRegion2Desc}
+                  </p>
                   <div className="mt-6 flex gap-4 text-xs font-semibold">
                     {isAdmin && <Link href="/admin/users" className="text-acid hover:underline">Kelola Pengguna &rarr;</Link>}
                     <Link href="/admin/translations" className="text-ink-soft hover:text-acid">Audit Terjemahan &rarr;</Link>
@@ -601,8 +554,12 @@ export default function DashboardPage() {
               {activeRegion === "05" && (
                 <div className="border border-hairline bg-panel p-6 md:p-8">
                   <span className="font-mono text-xs text-acid">REGION 05 · UNIVERSE & TRANSMISSIONS</span>
-                  <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">{copy.dashboard.hqRegion5Title}</h2>
-                  <p className="mt-2 text-sm text-muted">{copy.dashboard.hqRegion5Desc}</p>
+                  <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">
+                    {copy.dashboard.hqRegion5Title}
+                  </h2>
+                  <p className="mt-2 text-sm text-muted">
+                    {copy.dashboard.hqRegion5Desc}
+                  </p>
                   <div className="mt-6 flex gap-4 text-xs font-semibold">
                     <Link href="/corpus" className="text-acid hover:underline">Arsip Korpus &rarr;</Link>
                     <Link href="/workflow" className="text-ink-soft hover:text-acid">Antrean Publikasi &rarr;</Link>
@@ -613,8 +570,12 @@ export default function DashboardPage() {
                 <div className="space-y-6">
                   <div className="border border-hairline bg-panel p-6 md:p-8">
                     <span className="font-mono text-xs text-acid">REGION 06 · SYSTEM OBSERVATORY</span>
-                    <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">{copy.dashboard.hqRegion6Title}</h2>
-                    <p className="mt-2 text-sm text-muted">{copy.dashboard.hqRegion6Desc}</p>
+                    <h2 className="ql-display mt-3 text-2xl font-semibold text-ink">
+                      {copy.dashboard.hqRegion6Title}
+                    </h2>
+                    <p className="mt-2 text-sm text-muted">
+                      {copy.dashboard.hqRegion6Desc}
+                    </p>
                     <div className="mt-6 flex gap-4 text-xs font-semibold">
                       {hasConnectors && <Link href="/connectors" className="text-acid hover:underline">Konektor DNS &rarr;</Link>}
                       <Link href="/command-center/export" className="text-ink-soft hover:text-acid">Studio Data &rarr;</Link>
@@ -701,6 +662,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </WorkspaceTemplate>
+    </WorkspaceShell>
   );
 }

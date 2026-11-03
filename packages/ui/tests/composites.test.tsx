@@ -25,6 +25,7 @@ import {
   SearchDialog,
   SanctuaryHeader,
   WorkspaceSidebar,
+  WorkspaceShell,
   type SidebarNavItem,
 } from "../src/index.js";
 import { assertNoOwnColours, render } from "./render-helpers.js";
@@ -91,6 +92,23 @@ void test("SidebarFooter renders identity lines and only logs out when asked", (
   );
   assert.doesNotMatch(identityOnly, /aria-label="Sign out"/);
   assertNoOwnColours(identityOnly, "SidebarFooter (identity only)");
+});
+
+void test("WorkspaceShell wires the shared navigation label and drawer trigger", () => {
+  const markup = render(
+    <WorkspaceShell
+      closeLabel="Close menu"
+      items={[{ href: "/models", label: "Models" }]}
+      navLabel="Main navigation"
+    >
+      <p>Content</p>
+    </WorkspaceShell>,
+  );
+  assert.match(markup, /aria-label="Close menu"/);
+  assert.match(markup, /aria-controls="ql-workspace-sidebar"/);
+  assert.match(markup, /aria-expanded="true"/);
+  assert.match(markup, /aria-label="Main navigation"/);
+  assert.match(markup, /Content/);
 });
 
 void test("PageHeader emits eyebrow, heading, description and an action slot", () => {

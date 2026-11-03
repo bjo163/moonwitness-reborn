@@ -2,13 +2,11 @@
 
 import {
   moonClient,
-  type AuthUserDto,
   type ModelRecordDto,
 } from "@moonwitness/moonclient";
 import {
   Alert,
   Badge,
-  Button,
   Card,
   CardContent,
   CardHeader,
@@ -16,18 +14,15 @@ import {
   LoadingScreen,
   PageHeader,
   Select,
-  SidebarTrigger,
-  Textarea,
-  WorkspaceSidebar,
-  WorkspaceTemplate,
   StudioExportDialog,
+  Textarea,
+  WorkspaceShell,
   type SidebarNavItem,
   type ExportFormat,
   type ExportMetadataOption,
 } from "@moonwitness/ui";
 import {
   Boxes,
-  Download,
   FileText,
   KeyRound,
   LayoutDashboard,
@@ -44,40 +39,30 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
-import { LocaleSwitcher } from "../locale/locale-switcher";
 import { useMessages } from "../locale/messages";
 import { useTranslationCatalog } from "../locale/translation-catalog";
-import { useLocalePreference } from "../locale/use-locale-preference";
+import { useWorkspaceSession } from "../locale/use-workspace-session";
 
 export default function StudioExportPage() {
   const router = useRouter();
   const copy = useMessages();
   const { t } = useTranslationCatalog();
-  const [user, setUser] = useState<AuthUserDto | null | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  const { user, loading, error } = useWorkspaceSession();
   const [artifacts, setArtifacts] = useState<ModelRecordDto[]>([]);
   const [selectedArtifactId, setSelectedArtifactId] = useState("");
   const [compiledMarkdown, setCompiledMarkdown] = useState("");
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-
-  const { locale, changeLocale, saving: localeSaving } =
-    useLocalePreference(user ?? null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     async function loadArtifacts() {
       try {
-        const currentUserData = await moonClient.currentUser();
-        if (!active) return;
-        if (!currentUserData.user) {
+        if (!user) {
           router.replace("/auth");
           return;
         }
-        setUser(currentUserData.user);
 
         const res = await moonClient
           .listRecords("studio.artifact")
@@ -89,11 +74,9 @@ export default function StudioExportPage() {
           setSelectedArtifactId(String(res.records[0].id));
           compileArtifact(res.records[0]);
         }
-        setLoading(false);
       } catch (loadError) {
         if (!active) return;
-        setError(apiErrorMessage(loadError, t));
-        setLoading(false);
+        setLoadError(apiErrorMessage(loadError, t));
       }
     }
 
@@ -101,7 +84,7 @@ export default function StudioExportPage() {
     return () => {
       active = false;
     };
-  }, [router, t]);
+  }, [router, t, user]);
 
   function compileArtifact(artifact: ModelRecordDto) {
     const title = String(artifact.title ?? artifact.name ?? "Untitled Artifact");
@@ -137,28 +120,6 @@ export default function StudioExportPage() {
     }
   }
 
-  function handleDownload() {
-    const blob = new Blob([compiledMarkdown], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `moonwitness-artifact-${selectedArtifactId || "export"}.md`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }
-
-  async function logout() {
-    setError(null);
-    try {
-      await moonClient.logout();
-      router.replace("/auth");
-    } catch (logoutError) {
-      setError(apiErrorMessage(logoutError, t));
-    }
-  }
-
   if (loading || user === undefined) {
     return <LoadingScreen label={copy.common.loading} />;
   }
@@ -172,43 +133,43 @@ export default function StudioExportPage() {
   const sidebarNavItems: SidebarNavItem[] = [
     {
       href: "/command-center",
-      label: copy.common.dashboard,
+      label: t("web.common.dashboard"),
       icon: <LayoutDashboard className="size-4" />,
     },
     {
       href: "/command-center/search",
-      label: locale === "id" ? "Pencarian Cerdas" : "Smart Search",
+      label: t("web.common.searchAction"),
       icon: <SearchIcon className="size-4" />,
     },
     {
       href: "/command-center/graph",
-      label: locale === "id" ? "Visualisasi Relasi" : "Correlation Graph",
+      label: t("web.graph.correlationGraph"),
       icon: <Network className="size-4" />,
     },
     {
       href: "/command-center/export",
-      label: locale === "id" ? "Ekspor Studio" : "Studio Exporter",
+      label: t("web.translationAdmin.exportPo"),
       icon: <FileText className="size-4" />,
       active: true,
     },
     {
       href: "/command-center/chat",
-      label: copy.common.chat,
+      label: t("web.common.chat"),
       icon: <MessageSquare className="size-4" />,
     },
     {
       href: "/models",
-      label: copy.common.models,
+      label: t("web.common.models"),
       icon: <Boxes className="size-4" />,
     },
     {
       href: "/providers",
-      label: copy.common.providers,
+      label: t("web.common.providers"),
       icon: <Sparkles className="size-4" />,
     },
     {
       href: "/connectors",
-      label: copy.common.integrations,
+      label: t("web.common.integrations"),
       icon: <Plug className="size-4" />,
     },
     {
@@ -238,7 +199,7 @@ export default function StudioExportPage() {
       ? [
           {
             href: "/admin/users",
-            label: copy.common.users,
+            label: t("web.common.users"),
             icon: <KeyRound className="size-4" />,
           },
           {
@@ -251,168 +212,125 @@ export default function StudioExportPage() {
   ];
 
   return (
-    <WorkspaceTemplate
-      sidebarOpen={sidebarOpen}
-      onCloseSidebar={() => setSidebarOpen(false)}
-      closeLabel={copy.common.closeMenu}
-      sidebar={
-        <WorkspaceSidebar
-          brandIcon={<Sparkles aria-hidden="true" size={16} />}
-          closeLabel={copy.common.closeMenu}
-          identity={{ name: user?.name ?? "User", subtitle: user?.email ?? "Member" }}
-          items={sidebarNavItems}
-          logout={{ label: copy.common.logout, onLogout: () => void logout() }}
-          navLabel="Studio Exporter"
-          onCloseSidebar={() => setSidebarOpen(false)}
-        />
-      }
-      header={
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger
-              label={copy.common.openMenu}
-              onOpenSidebar={() => setSidebarOpen(true)}
-              sidebarOpen={sidebarOpen}
-            />
-            <span className="text-sm font-medium text-ink-soft">
-              Studio Exporter
-            </span>
-          </div>
-          <LocaleSwitcher
-            locale={locale}
-            label={copy.common.localeLabel}
-            disabled={localeSaving}
-            onChange={(nextLocale) => void changeLocale(nextLocale)}
-          />
-        </div>
-      }
+    <WorkspaceShell
+      items={sidebarNavItems}
+      identity={{ name: user?.name ?? "User", subtitle: user?.email ?? "Member" }}
+      closeLabel={t("web.common.closeMenu")}
+      navLabel={t("web.common.mainNavigation")}
     >
       <div className="space-y-6 p-6">
         <PageHeader
-          title={locale === "id" ? "Ekspor & Kompilasi Studio" : "Studio Artifact Exporter"}
-          description={
-            locale === "id"
-              ? "Kompilasi artefak draf kreatif studio menjadi dokumen Markdown dengan metadata dan sitasi."
-              : "Compile creative studio artifacts into structured Markdown documents with citations."
-          }
-          
+          title={t("web.export.title")}
+          description={t("web.export.description")}
         />
 
-        {error && <Alert variant="error">{error}</Alert>}
+        {(error ?? loadError) && (
+          <Alert variant="error">{error ?? loadError}</Alert>
+        )}
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div>
-            <Card>
-              <CardHeader>
-                <span>{locale === "id" ? "Pilih Artefak Studio" : "Select Studio Artifact"}</span>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {artifacts.length === 0 ? (
-                  <div className="py-6 text-center text-sm text-muted">
-                    {locale === "id"
-                      ? "Belum ada artefak studio terdaftar di model studio.artifact."
-                      : "No studio artifacts found in studio.artifact model."}
-                  </div>
-                ) : (
-                  <FormField
-                    label={locale === "id" ? "Daftar Artefak" : "Artifact List"}
-                    htmlFor="select-artifact"
-                  >
-                    <Select
-                      id="select-artifact"
-                      value={selectedArtifactId}
-                      onChange={(e) => handleSelect(e.target.value)}
+        <div className="space-y-6 p-6">
+          <PageHeader
+            title={t("web.export.compiledTitle")}
+            description={t("web.export.compiledDesc")}
+          />
+
+          {(error ?? loadError) && (
+            <Alert variant="error">{error ?? loadError}</Alert>
+          )}
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div>
+              <Card>
+                <CardHeader>
+                  <span>{t("web.export.selectArtifact")}</span>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {artifacts.length === 0 ? (
+                    <div className="py-6 text-center text-sm text-muted">
+                      {t("web.export.noArtifacts")}
+                    </div>
+                  ) : (
+                    <FormField
+                      label={t("web.export.artifactList")}
+                      htmlFor="select-artifact"
                     >
-                      {artifacts.map((a) => (
-                        <option key={String(a.id)} value={String(a.id)}>
-                          {String(a.title ?? a.name ?? a.id)} ({String(a.stage ?? "draft")})
-                        </option>
-                      ))}
-                    </Select>
-                  </FormField>
-                )}
-                <div className="flex flex-col gap-2">
-                  <Button
-                    onClick={handleDownload}
-                    disabled={!compiledMarkdown || artifacts.length === 0}
-                    className="w-full"
-                  >
-                    <Download className="mr-2 size-4" />
-                    {locale === "id" ? "Unduh Markdown" : "Download Markdown"}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setExportDialogOpen(true)}
-                    disabled={artifacts.length === 0}
-                    className="w-full"
-                  >
-                    <FileText className="mr-2 size-4" />
-                    {locale === "id" ? "Opsi Ekspor Mutakhir (Sanad & PDF)" : "Advanced Export (Sanad & PDF)"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                      <Select
+                        id="select-artifact"
+                        value={selectedArtifactId}
+                        onChange={(e) => handleSelect(e.target.value)}
+                      >
+                        {artifacts.map((a) => (
+                          <option key={String(a.id)} value={String(a.id)}>
+                            {String(a.title ?? a.name ?? a.id)} ({String(a.stage ?? "draft")})
+                          </option>
+                        ))}
+                      </Select>
+                    </FormField>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <span>{t("web.export.preview")}</span>
+                    <Badge variant="outline">Markdown</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Textarea
+                    value={compiledMarkdown}
+                    readOnly
+                    rows={16}
+                    className="font-mono text-xs"
+                  />
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <span>{locale === "id" ? "Pratinjau Kompilasi" : "Compiled Preview"}</span>
-                  <Badge variant="outline">Markdown</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={compiledMarkdown}
-                  readOnly
-                  rows={16}
-                  className="font-mono text-xs"
-                />
-              </CardContent>
-            </Card>
-          </div>
+          <StudioExportDialog
+            isOpen={exportDialogOpen}
+            onClose={() => setExportDialogOpen(false)}
+            documentTitle={
+              artifacts.find((a) => String(a.id) === selectedArtifactId)?.title as string ?? "Studio Artifact"
+            }
+            isExporting={isExporting}
+            onExport={(format: ExportFormat, options: ExportMetadataOption) => {
+              void (async () => {
+                setIsExporting(true);
+                try {
+                  const apiFormat = format === "mushaf_pdf" ? "pdf" : format;
+                  const blob = await moonClient.exportResearchArtifact({
+                    artifactId: selectedArtifactId,
+                    format: apiFormat,
+                    options: {
+                      includeAttributionStamps: options.includeSanadChain,
+                      includeArabicScript: options.includeMorphologyAnalysis,
+                      paperSize: "a4",
+                    },
+                  });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `artifact-${selectedArtifactId}.${apiFormat === "pdf" ? "pdf" : apiFormat === "json" ? "json" : "md"}`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                  setExportDialogOpen(false);
+                } catch (exportErr) {
+                  setLoadError(apiErrorMessage(exportErr, t));
+                } finally {
+                  setIsExporting(false);
+                }
+              })();
+            }}
+          />
         </div>
-
-        <StudioExportDialog
-          isOpen={exportDialogOpen}
-          onClose={() => setExportDialogOpen(false)}
-          documentTitle={
-            artifacts.find((a) => String(a.id) === selectedArtifactId)?.title as string ?? "Studio Artifact"
-          }
-          isExporting={isExporting}
-          onExport={(format: ExportFormat, options: ExportMetadataOption) => {
-            void (async () => {
-              setIsExporting(true);
-              try {
-                const apiFormat = format === "mushaf_pdf" ? "pdf" : format;
-                const blob = await moonClient.exportResearchArtifact({
-                  artifactId: selectedArtifactId,
-                  format: apiFormat,
-                  options: {
-                    includeAttributionStamps: options.includeSanadChain,
-                    includeArabicScript: options.includeMorphologyAnalysis,
-                    paperSize: "a4",
-                  },
-                });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `artifact-${selectedArtifactId}.${apiFormat === "pdf" ? "pdf" : apiFormat === "json" ? "json" : "md"}`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                setExportDialogOpen(false);
-              } catch (exportErr) {
-                setError(apiErrorMessage(exportErr, t));
-              } finally {
-                setIsExporting(false);
-              }
-            })();
-          }}
-        />
       </div>
-    </WorkspaceTemplate>
+    </WorkspaceShell>
   );
 }

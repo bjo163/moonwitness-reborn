@@ -249,6 +249,7 @@ export async function saveTranslationDraft(
       "i18n.translation",
       { id: existing.id },
       values,
+      { actorId },
     );
     const updated = await orm.findOneByService("i18n.translation", {
       id: existing.id,
@@ -256,10 +257,14 @@ export async function saveTranslationDraft(
     if (!updated) throw new Error("Updated translation could not be loaded.");
     return mapAdminRecord(updated);
   }
-  const created = await orm.createRecordForService("i18n.translation", {
-    ...values,
-    catalog_key: key,
-  });
+  const created = await orm.createRecordForService(
+    "i18n.translation",
+    {
+      ...values,
+      catalog_key: key,
+    },
+    { actorId },
+  );
   return mapAdminRecord(created);
 }
 
@@ -281,6 +286,7 @@ export async function approveTranslation(
       updated_by: actorId,
       updated_at: new Date().toISOString(),
     },
+    { actorId },
   );
   const approved = await orm.findOneByService("i18n.translation", { id });
   if (!approved) throw new Error("Approved translation could not be loaded.");
@@ -403,7 +409,6 @@ export function createDefaultI18nData(): QlSeedDataRecord[] {
           ),
           status: "published",
           draft_source: "seed",
-          updated_by: "system",
         },
         updatePolicy: "insert_only",
       });

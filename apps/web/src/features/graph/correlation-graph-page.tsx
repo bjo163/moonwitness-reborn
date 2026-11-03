@@ -2,7 +2,6 @@
 
 import {
   moonClient,
-  type AuthUserDto,
   type ModelRecordDto,
 } from "@moonwitness/moonclient";
 import {
@@ -13,10 +12,8 @@ import {
   CardHeader,
   LoadingScreen,
   PageHeader,
-  SidebarTrigger,
-  WorkspaceSidebar,
-  WorkspaceTemplate,
   SemanticCrossSurahGraph,
+  WorkspaceShell,
   type SidebarNavItem,
 } from "@moonwitness/ui";
 import {
@@ -36,10 +33,9 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiErrorMessage } from "../locale/api-error-message";
-import { LocaleSwitcher } from "../locale/locale-switcher";
 import { useMessages } from "../locale/messages";
 import { useTranslationCatalog } from "../locale/translation-catalog";
-import { useLocalePreference } from "../locale/use-locale-preference";
+import { useWorkspaceSession } from "../locale/use-workspace-session";
 
 interface GraphNode {
   id: string;
@@ -58,31 +54,18 @@ export default function CorrelationGraphPage() {
   const router = useRouter();
   const copy = useMessages();
   const { t } = useTranslationCatalog();
-  const [user, setUser] = useState<AuthUserDto | null | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  const { user, loading, error } = useWorkspaceSession();
   const [nodes, setNodes] = useState<GraphNode[]>([]);
   const [edges, setEdges] = useState<GraphEdge[]>([]);
+  const [pageError, setPageError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
-
-  const { locale, changeLocale, saving: localeSaving } =
-    useLocalePreference(user ?? null);
 
   useEffect(() => {
     let active = true;
     async function loadData() {
       try {
-        const currentUserData = await moonClient.currentUser();
         if (!active) return;
-        if (!currentUserData.user) {
-          router.replace("/auth");
-          return;
-        }
-        setUser(currentUserData.user);
 
-        // Fetch correlations, characters, stories, events
         const [corrRes, personRes, storyRes, eventRes] = await Promise.all([
           moonClient.listRecords("research.correlation").catch(() => ({ records: [] })),
           moonClient.listRecords("person.profile").catch(() => ({ records: [] })),
@@ -95,8 +78,6 @@ export default function CorrelationGraphPage() {
         const loadedNodes: GraphNode[] = [];
         const loadedEdges: GraphEdge[] = [];
 
-        // `research.correlation` points at entities by `canonical_id`, so the
-        // graph joins on that key rather than the row id.
         const entityKey = (r: ModelRecordDto) => String(r.canonical_id ?? r.id);
 
         personRes.records.forEach((r: ModelRecordDto) => {
@@ -136,11 +117,9 @@ export default function CorrelationGraphPage() {
 
         setNodes(loadedNodes);
         setEdges(loadedEdges);
-        setLoading(false);
       } catch (loadError) {
         if (!active) return;
-        setError(apiErrorMessage(loadError, t));
-        setLoading(false);
+        setPageError(apiErrorMessage(loadError, t));
       }
     }
 
@@ -148,17 +127,7 @@ export default function CorrelationGraphPage() {
     return () => {
       active = false;
     };
-  }, [router, t]);
-
-  async function logout() {
-    setError(null);
-    try {
-      await moonClient.logout();
-      router.replace("/auth");
-    } catch (logoutError) {
-      setError(apiErrorMessage(logoutError, t));
-    }
-  }
+  }, [router, t, user]);
 
   if (loading || user === undefined) {
     return <LoadingScreen label={copy.common.loading} />;
@@ -173,38 +142,38 @@ export default function CorrelationGraphPage() {
   const sidebarNavItems: SidebarNavItem[] = [
     {
       href: "/command-center",
-      label: copy.common.dashboard,
+      label: t("web.common.dashboard"),
       icon: <LayoutDashboard className="size-4" />,
     },
     {
       href: "/command-center/search",
-      label: locale === "id" ? "Pencarian Cerdas" : "Smart Search",
+      label: t("web.common.searchAction"),
       icon: <SearchIcon className="size-4" />,
     },
     {
       href: "/command-center/graph",
-      label: locale === "id" ? "Visualisasi Relasi" : "Correlation Graph",
+      label: t("web.graph.correlationGraph"),
       icon: <Network className="size-4" />,
       active: true,
     },
     {
       href: "/command-center/chat",
-      label: copy.common.chat,
+      label: t("web.common.chat"),
       icon: <MessageSquare className="size-4" />,
     },
     {
       href: "/models",
-      label: copy.common.models,
+      label: t("web.common.models"),
       icon: <Boxes className="size-4" />,
     },
     {
       href: "/providers",
-      label: copy.common.providers,
+      label: t("web.common.providers"),
       icon: <Sparkles className="size-4" />,
     },
     {
       href: "/connectors",
-      label: copy.common.integrations,
+      label: t("web.common.integrations"),
       icon: <Plug className="size-4" />,
     },
     {
@@ -234,7 +203,7 @@ export default function CorrelationGraphPage() {
       ? [
           {
             href: "/admin/users",
-            label: copy.common.users,
+            label: t("web.common.users"),
             icon: <KeyRound className="size-4" />,
           },
           {
@@ -247,75 +216,38 @@ export default function CorrelationGraphPage() {
   ];
 
   return (
-    <WorkspaceTemplate
-      sidebarOpen={sidebarOpen}
-      onCloseSidebar={() => setSidebarOpen(false)}
-      closeLabel={copy.common.closeMenu}
-      sidebar={
-        <WorkspaceSidebar
-          brandIcon={<Sparkles aria-hidden="true" size={16} />}
-          closeLabel={copy.common.closeMenu}
-          identity={{ name: user?.name ?? "User", subtitle: user?.email ?? "Member" }}
-          items={sidebarNavItems}
-          logout={{ label: copy.common.logout, onLogout: () => void logout() }}
-          navLabel="Knowledge Graph"
-          onCloseSidebar={() => setSidebarOpen(false)}
-        />
-      }
-      header={
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger
-              label={copy.common.openMenu}
-              onOpenSidebar={() => setSidebarOpen(true)}
-              sidebarOpen={sidebarOpen}
-            />
-            <span className="text-sm font-medium text-ink-soft">
-              Knowledge Graph
-            </span>
-          </div>
-          <LocaleSwitcher
-            locale={locale}
-            label={copy.common.localeLabel}
-            disabled={localeSaving}
-            onChange={(nextLocale) => void changeLocale(nextLocale)}
-          />
-        </div>
-      }
+    <WorkspaceShell
+      items={sidebarNavItems}
+      identity={{ name: user?.name ?? "User", subtitle: user?.email ?? "Member" }}
+      closeLabel={t("web.common.closeMenu")}
+      navLabel={t("web.common.mainNavigation")}
     >
       <div className="space-y-6 p-6">
         <PageHeader
-          title={locale === "id" ? "Graf Korelasi & Ontologi" : "Ontology & Correlation Graph"}
-          description={
-            locale === "id"
-              ? "Eksplorasi hubungan semantik antara Tokoh, Peristiwa, Narasi, dan Korpus Al-Qur'an secara visual."
-              : "Visually explore semantic relations between Persons, Events, Narratives, and Quranic Corpus."
-          }
-          
+          title={t("web.graph.title")}
+          description={t("web.graph.description")}
         />
 
-        {error && <Alert variant="error">{error}</Alert>}
+        {(error ?? pageError) && (
+          <Alert variant="error">{error ?? pageError}</Alert>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Network className="size-4 text-ink-muted" />
-                    <span>{locale === "id" ? "Simpul & Relasi Ontologi" : "Ontology Nodes & Relations"}</span>
-                  </div>
-                  <Badge variant="outline">
-                    {nodes.length} {locale === "id" ? "Simpul" : "Nodes"} | {edges.length} {locale === "id" ? "Relasi" : "Edges"}
-                  </Badge>
+                <div className="flex items-center gap-2">
+                  <Network className="size-4 text-ink-muted" />
+                  <span>{t("web.graph.ontoNodesRelations")}</span>
                 </div>
+                <Badge variant="outline">
+                  {nodes.length} {t("web.graph.nodes")} | {edges.length} {t("web.graph.edges")}
+                </Badge>
               </CardHeader>
               <CardContent>
                 {nodes.length === 0 ? (
                   <div className="py-12 text-center text-muted">
-                    {locale === "id"
-                      ? "Belum ada entitas terdaftar untuk divisualisasikan. Masukkan entitas melalui menu Model Data."
-                      : "No entities registered yet to visualize. Populate models via the Models workspace."}
+                    {t("web.graph.empty")}
                   </div>
                 ) : (
                   <SemanticCrossSurahGraph
@@ -363,7 +295,7 @@ export default function CorrelationGraphPage() {
           <div>
             <Card>
               <CardHeader>
-                <span>{locale === "id" ? "Detail Simpul Terpilih" : "Selected Node Details"}</span>
+                <span>{t("web.graph.selectedNodeDetails")}</span>
               </CardHeader>
               <CardContent className="space-y-4">
                 {selectedNode ? (
@@ -379,7 +311,7 @@ export default function CorrelationGraphPage() {
 
                     <div className="mt-4 border-t border-hairline pt-4">
                       <div className="text-xs font-semibold uppercase text-muted">
-                        {locale === "id" ? "Koneksi Langsung" : "Direct Connections"}
+                        {t("web.graph.directConnections")}
                       </div>
                       <ul className="mt-2 space-y-1 text-xs">
                         {edges
@@ -396,9 +328,7 @@ export default function CorrelationGraphPage() {
                   </div>
                 ) : (
                   <div className="py-8 text-center text-sm text-muted">
-                    {locale === "id"
-                      ? "Pilih salah satu simpul untuk melihat detail dan relasi semantiknya."
-                      : "Select a node to inspect its details and semantic relations."}
+                    {t("web.graph.selectNode")}
                   </div>
                 )}
               </CardContent>
@@ -406,6 +336,6 @@ export default function CorrelationGraphPage() {
           </div>
         </div>
       </div>
-    </WorkspaceTemplate>
+    </WorkspaceShell>
   );
 }
