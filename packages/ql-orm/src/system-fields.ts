@@ -90,3 +90,66 @@ export function normalizeModelDefinition(
     },
   };
 }
+
+/**
+ * Validate a model's audit field declarations against QlOrm standards.
+ *
+ * Returns a compliance report indicating which audit fields are:
+ * - declared and correctly typed
+ * - declared but with incorrect type
+ * - missing (not declared at all)
+ * - private (created_by/updated_by have private: true)
+ *
+ * The model is never mutated; this is a read-only validation.
+ */
+export function validateModelAuditFields(
+  model: QlModelDefinition,
+): ModelAuditComplianceReport {
+  const report: ModelAuditComplianceReport = {
+    modelName: model.name,
+    fullyCompliant: true,
+    fields: {} as Record<QlAuditFieldName, FieldCompliance>,
+  };
+
+  for (const name of AUDIT_FIELD_NAMES) {
+    const fieldDef = model.fields[name];
+    const fieldCompliance: FieldCompliance = {
+      declared: !!fieldDef,
+      correctType: false,
+      expectedType: AUDIT_FIELD_TYPES[name],
+      hasPrivateModifier: false,
+    };
+
+    if (fieldDef) {
+      fieldCompliance.correctType = fieldDef.type === AUDIT_FIELD_TYPES[name];
+
+      // Check private modifier for created_by/updated_by
+      if (name === "created_by" || name === "updated_by") {
+        const privateDeclared = "private" in fieldDef && fieldDef.private === true;
+        fieldCompliance.hasPrivateModifier = privateDeclared;
+      }
+    }
+
+    // If any field is not compliant, the model is not fully compliant
+    if (!fieldCompliance.correctType || !fieldCompliance.hasPrivateModifier) {
+      report.fullyCompliant = false;
+    }
+
+    report.fields[name] = fieldCompliance;
+  }
+
+  return report;
+}
+
+interface FieldCompliance {
+  declared: boolean;
+  correctType: boolean;
+  expectedType: "datetime" | "char";
+  hasPrivateModifier: boolean;
+}
+
+interface ModelAuditComplianceReport {
+  modelName: string;
+  fullyCompliant: boolean;
+  fields: Record<QlAuditFieldName, FieldCompliance>;
+}
