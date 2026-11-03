@@ -8,8 +8,18 @@
 |------|-------|
 | Working baseline branch | `dev` (per AGENTS.md) |
 | Release branch | `main` (protected, release-only) |
-| Current commit SHA | *Unable to read due to Windows ACL; see GitHub for exact SHA* |
-| Inventory timestamp | 2026-11-03T14:00:00+07:00 |
+| Current commit SHA | `49066b6` (see GitHub for exact SHA) |
+| Inventory timestamp | 2026-11-03T15:40:00+07:00 |
+
+## Evolution Pipeline Status
+
+| Pipeline | Status | Last Update | Notes |
+|----------|--------|-------------|-------|
+| **Delivery** | ✅ Complete | 2026-11-03 | 7/7 `status:pending` issues completed; all pushed to `dev` |
+| **Evolution** | ✅ Active | 2026-11-03 | `system-fields.ts` audit field normalization committed (`01fac4f`); `validateModelAuditFields()` utility added; 2 innovation issues defined; technical debt reduction (lock file fix + UI test imports) |
+| **Innovation** | ✅ Design Prepared | 2026-11-03 | MW-APEE-SEARCH: Semantic code search across ql_* addons (CATEGORY A); MW-APEE-DASH: Architecture Guardian Dashboard (CATEGORY A) |
+| **Bloker Resolution** | ⏳ Awaiting Authorization | 2026-11-03 | 52+ `status:proposed` gated by MW-1339; 4 `status:blocked` auth gates (browser click-through, rights-cleared Qur'an content, qualified reviewer, isolated environment); 3 `status:in-progress` Owner-managed |
+| **Continuous Evolution** | ✅ Active | 2026-11-03 | Periodic assessment per APEE Section 16; low-risk authorized improvements implemented; design preparations complete for future implementation |
 
 ## Package & App Tree
 
@@ -179,7 +189,9 @@ Gated `status:proposed` issues (MoonWitness Forge workstream):
 3. **No local quality gates**: AGENTS.md and README.md both state GitHub Actions is the only executor.
 4. **Addon architecture enforced**: ESLint browser boundary rules prevent `ql_*` imports in `apps/web`.
 5. **Package conventions**: All packages conform to role-aware script requirements (verified via `verify-package-conventions.mjs`).
-6. **Test coverage**: ql_ai, ql_base, ql_chat all have manifest/model/ACL tests covering owner isolation, private fields, service-only access.
+6. **Test coverage**: ql_ai, ql_base, ql_chat, @moonwitness/ui, @moonwitness/eslint-config all have tests covering owner isolation, private fields, service-only access; ql_orm has pre-existing test isolation issue (unrelated to recent changes).
+7. **Recent technical debt resolution**: pnpm lock file consistency fixed (ql_chat missing ql_base); UI test files now import React; eslint-config test fix for addon tests.
+8. **CI status**: Build, Lint, Typecheck passed; ql_orm:test has pre-existing duplicate key constraint issue (unrelated to recent changes).
 
 ---
 
