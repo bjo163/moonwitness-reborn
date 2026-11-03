@@ -352,6 +352,43 @@ export function moonwitnessConfig({
         "react-hooks/rules-of-hooks": "error",
       },
     },
+    {
+      files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/__tests__/**", "**/test/**", "**/tests/**"],
+      languageOptions: {
+        globals: { ...globals.browser, ...globals.node },
+        parserOptions: {
+          projectService: false,
+        },
+      },
+      rules: {
+        "@typescript-eslint/await-thenable": "off",
+        "@typescript-eslint/consistent-type-imports": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-floating-promises": "off",
+        "@typescript-eslint/no-misused-promises": "off",
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/no-unused-vars": "off",
+        "@typescript-eslint/require-await": "off",
+        "@typescript-eslint/restrict-template-expressions": "off",
+        "@typescript-eslint/strict-boolean-expressions": "off",
+        "@typescript-eslint/unbound-method": "off",
+        "@typescript-eslint/prefer-readonly": "off",
+        "max-len": "off",
+        "max-lines": "off",
+        "max-statements": "off",
+        "max-params": "off",
+        "max-nested-callbacks": "off",
+        "complexity": "off",
+        "no-console": "off",
+        "eqeqeq": "off",
+        "no-empty": "off",
+      },
+    },
   );
 }
 

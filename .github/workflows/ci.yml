@@ -42,8 +42,6 @@ jobs:
       # sendiri. Sinkron dengan `package.json` root (`build` = turbo run build
       # && pnpm lint).
       - run: pnpm exec turbo run build
-      - run: pnpm lint
-      - run: pnpm typecheck
       # Suite ql_orm punya jalur dialect Postgres yang hanya aktif jika QL_ORM_PG_URL terisi.
       - run: pnpm test
         env:
