@@ -114,7 +114,7 @@ export function validateModelAuditFields(
   for (const name of AUDIT_FIELD_NAMES) {
     const fieldDef = model.fields[name];
     const fieldCompliance: FieldCompliance = {
-      declared: !!fieldDef,
+      declared: Boolean(fieldDef),
       correctType: false,
       expectedType: AUDIT_FIELD_TYPES[name],
       hasPrivateModifier: false,
