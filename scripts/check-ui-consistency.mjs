@@ -34,7 +34,8 @@ function parseCatalog(source) {
     field = "";
   }
 
-  for (const line of source.split("\n")) {
+  for (const rawLine of source.split("\n")) {
+    const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
     if (line === "") {
       commit();
       continue;
