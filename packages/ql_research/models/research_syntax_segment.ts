@@ -65,13 +65,5 @@ export const researchSyntaxSegment: QlModelDefinition = {
       required: false,
       maxLength: 32,
     },
-    created_at: {
-      type: "datetime",
-      required: true,
-    },
-    updated_at: {
-      type: "datetime",
-      required: true,
-    },
   },
 };

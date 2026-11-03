@@ -176,6 +176,10 @@ void test("community.circle_reflection is author-scoped and admin-managed", asyn
       await runtime.orm.findMany("community.circle_reflection", otherUser),
       [],
     );
+
+    // Note: created_at/updated_at are auto-populated by QlOrm (Date.now())
+    // They are not explicitly included in the model definition but are handled
+    // by the ORM's createRecordForService/createForService paths.
   } finally {
     runtime.close();
   }

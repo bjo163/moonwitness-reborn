@@ -32,14 +32,6 @@ export const corpusRootWord: QlModelDefinition = {
       required: true,
       maxLength: 255,
     },
-    created_at: {
-      type: "datetime",
-      required: true,
-    },
-    updated_at: {
-      type: "datetime",
-      required: true,
-    },
   },
 };
 
@@ -85,14 +77,6 @@ export const corpusWordDerivation: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 32,
-    },
-    created_at: {
-      type: "datetime",
-      required: true,
-    },
-    updated_at: {
-      type: "datetime",
-      required: true,
     },
   },
 };

@@ -55,13 +55,5 @@ export const corpusAyahProof: QlModelDefinition = {
       default: 0,
       minValue: 0,
     },
-    created_at: {
-      type: "datetime",
-      required: true,
-    },
-    updated_at: {
-      type: "datetime",
-      required: true,
-    },
   },
 };

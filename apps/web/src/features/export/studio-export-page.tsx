@@ -46,7 +46,7 @@ import { useWorkspaceSession } from "../locale/use-workspace-session";
 export default function StudioExportPage() {
   const router = useRouter();
   const copy = useMessages();
-  const { t } = useTranslationCatalog();
+  const { t, tm } = useTranslationCatalog();
   const { user, loading, error } = useWorkspaceSession();
   const [artifacts, setArtifacts] = useState<ModelRecordDto[]>([]);
   const [selectedArtifactId, setSelectedArtifactId] = useState("");
@@ -141,11 +141,11 @@ export default function StudioExportPage() {
       label: t("web.common.searchAction"),
       icon: <SearchIcon className="size-4" />,
     },
-    {
-      href: "/command-center/graph",
-      label: t("web.graph.correlationGraph"),
-      icon: <Network className="size-4" />,
-    },
+{
+        href: "/command-center/graph",
+        label: tm("web.graph.title", "Knowledge Graph"),
+        icon: <Network className="size-4" />,
+      },
     {
       href: "/command-center/export",
       label: t("web.translationAdmin.exportPo"),
@@ -220,8 +220,8 @@ export default function StudioExportPage() {
     >
       <div className="space-y-6 p-6">
         <PageHeader
-          title={t("web.export.title")}
-          description={t("web.export.description")}
+          title={tm("web.export.title", "Studio Exporter")}
+          description={tm("web.export.description", "Compile creative studio artifacts into structured Markdown documents with citations.")}
         />
 
         {(error ?? loadError) && (
@@ -230,8 +230,8 @@ export default function StudioExportPage() {
 
         <div className="space-y-6 p-6">
           <PageHeader
-            title={t("web.export.compiledTitle")}
-            description={t("web.export.compiledDesc")}
+            title={tm("web.export.compiledTitle", "Studio Artifact Exporter")}
+            description={tm("web.export.compiledDesc", "Compile creative studio artifacts into structured Markdown documents with citations.")}
           />
 
           {(error ?? loadError) && (
@@ -242,16 +242,16 @@ export default function StudioExportPage() {
             <div>
               <Card>
                 <CardHeader>
-                  <span>{t("web.export.selectArtifact")}</span>
+                  <span>{tm("web.export.selectArtifact", "Select Studio Artifact")}</span>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {artifacts.length === 0 ? (
                     <div className="py-6 text-center text-sm text-muted">
-                      {t("web.export.noArtifacts")}
+                      {tm("web.export.noArtifacts", "No studio artifacts found in studio.artifact model.")}
                     </div>
                   ) : (
                     <FormField
-                      label={t("web.export.artifactList")}
+                      label={tm("web.export.artifactList", "Artifact List")}
                       htmlFor="select-artifact"
                     >
                       <Select
@@ -275,7 +275,7 @@ export default function StudioExportPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <span>{t("web.export.preview")}</span>
+                    <span>{tm("web.export.preview", "Compiled Preview")}</span>
                     <Badge variant="outline">Markdown</Badge>
                   </div>
                 </CardHeader>

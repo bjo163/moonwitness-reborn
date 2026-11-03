@@ -66,8 +66,6 @@ export const irAttachment: QlModelDefinition = {
     parent_model: { type: "char", maxLength: 120 },
     parent_record_id: { type: "char", maxLength: 120 },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
     uploaded_at: { type: "datetime" },
   },
 };

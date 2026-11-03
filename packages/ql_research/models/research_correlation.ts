@@ -73,7 +73,5 @@ export const researchCorrelation: QlModelDefinition = {
     },
     scholarly_rationale: { type: "text", maxLength: 4000 },
     contestation_notes: { type: "text", maxLength: 2000 },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

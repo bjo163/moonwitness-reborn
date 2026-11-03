@@ -26,7 +26,5 @@ export const corpusConcept: QlModelDefinition = {
     },
     version: { type: "char", required: true, maxLength: 32 },
     is_deprecated: { type: "boolean", required: true },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

@@ -37,5 +37,6 @@ export const chatCitation: QlModelDefinition = {
       private: true,
     },
     created_at: { type: "datetime", required: true, private: true },
+    updated_at: { type: "datetime", required: true, private: true },
   },
 };

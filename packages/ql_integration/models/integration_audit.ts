@@ -37,6 +37,5 @@ export const integrationAudit: QlModelDefinition = {
     error_code: { type: "char", maxLength: 24 },
     error_message: { type: "char", maxLength: 500 },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
   },
 };

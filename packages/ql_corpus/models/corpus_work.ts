@@ -31,7 +31,5 @@ export const corpusWork: QlModelDefinition = {
     primary_locale: { type: "char", required: true, maxLength: 12, validator: bcp47Validator("primary_locale") },
     description: { type: "text", maxLength: 4000 },
     source_artifact_id: { type: "char", maxLength: 64 },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

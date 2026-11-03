@@ -42,13 +42,5 @@ export const workflowPeerReview: QlModelDefinition = {
       maxLength: 64,
       private: true,
     },
-    created_at: {
-      type: "datetime",
-      required: true,
-    },
-    updated_at: {
-      type: "datetime",
-      required: true,
-    },
   },
 };

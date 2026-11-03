@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { loadAddons, QlAccessError, QlValidationError } from "ql_orm";
+import {
+  loadAddons,
+  normalizeModelDefinition,
+  QlAccessError,
+  QlValidationError,
+} from "ql_orm";
 import { stubAddonManifest, withMemoryOrm } from "ql_orm/testing";
 import attachmentManifest from "../__manifest__.js";
 import { ATTACHMENT_MODEL, UPLOAD_MODEL } from "../services/attachment-vocabulary.js";
@@ -60,12 +65,13 @@ void test("user ACL is read and unlink only, and upload sessions have none", () 
 });
 
 void test("views never expose the private storage key", () => {
+  const model = normalizeModelDefinition(attachmentManifest.models[0]);
   for (const view of attachmentManifest.views) {
     assert.equal(view.model, ATTACHMENT_MODEL);
     assert.equal(view.fields.includes("storage_key"), false);
     assert.equal(view.fields.includes("owner_id"), false);
     for (const field of view.fields) {
-      assert.ok(attachmentManifest.models[0].fields[field], `unknown field ${field}`);
+      assert.ok(model.fields[field], `unknown field ${field}`);
     }
   }
 });

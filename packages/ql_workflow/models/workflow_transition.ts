@@ -54,6 +54,5 @@ export const workflowTransition: QlModelDefinition = {
     revision: { type: "integer", required: true, minValue: 1 },
     actor_id: { type: "char", required: true, private: true },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
   },
 };

@@ -67,20 +67,6 @@ function headingFor(
   });
 }
 
-/**
- * Whose voice the reader asks for: keep the reciter the reader was already
- * playing, otherwise the first row of the registry. The registry is ordered by
- * slug server-side, so the fallback is stable across reloads.
- */
-function preferredReciterSlug(
-  registry: readonly ReciterListItemDto[],
-  current: string,
-): string {
-  return registry.some((reciter) => reciter.slug === current)
-    ? current
-    : (registry[0]?.slug ?? "");
-}
-
 export default function QuranReader() {
   const { t } = useTranslationCatalog();
   const params = useParams<{ editionKey: string; surah: string }>();
@@ -105,6 +91,17 @@ export default function QuranReader() {
   const [audioManifest, setAudioManifest] =
     useState<SurahAudioManifestResponseDto | null>(null);
   const [audioError, setAudioError] = useState<string | null>(null);
+  /**
+   * The registry decides whose voice plays: a selection its rows no longer
+   * contain falls back to the first curated reciter instead of leaving an empty
+   * player and a control that names nobody.
+   */
+  const activeReciterSlug =
+    reciters === null || reciters.length === 0
+      ? ""
+      : (reciters.find((reciter) => reciter.slug === reciterSlug)?.slug ??
+        reciters[0]?.slug ??
+        "");
   /**
    * The verification deep link is copied as an absolute URL, so it is built
    * only once the browser origin is known. The server render omits it instead
@@ -180,11 +177,6 @@ export default function QuranReader() {
       .then(({ reciters: registry }) => {
         if (cancelled) return;
         setReciters(registry);
-        setReciterSlug((current) =>
-          registry.some((reciter) => reciter.slug === current)
-            ? current
-            : (registry[0]?.slug ?? ""),
-        );
       })
       .catch((requestError: unknown) => {
         if (cancelled) return;
@@ -197,12 +189,12 @@ export default function QuranReader() {
   }, [t]);
 
   useEffect(() => {
-    if (!reciterSlug) return;
+    if (activeReciterSlug === "") return;
     let cancelled = false;
     setAudioError(null);
     setAudioManifest(null);
     void moonClient
-      .getSurahAudioManifest(reciterSlug, surah)
+      .getSurahAudioManifest(activeReciterSlug, surah)
       .then((manifest) => {
         if (!cancelled) setAudioManifest(manifest);
       })
@@ -213,7 +205,7 @@ export default function QuranReader() {
     return () => {
       cancelled = true;
     };
-  }, [reciterSlug, surah, t]);
+  }, [activeReciterSlug, surah, t]);
 
   const rtl = isArabicVerbatim(reading?.passages[0]);
   const primaryPassage = reading?.passages[0];
@@ -327,7 +319,7 @@ export default function QuranReader() {
             <div className="space-y-4">
               <TilawahRegion
                 reciters={reciters}
-                reciterSlug={reciterSlug}
+                reciterSlug={activeReciterSlug}
                 manifest={audioManifest}
                 error={audioError}
                 surahNumber={surah}

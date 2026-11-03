@@ -150,11 +150,9 @@ export function parsePoCatalog(
           ),
         );
       } else {
-        const translatedText = message.msgstr[0] ?? "";
+        const translatedText = message.msgstr?.[0] ?? "";
         if (!translatedText.trim()) {
-          throw new QlValidationError(
-            `PO message '${context}' has an empty translation.`,
-          );
+          continue;
         }
         entries.push(validateEntry(locale, context, message.msgid, translatedText));
       }

@@ -39,7 +39,5 @@ export const workflowTask: QlModelDefinition = {
     },
     due_at: { type: "datetime" },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

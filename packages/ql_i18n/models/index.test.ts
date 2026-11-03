@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { loadAddons } from "ql_orm";
+import { loadAddons, normalizeModelDefinition } from "ql_orm";
 import { stubAddonManifest } from "ql_orm/testing";
 import manifest from "../__manifest__.js";
 
@@ -24,7 +24,9 @@ void test("ql_i18n declares dependencies and stays deny-by-default for members",
     manifest.views.every((view) =>
       view.fields.every((field) => {
         const model = manifest.models.find((entry) => entry.name === view.model);
-        return model && model.fields[field] && !model.fields[field].private;
+        if (!model) return false;
+        const normalized = normalizeModelDefinition(model);
+        return Boolean(normalized.fields[field]) && !normalized.fields[field].private;
       }),
     ),
   );

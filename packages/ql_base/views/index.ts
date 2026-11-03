@@ -23,13 +23,13 @@ export const views: QlViewDefinition[] = [
     name: "community.study_circle.list",
     model: "community.study_circle",
     type: "list",
-    fields: ["title", "surah_number", "status", "max_members", "updated_at"],
+    fields: ["title", "surah_number", "status", "max_members"],
   },
   {
     name: "community.circle_reflection.list",
     model: "community.circle_reflection",
     type: "list",
-    fields: ["circle_id", "passage_locator", "moderation_status", "created_at"],
+    fields: ["circle_id", "passage_locator", "moderation_status"],
   },
 ];
 

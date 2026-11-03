@@ -41,6 +41,5 @@ export const resUsers: QlModelDefinition = {
           ? undefined
           : "Field 'preferred_locale' must be 'id' or 'en'.",
     },
-    created_at: { type: "datetime", required: true },
   },
 };

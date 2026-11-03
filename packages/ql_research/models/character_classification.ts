@@ -69,7 +69,5 @@ export const characterClassification: QlModelDefinition = {
     },
     core_traits: { type: "text", maxLength: 2000 },
     narrative_function: { type: "text", maxLength: 2000 },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

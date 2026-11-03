@@ -73,7 +73,5 @@ export const lawInstrument: QlModelDefinition = {
     summary: { type: "text", maxLength: 4000 },
     source_reference: { type: "char", maxLength: 250 },
     is_binding: { type: "boolean", default: false },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

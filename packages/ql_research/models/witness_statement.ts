@@ -45,7 +45,5 @@ export const witnessStatement: QlModelDefinition = {
       },
     },
     consent_status: { type: "char", required: true, maxLength: 32 },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

@@ -237,3 +237,35 @@ void test("operators get forms for the graph tables and nothing for the index", 
     "derived index tokens must stay out of the view-driven editor",
   );
 });
+
+void test("reader groups cannot mint thematic nodes or semantic edges", async () => {
+  await withMemoryOrm(manifests, async (orm) => {
+    for (const group of ["viewer", "user"]) {
+      const reader: QlUserContext = { id: `graph-reader-${group}`, groups: [group] };
+      await assert.rejects(
+        () =>
+          orm.create("search.thematic_node", reader, {
+            slug: "denied-node",
+            title_id: "Ditolak",
+            title_en: "Denied",
+            category: "concept",
+            passage_count: 0,
+          }),
+        QlAccessError,
+        `a graph node is a scholarly claim, not something group ${group} can post`,
+      );
+      await assert.rejects(
+        () =>
+          orm.create("search.semantic_edge", reader, {
+            source_node_slug: "denied-node",
+            target_node_slug: "another",
+            relation_type: "thematic_echo",
+            weight: 9,
+            evidence_payload: "[]",
+          }),
+        QlAccessError,
+        `a relation between concepts is curated, not written by group ${group}`,
+      );
+    }
+  });
+});

@@ -5,6 +5,7 @@
 - Semua domain model, data, ACL, dependensi, dan deklarasi view harus menjadi addon `ql_*` di `packages/`, memakai TypeScript.
 - Jangan menambahkan Drizzle, schema Drizzle, atau migration files. Semua tabel aplikasi harus didefinisikan melalui model addon `ql_*` dan disinkronkan otomatis oleh QlOrm.
 - Setiap addon menyediakan `__manifest__.ts`, definisi model di `models/`, view di `views/`, dan deklarasi `data` default; daftar data boleh kosong hanya bila tidak ada seed sistem/referensi yang sah. QlOrm memuat seed ber-ID stabil sesudah sinkronisasi schema mengikuti urutan dependensi.
+- Field audit `created_at`/`updated_at` (timestamp) dan `created_by`/`updated_by` (uid privat) disuntikkan otomatis oleh QlOrm untuk setiap model tabel; addon tidak boleh mendeklarasikannya ulang. Nilai eksplisit pada jalur service dihormati, sedangkan CRUD pengguna tidak boleh menulis field audit. Model yang butuh privasi timestamp (mis. tabel token) boleh mendeklarasikan ulang dengan tipe yang sama dan `private: true`.
 - Gunakan prefix nama package `ql_` dan nama model berformat `domain.entity` (contoh `ai.provider`).
 - Kontrak request/response, route, dan SDK komunikasi API wajib berada di `@moonwitness/moonclient`.
 - Semua komunikasi HTTP aplikasi web (`apps/web`) wajib memakai instance `moonClient`; jangan memakai `fetch`, XMLHttpRequest, atau klien transport lain di aplikasi. Utility developer mandiri di luar `apps/web` boleh memakai HTTP same-origin hanya ke server loopback miliknya sendiri.

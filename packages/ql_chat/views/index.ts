@@ -11,7 +11,7 @@ export const views: QlViewDefinition[] = [
     name: "chat.conversation.form",
     model: "chat.conversation",
     type: "form",
-    fields: ["title", "created_at", "updated_at"],
+    fields: ["title"],
   },
   {
     name: "chat.conversation.landing",

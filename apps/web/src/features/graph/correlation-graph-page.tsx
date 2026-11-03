@@ -53,7 +53,7 @@ interface GraphEdge {
 export default function CorrelationGraphPage() {
   const router = useRouter();
   const copy = useMessages();
-  const { t } = useTranslationCatalog();
+  const { t, tm } = useTranslationCatalog();
   const { user, loading, error } = useWorkspaceSession();
   const [nodes, setNodes] = useState<GraphNode[]>([]);
   const [edges, setEdges] = useState<GraphEdge[]>([]);
@@ -150,12 +150,12 @@ export default function CorrelationGraphPage() {
       label: t("web.common.searchAction"),
       icon: <SearchIcon className="size-4" />,
     },
-    {
-      href: "/command-center/graph",
-      label: t("web.graph.correlationGraph"),
-      icon: <Network className="size-4" />,
-      active: true,
-    },
+{
+        href: "/command-center/graph",
+        label: tm("web.graph.title", "Knowledge Graph"),
+        icon: <Network className="size-4" />,
+        active: true,
+      },
     {
       href: "/command-center/chat",
       label: t("web.common.chat"),
@@ -224,7 +224,7 @@ export default function CorrelationGraphPage() {
     >
       <div className="space-y-6 p-6">
         <PageHeader
-          title={t("web.graph.title")}
+          title={tm("web.graph.title", "Knowledge Graph")}
           description={t("web.graph.description")}
         />
 
@@ -238,10 +238,10 @@ export default function CorrelationGraphPage() {
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Network className="size-4 text-ink-muted" />
-                  <span>{t("web.graph.ontoNodesRelations")}</span>
+                  <span>{tm("web.graph.ontoNodesRelations", "Ontology Nodes & Relations")}</span>
                 </div>
                 <Badge variant="outline">
-                  {nodes.length} {t("web.graph.nodes")} | {edges.length} {t("web.graph.edges")}
+                  {nodes.length} {tm("web.graph.nodes", "Nodes")} | {edges.length} {tm("web.graph.edges", "Edges")}
                 </Badge>
               </CardHeader>
               <CardContent>
@@ -295,7 +295,7 @@ export default function CorrelationGraphPage() {
           <div>
             <Card>
               <CardHeader>
-                <span>{t("web.graph.selectedNodeDetails")}</span>
+                <span>{tm("web.graph.selectedNodeDetails", "Selected Node Details")}</span>
               </CardHeader>
               <CardContent className="space-y-4">
                 {selectedNode ? (
@@ -311,7 +311,7 @@ export default function CorrelationGraphPage() {
 
                     <div className="mt-4 border-t border-hairline pt-4">
                       <div className="text-xs font-semibold uppercase text-muted">
-                        {t("web.graph.directConnections")}
+                        {tm("web.graph.directConnections", "Direct Connections")}
                       </div>
                       <ul className="mt-2 space-y-1 text-xs">
                         {edges
@@ -328,7 +328,7 @@ export default function CorrelationGraphPage() {
                   </div>
                 ) : (
                   <div className="py-8 text-center text-sm text-muted">
-                    {t("web.graph.selectNode")}
+                    {tm("web.graph.selectNode", "Select a node to inspect its details and semantic relations.")}
                   </div>
                 )}
               </CardContent>

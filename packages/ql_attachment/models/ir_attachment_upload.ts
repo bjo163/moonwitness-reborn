@@ -49,7 +49,5 @@ export const irAttachmentUpload: QlModelDefinition = {
     },
     expires_at: { type: "datetime", required: true },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

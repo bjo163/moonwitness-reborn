@@ -35,13 +35,5 @@ export const searchSemanticEdge: QlModelDefinition = {
       required: true,
       maxLength: 4000,
     },
-    created_at: {
-      type: "datetime",
-      required: true,
-    },
-    updated_at: {
-      type: "datetime",
-      required: true,
-    },
   },
 };

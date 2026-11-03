@@ -141,17 +141,21 @@ async function appendSourceProvenance(
     correlationId: string;
   },
 ): Promise<void> {
-  await orm.createRecordForService("source.provenance", {
-    subject_type: row.subjectType,
-    subject_id: row.subjectId,
-    ...(row.fromStage ? { from_stage: row.fromStage } : {}),
-    to_stage: row.toStage,
-    action: row.action,
-    reason: row.reason ?? "",
-    correlation_id: row.correlationId,
-    actor_id: row.actorId,
-    occurred_at: new Date(),
-  });
+  await orm.createRecordForService(
+    "source.provenance",
+    {
+      subject_type: row.subjectType,
+      subject_id: row.subjectId,
+      ...(row.fromStage ? { from_stage: row.fromStage } : {}),
+      to_stage: row.toStage,
+      action: row.action,
+      reason: row.reason ?? "",
+      correlation_id: row.correlationId,
+      actor_id: row.actorId,
+      occurred_at: new Date(),
+    },
+    { actorId: row.actorId },
+  );
 }
 
 function correlationId(): string {
@@ -199,6 +203,7 @@ export async function publishEdition(
     "corpus.edition",
     { edition_key: editionKey },
     { stage: "published", updated_at: stamped },
+    { actorId: actor.id },
   );
   if (stageUpdates === 0) {
     throw new QlConflictError(`Edition '${editionKey}' could not be published.`);
@@ -207,6 +212,7 @@ export async function publishEdition(
     "corpus.passage",
     { edition_id: String(edition.id), stage: "staged" },
     { stage: "published", updated_at: stamped },
+    { actorId: actor.id },
   );
   await appendSourceProvenance(orm, {
     subjectType: "corpus.edition",
@@ -254,6 +260,7 @@ export async function withdrawEdition(
     "corpus.edition",
     { edition_key: editionKey },
     { stage: "withdrawn", updated_at: stamped },
+    { actorId: actor.id },
   );
   if (updated === 0) {
     throw new QlConflictError(`Edition '${editionKey}' could not be withdrawn.`);
@@ -262,6 +269,7 @@ export async function withdrawEdition(
     "corpus.passage",
     { edition_id: String(edition.id), stage: "published" },
     { stage: "withdrawn", updated_at: stamped },
+    { actorId: actor.id },
   );
   await appendSourceProvenance(orm, {
     subjectType: "corpus.edition",

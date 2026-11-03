@@ -37,13 +37,5 @@ export const workflowCovenantSignature: QlModelDefinition = {
       required: true,
       maxLength: 64,
     },
-    created_at: {
-      type: "datetime",
-      required: true,
-    },
-    updated_at: {
-      type: "datetime",
-      required: true,
-    },
   },
 };

@@ -18,6 +18,5 @@ export const chatCitationVerification: QlModelDefinition = {
       default: "verified",
     },
     owner_id: { type: "char", required: true, maxLength: 64, private: true },
-    created_at: { type: "datetime", required: true },
   },
 };

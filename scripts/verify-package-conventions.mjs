@@ -24,6 +24,7 @@ const PACKAGE_ROLES = {
   "@moonwitness/eslint-config": "config",
   "ql_ai": "addon",
   "ql_auth": "addon",
+  "ql_attachment": "addon",
   "ql_base": "addon",
   "ql_chat": "addon",
   "ql_cloudflare": "addon",
@@ -183,7 +184,9 @@ async function checkTaskGraph(packages) {
       errors.push(`root package.json: missing workspace "${task}" script`);
       continue;
     }
-    if (!command.startsWith(`turbo run ${task}`)) {
+    const usesDevPreflight =
+      task === "dev" && command.includes("scripts/dev-preflight.mjs");
+    if (!command.startsWith(`turbo run ${task}`) && !usesDevPreflight) {
       errors.push(`root package.json: "${task}" must run 'turbo run ${task}', got "${command}"`);
     }
   }

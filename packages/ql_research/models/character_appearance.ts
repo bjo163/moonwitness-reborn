@@ -43,7 +43,5 @@ export const characterAppearance: QlModelDefinition = {
     },
     arc_milestone: { type: "char", maxLength: 200 },
     scene_notes: { type: "text", maxLength: 4000 },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

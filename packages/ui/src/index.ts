@@ -77,6 +77,10 @@ export {
   type SidebarLogout,
   type WorkspaceSidebarProps,
 } from "./composites/workspace-sidebar.js";
+export {
+  WorkspaceShell,
+  type WorkspaceShellProps,
+} from "./composites/workspace-shell.js";
 export { cn } from "./lib/utils.js";
 export { HeroStage, type HeroStageProps } from "./composites/hero-stage.js";
 export { ThemeToggle, type ThemeToggleProps } from "./composites/theme-toggle.js";
@@ -243,5 +247,3 @@ export {
   type AttachmentListProps,
   type AttachmentRow,
 } from "./composites/attachment-list.js";
-
-

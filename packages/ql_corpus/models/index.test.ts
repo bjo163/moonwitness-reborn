@@ -16,9 +16,11 @@ import { stubAddonManifest, withMemoryOrm } from "ql_orm/testing";
 import corpusManifest from "../__manifest__.js";
 import sourceManifest from "ql_source/__manifest__";
 import {
+  AYAH_MAX_BOUND,
   TOTAL_AYAH_COUNT,
   SURAHS,
 } from "../services/corpus-vocabulary.js";
+import { readSurahAudioManifest } from "../services/audio-service.js";
 import {
   assertAnnotationAuthority,
   assertEditionKindLocaleInvariant,
@@ -932,6 +934,128 @@ void test("UNILEX ontology models corpus.term and corpus.concept are registered 
         updated_at: new Date().toISOString(),
       });
       assert.ok(derivationRecord.id);
+    },
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Track 04/05 registries: the smoke test above only proves a row can be
+// written by the service. These are the denial cases: a reader cannot mint
+// proof anchors or put words in a reciter's mouth, a digest that is not a
+// digest is refused, and a locator the canonical table cannot produce is
+// refused by the service even though the column lets it through.
+// ---------------------------------------------------------------------------
+
+void test("proof and tilawah registries deny reader writes and impossible rows", async () => {
+  await withMemoryOrm(
+    [
+      stubAddonManifest("ql_base"),
+      stubAddonManifest("ql_auth"),
+      sourceManifest,
+      corpusManifest,
+    ],
+    async (orm) => {
+      const timestamp = new Date().toISOString();
+      const digest = sha256("bismillah");
+      const proofValues = {
+        passage_id: "mw:passage:denial:1:1",
+        edition_code: "kemenag",
+        surah_number: 1,
+        ayah_number: 1,
+        content_hash_sha256: digest,
+        canonical_payload: `V1|kemenag|1:1|bismillah`,
+        verification_count: 0,
+        created_at: timestamp,
+        updated_at: timestamp,
+      };
+      const reciterValues = {
+        slug: "registry-reciter",
+        name_translit: "Registry Reciter",
+        name_arabic: "قارئ السجل",
+        recitation_style: "murattal",
+        audio_base_url: "https://audio.invalid/registry",
+        license_type: "public_domain",
+        is_active: true,
+        created_at: timestamp,
+        updated_at: timestamp,
+      };
+      const segmentValues = {
+        reciter_slug: "registry-reciter",
+        surah_number: 1,
+        ayah_number: 1,
+        start_ms: 0,
+        end_ms: 4500,
+        audio_file_url: "https://audio.invalid/registry/001001.mp3",
+        created_at: timestamp,
+        updated_at: timestamp,
+      };
+
+      for (const group of ["viewer", "user"]) {
+        const reader = { id: `reader-${group}`, groups: [group] };
+        for (const [model, values] of [
+          ["corpus.ayah_proof", proofValues],
+          ["corpus.reciter", reciterValues],
+          ["corpus.audio_segment", segmentValues],
+        ] as const) {
+          await assert.rejects(
+            () => orm.create(model, reader, values),
+            QlAccessError,
+            `${model} must stay operator-authored for group ${group}`,
+          );
+        }
+      }
+
+      const operator = { id: "operator-1", groups: ["operator"] };
+      await assert.rejects(
+        () =>
+          orm.create("corpus.ayah_proof", operator, {
+            ...proofValues,
+            content_hash_sha256: "not-a-digest",
+          }),
+        QlValidationError,
+        "sha256Validator has to refuse a digest that is not a digest",
+      );
+      const anchored = await orm.create("corpus.ayah_proof", operator, proofValues);
+      assert.ok(anchored.id);
+      await assert.rejects(
+        () =>
+          orm.create("corpus.ayah_proof", operator, {
+            ...proofValues,
+            passage_id: "mw:passage:denial:2:1",
+            surah_number: 2,
+          }),
+        QlConflictError,
+        "one digest anchoring two verses would make verification ambiguous",
+      );
+
+      await orm.create("corpus.reciter", operator, reciterValues);
+      await assert.rejects(
+        () =>
+          orm.create("corpus.audio_segment", operator, {
+            ...segmentValues,
+            ayah_number: AYAH_MAX_BOUND + 1,
+          }),
+        QlValidationError,
+        `no ayah is numbered above ${AYAH_MAX_BOUND} in any surah`,
+      );
+      await orm.create("corpus.audio_segment", operator, segmentValues);
+
+      // The coarse column ceiling is not a per-surah permission: 114 has six
+      // verses, so a clip stored for 114:286 has to be refused on the way out.
+      await orm.create("corpus.audio_segment", operator, {
+        ...segmentValues,
+        surah_number: 114,
+        ayah_number: AYAH_MAX_BOUND,
+        audio_file_url: "https://audio.invalid/registry/114286.mp3",
+      });
+      await assert.rejects(
+        () => readSurahAudioManifest(orm, "registry-reciter", 114),
+        QlValidationError,
+        "the service enforces the SURAHS table, not the column bound",
+      );
+      const curated = await readSurahAudioManifest(orm, "registry-reciter", 1);
+      assert.equal(curated.segments.length, 1);
+      assert.equal(curated.reciterName, "Registry Reciter");
     },
   );
 });

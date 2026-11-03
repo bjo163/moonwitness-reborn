@@ -47,14 +47,6 @@ export const corpusReciter: QlModelDefinition = {
       required: true,
       default: true,
     },
-    created_at: {
-      type: "datetime",
-      required: true,
-    },
-    updated_at: {
-      type: "datetime",
-      required: true,
-    },
   },
 };
 
@@ -98,14 +90,6 @@ export const corpusAudioSegment: QlModelDefinition = {
       type: "char",
       required: true,
       maxLength: 512,
-    },
-    created_at: {
-      type: "datetime",
-      required: true,
-    },
-    updated_at: {
-      type: "datetime",
-      required: true,
     },
   },
 };

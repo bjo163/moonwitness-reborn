@@ -1049,1839 +1049,1839 @@ msgctxt "web:errors.generic"
 msgid "Tindakan tidak dapat diselesaikan. Coba lagi."
 msgstr "The action could not be completed. Try again."
 
-msgctxt "web.models:title"
+msgctxt "web:models.title"
 msgid "Workspace model"
 msgstr "Model workspace"
 
-msgctxt "web.models:loading"
+msgctxt "web:models.loading"
 msgid "Memuat model MoonWitness..."
 msgstr "Loading MoonWitness models..."
 
-msgctxt "web.common:actions"
+msgctxt "web:common.actions"
 msgid "Aksi"
 msgstr "Actions"
 
-msgctxt "web.common:yes"
+msgctxt "web:common.yes"
 msgid "Ya"
 msgstr "Yes"
 
-msgctxt "web.common:no"
+msgctxt "web:common.no"
 msgid "Tidak"
 msgstr "No"
 
-msgctxt "web.models:signIn"
+msgctxt "web:models.signIn"
 msgid "Masuk untuk mengakses data addon."
 msgstr "Sign in to access addon data."
 
-msgctxt "web.models:back"
+msgctxt "web:models.back"
 msgid "Kembali ke autentikasi"
 msgstr "Back to sign in"
 
-msgctxt "web.models:aiWorkspace"
+msgctxt "web:models.aiWorkspace"
 msgid "Workspace AI"
 msgstr "AI workspace"
 
-msgctxt "web.models:providers"
+msgctxt "web:models.providers"
 msgid "Provider model"
 msgstr "Model providers"
 
-msgctxt "web.models:addonModels"
+msgctxt "web:models.addonModels"
 msgid "Model addon"
 msgstr "Addon models"
 
-msgctxt "web.models:noModel"
+msgctxt "web:models.noModel"
 msgid "Tidak ada model"
 msgstr "No model"
 
-msgctxt "web.models:dataViews"
+msgctxt "web:models.dataViews"
 msgid "Tampilan data dari metadata addon"
 msgstr "Data views from addon metadata"
 
-msgctxt "web.models:section"
+msgctxt "web:models.section"
 msgid "DATA BERDASARKAN MODEL"
 msgstr "MODEL-FIRST DATA"
 
-msgctxt "web.models:chooseModel"
+msgctxt "web:models.chooseModel"
 msgid "Pilih model dari addon."
 msgstr "Choose an addon model."
 
-msgctxt "web.models:addRecord"
+msgctxt "web:models.addRecord"
 msgid "Tambah record"
 msgstr "Add record"
 
-msgctxt "web.models:emptyModels"
+msgctxt "web:models.emptyModels"
 msgid "Model yang dapat diakses belum tersedia."
 msgstr "No accessible models are available."
 
-msgctxt "web.models:emptyRecords"
+msgctxt "web:models.emptyRecords"
 msgid "Belum ada data. Tambahkan record untuk memulai."
 msgstr "No records yet. Add one to get started."
 
-msgctxt "web.models:deleteRecord"
+msgctxt "web:models.deleteRecord"
 msgid "Hapus {name}"
 msgstr "Delete {name}"
 
-msgctxt "web.models:formRecord"
+msgctxt "web:models.formRecord"
 msgid "Form record"
 msgstr "Record form"
 
-msgctxt "web.models:editRecord"
+msgctxt "web:models.editRecord"
 msgid "EDIT RECORD"
 msgstr "EDIT RECORD"
 
-msgctxt "web.models:newRecord"
+msgctxt "web:models.newRecord"
 msgid "RECORD BARU"
 msgstr "NEW RECORD"
 
-msgctxt "web.models:editData"
+msgctxt "web:models.editData"
 msgid "Edit data"
 msgstr "Edit record"
 
-msgctxt "web.models:addData"
+msgctxt "web:models.addData"
 msgid "Tambah data"
 msgstr "Add data"
 
-msgctxt "web.models:closeForm"
+msgctxt "web:models.closeForm"
 msgid "Tutup form"
 msgstr "Close form"
 
-msgctxt "web.models:cancel"
+msgctxt "web:models.cancel"
 msgid "Batal"
 msgstr "Cancel"
 
-msgctxt "web.models:save"
+msgctxt "web:models.save"
 msgid "Simpan"
 msgstr "Save"
 
-msgctxt "web.models:saving"
+msgctxt "web:models.saving"
 msgid "Menyimpan..."
 msgstr "Saving..."
 
-msgctxt "web.providers:loading"
+msgctxt "web:providers.loading"
 msgid "Memuat provider..."
 msgstr "Loading providers..."
 
-msgctxt "web.providers:signIn"
+msgctxt "web:providers.signIn"
 msgid "Masuk untuk mengatur provider"
 msgstr "Sign in to manage providers"
 
-msgctxt "web.providers:description"
+msgctxt "web:providers.description"
 msgid "Konfigurasi provider tersimpan terpisah untuk setiap akun."
 msgstr "Provider configuration is stored separately for each account."
 
-msgctxt "web.providers:back"
+msgctxt "web:providers.back"
 msgid "Kembali ke chat"
 msgstr "Back to chat"
 
-msgctxt "web.providers:gateway"
+msgctxt "web:providers.gateway"
 msgid "Gateway model"
 msgstr "Model gateway"
 
-msgctxt "web.providers:personal"
+msgctxt "web:providers.personal"
 msgid "Provider pribadi"
 msgstr "Personal providers"
 
-msgctxt "web.providers:eyebrow"
+msgctxt "web:providers.eyebrow"
 msgid "MoonWitness · Gateway"
 msgstr "MoonWitness · Gateway"
 
-msgctxt "web.providers:title"
+msgctxt "web:providers.title"
 msgid "Provider model"
 msgstr "Model providers"
 
-msgctxt "web.providers:intro"
+msgctxt "web:providers.intro"
 msgid "Hubungkan endpoint OpenAI-compatible milikmu. Saat provider gagal, MoonWitness mencoba provider aktif berikutnya sesuai urutan."
 msgstr "Connect an OpenAI-compatible endpoint. If a provider fails, MoonWitness tries the next enabled provider in priority order."
 
-msgctxt "web.providers:empty"
+msgctxt "web:providers.empty"
 msgid "Belum ada provider. Tambahkan provider OpenAI-compatible untuk mengaktifkan chat."
 msgstr "No providers yet. Add an OpenAI-compatible provider to enable chat."
 
-msgctxt "web.providers:active"
+msgctxt "web:providers.active"
 msgid "Aktif"
 msgstr "Active"
 
-msgctxt "web.providers:inactive"
+msgctxt "web:providers.inactive"
 msgid "Nonaktif"
 msgstr "Inactive"
 
-msgctxt "web.providers:priority"
+msgctxt "web:providers.priority"
 msgid "Prioritas {number}"
 msgstr "Priority {number}"
 
-msgctxt "web.providers:keyStored"
+msgctxt "web:providers.keyStored"
 msgid "API key tersimpan terenkripsi"
 msgstr "API key stored encrypted"
 
-msgctxt "web.providers:keyMissing"
+msgctxt "web:providers.keyMissing"
 msgid "API key belum tersimpan"
 msgstr "No API key stored"
 
-msgctxt "web.providers:raisePriority"
+msgctxt "web:providers.raisePriority"
 msgid "Naikkan prioritas"
 msgstr "Move up in priority"
 
-msgctxt "web.providers:lowerPriority"
+msgctxt "web:providers.lowerPriority"
 msgid "Turunkan prioritas"
 msgstr "Move down in priority"
 
-msgctxt "web.providers:edit"
+msgctxt "web:providers.edit"
 msgid "Edit"
 msgstr "Edit"
 
-msgctxt "web.providers:delete"
+msgctxt "web:providers.delete"
 msgid "Hapus {name}"
 msgstr "Delete {name}"
 
-msgctxt "web.providers:editTitle"
+msgctxt "web:providers.editTitle"
 msgid "Edit provider"
 msgstr "Edit provider"
 
-msgctxt "web.providers:addTitle"
+msgctxt "web:providers.addTitle"
 msgid "Tambah provider"
 msgstr "Add provider"
 
-msgctxt "web.providers:securityNote"
+msgctxt "web:providers.securityNote"
 msgid "MoonWitness hanya menyimpan API key dalam bentuk terenkripsi."
 msgstr "MoonWitness stores API keys only in encrypted form."
 
-msgctxt "web.providers:cancelEdit"
+msgctxt "web:providers.cancelEdit"
 msgid "Batal edit"
 msgstr "Cancel editing"
 
-msgctxt "web.providers:name"
+msgctxt "web:providers.name"
 msgid "Nama provider"
 msgstr "Provider name"
 
-msgctxt "web.providers:namePlaceholder"
+msgctxt "web:providers.namePlaceholder"
 msgid "Provider saya"
 msgstr "My provider"
 
-msgctxt "web.providers:modelId"
+msgctxt "web:providers.modelId"
 msgid "ID model"
 msgstr "Model ID"
 
-msgctxt "web.providers:modelPlaceholder"
+msgctxt "web:providers.modelPlaceholder"
 msgid "model-id atau auto"
 msgstr "model-id or auto"
 
-msgctxt "web.providers:baseUrl"
+msgctxt "web:providers.baseUrl"
 msgid "Base URL OpenAI-compatible"
 msgstr "OpenAI-compatible base URL"
 
-msgctxt "web.providers:newApiKey"
+msgctxt "web:providers.newApiKey"
 msgid "API key baru (opsional)"
 msgstr "New API key (optional)"
 
-msgctxt "web.providers:apiKey"
+msgctxt "web:providers.apiKey"
 msgid "API key"
 msgstr "API key"
 
-msgctxt "web.providers:keepKey"
+msgctxt "web:providers.keepKey"
 msgid "Kosongkan untuk mempertahankan key saat ini"
 msgstr "Leave blank to keep the current key"
 
-msgctxt "web.providers:yourKey"
+msgctxt "web:providers.yourKey"
 msgid "Key milikmu dari provider"
 msgstr "Your key from the provider"
 
-msgctxt "web.providers:enable"
+msgctxt "web:providers.enable"
 msgid "Aktifkan untuk chat dan fallback"
 msgstr "Enable for chat and fallback"
 
-msgctxt "web.providers:saving"
+msgctxt "web:providers.saving"
 msgid "Menyimpan..."
 msgstr "Saving..."
 
-msgctxt "web.providers:save"
+msgctxt "web:providers.save"
 msgid "Simpan perubahan"
 msgstr "Save changes"
 
-msgctxt "web.providers:add"
+msgctxt "web:providers.add"
 msgid "Tambah provider"
 msgstr "Add provider"
 
-msgctxt "web.providers:securityGuidance"
+msgctxt "web:providers.securityGuidance"
 msgid "Masukkan hanya API key yang kamu miliki atau berwenang gunakan. Kuota, kebijakan, dan akses free-tier tetap ditentukan masing-masing provider. URL harus HTTPS; HTTP hanya diizinkan untuk localhost."
 msgstr "Only enter API keys you own or are authorized to use. Each provider controls its quotas, policies, and free-tier access. URLs must use HTTPS; HTTP is allowed only for localhost."
 
-msgctxt "web.connectors:unresolved"
+msgctxt "web:connectors.unresolved"
 msgid "Belum terhubung"
 msgstr "Not connected"
 
-msgctxt "web.connectors:environment"
+msgctxt "web:connectors.environment"
 msgid "Variabel environment"
 msgstr "Environment variable"
 
-msgctxt "web.connectors:keychain"
+msgctxt "web:connectors.keychain"
 msgid "Keychain OS"
 msgstr "OS keychain"
 
-msgctxt "web.connectors:configFile"
+msgctxt "web:connectors.configFile"
 msgid "File konfigurasi CLI"
 msgstr "CLI config file"
 
-msgctxt "web.connectors:unverified"
+msgctxt "web:connectors.unverified"
 msgid "Belum diverifikasi"
 msgstr "Not verified"
 
-msgctxt "web.connectors:tokenOk"
+msgctxt "web:connectors.tokenOk"
 msgid "Token aktif"
 msgstr "Token active"
 
-msgctxt "web.connectors:tokenInvalid"
+msgctxt "web:connectors.tokenInvalid"
 msgid "Token ditolak"
 msgstr "Token rejected"
 
-msgctxt "web.connectors:networkIssue"
+msgctxt "web:connectors.networkIssue"
 msgid "Jaringan bermasalah"
 msgstr "Network issue"
 
-msgctxt "web.connectors:tokenMissing"
+msgctxt "web:connectors.tokenMissing"
 msgid "Token tidak ditemukan"
 msgstr "Token not found"
 
-msgctxt "web.connectors:signIn"
+msgctxt "web:connectors.signIn"
 msgid "Masuk untuk mengatur connector"
 msgstr "Sign in to manage connectors"
 
-msgctxt "web.connectors:description"
+msgctxt "web:connectors.description"
 msgid "Connector layanan eksternal dikelola per akun."
 msgstr "External service connectors are managed per account."
 
-msgctxt "web.connectors:loading"
+msgctxt "web:connectors.loading"
 msgid "Memuat connector..."
 msgstr "Loading connectors..."
 
-msgctxt "web.connectors:back"
+msgctxt "web:connectors.back"
 msgid "Kembali ke chat"
 msgstr "Back to chat"
 
-msgctxt "web.connectors:models"
+msgctxt "web:connectors.models"
 msgid "Model data"
 msgstr "Data models"
 
-msgctxt "web.connectors:providers"
+msgctxt "web:connectors.providers"
 msgid "Provider model"
 msgstr "Model providers"
 
-msgctxt "web.connectors:users"
+msgctxt "web:connectors.users"
 msgid "Manajemen pengguna"
 msgstr "User management"
 
-msgctxt "web.connectors:integrations"
+msgctxt "web:connectors.integrations"
 msgid "Integrasi eksternal"
 msgstr "External integrations"
 
-msgctxt "web.connectors:integrationsDescription"
+msgctxt "web:connectors.integrationsDescription"
 msgid "Cloudflare, DNS, dan layanan lain"
 msgstr "Cloudflare, DNS, and other services"
 
-msgctxt "web.connectors:eyebrow"
+msgctxt "web:connectors.eyebrow"
 msgid "PENGELOLAAN CONNECTOR"
 msgstr "CONNECTOR MANAGEMENT"
 
-msgctxt "web.connectors:title"
+msgctxt "web:connectors.title"
 msgid "Connector"
 msgstr "Connector"
 
-msgctxt "web.connectors:securityDescription"
+msgctxt "web:connectors.securityDescription"
 msgid "MoonWitness tidak pernah menyimpan token. Kredensial dibaca dari OS credential store milik CLI layanan setiap kali permintaan diproses, jadi mencabut akses cukup dilakukan di sisi penyedia."
 msgstr "MoonWitness never stores tokens. Credentials are read from the service CLI's OS credential store per request, so revoke access with the provider."
 
-msgctxt "web.connectors:empty"
+msgctxt "web:connectors.empty"
 msgid "Belum ada connector. Tambahkan satu untuk mulai mengelola DNS dari MoonWitness."
 msgstr "No connectors yet. Add one to manage DNS from MoonWitness."
 
-msgctxt "web.connectors:enabled"
+msgctxt "web:connectors.enabled"
 msgid "Aktif"
 msgstr "Active"
 
-msgctxt "web.connectors:disabled"
+msgctxt "web:connectors.disabled"
 msgid "Nonaktif"
 msgstr "Inactive"
 
-msgctxt "web.connectors:readOnly"
+msgctxt "web:connectors.readOnly"
 msgid "Hanya baca"
 msgstr "Read-only"
 
-msgctxt "web.connectors:tokenSource"
+msgctxt "web:connectors.tokenSource"
 msgid "Sumber token: {source}"
 msgstr "Token source: {source}"
 
-msgctxt "web.connectors:neverRead"
+msgctxt "web:connectors.neverRead"
 msgid "Token belum pernah terbaca."
 msgstr "Token has not been read yet."
 
-msgctxt "web.connectors:lastVerified"
+msgctxt "web:connectors.lastVerified"
 msgid "Verifikasi terakhir {date}"
 msgstr "Last verified {date}"
 
-msgctxt "web.connectors:lastSynced"
+msgctxt "web:connectors.lastSynced"
 msgid "Sinkron terakhir {date}"
 msgstr "Last synced {date}"
 
-msgctxt "web.connectors:lastSyncStatus"
+msgctxt "web:connectors.lastSyncStatus"
 msgid "Status sinkron terakhir: {status}"
 msgstr "Last sync status: {status}"
 
-msgctxt "web.connectors:syncStatuses.ok"
+msgctxt "web:connectors.syncStatuses.ok"
 msgid "Berhasil"
 msgstr "Succeeded"
 
-msgctxt "web.connectors:syncStatuses.partial"
+msgctxt "web:connectors.syncStatuses.partial"
 msgid "Sebagian"
 msgstr "Partial"
 
-msgctxt "web.connectors:syncStatuses.error"
+msgctxt "web:connectors.syncStatuses.error"
 msgid "Gagal"
 msgstr "Failed"
 
-msgctxt "web.connectors:capabilities.dns"
+msgctxt "web:connectors.capabilities.dns"
 msgid "DNS"
 msgstr "DNS"
 
-msgctxt "web.connectors:dns"
+msgctxt "web:connectors.dns"
 msgid "DNS"
 msgstr "DNS"
 
-msgctxt "web.connectors:verify"
+msgctxt "web:connectors.verify"
 msgid "Verifikasi"
 msgstr "Verify"
 
-msgctxt "web.connectors:deactivate"
+msgctxt "web:connectors.deactivate"
 msgid "Nonaktifkan"
 msgstr "Disable"
 
-msgctxt "web.connectors:activate"
+msgctxt "web:connectors.activate"
 msgid "Aktifkan"
 msgstr "Enable"
 
-msgctxt "web.connectors:edit"
+msgctxt "web:connectors.edit"
 msgid "Edit"
 msgstr "Edit"
 
-msgctxt "web.connectors:delete"
+msgctxt "web:connectors.delete"
 msgid "Hapus {name}"
 msgstr "Delete {name}"
 
-msgctxt "web.connectors:sync"
+msgctxt "web:connectors.sync"
 msgid "Sinkronkan"
 msgstr "Sync"
 
-msgctxt "web.connectors:editLabel"
+msgctxt "web:connectors.editLabel"
 msgid "Ubah connector"
 msgstr "Edit connector"
 
-msgctxt "web.connectors:newLabel"
+msgctxt "web:connectors.newLabel"
 msgid "Tambah connector"
 msgstr "Add connector"
 
-msgctxt "web.connectors:cancelEdit"
+msgctxt "web:connectors.cancelEdit"
 msgid "Batal edit"
 msgstr "Cancel editing"
 
-msgctxt "web.connectors:kind"
+msgctxt "web:connectors.kind"
 msgid "Jenis layanan"
 msgstr "Service type"
 
-msgctxt "web.connectors:label"
+msgctxt "web:connectors.label"
 msgid "Nama connector"
 msgstr "Connector name"
 
-msgctxt "web.connectors:labelPlaceholder"
+msgctxt "web:connectors.labelPlaceholder"
 msgid "Produksi pribadi"
 msgstr "Personal production"
 
-msgctxt "web.connectors:confirmName"
+msgctxt "web:connectors.confirmName"
 msgid "Konfirmasi nama"
 msgstr "Confirm name"
 
-msgctxt "web.connectors:saving"
+msgctxt "web:connectors.saving"
 msgid "Menyimpan..."
 msgstr "Saving..."
 
-msgctxt "web.connectors:save"
+msgctxt "web:connectors.save"
 msgid "Simpan perubahan"
 msgstr "Save changes"
 
-msgctxt "web.connectors:add"
+msgctxt "web:connectors.add"
 msgid "Tambah connector"
 msgstr "Add connector"
 
-msgctxt "web.dns:signIn"
+msgctxt "web:dns.signIn"
 msgid "Masuk untuk mengelola DNS"
 msgstr "Sign in to manage DNS"
 
-msgctxt "web.dns:signInDescription"
+msgctxt "web:dns.signInDescription"
 msgid "Zone dan record hanya tampil untuk pemilik connector."
 msgstr "Zones and records are visible only to the connector owner."
 
-msgctxt "web.dns:back"
+msgctxt "web:dns.back"
 msgid "Ke halaman masuk"
 msgstr "Go to sign in"
 
-msgctxt "web.dns:loading"
+msgctxt "web:dns.loading"
 msgid "Memuat DNS..."
 msgstr "Loading DNS..."
 
-msgctxt "web.dns:zones"
+msgctxt "web:dns.zones"
 msgid "Zone tersalin"
 msgstr "Mirrored zones"
 
-msgctxt "web.dns:zoneList"
+msgctxt "web:dns.zoneList"
 msgid "Daftar zone"
 msgstr "Zone list"
 
-msgctxt "web.dns:stale"
+msgctxt "web:dns.stale"
 msgid "Usang"
 msgstr "Stale"
 
-msgctxt "web.dns:readOnly"
+msgctxt "web:dns.readOnly"
 msgid "Hanya baca"
 msgstr "Read-only"
 
-msgctxt "web.dns:connectorDisabled"
+msgctxt "web:dns.connectorDisabled"
 msgid "Connector nonaktif"
 msgstr "Connector disabled"
 
-msgctxt "web.dns:mirror"
+msgctxt "web:dns.mirror"
 msgid "Cermin Cloudflare"
 msgstr "Cloudflare mirror"
 
-msgctxt "web.dns:zoneFallback"
+msgctxt "web:dns.zoneFallback"
 msgid "Zone DNS"
 msgstr "DNS zone"
 
-msgctxt "web.dns:mirrorDescription"
+msgctxt "web:dns.mirrorDescription"
 msgid "Daftar ini adalah cermin Cloudflare. Setiap mutasi langsung mengubah zona aslinya, jadi periksa nama dan content sebelum menyimpan."
 msgstr "This list mirrors Cloudflare. Every mutation changes the live zone, so verify names and content before saving."
 
-msgctxt "web.dns:newRecord"
+msgctxt "web:dns.newRecord"
 msgid "Record baru"
 msgstr "New record"
 
-msgctxt "web.dns:readOnlyWarning"
+msgctxt "web:dns.readOnlyWarning"
 msgid "Connector hanya baca atau nonaktif; mutasi ditolak server."
 msgstr "This connector is read-only or disabled; the server will reject mutations."
 
-msgctxt "web.dns:search"
+msgctxt "web:dns.search"
 msgid "Cari nama atau content"
 msgstr "Search name or content"
 
-msgctxt "web.dns:searchPlaceholder"
+msgctxt "web:dns.searchPlaceholder"
 msgid "mis. api atau v=spf1"
 msgstr "e.g. api or v=spf1"
 
-msgctxt "web.dns:type"
+msgctxt "web:dns.type"
 msgid "Tipe"
 msgstr "Type"
 
-msgctxt "web.dns:all"
+msgctxt "web:dns.all"
 msgid "Semua"
 msgstr "All"
 
-msgctxt "web.dns:apply"
+msgctxt "web:dns.apply"
 msgid "Terapkan"
 msgstr "Apply"
 
-msgctxt "web.dns:clear"
+msgctxt "web:dns.clear"
 msgid "Bersihkan"
 msgstr "Clear"
 
-msgctxt "web.dns:zoneStatus"
+msgctxt "web:dns.zoneStatus"
 msgid "Status zone: {status}"
 msgstr "Zone status: {status}"
 
-msgctxt "web.dns:paused"
+msgctxt "web:dns.paused"
 msgid "dijeda"
 msgstr "paused"
 
-msgctxt "web.dns:truncated"
+msgctxt "web:dns.truncated"
 msgid "Daftar record dipotong, perbaiki pencarian"
 msgstr "The record list is truncated; refine your search"
 
-msgctxt "web.dns:emptyRecords"
+msgctxt "web:dns.emptyRecords"
 msgid "Tidak ada record yang cocok dengan pencarian ini."
 msgstr "No records match this search."
 
-msgctxt "web.dns:selectZone"
+msgctxt "web:dns.selectZone"
 msgid "Pilih zone di panel kiri untuk melihat record."
 msgstr "Select a zone from the panel to view records."
 
-msgctxt "web.dns:edit"
+msgctxt "web:dns.edit"
 msgid "Edit"
 msgstr "Edit"
 
-msgctxt "web.dns:auditEyebrow"
+msgctxt "web:dns.auditEyebrow"
 msgid "RIWAYAT AKSI"
 msgstr "ACTION HISTORY"
 
-msgctxt "web.dns:auditTitle"
+msgctxt "web:dns.auditTitle"
 msgid "Aksi terbaru untuk {connector}"
 msgstr "Recent activity for {connector}"
 
-msgctxt "web.dns:auditEmpty"
+msgctxt "web:dns.auditEmpty"
 msgid "Belum ada aksi tercatat."
 msgstr "No activity recorded yet."
 
-msgctxt "web.dns:recordForm"
+msgctxt "web:dns.recordForm"
 msgid "Form record DNS"
 msgstr "DNS record form"
 
-msgctxt "web.dns:editRecord"
+msgctxt "web:dns.editRecord"
 msgid "EDIT RECORD"
 msgstr "EDIT RECORD"
 
-msgctxt "web.dns:newRecordLabel"
+msgctxt "web:dns.newRecordLabel"
 msgid "RECORD BARU"
 msgstr "NEW RECORD"
 
-msgctxt "web.dns:closeForm"
+msgctxt "web:dns.closeForm"
 msgid "Tutup form"
 msgstr "Close form"
 
-msgctxt "web.dns:name"
+msgctxt "web:dns.name"
 msgid "Nama record"
 msgstr "Record name"
 
-msgctxt "web.dns:content"
+msgctxt "web:dns.content"
 msgid "Content"
 msgstr "Content"
 
-msgctxt "web.dns:contentPlaceholder"
+msgctxt "web:dns.contentPlaceholder"
 msgid "mis. 203.0.113.10"
 msgstr "e.g. 203.0.113.10"
 
-msgctxt "web.dns:ttl"
+msgctxt "web:dns.ttl"
 msgid "TTL (detik, 1 = Auto)"
 msgstr "TTL (seconds, 1 = Auto)"
 
-msgctxt "web.dns:comment"
+msgctxt "web:dns.comment"
 msgid "Catatan (opsional)"
 msgstr "Comment (optional)"
 
-msgctxt "web.dns:commentPlaceholder"
+msgctxt "web:dns.commentPlaceholder"
 msgid "Menjelaskan record ini untuk siapa pun yang membuka"
 msgstr "Explain this record to anyone who opens it"
 
-msgctxt "web.dns:confirmName"
+msgctxt "web:dns.confirmName"
 msgid "Konfirmasi nama"
 msgstr "Confirm name"
 
-msgctxt "web.adminUsers:loading"
+msgctxt "web:adminUsers.loading"
 msgid "Memuat pengguna..."
 msgstr "Loading users..."
 
-msgctxt "web.adminUsers:signIn"
+msgctxt "web:adminUsers.signIn"
 msgid "Masuk untuk mengelola pengguna"
 msgstr "Sign in to manage users"
 
-msgctxt "web.adminUsers:signInDescription"
+msgctxt "web:adminUsers.signInDescription"
 msgid "Manajemen peran hanya tersedia untuk akun dengan grup admin."
 msgstr "Role management is available only to accounts in the admin group."
 
-msgctxt "web.adminUsers:back"
+msgctxt "web:adminUsers.back"
 msgid "Ke halaman masuk"
 msgstr "Go to sign in"
 
-msgctxt "web.adminUsers:backToChat"
+msgctxt "web:adminUsers.backToChat"
 msgid "Kembali ke chat"
 msgstr "Back to chat"
 
-msgctxt "web.adminUsers:title"
+msgctxt "web:adminUsers.title"
 msgid "Manajemen pengguna"
 msgstr "User management"
 
-msgctxt "web.adminUsers:accountCount"
+msgctxt "web:adminUsers.accountCount"
 msgid "{count} akun"
 msgstr "{count} accounts"
 
-msgctxt "web.adminUsers:eyebrow"
+msgctxt "web:adminUsers.eyebrow"
 msgid "MoonWitness · Akses"
 msgstr "MoonWitness · Access"
 
-msgctxt "web.adminUsers:heading"
+msgctxt "web:adminUsers.heading"
 msgid "Peran dan akun"
 msgstr "Roles and accounts"
 
-msgctxt "web.adminUsers:description"
+msgctxt "web:adminUsers.description"
 msgid "Ubah peran untuk mengendalikan siapa yang boleh mengelola konektor dan DNS. Setiap perubahan peran menghapus sesi akun target, sehingga hak akses baru berlaku seketika."
 msgstr "Change roles to control who can manage connectors and DNS. Each role change removes the target account's sessions so new access takes effect immediately."
 
-msgctxt "web.adminUsers:name"
+msgctxt "web:adminUsers.name"
 msgid "Nama"
 msgstr "Name"
 
-msgctxt "web.adminUsers:email"
+msgctxt "web:adminUsers.email"
 msgid "Email"
 msgstr "Email"
 
-msgctxt "web.adminUsers:status"
+msgctxt "web:adminUsers.status"
 msgid "Status"
 msgstr "Status"
 
-msgctxt "web.adminUsers:joined"
+msgctxt "web:adminUsers.joined"
 msgid "Terdaftar"
 msgstr "Joined"
 
-msgctxt "web.adminUsers:active"
+msgctxt "web:adminUsers.active"
 msgid "Aktif"
 msgstr "Active"
 
-msgctxt "web.adminUsers:inactive"
+msgctxt "web:adminUsers.inactive"
 msgid "Nonaktif"
 msgstr "Inactive"
 
-msgctxt "web.adminUsers:empty"
+msgctxt "web:adminUsers.empty"
 msgid "Belum ada akun terdaftar."
 msgstr "No accounts registered yet."
 
-msgctxt "web.adminUsers:yourAccount"
+msgctxt "web:adminUsers.yourAccount"
 msgid "Akun Anda"
 msgstr "Your account"
 
-msgctxt "web.adminUsers:roleFor"
+msgctxt "web:adminUsers.roleFor"
 msgid "Peran untuk {name}"
 msgstr "Role for {name}"
 
-msgctxt "web.adminUsers:apply"
+msgctxt "web:adminUsers.apply"
 msgid "Terapkan"
 msgstr "Apply"
 
-msgctxt "web.adminUsers:confirmDeactivate"
+msgctxt "web:adminUsers.confirmDeactivate"
 msgid "Konfirmasi nonaktifkan"
 msgstr "Confirm deactivation"
 
-msgctxt "web.adminUsers:deactivate"
+msgctxt "web:adminUsers.deactivate"
 msgid "Nonaktifkan"
 msgstr "Deactivate"
 
-msgctxt "web.adminUsers:roleCatalog"
+msgctxt "web:adminUsers.roleCatalog"
 msgid "Katalog peran"
 msgstr "Role catalog"
 
-msgctxt "web.adminUsers:rootOnly"
+msgctxt "web:adminUsers.rootOnly"
 msgid "Hanya root"
 msgstr "Root only"
 
-msgctxt "web.adminUsers:groups"
+msgctxt "web:adminUsers.groups"
 msgid "Grup: {groups}"
 msgstr "Groups: {groups}"
 
-msgctxt "web.adminUsers:roleUpdated"
+msgctxt "web:adminUsers.roleUpdated"
 msgid "Peran {name} diperbarui. Sesi akun tersebut langsung dihapus."
 msgstr "Role for {name} updated. Their active sessions were removed."
 
-msgctxt "web.adminUsers:deactivated"
+msgctxt "web:adminUsers.deactivated"
 msgid "{name} dinonaktifkan dan semua sesinya dihapus."
 msgstr "{name} was deactivated and all sessions were removed."
 
-msgctxt "web.providers:modelGateway"
+msgctxt "web:providers.modelGateway"
 msgid "Gateway model"
 msgstr "Model gateway"
 
-msgctxt "web.providers:savedProviders"
+msgctxt "web:providers.savedProviders"
 msgid "Provider tersimpan"
 msgstr "Saved providers"
 
-msgctxt "web.providers:addedNotice"
+msgctxt "web:providers.addedNotice"
 msgid "Provider ditambahkan."
 msgstr "Provider added."
 
-msgctxt "web.providers:updatedNotice"
+msgctxt "web:providers.updatedNotice"
 msgid "Provider diperbarui."
 msgstr "Provider updated."
 
-msgctxt "web.providers:deletedNotice"
+msgctxt "web:providers.deletedNotice"
 msgid "Provider dihapus."
 msgstr "Provider deleted."
 
-msgctxt "web.providers:confirmDelete"
+msgctxt "web:providers.confirmDelete"
 msgid "Hapus provider {name}?"
 msgstr "Delete provider {name}?"
 
-msgctxt "web.connectors:zoneCount"
+msgctxt "web:connectors.zoneCount"
 msgid "{count} connector tersimpan"
 msgstr "{count} saved connectors"
 
-msgctxt "web.connectors:saved"
+msgctxt "web:connectors.saved"
 msgid "Connector diperbarui."
 msgstr "Connector updated."
 
-msgctxt "web.connectors:addedNotice"
+msgctxt "web:connectors.addedNotice"
 msgid "Connector ditambahkan. Jalankan verifikasi untuk memastikan token terbaca."
 msgstr "Connector added. Run verification to ensure its token can be read."
 
-msgctxt "web.connectors:verifyCompleted"
+msgctxt "web:connectors.verifyCompleted"
 msgid "Verifikasi connector selesai."
 msgstr "Connector verification completed."
 
-msgctxt "web.connectors:syncCompleted"
+msgctxt "web:connectors.syncCompleted"
 msgid "Sinkronisasi connector selesai."
 msgstr "Connector sync completed."
 
-msgctxt "web.connectors:disabledNotice"
+msgctxt "web:connectors.disabledNotice"
 msgid "Connector {name} dinonaktifkan."
 msgstr "Connector {name} disabled."
 
-msgctxt "web.connectors:enabledNotice"
+msgctxt "web:connectors.enabledNotice"
 msgid "Connector {name} diaktifkan."
 msgstr "Connector {name} enabled."
 
-msgctxt "web.connectors:deletedNotice"
+msgctxt "web:connectors.deletedNotice"
 msgid "Connector {name} dihapus. Riwayat audit tetap tersimpan."
 msgstr "Connector {name} deleted. Audit history was retained."
 
-msgctxt "web.connectors:confirmDelete"
+msgctxt "web:connectors.confirmDelete"
 msgid "Hapus connector {name}?"
 msgstr "Delete connector {name}?"
 
-msgctxt "web.connectors:editEyebrow"
+msgctxt "web:connectors.editEyebrow"
 msgid "EDIT"
 msgstr "EDIT"
 
-msgctxt "web.connectors:newEyebrow"
+msgctxt "web:connectors.newEyebrow"
 msgid "BARU"
 msgstr "NEW"
 
-msgctxt "web.connectors:capabilities"
+msgctxt "web:connectors.capabilities"
 msgid "Kapabilitas: {capabilities}."
 msgstr "Capabilities: {capabilities}."
 
-msgctxt "web.connectors:readOnlyCapability"
+msgctxt "web:connectors.readOnlyCapability"
 msgid "Hanya cermin dan baca; mutasi ditolak server."
 msgstr "Mirror and read only; the server rejects mutations."
 
-msgctxt "web.connectors:writableCapability"
+msgctxt "web:connectors.writableCapability"
 msgid "Boleh membaca dan memutasi."
 msgstr "Read and write operations are allowed."
 
-msgctxt "web.connectors:configureToken"
+msgctxt "web:connectors.configureToken"
 msgid "Atur token di konsol penyedia"
 msgstr "Configure token in provider console"
 
-msgctxt "web.connectors:enableConnector"
+msgctxt "web:connectors.enableConnector"
 msgid "Aktifkan connector ini"
 msgstr "Enable this connector"
 
-msgctxt "web.connectors:deleteHeading"
+msgctxt "web:connectors.deleteHeading"
 msgid "Hapus {name}?"
 msgstr "Delete {name}?"
 
-msgctxt "web.connectors:deleteDescription"
+msgctxt "web:connectors.deleteDescription"
 msgid "Cermin zona dan record ikut terhapus dari MoonWitness; riwayat audit tetap tersimpan. Ketik nama connector persis untuk mengonfirmasi."
 msgstr "The zone and record mirrors will be removed from MoonWitness; audit history is retained. Type the connector name exactly to confirm."
 
-msgctxt "web.connectors:cancel"
+msgctxt "web:connectors.cancel"
 msgid "Batal"
 msgstr "Cancel"
 
-msgctxt "web.connectors:deleteAction"
+msgctxt "web:connectors.deleteAction"
 msgid "Hapus connector"
 msgstr "Delete connector"
 
-msgctxt "web.dns:allConnectors"
+msgctxt "web:dns.allConnectors"
 msgid "Semua connector"
 msgstr "All connectors"
 
-msgctxt "web.dns:chat"
+msgctxt "web:dns.chat"
 msgid "Kembali ke chat"
 msgstr "Back to chat"
 
-msgctxt "web.dns:zonesEmpty"
+msgctxt "web:dns.zonesEmpty"
 msgid "Belum ada zone tersalin. Jalankan sinkronisasi lebih dulu."
 msgstr "No zones mirrored yet. Run a sync first."
 
-msgctxt "web.dns:noZone"
+msgctxt "web:dns.noZone"
 msgid "Pilih zone"
 msgstr "Select a zone"
 
-msgctxt "web.dns:connector"
+msgctxt "web:dns.connector"
 msgid "Connector"
 msgstr "Connector"
 
-msgctxt "web.dns:closeAudit"
+msgctxt "web:dns.closeAudit"
 msgid "Tutup riwayat"
 msgstr "Close history"
 
-msgctxt "web.dns:audit"
+msgctxt "web:dns.audit"
 msgid "Riwayat aksi"
 msgstr "Activity history"
 
-msgctxt "web.dns:syncing"
+msgctxt "web:dns.syncing"
 msgid "Menyinkronkan..."
 msgstr "Syncing..."
 
-msgctxt "web.dns:searchAction"
+msgctxt "web:dns.searchAction"
 msgid "Terapkan"
 msgstr "Apply"
 
-msgctxt "web.dns:clearAction"
+msgctxt "web:dns.clearAction"
 msgid "Bersihkan"
 msgstr "Clear"
 
-msgctxt "web.dns:deleteRecord"
+msgctxt "web:dns.deleteRecord"
 msgid "Hapus {name}"
 msgstr "Delete {name}"
 
-msgctxt "web.dns:close"
+msgctxt "web:dns.close"
 msgid "Tutup"
 msgstr "Close"
 
-msgctxt "web.dns:createRecord"
+msgctxt "web:dns.createRecord"
 msgid "Buat record"
 msgstr "Create record"
 
-msgctxt "web.dns:saveChanges"
+msgctxt "web:dns.saveChanges"
 msgid "Simpan perubahan"
 msgstr "Save changes"
 
-msgctxt "web.dns:proxied"
+msgctxt "web:dns.proxied"
 msgid "Proxied (hanya {types})"
 msgstr "Proxied (only {types})"
 
-msgctxt "web.dns:none"
+msgctxt "web:dns.none"
 msgid "tidak ada"
 msgstr "none"
 
-msgctxt "web.dns:notWritable"
+msgctxt "web:dns.notWritable"
 msgid "Connector ini read-only; MoonWitness menolak mutasi."
 msgstr "This connector is read-only; MoonWitness rejects mutations."
 
-msgctxt "web.dns:activateConnector"
+msgctxt "web:dns.activateConnector"
 msgid "Connector nonaktif. Aktifkan dulu di halaman connector."
 msgstr "Connector disabled. Enable it on the connector page first."
 
-msgctxt "web.dns:deleteDescription"
+msgctxt "web:dns.deleteDescription"
 msgid "Record ini hilang dari Cloudflare, bukan hanya dari cermin. Ketik nama record persis untuk mengonfirmasi."
 msgstr "This record will be deleted from Cloudflare, not just the mirror. Type its name exactly to confirm."
 
-msgctxt "web.dns:deleteAction"
+msgctxt "web:dns.deleteAction"
 msgid "Hapus record"
 msgstr "Delete record"
 
-msgctxt "web.dns:recordDeleted"
+msgctxt "web:dns.recordDeleted"
 msgid "Record {name} dihapus dari Cloudflare."
 msgstr "Record {name} deleted from Cloudflare."
 
-msgctxt "web.dns:recordCreated"
+msgctxt "web:dns.recordCreated"
 msgid "Record ditambahkan ke Cloudflare."
 msgstr "Record added to Cloudflare."
 
-msgctxt "web.dns:recordUpdated"
+msgctxt "web:dns.recordUpdated"
 msgid "Record {name} diperbarui di Cloudflare."
 msgstr "Record {name} updated in Cloudflare."
 
-msgctxt "web.dns:syncCompleted"
+msgctxt "web:dns.syncCompleted"
 msgid "Sinkronisasi selesai."
 msgstr "Sync completed."
 
-msgctxt "web.adminUsers:userList"
+msgctxt "web:adminUsers.userList"
 msgid "Daftar pengguna"
 msgstr "User list"
 
-msgctxt "web.dns:managed"
+msgctxt "web:dns.managed"
 msgid "Dikelola Cloudflare"
 msgstr "Managed by Cloudflare"
 
-msgctxt "web.dns:mirrorStale"
+msgctxt "web:dns.mirrorStale"
 msgid "Cermin usang"
 msgstr "Stale mirror"
 
-msgctxt "web.dns:auto"
+msgctxt "web:dns.auto"
 msgid "Otomatis"
 msgstr "Auto"
 
-msgctxt "web.dns:ttlSeconds"
+msgctxt "web:dns.ttlSeconds"
 msgid "{count} detik"
 msgstr "{count} sec"
 
-msgctxt "web.dns:yes"
+msgctxt "web:dns.yes"
 msgid "Ya"
 msgstr "Yes"
 
-msgctxt "web.dns:no"
+msgctxt "web:dns.no"
 msgid "Tidak"
 msgstr "No"
 
-msgctxt "web.dns:ttlColumn"
+msgctxt "web:dns.ttlColumn"
 msgid "TTL"
 msgstr "TTL"
 
-msgctxt "web.dns:proxiedColumn"
+msgctxt "web:dns.proxiedColumn"
 msgid "Proxied"
 msgstr "Proxied"
 
-msgctxt "web.dns:notes"
+msgctxt "web:dns.notes"
 msgid "Catatan"
 msgstr "Notes"
 
-msgctxt "web.dns:dateTime"
+msgctxt "web:dns.dateTime"
 msgid "Waktu"
 msgstr "Date and time"
 
-msgctxt "web.dns:action"
+msgctxt "web:dns.action"
 msgid "Aksi"
 msgstr "Action"
 
-msgctxt "web.dns:result"
+msgctxt "web:dns.result"
 msgid "Hasil"
 msgstr "Result"
 
-msgctxt "web.dns:target"
+msgctxt "web:dns.target"
 msgid "Target"
 msgstr "Target"
 
-msgctxt "web.dns:detail"
+msgctxt "web:dns.detail"
 msgid "Detail"
 msgstr "Detail"
 
-msgctxt "web.dns:connectorNotFound"
+msgctxt "web:dns.connectorNotFound"
 msgid "Connector ini tidak ada di akun kamu."
 msgstr "This connector is not in your account."
 
-msgctxt "web.dns:invalidTtl"
+msgctxt "web:dns.invalidTtl"
 msgid "TTL harus bilangan bulat; isi 1 untuk Auto."
 msgstr "TTL must be a whole number; enter 1 for Auto."
 
-msgctxt "web.models:fieldName"
+msgctxt "web:models.fieldName"
 msgid "Nama"
 msgstr "Name"
 
-msgctxt "web.models:fieldEmail"
+msgctxt "web:models.fieldEmail"
 msgid "Email"
 msgstr "Email"
 
-msgctxt "web.models:fieldActive"
+msgctxt "web:models.fieldActive"
 msgid "Aktif"
 msgstr "Active"
 
-msgctxt "web.models:fieldRole"
+msgctxt "web:models.fieldRole"
 msgid "Peran"
 msgstr "Role"
 
-msgctxt "web.models:fieldDescription"
+msgctxt "web:models.fieldDescription"
 msgid "Deskripsi"
 msgstr "Description"
 
-msgctxt "web.models:fieldCreatedAt"
+msgctxt "web:models.fieldCreatedAt"
 msgid "Dibuat pada"
 msgstr "Created at"
 
-msgctxt "web.models:fieldUpdatedAt"
+msgctxt "web:models.fieldUpdatedAt"
 msgid "Diperbarui pada"
 msgstr "Updated at"
 
-msgctxt "web.models:fieldOwner"
+msgctxt "web:models.fieldOwner"
 msgid "Pemilik"
 msgstr "Owner"
 
-msgctxt "web.models:fieldType"
+msgctxt "web:models.fieldType"
 msgid "Tipe"
 msgstr "Type"
 
-msgctxt "web.models:fieldStatus"
+msgctxt "web:models.fieldStatus"
 msgid "Status"
 msgstr "Status"
 
-msgctxt "web.models:fieldLabel"
+msgctxt "web:models.fieldLabel"
 msgid "Label"
 msgstr "Label"
 
-msgctxt "web.models:fieldKind"
+msgctxt "web:models.fieldKind"
 msgid "Jenis"
 msgstr "Kind"
 
-msgctxt "web.models:fieldEnabled"
+msgctxt "web:models.fieldEnabled"
 msgid "Aktif"
 msgstr "Enabled"
 
-msgctxt "web.models:fieldPriority"
+msgctxt "web:models.fieldPriority"
 msgid "Prioritas"
 msgstr "Priority"
 
-msgctxt "web.models:fieldBaseUrl"
+msgctxt "web:models.fieldBaseUrl"
 msgid "Base URL"
 msgstr "Base URL"
 
-msgctxt "web.models:fieldModel"
+msgctxt "web:models.fieldModel"
 msgid "Model"
 msgstr "Model"
 
-msgctxt "web.models:fieldContent"
+msgctxt "web:models.fieldContent"
 msgid "Content"
 msgstr "Content"
 
-msgctxt "web.models:fieldId"
+msgctxt "web:models.fieldId"
 msgid "ID"
 msgstr "ID"
 
-msgctxt "web.models:fieldTokenRef"
+msgctxt "web:models.fieldTokenRef"
 msgid "Referensi token"
 msgstr "Token reference"
 
-msgctxt "web.models:fieldExternalId"
+msgctxt "web:models.fieldExternalId"
 msgid "ID eksternal"
 msgstr "External ID"
 
-msgctxt "web.models:invalidDate"
+msgctxt "web:models.invalidDate"
 msgid "Nilai {name} bukan tanggal yang valid."
 msgstr "{name} is not a valid date."
 
-msgctxt "web.models:fieldOwnerId"
+msgctxt "web:models.fieldOwnerId"
 msgid "Pemilik"
 msgstr "Owner"
 
-msgctxt "web.models:entities.ai_provider"
+msgctxt "web:models.entities.ai_provider"
 msgid "Penyedia model AI"
 msgstr "AI model provider"
 
-msgctxt "web.models:descriptions.ai_provider"
+msgctxt "web:models.descriptions.ai_provider"
 msgid "Endpoint model dan prioritas fallback milik pengguna."
 msgstr "User-owned model endpoint and fallback priority."
 
-msgctxt "web.models:entities.res_role"
+msgctxt "web:models.entities.res_role"
 msgid "Peran pengguna"
 msgstr "User role"
 
-msgctxt "web.models:descriptions.res_role"
+msgctxt "web:models.descriptions.res_role"
 msgid "Katalog peran dan grup akses yang diberikan."
 msgstr "Catalog of roles and their assigned access groups."
 
-msgctxt "web.models:entities.res_sessions"
+msgctxt "web:models.entities.res_sessions"
 msgid "Sesi pengguna"
 msgstr "User session"
 
-msgctxt "web.models:descriptions.res_sessions"
+msgctxt "web:models.descriptions.res_sessions"
 msgid "Sesi autentikasi pengguna."
 msgstr "User authentication sessions."
 
-msgctxt "web.models:entities.res_users"
+msgctxt "web:models.entities.res_users"
 msgid "Pengguna"
 msgstr "User"
 
-msgctxt "web.models:descriptions.res_users"
+msgctxt "web:models.descriptions.res_users"
 msgid "Akun pengguna."
 msgstr "User accounts."
 
-msgctxt "web.models:entities.res_verification"
+msgctxt "web:models.entities.res_verification"
 msgid "Verifikasi pengguna"
 msgstr "User verification"
 
-msgctxt "web.models:descriptions.res_verification"
+msgctxt "web:models.descriptions.res_verification"
 msgid "Token sekali pakai untuk pemulihan akun."
 msgstr "One-time token for account recovery."
 
-msgctxt "web.models:entities.res_partner"
+msgctxt "web:models.entities.res_partner"
 msgid "Kontak"
 msgstr "Contact"
 
-msgctxt "web.models:descriptions.res_partner"
+msgctxt "web:models.descriptions.res_partner"
 msgid "Contact dan organisasi."
 msgstr "Contacts and organizations."
 
-msgctxt "web.models:entities.chat_conversation"
+msgctxt "web:models.entities.chat_conversation"
 msgid "Percakapan"
 msgstr "Conversation"
 
-msgctxt "web.models:descriptions.chat_conversation"
+msgctxt "web:models.descriptions.chat_conversation"
 msgid "Percakapan milik pengguna."
 msgstr "User-owned conversations."
 
-msgctxt "web.models:entities.chat_message"
+msgctxt "web:models.entities.chat_message"
 msgid "Pesan chat"
 msgstr "Chat message"
 
-msgctxt "web.models:descriptions.chat_message"
+msgctxt "web:models.descriptions.chat_message"
 msgid "Pesan berurutan dalam percakapan."
 msgstr "Ordered messages within a conversation."
 
-msgctxt "web.models:entities.cloudflare_record"
+msgctxt "web:models.entities.cloudflare_record"
 msgid "Record DNS Cloudflare"
 msgstr "Cloudflare DNS record"
 
-msgctxt "web.models:descriptions.cloudflare_record"
+msgctxt "web:models.descriptions.cloudflare_record"
 msgid "Mirror DNS record Cloudflare milik konektor seorang pengguna."
 msgstr "Mirrored Cloudflare DNS record owned by a user's connector."
 
-msgctxt "web.models:entities.cloudflare_zone"
+msgctxt "web:models.entities.cloudflare_zone"
 msgid "Zone DNS Cloudflare"
 msgstr "Cloudflare DNS zone"
 
-msgctxt "web.models:descriptions.cloudflare_zone"
+msgctxt "web:models.descriptions.cloudflare_zone"
 msgid "Mirror zone Cloudflare milik konektor seorang pengguna."
 msgstr "Mirrored Cloudflare zone owned by a user's connector."
 
-msgctxt "web.models:entities.corpus_annotation"
+msgctxt "web:models.entities.corpus_annotation"
 msgid "Anotasi korpus"
 msgstr "Corpus annotation"
 
-msgctxt "web.models:descriptions.corpus_annotation"
+msgctxt "web:models.descriptions.corpus_annotation"
 msgid "Tafsir, refleksi, atau anotasi yang merujuk ke satu passage; tidak pernah boleh berisi teks revelation."
 msgstr "Tafsir, refleksi, or annotation referring to one passage; it must never contain revelation text."
 
-msgctxt "web.models:entities.corpus_edition"
+msgctxt "web:models.entities.corpus_edition"
 msgid "Edisi korpus"
 msgstr "Corpus edition"
 
-msgctxt "web.models:descriptions.corpus_edition"
+msgctxt "web:models.descriptions.corpus_edition"
 msgid "Edisi work dalam bahasa dan authority tertentu; stage mengontrol visibilitas publik."
 msgstr "An edition of a work in a specific language and authority; its stage controls public visibility."
 
-msgctxt "web.models:entities.corpus_passage"
+msgctxt "web:models.entities.corpus_passage"
 msgid "Passage korpus"
 msgstr "Corpus passage"
 
-msgctxt "web.models:descriptions.corpus_passage"
+msgctxt "web:models.descriptions.corpus_passage"
 msgid "Satu baris teks milik satu edisi + locator (ayat Arab, terjemahan, dsb)."
 msgstr "One text row belonging to an edition and locator (Arabic verse, translation, etc.)."
 
-msgctxt "web.models:entities.corpus_work"
+msgctxt "web:models.entities.corpus_work"
 msgid "Karya korpus"
 msgstr "Corpus work"
 
-msgctxt "web.models:descriptions.corpus_work"
+msgctxt "web:models.descriptions.corpus_work"
 msgid "Karya tingkat atas (mis. Al-Qur'an); banyak edisi/bahasa dapat merujuk ke satu work."
 msgstr "A top-level work (e.g. the Qur'an) that multiple editions and languages can reference."
 
-msgctxt "web.models:entities.corpus_lexical_candidate"
+msgctxt "web:models.entities.corpus_lexical_candidate"
 msgid "Kandidat leksikal korpus"
 msgstr "Corpus lexical candidates"
 
-msgctxt "web.models:descriptions.corpus_lexical_candidate"
+msgctxt "web:models.descriptions.corpus_lexical_candidate"
 msgid "Kandidat frekuensi Arab yang belum ditinjau dari edisi Al-Qur'an dengan hak transformasi yang disetujui; bukan kesimpulan agama."
 msgstr "Unreviewed Arabic frequency candidates from Quran editions with cleared transform rights; not religious conclusions."
 
-msgctxt "web.models:entities.corpus_ayah_proof"
+msgctxt "web:models.entities.corpus_ayah_proof"
 msgid "Bukti Kriptografis Ayat"
 msgstr "Ayah Cryptographic Proof"
 
-msgctxt "web.models:descriptions.corpus_ayah_proof"
+msgctxt "web:models.descriptions.corpus_ayah_proof"
 msgid "Rekaman bukti kriptografis penjangkar hash konten ayat yang tidak dapat diubah."
 msgstr "Cryptographic proof record anchoring immutable passage content hashes."
 
-msgctxt "web.models:entities.corpus_reciter"
+msgctxt "web:models.entities.corpus_reciter"
 msgid "Qari Tilawah"
 msgstr "Tilawah Reciter"
 
-msgctxt "web.models:descriptions.corpus_reciter"
+msgctxt "web:models.descriptions.corpus_reciter"
 msgid "Metadata qari Al-Qur'an terverifikasi dan sertifikasi hak cipta audio."
 msgstr "Verified Quranic reciter metadata and rights certification."
 
-msgctxt "web.models:entities.corpus_audio_segment"
+msgctxt "web:models.entities.corpus_audio_segment"
 msgid "Segmen Audio Ayat"
 msgstr "Ayah Audio Segment"
 
-msgctxt "web.models:descriptions.corpus_audio_segment"
+msgctxt "web:models.descriptions.corpus_audio_segment"
 msgid "Batas cap waktu milidetik untuk sinkronisasi audio ayat Al-Qur'an."
 msgstr "Millisecond timestamp boundaries for ayah audio synchronization."
 
-msgctxt "web.models:fieldCandidateText"
+msgctxt "web:models.fieldCandidateText"
 msgid "Teks kandidat"
 msgstr "Candidate text"
 
-msgctxt "web.models:fieldNormalizedForm"
+msgctxt "web:models.fieldNormalizedForm"
 msgid "Bentuk ternormalisasi"
 msgstr "Normalized form"
 
-msgctxt "web.models:fieldOccurrenceCount"
+msgctxt "web:models.fieldOccurrenceCount"
 msgid "Jumlah kemunculan"
 msgstr "Occurrence count"
 
-msgctxt "web.models:fieldVerseReferenceCount"
+msgctxt "web:models.fieldVerseReferenceCount"
 msgid "Jumlah referensi ayat"
 msgstr "Verse reference count"
 
-msgctxt "web.models:fieldSourceEdition"
+msgctxt "web:models.fieldSourceEdition"
 msgid "Edisi sumber"
 msgstr "Source edition"
 
-msgctxt "web.models:fieldSourceVersionId"
+msgctxt "web:models.fieldSourceVersionId"
 msgid "ID versi sumber"
 msgstr "Source version ID"
 
-msgctxt "web.models:fieldSourceReferences"
+msgctxt "web:models.fieldSourceReferences"
 msgid "Referensi sumber"
 msgstr "Source references"
 
-msgctxt "web.models:fieldNormalizationVersion"
+msgctxt "web:models.fieldNormalizationVersion"
 msgid "Versi normalisasi"
 msgstr "Normalization version"
 
-msgctxt "web.models:fieldAlgorithmVersion"
+msgctxt "web:models.fieldAlgorithmVersion"
 msgid "Versi algoritme"
 msgstr "Algorithm version"
 
-msgctxt "web.models:entities.i18n_language"
+msgctxt "web:models.entities.i18n_language"
 msgid "Bahasa antarmuka"
 msgstr "Interface language"
 
-msgctxt "web.models:descriptions.i18n_language"
+msgctxt "web:models.descriptions.i18n_language"
 msgid "Bahasa antarmuka yang diaktifkan untuk MoonWitness."
 msgstr "Interface languages enabled for MoonWitness."
 
-msgctxt "web.models:entities.i18n_translation"
+msgctxt "web:models.entities.i18n_translation"
 msgid "Terjemahan antarmuka"
 msgstr "Interface translation"
 
-msgctxt "web.models:descriptions.i18n_translation"
+msgctxt "web:models.descriptions.i18n_translation"
 msgid "Entri katalog UI dan status terjemahannya."
 msgstr "UI catalog entries and their translation status."
 
-msgctxt "web.models:entities.integration_audit"
+msgctxt "web:models.entities.integration_audit"
 msgid "Audit integrasi"
 msgstr "Integration audit"
 
-msgctxt "web.models:descriptions.integration_audit"
+msgctxt "web:models.descriptions.integration_audit"
 msgid "Jejak append-only untuk setiap aksi pada konektor eksternal."
 msgstr "Append-only trail of every action on an external connector."
 
-msgctxt "web.models:entities.integration_connector"
+msgctxt "web:models.entities.integration_connector"
 msgid "Connector integrasi"
 msgstr "Integration connector"
 
-msgctxt "web.models:descriptions.integration_connector"
+msgctxt "web:models.descriptions.integration_connector"
 msgid "Konektor layanan eksternal; kredensialnya tinggal di OS credential store, tidak di sini."
 msgstr "External service connector; its credentials remain in the OS credential store, not here."
 
-msgctxt "web.models:entities.source_artifact"
+msgctxt "web:models.entities.source_artifact"
 msgid "Artefak sumber"
 msgstr "Source artifact"
 
-msgctxt "web.models:descriptions.source_artifact"
+msgctxt "web:models.descriptions.source_artifact"
 msgid "Registrasi sumber eksternal (senjata: edisi Al-Qur'an, korpus tafsir, leksikon)."
 msgstr "Registry of external sources (e.g. Qur'an editions, tafsir corpora, and lexicons)."
 
-msgctxt "web.models:entities.source_provenance"
+msgctxt "web:models.entities.source_provenance"
 msgid "Provenance sumber"
 msgstr "Source provenance"
 
-msgctxt "web.models:descriptions.source_provenance"
+msgctxt "web:models.descriptions.source_provenance"
 msgid "Ledger append-only setiap transisi lifecycle/keputusan atas sumber dan korpus."
 msgstr "Append-only ledger of lifecycle transitions and decisions for sources and corpora."
 
-msgctxt "web.models:entities.source_rights"
+msgctxt "web:models.entities.source_rights"
 msgid "Hak sumber"
 msgstr "Source rights"
 
-msgctxt "web.models:descriptions.source_rights"
+msgctxt "web:models.descriptions.source_rights"
 msgid "Keputusan rights untuk satu aksi spesifik terhadap satu versi sumber; deny-by-default."
 msgstr "Rights decision for a specific action on a source version; denied by default."
 
-msgctxt "web.models:entities.source_version"
+msgctxt "web:models.entities.source_version"
 msgid "Versi sumber"
 msgstr "Source version"
 
-msgctxt "web.models:descriptions.source_version"
+msgctxt "web:models.descriptions.source_version"
 msgid "Snapshot beku dari sebuah artifact: repo, branch, SHA, checksum, jumlah baris."
 msgstr "Frozen snapshot of an artifact: repository, branch, SHA, checksum, and row count."
 
-msgctxt "web.models:entities.workflow_change"
+msgctxt "web:models.entities.workflow_change"
 msgid "Perubahan workflow"
 msgstr "Workflow change"
 
-msgctxt "web.models:descriptions.workflow_change"
+msgctxt "web:models.descriptions.workflow_change"
 msgid "Change request CAB: satu perubahan yang diusulkan, direview, dan diputuskan oleh board."
 msgstr "CAB change request: a proposed change reviewed and decided by the board."
 
-msgctxt "web.models:entities.workflow_project"
+msgctxt "web:models.entities.workflow_project"
 msgid "Proyek workflow"
 msgstr "Workflow project"
 
-msgctxt "web.models:descriptions.workflow_project"
+msgctxt "web:models.descriptions.workflow_project"
 msgid "Wadah pelacak proyek PM; mengelompokkan task dan menyimpan metadata dasar."
 msgstr "Project tracker container that groups tasks and stores basic metadata."
 
-msgctxt "web.models:entities.workflow_task"
+msgctxt "web:models.entities.workflow_task"
 msgid "Task workflow"
 msgstr "Workflow task"
 
-msgctxt "web.models:descriptions.workflow_task"
+msgctxt "web:models.descriptions.workflow_task"
 msgid "Item pelacak proyek milik satu pengguna; terhubung ke workflow.project via project_id."
 msgstr "User-owned project tracker item linked to workflow.project through project_id."
 
-msgctxt "web.models:entities.workflow_transition"
+msgctxt "web:models.entities.workflow_transition"
 msgid "Transisi workflow"
 msgstr "Workflow transition"
 
-msgctxt "web.models:descriptions.workflow_transition"
+msgctxt "web:models.descriptions.workflow_transition"
 msgid "Jejak append-only setiap transisi state pada workflow.change; tidak dapat diubah atau dihapus."
 msgstr "Append-only trail of every state transition on workflow.change; it cannot be changed or deleted."
 
-msgctxt "web.corpus:shelfTitle"
+msgctxt "web:corpus.shelfTitle"
 msgid "Kitab & Sumber"
 msgstr "Books & sources"
 
-msgctxt "web.corpus:shelfDescription"
+msgctxt "web:corpus.shelfDescription"
 msgid "Setiap edisi menampilkan otoritas teks (revelation vs. terjemahan) dan atribusi penerbit. Edisi yang hak tayangnya belum disahkan tidak muncul di daftar ini sama sekali — server tidak mengembalikannya."
 msgstr "Each edition identifies its text authority (revelation or translation) and publisher attribution. Editions without cleared display rights are absent from this list because the server does not return them."
 
-msgctxt "web.corpus:loadingEditions"
+msgctxt "web:corpus.loadingEditions"
 msgid "Memuat daftar edisi..."
 msgstr "Loading editions..."
 
-msgctxt "web.corpus:noEditions"
+msgctxt "web:corpus.noEditions"
 msgid "Belum ada edisi yang diterbitkan."
 msgstr "No published editions yet."
 
-msgctxt "web.corpus:authority"
+msgctxt "web:corpus.authority"
 msgid "Authority"
 msgstr "Authority"
 
-msgctxt "web.corpus:publisher"
+msgctxt "web:corpus.publisher"
 msgid "Penerbit"
 msgstr "Publisher"
 
-msgctxt "web.corpus:attribution"
+msgctxt "web:corpus.attribution"
 msgid "Atribusi"
 msgstr "Attribution"
 
-msgctxt "web.corpus:stage"
+msgctxt "web:corpus.stage"
 msgid "Tahap"
 msgstr "Stage"
 
-msgctxt "web.corpus:emptyShelf"
+msgctxt "web:corpus.emptyShelf"
 msgid "Tidak ada edisi yang tersedia."
 msgstr "No editions are available."
 
-msgctxt "web.corpus:authorityVerbatim"
+msgctxt "web:corpus.authorityVerbatim"
 msgid "Teks Al-Qur'an (verbatim, {locale})"
 msgstr "Qur'anic text (verbatim, {locale})"
 
-msgctxt "web.corpus:authorityTranslation"
+msgctxt "web:corpus.authorityTranslation"
 msgid "Terjemahan ({locale})"
 msgstr "Translation ({locale})"
 
-msgctxt "web.corpus:authorityAttributed"
+msgctxt "web:corpus.authorityAttributed"
 msgid "{authority} (beratribusi)"
 msgstr "{authority} (attributed)"
 
-msgctxt "web.corpus:backToShelf"
+msgctxt "web:corpus.backToShelf"
 msgid "Kembali ke daftar kitab"
 msgstr "Back to the shelf"
 
-msgctxt "web.corpus:backToShelfEnglish"
+msgctxt "web:corpus.backToShelfEnglish"
 msgid "Kembali ke daftar sumber"
 msgstr "Back to sources"
 
-msgctxt "web.corpus:quranTitle"
+msgctxt "web:corpus.quranTitle"
 msgid "Al-Qur'an — Surah {surah}"
 msgstr "Qur'an — Surah {surah}"
 
-msgctxt "web.corpus:translationTitle"
+msgctxt "web:corpus.translationTitle"
 msgid "Terjemahan — Surah {surah}"
 msgstr "Translation — Surah {surah}"
 
-msgctxt "web.corpus:quranHeading"
+msgctxt "web:corpus.quranHeading"
 msgid "Teks Al-Qur'an (verbatim)"
 msgstr "Qur'anic text (verbatim)"
 
-msgctxt "web.corpus:translationHeading"
+msgctxt "web:corpus.translationHeading"
 msgid "Terjemahan — karya beratribusi, bukan teks sumber"
 msgstr "Translation — attributed work, not the source text"
 
-msgctxt "web.corpus:attributedHeading"
+msgctxt "web:corpus.attributedHeading"
 msgid "{authority} (beratribusi)"
 msgstr "{authority} (attributed)"
 
-msgctxt "web.corpus:loadingSurah"
+msgctxt "web:corpus.loadingSurah"
 msgid "Memuat surah..."
 msgstr "Loading surah..."
 
-msgctxt "web.corpus:emptySurah"
+msgctxt "web:corpus.emptySurah"
 msgid "Tidak ada ayat untuk surah ini."
 msgstr "No verses for this surah."
 
-msgctxt "web.corpus:readerDisclaimer"
+msgctxt "web:corpus.readerDisclaimer"
 msgid "Terjemahan dan tafsir bukan teks Qur'ani dan bukan pengganti ayat sumber. Platform ini tidak memiliki otoritas keagamaan."
 msgstr "Translations and tafsir are not Qur'anic text and do not replace the source verse. This platform carries no religious authority."
 
-msgctxt "web.corpus:checksum"
+msgctxt "web:corpus.checksum"
 msgid "checksum"
 msgstr "checksum"
 
-msgctxt "web.corpus:stageDraft"
+msgctxt "web:corpus.stageDraft"
 msgid "Draf"
 msgstr "Draft"
 
-msgctxt "web.corpus:stageAccepted"
+msgctxt "web:corpus.stageAccepted"
 msgid "Diterima"
 msgstr "Accepted"
 
-msgctxt "web.corpus:stagePublished"
+msgctxt "web:corpus.stagePublished"
 msgid "Diterbitkan"
 msgstr "Published"
 
-msgctxt "web.corpus:stageOther"
+msgctxt "web:corpus.stageOther"
 msgid "{stage}"
 msgstr "{stage}"
 
-msgctxt "web.corpus:surahTitle"
+msgctxt "web:corpus.surahTitle"
 msgid "Surah {surah}"
 msgstr "Surah {surah}"
 
-msgctxt "web.corpus:rowKindAyah"
+msgctxt "web:corpus.rowKindAyah"
 msgid "Ayat"
 msgstr "Verse"
 
-msgctxt "web.corpus:rowKindTranslation"
+msgctxt "web:corpus.rowKindTranslation"
 msgid "Terjemahan"
 msgstr "Translation"
 
-msgctxt "web.corpus:rowKindOther"
+msgctxt "web:corpus.rowKindOther"
 msgid "{kind}"
 msgstr "{kind}"
 
-msgctxt "web.models:viewList"
+msgctxt "web:models.viewList"
 msgid "Daftar"
 msgstr "List"
 
-msgctxt "web.models:viewForm"
+msgctxt "web:models.viewForm"
 msgid "Formulir"
 msgstr "Form"
 
-msgctxt "web.connectors:savedConnectors"
+msgctxt "web:connectors.savedConnectors"
 msgid "Connector tersimpan"
 msgstr "Saved connectors"
 
-msgctxt "web.connectors:kinds.cloudflare.label"
+msgctxt "web:connectors.kinds.cloudflare.label"
 msgid "Cloudflare"
 msgstr "Cloudflare"
 
-msgctxt "web.connectors:kinds.cloudflare.credentialHelp"
+msgctxt "web:connectors.kinds.cloudflare.credentialHelp"
 msgid "Token dibaca dari OS credential store (CLOUDFLARE_API_TOKEN, keychain, atau file konfigurasi CLI). Butuh permission Zone / DNS / Edit."
 msgstr "The token is read from the OS credential store (CLOUDFLARE_API_TOKEN, keychain, or CLI config file). Requires Zone / DNS / Edit permission."
 
-msgctxt "web.connectors:kinds.cloudflareRead.label"
+msgctxt "web:connectors.kinds.cloudflareRead.label"
 msgid "Cloudflare (read-only)"
 msgstr "Cloudflare (read-only)"
 
-msgctxt "web.connectors:kinds.cloudflareRead.credentialHelp"
+msgctxt "web:connectors.kinds.cloudflareRead.credentialHelp"
 msgid "Token dibaca dari OS credential store yang sama. Buat token Zone / DNS / View di Cloudflare agar pembatasan ini juga berlaku di luar MoonWitness."
 msgstr "The token is read from the same OS credential store. Create a Zone / DNS / View token in Cloudflare so this restriction also applies outside MoonWitness."
 
-msgctxt "web.adminUsers:roles.super_admin.name"
+msgctxt "web:adminUsers.roles.super_admin.name"
 msgid "Super Administrator"
 msgstr "Super Administrator"
 
-msgctxt "web.adminUsers:roles.super_admin.description"
+msgctxt "web:adminUsers.roles.super_admin.description"
 msgid "Pemilik sistem; dapat menetapkan peran dan menghapus connector."
 msgstr "System owner; can assign roles and remove connectors."
 
-msgctxt "web.adminUsers:roles.admin.name"
+msgctxt "web:adminUsers.roles.admin.name"
 msgid "Administrator"
 msgstr "Administrator"
 
-msgctxt "web.adminUsers:roles.admin.description"
+msgctxt "web:adminUsers.roles.admin.description"
 msgid "Mengelola akun pengguna dan membaca jejak audit."
 msgstr "Manages user accounts and reads audit history."
 
-msgctxt "web.adminUsers:roles.integrations_manager.name"
+msgctxt "web:adminUsers.roles.integrations_manager.name"
 msgid "Integrations Manager"
 msgstr "Integrations Manager"
 
-msgctxt "web.adminUsers:roles.integrations_manager.description"
+msgctxt "web:adminUsers.roles.integrations_manager.description"
 msgid "Membuat dan menghapus connector serta mengatur aksesnya."
 msgstr "Creates and removes connectors and manages their access."
 
-msgctxt "web.adminUsers:roles.operator.name"
+msgctxt "web:adminUsers.roles.operator.name"
 msgid "Operator"
 msgstr "Operator"
 
-msgctxt "web.adminUsers:roles.operator.description"
+msgctxt "web:adminUsers.roles.operator.description"
 msgid "Menjalankan sinkronisasi dan mengubah record DNS."
 msgstr "Runs synchronization and changes DNS records."
 
-msgctxt "web.adminUsers:roles.member.name"
+msgctxt "web:adminUsers.roles.member.name"
 msgid "Member"
 msgstr "Member"
 
-msgctxt "web.adminUsers:roles.member.description"
+msgctxt "web:adminUsers.roles.member.description"
 msgid "Pengguna biasa dengan data miliknya sendiri."
 msgstr "Standard user with access to their own data."
 
-msgctxt "web.adminUsers:roles.viewer.name"
+msgctxt "web:adminUsers.roles.viewer.name"
 msgid "Viewer"
 msgstr "Viewer"
 
-msgctxt "web.adminUsers:roles.viewer.description"
+msgctxt "web:adminUsers.roles.viewer.description"
 msgid "Hanya membaca."
 msgstr "Read-only access."
 
-msgctxt "web.models:entities.research_lexical_review"
+msgctxt "web:models.entities.research_lexical_review"
 msgid "Penilaian leksikal"
 msgstr "Lexical assessment"
 
-msgctxt "web.models:descriptions.research_lexical_review"
+msgctxt "web:models.descriptions.research_lexical_review"
 msgid "Penilaian manusia append-only atas frekuensi leksikal eksploratif yang terikat pada snapshot sumber dan metode."
 msgstr "Append-only human assessment of exploratory lexical frequency tied to a source and method snapshot."
 
-msgctxt "web.research:navLabel"
+msgctxt "web:research.navLabel"
 msgid "Review Riset"
 msgstr "Research Review"
 
-msgctxt "web.research:title"
+msgctxt "web:research.title"
 msgid "Antrean review leksikal"
 msgstr "Lexical review queue"
 
-msgctxt "web.research:description"
+msgctxt "web:research.description"
 msgid "Tinjau frekuensi token Arab eksploratif dengan rujukan sumber yang dapat diaudit. Hasil komputasi bukan identifikasi Asmaulhusna."
 msgstr "Review exploratory Arabic token frequencies with auditable source references. Computed results do not identify Divine Names."
 
-msgctxt "web.research:reviewerRequired"
+msgctxt "web:research.reviewerRequired"
 msgid "Halaman ini hanya tersedia untuk admin dan operator."
 msgstr "This page is available only to admins and operators."
 
-msgctxt "web.research:edition"
+msgctxt "web:research.edition"
 msgid "Edisi sumber"
 msgstr "Source edition"
 
-msgctxt "web.research:loadingEditions"
+msgctxt "web:research.loadingEditions"
 msgid "Memuat edisi..."
 msgstr "Loading editions..."
 
-msgctxt "web.research:noEditions"
+msgctxt "web:research.noEditions"
 msgid "Belum ada edisi terbit yang dapat ditinjau."
 msgstr "No published editions are available for review."
 
-msgctxt "web.research:loadingCandidates"
+msgctxt "web:research.loadingCandidates"
 msgid "Menghitung frekuensi leksikal..."
 msgstr "Computing lexical frequencies..."
 
-msgctxt "web.research:emptyCandidates"
+msgctxt "web:research.emptyCandidates"
 msgid "Tidak ada kandidat leksikal pada edisi ini."
 msgstr "No lexical candidates are available for this edition."
 
-msgctxt "web.research:candidate"
+msgctxt "web:research.candidate"
 msgid "Bentuk token"
 msgstr "Token form"
 
-msgctxt "web.research:normalizedForm"
+msgctxt "web:research.normalizedForm"
 msgid "Bentuk normalisasi"
 msgstr "Normalized form"
 
-msgctxt "web.research:occurrenceCount"
+msgctxt "web:research.occurrenceCount"
 msgid "Jumlah kemunculan"
 msgstr "Occurrences"
 
-msgctxt "web.research:verseCount"
+msgctxt "web:research.verseCount"
 msgid "Rujukan ayat"
 msgstr "Verse references"
 
-msgctxt "web.research:reviewStatus"
+msgctxt "web:research.reviewStatus"
 msgid "Status review"
 msgstr "Review status"
 
-msgctxt "web.research:unreviewed"
+msgctxt "web:research.unreviewed"
 msgid "Belum ditinjau"
 msgstr "Unreviewed"
 
-msgctxt "web.research:sourceVersion"
+msgctxt "web:research.sourceVersion"
 msgid "Versi sumber"
 msgstr "Source version"
 
-msgctxt "web.research:algorithmVersion"
+msgctxt "web:research.algorithmVersion"
 msgid "Versi algoritme"
 msgstr "Algorithm version"
 
-msgctxt "web.research:normalizationVersion"
+msgctxt "web:research.normalizationVersion"
 msgid "Versi normalisasi"
 msgstr "Normalization version"
 
-msgctxt "web.research:evidenceReferences"
+msgctxt "web:research.evidenceReferences"
 msgid "Rujukan dan checksum sumber"
 msgstr "Source references and checksums"
 
-msgctxt "web.research:checksum"
+msgctxt "web:research.checksum"
 msgid "Checksum"
 msgstr "Checksum"
 
-msgctxt "web.research:referenceId"
+msgctxt "web:research.referenceId"
 msgid "ID sumber"
 msgstr "Source record ID"
 
-msgctxt "web.research:decision"
+msgctxt "web:research.decision"
 msgid "Keputusan riset"
 msgstr "Research decision"
 
-msgctxt "web.research:rationale"
+msgctxt "web:research.rationale"
 msgid "Alasan peninjauan"
 msgstr "Review rationale"
 
-msgctxt "web.research:rationalePlaceholder"
+msgctxt "web:research.rationalePlaceholder"
 msgid "Catat alasan dan kebutuhan verifikasi ahli."
 msgstr "Record the rationale and any need for expert verification."
 
-msgctxt "web.research:submitReview"
+msgctxt "web:research.submitReview"
 msgid "Simpan penilaian"
 msgstr "Save assessment"
 
-msgctxt "web.research:saving"
+msgctxt "web:research.saving"
 msgid "Menyimpan..."
 msgstr "Saving..."
 
-msgctxt "web.research:saved"
+msgctxt "web:research.saved"
 msgid "Penilaian tersimpan sebagai catatan audit baru."
 msgstr "Assessment saved as a new audit record."
 
-msgctxt "web.research:decisions.retain_for_research"
+msgctxt "web:research.decisions.retain_for_research"
 msgid "Simpan untuk riset lanjutan"
 msgstr "Retain for further research"
 
-msgctxt "web.research:decisions.exclude_from_research"
+msgctxt "web:research.decisions.exclude_from_research"
 msgid "Keluarkan dari riset lanjutan"
 msgstr "Exclude from further research"
 
-msgctxt "web.research:decisions.needs_expert_review"
+msgctxt "web:research.decisions.needs_expert_review"
 msgid "Perlu tinjauan ahli"
 msgstr "Needs expert review"
 
-msgctxt "web.research:researchDisclaimer"
+msgctxt "web:research.researchDisclaimer"
 msgid "Frekuensi token dan keputusan review ini bukan kesimpulan agama atau verifikasi nama ilahi. Penilaian baru menandai jalur riset dan selalu menyimpan provenance sumber/metode."
 msgstr "Token frequency and review decisions are not religious conclusions or verification of Divine Names. Assessments only route further research and retain source/method provenance."
 
-msgctxt "web.models:categories.knowledge"
+msgctxt "web:models.categories.knowledge"
 msgid "KITAB, SUMBER & LEKSIKON"
 msgstr "SCRIPTURE, SOURCES & LEXICON"
 
-msgctxt "web.models:categories.research"
+msgctxt "web:models.categories.research"
 msgid "RISET, SAKSI & MIZAN"
 msgstr "RESEARCH, WITNESS & MIZAN"
 
-msgctxt "web.models:categories.intelligence"
+msgctxt "web:models.categories.intelligence"
 msgid "KECERDASAN & PERCAKAPAN"
 msgstr "AI & CONVERSATIONS"
 
-msgctxt "web.models:categories.workflow"
+msgctxt "web:models.categories.workflow"
 msgid "ALUR KERJA & TATA KELOLA"
 msgstr "WORKFLOW & GOVERNANCE"
 
-msgctxt "web.models:categories.integration"
+msgctxt "web:models.categories.integration"
 msgid "INTEGRASI & INFRASTRUKTUR"
 msgstr "INTEGRATIONS & INFRASTRUCTURE"
 
-msgctxt "web.models:categories.system"
+msgctxt "web:models.categories.system"
 msgid "SISTEM, AKSES & REFERENSI"
 msgstr "SYSTEM, ACCESS & REFERENCE"
 
-msgctxt "web.models:codeMode"
+msgctxt "web:models.codeMode"
 msgid "Mode kode"
 msgstr "Code mode"
 
-msgctxt "web.models:humanMode"
+msgctxt "web:models.humanMode"
 msgid "Mode nama"
 msgstr "Label mode"
 
-msgctxt "web.models:entities.res_country"
+msgctxt "web:models.entities.res_country"
 msgid "Negara"
 msgstr "Countries"
 
-msgctxt "web.models:descriptions.res_country"
+msgctxt "web:models.descriptions.res_country"
 msgid "Katalog referensi kode dan nama negara ISO."
 msgstr "Reference catalog of ISO country codes and names."
 
-msgctxt "web.models:entities.corpus_term"
+msgctxt "web:models.entities.corpus_term"
 msgid "Istilah Leksikon (UNILEX)"
 msgstr "Lexicon Terms (UNILEX)"
 
-msgctxt "web.models:descriptions.corpus_term"
+msgctxt "web:models.descriptions.corpus_term"
 msgid "Entitas istilah kanonis, akar kata, lemma, dan kelas kata dalam ontologi UNILEX."
 msgstr "Canonical term, root, lemma, and part-of-speech entries in the UNILEX ontology."
 
-msgctxt "web.models:entities.corpus_concept"
+msgctxt "web:models.entities.corpus_concept"
 msgid "Konsep Semantik (UNILEX)"
 msgstr "Semantic Concepts (UNILEX)"
 
-msgctxt "web.models:descriptions.corpus_concept"
+msgctxt "web:models.descriptions.corpus_concept"
 msgid "Kategori konseptual dan definisi lintas disiplin dalam ontologi UNILEX."
 msgstr "Cross-disciplinary conceptual categories and definitions in the UNILEX ontology."
 
-msgctxt "web.models:entities.witness_statement"
+msgctxt "web:models.entities.witness_statement"
 msgid "Pernyataan Saksi"
 msgstr "Witness Statements"
 
-msgctxt "web.models:descriptions.witness_statement"
+msgctxt "web:models.descriptions.witness_statement"
 msgid "Kesaksian beratribusi lengkap dengan rantai transmisi dan penilaian reliabilitas."
 msgstr "Attributed testimony with explicit transmission chains and reliability assessments."
 
-msgctxt "web.models:entities.story_narrative"
+msgctxt "web:models.entities.story_narrative"
 msgid "Karya & Tradisi Naratif"
 msgstr "Story Narratives"
 
-msgctxt "web.models:descriptions.story_narrative"
+msgctxt "web:models.descriptions.story_narrative"
 msgid "Karya naratif, tradisi lisan, dan motif cerita dengan pemisahan tegas fiksi vs laporan historis."
 msgstr "Narrative works, oral traditions, and story motifs with strict separation of fiction vs historical report."
 
-msgctxt "web.models:entities.event_record"
+msgctxt "web:models.entities.event_record"
 msgid "Rekaman Peristiwa"
 msgstr "Event Records"
 
-msgctxt "web.models:descriptions.event_record"
+msgctxt "web:models.descriptions.event_record"
 msgid "Catatan peristiwa historis beserta konteks waktu, lokasi, dan status epistemiknya."
 msgstr "Historical event records with temporal context, location, and explicit epistemic status."
 
-msgctxt "web.models:entities.person_profile"
+msgctxt "web:models.entities.person_profile"
 msgid "Profil Tokoh Historis"
 msgstr "Historical Person Profiles"
 
-msgctxt "web.models:descriptions.person_profile"
+msgctxt "web:models.descriptions.person_profile"
 msgid "Identitas tokoh historis, perawi, ulama, atau penulis yang didukung rujukan sumber."
 msgstr "Source-backed profiles of historical figures, transmitters, scholars, and authors."
 
-msgctxt "web.models:entities.law_instrument"
+msgctxt "web:models.entities.law_instrument"
 msgid "Instrumen Hukum & Yurisdiksi"
 msgstr "Legal Instruments"
 
-msgctxt "web.models:descriptions.law_instrument"
+msgctxt "web:models.descriptions.law_instrument"
 msgid "Instrumen hukum, fatwa, undang-undang, dan kanon yurisdiksi komparatif."
 msgstr "Statutes, fatwas, treaties, and comparative jurisdictional legal instruments."
 
-msgctxt "web.models:entities.mizan_assessment"
+msgctxt "web:models.entities.mizan_assessment"
 msgid "Asesmen Neraca Mizan"
 msgstr "Mizan Assessments"
 
-msgctxt "web.models:descriptions.mizan_assessment"
+msgctxt "web:models.descriptions.mizan_assessment"
 msgid "Evaluasi multidimensi berversi berdasarkan rubrik keseimbangan dan akuntabilitas epistemik Mizan."
 msgstr "Versioned multidimensional evaluations under the Mizan epistemic balance rubric."
 
-msgctxt "web.models:entities.research_correlation"
+msgctxt "web:models.entities.research_correlation"
 msgid "Korelasi Entitas Riset"
 msgstr "Research Correlations"
 
-msgctxt "web.models:descriptions.research_correlation"
+msgctxt "web:models.descriptions.research_correlation"
 msgid "Tautan semantik terketik lintas karya, ayat, tokoh, peristiwa, kesaksian, dan instrumen hukum."
 msgstr "Typed semantic links across works, passages, persons, events, testimonies, and legal instruments."
 
-msgctxt "web.models:entities.character_canon"
+msgctxt "web:models.entities.character_canon"
 msgid "Kanon Karakter (Character Bible)"
 msgstr "Character Canon"
 
-msgctxt "web.models:descriptions.character_canon"
+msgctxt "web:models.descriptions.character_canon"
 msgid "Entri karakter terkendali yang memisahkan tokoh sejarah dari arketipe kreatif."
 msgstr "Controlled character bible entries demarcating historical figures from creative archetypes."
 
-msgctxt "web.models:entities.character_classification"
+msgctxt "web:models.entities.character_classification"
 msgid "Klasifikasi & Arketipe Karakter"
 msgstr "Character Classifications"
 
-msgctxt "web.models:descriptions.character_classification"
+msgctxt "web:models.descriptions.character_classification"
 msgid "Pemetaan arketipe, orientasi moral, dan fungsi naratif untuk karakter kanonis."
 msgstr "Archetype, moral alignment, and narrative function mappings for canonical characters."
 
-msgctxt "web.models:entities.character_appearance"
+msgctxt "web:models.entities.character_appearance"
 msgid "Kemunculan Karakter"
 msgstr "Character Appearances"
 
-msgctxt "web.models:descriptions.character_appearance"
+msgctxt "web:models.descriptions.character_appearance"
 msgid "Pelacakan kemunculan dan perkembangan karakter di berbagai segmen karya naratif."
 msgstr "Tracking of character occurrences and arc milestones across narrative works."
 
-msgctxt "web.models:entities.studio_artifact"
+msgctxt "web:models.entities.studio_artifact"
 msgid "Artefak Studio Kreatif"
 msgstr "Creative Studio Artifacts"
 
-msgctxt "web.models:descriptions.studio_artifact"
+msgctxt "web:models.descriptions.studio_artifact"
 msgid "Ruang draf naskah, skenario, dan adaptasi kreatif yang terpisah dari korpus kanonis."
 msgstr "Versioned manuscript, screenplay, and adaptation drafts kept distinct from canonical corpus sources."
 
@@ -3005,27 +3005,27 @@ msgctxt "web:landing.views.integration_connector.description"
 msgid "Hubungkan layanan infrastruktur dan DNS melalui kredensial OS tanpa menyimpan token mentah."
 msgstr "Connect infrastructure and DNS services via OS credential stores without persisting raw tokens."
 
-msgctxt "web.models:searchModels"
+msgctxt "web:models.searchModels"
 msgid "Cari model..."
 msgstr "Search models..."
 
-msgctxt "web.models:searchRecords"
+msgctxt "web:models.searchRecords"
 msgid "Saring rekaman..."
 msgstr "Filter records..."
 
-msgctxt "web.models:noMatchingModels"
+msgctxt "web:models.noMatchingModels"
 msgid "Tidak ada model yang cocok."
 msgstr "No matching models."
 
-msgctxt "web.models:viewRecord"
+msgctxt "web:models.viewRecord"
 msgid "DETAIL REKAMAN"
 msgstr "RECORD DETAILS"
 
-msgctxt "web.models:publicExplorerNotice"
+msgctxt "web:models.publicExplorerNotice"
 msgid "Mode baca publik. Masuk untuk mengelola data sesuai hak akses akun."
 msgstr "Public read-only mode. Sign in to manage records with your account permissions."
 
-msgctxt "web.models:signInToManage"
+msgctxt "web:models.signInToManage"
 msgid "Masuk"
 msgstr "Sign in"
 
@@ -4041,3 +4041,59 @@ msgstr "This graph only renders relations an operator wrote through the Models w
 msgctxt "web:corpus.unresolvedEdgesWarning"
 msgid "{count} relasi menunjuk ke simpul yang tidak terdaftar sehingga tidak digambar. Perbaiki data itu di ruang Model."
 msgstr "{count} relations point at a node that is not registered, so they are not drawn. Fix that data in the Models workspace."
+
+msgctxt "web:graph.ontoNodesRelations"
+msgid "Simpul & Relasi"
+msgstr "Nodes & Relations"
+
+msgctxt "web:graph.nodes"
+msgid "simpul"
+msgstr "nodes"
+
+msgctxt "web:graph.edges"
+msgid "relasi"
+msgstr "edges"
+
+msgctxt "web:graph.selectedNodeDetails"
+msgid "Detail Simpul Terpilih"
+msgstr "Selected Node Details"
+
+msgctxt "web:graph.directConnections"
+msgid "Relasi Langsung"
+msgstr "Direct Connections"
+
+msgctxt "web:graph.selectNode"
+msgid "Pilih simpul pada graf untuk melihat detailnya."
+msgstr "Select a node on the graph to view its details."
+
+msgctxt "web:export.title"
+msgid "Ekspor Kompilasi"
+msgstr "Export Compilation"
+
+msgctxt "web:export.description"
+msgid "Gunakan halaman ini untuk mengekspor materi terkompilasi."
+msgstr "Use this page to export the compiled material."
+
+msgctxt "web:export.compiledTitle"
+msgid "Kompilasi"
+msgstr "Compilation"
+
+msgctxt "web:export.compiledDesc"
+msgid "Pratinjau markdown yang dikompilasi dari artefak terpilih."
+msgstr "Preview markdown compiled from the selected artifacts."
+
+msgctxt "web:export.selectArtifact"
+msgid "Pilih Artefak"
+msgstr "Select Artifact"
+
+msgctxt "web:export.noArtifacts"
+msgid "Belum ada artefak terpilih."
+msgstr "No artifacts selected yet."
+
+msgctxt "web:export.artifactList"
+msgid "Daftar Artefak"
+msgstr "Artifact List"
+
+msgctxt "web:export.preview"
+msgid "Pratinjau"
+msgstr "Preview"

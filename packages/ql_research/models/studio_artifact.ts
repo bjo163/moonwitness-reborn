@@ -70,7 +70,5 @@ export const studioArtifact: QlModelDefinition = {
     content_body: { type: "text", maxLength: 10000 },
     lore_review_notes: { type: "text", maxLength: 4000 },
     owner_id: { type: "char", required: true, maxLength: 64 },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

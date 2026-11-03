@@ -59,7 +59,5 @@ export const corpusEdition: QlModelDefinition = {
       options: CORPUS_STAGES,
       validator: enumValidator("stage", CORPUS_STAGES),
     },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

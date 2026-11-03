@@ -46,7 +46,5 @@ export const storyNarrative: QlModelDefinition = {
     source_artifact_id: { type: "char", maxLength: 64 },
     passage_id: { type: "char", maxLength: 64 },
     is_fictional: { type: "boolean", required: true },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

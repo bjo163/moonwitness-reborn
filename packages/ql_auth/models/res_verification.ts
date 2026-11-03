@@ -21,5 +21,6 @@ export const resVerification: QlModelDefinition = {
     token_hash: { type: "char", required: true, unique: true, private: true },
     expires_at: { type: "datetime", required: true, private: true },
     created_at: { type: "datetime", required: true, private: true },
+    updated_at: { type: "datetime", required: true, private: true },
   },
 };

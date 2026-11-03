@@ -40,8 +40,12 @@ jobs:
       # jalan lebih dulu. Urutannya sengaja dipertahankan terpisah (build, lint,
       # typecheck, test, budget) agar kegagalan pada setiap gate terlihat
       # sendiri. Sinkron dengan `package.json` root (`build` = turbo run build
-      # && pnpm lint).
+      # diikuti lint/typecheck/test/budget terpisah).
       - run: pnpm exec turbo run build
+      # Type-aware lint requires built types from dist/; run as separate gate for visibility.
+      - run: pnpm lint
+      # Typecheck must pass with built types from dist/.
+      - run: pnpm typecheck
       # Suite ql_orm punya jalur dialect Postgres yang hanya aktif jika QL_ORM_PG_URL terisi.
       - run: pnpm test
         env:

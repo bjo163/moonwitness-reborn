@@ -152,22 +152,27 @@ export async function requestTransition(
     "workflow.change",
     { id: changeId },
     { state: next, revision: nextRevision, updated_at: stamped },
+    { actorId: user.id },
   );
   if (updated === 0) {
     throw new QlNotFoundError(`Change '${changeId}' could not be updated.`);
   }
 
-  const transition = await orm.createRecordForService("workflow.transition", {
-    change_id: changeId,
-    from_state: current,
-    to_state: next,
-    action,
-    reason: trimmedReason ?? "",
-    revision: nextRevision,
-    actor_id: user.id,
-    owner_id: owner,
-    created_at: stamped,
-  });
+  const transition = await orm.createRecordForService(
+    "workflow.transition",
+    {
+      change_id: changeId,
+      from_state: current,
+      to_state: next,
+      action,
+      reason: trimmedReason ?? "",
+      revision: nextRevision,
+      actor_id: user.id,
+      owner_id: owner,
+      created_at: stamped,
+    },
+    { actorId: user.id },
+  );
   const change = await orm.findOneByService("workflow.change", { id: changeId });
   if (!change) throw new QlNotFoundError(`Change '${changeId}' vanished after update.`);
   return { change, transition };
@@ -249,15 +254,19 @@ export async function submitPeerReviewForService(
   }
 
   const stamped = new Date();
-  const review = await orm.createRecordForService("workflow.peer_review", {
-    change_id: changeId,
-    decision: payload.decision,
-    notes: payload.notes,
-    sanad_chain_ref: payload.sanadChainRef,
-    reviewer_id: reviewerId,
-    created_at: stamped,
-    updated_at: stamped,
-  });
+  const review = await orm.createRecordForService(
+    "workflow.peer_review",
+    {
+      change_id: changeId,
+      decision: payload.decision,
+      notes: payload.notes,
+      sanad_chain_ref: payload.sanadChainRef,
+      reviewer_id: reviewerId,
+      created_at: stamped,
+      updated_at: stamped,
+    },
+    { actorId: reviewerId },
+  );
 
   const approvedReviews = await orm.findManyByService(
     "workflow.peer_review",
@@ -278,18 +287,23 @@ export async function submitPeerReviewForService(
       "workflow.change",
       { id: changeId },
       { state: "approved", revision: nextRevision, updated_at: stamped },
+      { actorId: reviewerId },
     );
-    await orm.createRecordForService("workflow.transition", {
-      change_id: changeId,
-      from_state: String(change.state),
-      to_state: "approved",
-      action: "approve",
-      reason: `Quorum of ${distinctReviewerIds.size} distinct Sanad peer reviews reached.`,
-      revision: nextRevision,
-      actor_id: reviewerId,
-      owner_id: owner,
-      created_at: stamped,
-    });
+    await orm.createRecordForService(
+      "workflow.transition",
+      {
+        change_id: changeId,
+        from_state: String(change.state),
+        to_state: "approved",
+        action: "approve",
+        reason: `Quorum of ${distinctReviewerIds.size} distinct Sanad peer reviews reached.`,
+        revision: nextRevision,
+        actor_id: reviewerId,
+        owner_id: owner,
+        created_at: stamped,
+      },
+      { actorId: reviewerId },
+    );
     const refreshed = await orm.findOneByService("workflow.change", { id: changeId });
     if (refreshed) updatedChange = refreshed;
   }

@@ -69,7 +69,5 @@ export const corpusAnnotation: QlModelDefinition = {
       validator: authorityValidator("stage", CORPUS_STAGES),
     },
     import_run_id: { type: "char", maxLength: 64 },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

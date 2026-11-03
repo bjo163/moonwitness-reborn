@@ -46,7 +46,5 @@ export const characterCanon: QlModelDefinition = {
     historical_anchor_id: { type: "char", maxLength: 80 },
     lore_constraints: { type: "text", maxLength: 2000 },
     creative_owner_id: { type: "char", maxLength: 64 },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

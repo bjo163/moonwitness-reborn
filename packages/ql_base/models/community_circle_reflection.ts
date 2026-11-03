@@ -37,9 +37,5 @@ export const communityCircleReflection: QlModelDefinition = {
       required: true,
       maxLength: 64,
     },
-    created_at: {
-      type: "datetime",
-      required: true,
-    },
   },
 };

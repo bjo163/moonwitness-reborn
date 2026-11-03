@@ -36,13 +36,5 @@ export const searchThematicNode: QlModelDefinition = {
       minValue: 0,
       maxValue: 10000,
     },
-    created_at: {
-      type: "datetime",
-      required: true,
-    },
-    updated_at: {
-      type: "datetime",
-      required: true,
-    },
   },
 };

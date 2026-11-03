@@ -26,7 +26,5 @@ export const corpusTerm: QlModelDefinition = {
     },
     transliteration: { type: "char", maxLength: 200 },
     description: { type: "text", maxLength: 4000 },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

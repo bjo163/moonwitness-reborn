@@ -79,13 +79,5 @@ export const searchIndexEntryModel: QlModelDefinition = {
       maxValue: AYAH_MAX_BOUND,
       private: true,
     },
-    created_at: {
-      type: "datetime",
-      required: true,
-    },
-    updated_at: {
-      type: "datetime",
-      required: true,
-    },
   },
 };

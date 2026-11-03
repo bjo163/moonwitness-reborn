@@ -33,6 +33,5 @@ export const chatMessage: QlModelDefinition = {
           : "Message grounding status is invalid.",
       private: true,
     },
-    created_at: { type: "datetime", required: true },
   },
 };

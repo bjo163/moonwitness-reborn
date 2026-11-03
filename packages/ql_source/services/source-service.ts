@@ -82,22 +82,26 @@ async function appendProvenance(
     inputVersionId?: string;
   },
 ): Promise<QlRecord> {
-  return orm.createRecordForService("source.provenance", {
-    subject_type: row.subjectType,
-    subject_id: row.subjectId,
-    // Only set `from_stage` when we actually have a prior stage — the field's
-    // enumValidator rejects an empty string, and QlOrm's `createRecordForService`
-    // skips the validator entirely for keys the input omits.
-    ...(row.fromStage ? { from_stage: row.fromStage } : {}),
-    to_stage: row.toStage,
-    action: row.action,
-    ...(row.decision ? { decision: row.decision } : {}),
-    reason: row.reason ?? "",
-    correlation_id: row.correlationId,
-    ...(row.inputVersionId ? { input_version_id: row.inputVersionId } : {}),
-    actor_id: row.actorId,
-    occurred_at: new Date(),
-  });
+  return orm.createRecordForService(
+    "source.provenance",
+    {
+      subject_type: row.subjectType,
+      subject_id: row.subjectId,
+      // Only set `from_stage` when we actually have a prior stage — the field's
+      // enumValidator rejects an empty string, and QlOrm's `createRecordForService`
+      // skips the validator entirely for keys the input omits.
+      ...(row.fromStage ? { from_stage: row.fromStage } : {}),
+      to_stage: row.toStage,
+      action: row.action,
+      ...(row.decision ? { decision: row.decision } : {}),
+      reason: row.reason ?? "",
+      correlation_id: row.correlationId,
+      ...(row.inputVersionId ? { input_version_id: row.inputVersionId } : {}),
+      actor_id: row.actorId,
+      occurred_at: new Date(),
+    },
+    { actorId: row.actorId },
+  );
 }
 
 /**
@@ -137,6 +141,7 @@ export async function transitionStage(
     model,
     { id },
     { lifecycle_stage: toStage, updated_at: stamped },
+    { actorId: actor.id },
   );
   if (updatedCount === 0) {
     throw new QlNotFoundError(`${model} '${id}' could not be updated.`);
@@ -220,6 +225,7 @@ export async function upsertRights(
         basis_notes: input.basisNotes ?? "",
         updated_at: stamped,
       },
+      { actorId: actor.id },
     );
     if (changed === 0) {
       throw new QlConflictError(`Rights row '${key}' could not be updated.`);
@@ -229,24 +235,28 @@ export async function upsertRights(
     record = after;
   } else {
     const ownerId = typeof version.owner_id === "string" ? version.owner_id : actor.id;
-    record = await orm.createRecordForService("source.rights", {
-      version_id: input.versionId,
-      rights_key: key,
-      action,
-      rights_status: status,
-      license_id: input.licenseId ?? "",
-      license_text: input.licenseText ?? "",
-      attribution_required: input.attributionRequired ?? true,
-      attribution_text: input.attributionText,
-      territory: input.territory ?? "",
-      verified_by_id: actor.id,
-      verified_at: stamped,
-      license_evidence_ref: input.licenseEvidenceRef ?? "",
-      basis_notes: input.basisNotes ?? "",
-      owner_id: ownerId,
-      created_at: stamped,
-      updated_at: stamped,
-    });
+    record = await orm.createRecordForService(
+      "source.rights",
+      {
+        version_id: input.versionId,
+        rights_key: key,
+        action,
+        rights_status: status,
+        license_id: input.licenseId ?? "",
+        license_text: input.licenseText ?? "",
+        attribution_required: input.attributionRequired ?? true,
+        attribution_text: input.attributionText,
+        territory: input.territory ?? "",
+        verified_by_id: actor.id,
+        verified_at: stamped,
+        license_evidence_ref: input.licenseEvidenceRef ?? "",
+        basis_notes: input.basisNotes ?? "",
+        owner_id: ownerId,
+        created_at: stamped,
+        updated_at: stamped,
+      },
+      { actorId: actor.id },
+    );
   }
   const cid = correlationId();
   const provenance = await appendProvenance(orm, {

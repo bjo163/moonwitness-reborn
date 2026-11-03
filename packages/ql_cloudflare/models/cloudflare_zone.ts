@@ -15,7 +15,5 @@ export const cloudflareZone: QlModelDefinition = {
     stale: { type: "boolean", required: true, default: false },
     last_sync_at: { type: "datetime" },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

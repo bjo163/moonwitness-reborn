@@ -411,16 +411,21 @@ export function createConversationStore(orm: QlOrm): ConversationStore {
         "res.users",
         { id },
         { preferred_locale: preferredLocale },
+        { actorId: id },
       );
       return updated ? this.getUserById(id) : undefined;
     },
 
     async createSession(userId, tokenHash, expiresAt) {
-      await orm.createRecordForService("res.sessions", {
-        user_id: userId,
-        token_hash: tokenHash,
-        expires_at: expiresAt,
-      });
+      await orm.createRecordForService(
+        "res.sessions",
+        {
+          user_id: userId,
+          token_hash: tokenHash,
+          expires_at: expiresAt,
+        },
+        { actorId: userId },
+      );
     },
 
     async getSessionUser(tokenHash, now = new Date()) {
@@ -445,12 +450,16 @@ export function createConversationStore(orm: QlOrm): ConversationStore {
 
     async createVerification(input) {
       return verificationFromRecord(
-        await orm.createRecordForService("res.verification", {
-          user_id: input.userId,
-          purpose: input.purpose,
-          token_hash: input.tokenHash,
-          expires_at: input.expiresAt,
-        }),
+        await orm.createRecordForService(
+          "res.verification",
+          {
+            user_id: input.userId,
+            purpose: input.purpose,
+            token_hash: input.tokenHash,
+            expires_at: input.expiresAt,
+          },
+          { actorId: input.userId },
+        ),
       );
     },
 
@@ -491,18 +500,23 @@ export function createConversationStore(orm: QlOrm): ConversationStore {
           "res.users",
           { id: userId, active: true },
           { password_hash: passwordHash },
+          { actorId: userId },
         )) === 1
       );
     },
 
     async createConversation(userId, title = "Percakapan baru") {
       return conversationFromRecord(
-        await orm.createRecordForService("chat.conversation", {
-          user_id: userId,
-          title,
-          created_at: new Date(),
-          updated_at: new Date(),
-        }),
+        await orm.createRecordForService(
+          "chat.conversation",
+          {
+            user_id: userId,
+            title,
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+          { actorId: userId },
+        ),
       );
     },
 
@@ -575,27 +589,35 @@ export function createConversationStore(orm: QlOrm): ConversationStore {
         { limit: 1, orderBy: "rowid-asc" },
       );
       const now = new Date();
-      const record = await orm.createRecordForService("chat.message", {
-        conversation_id: conversationId,
-        role,
-        content,
-        ...(metadata.groundingStatus
-          ? { grounding_status: metadata.groundingStatus }
-          : {}),
-        created_at: now,
-      });
-      for (const citation of metadata.citations) {
-        await orm.createRecordForService("chat.citation", {
-          owner_id: userId,
+      const record = await orm.createRecordForService(
+        "chat.message",
+        {
           conversation_id: conversationId,
-          message_id: String(record.id),
-          evidence_id: citation.evidenceId,
-          edition_id: citation.editionId,
-          edition_key: citation.editionKey,
-          surah: citation.surah,
-          ayah: citation.ayah,
+          role,
+          content,
+          ...(metadata.groundingStatus
+            ? { grounding_status: metadata.groundingStatus }
+            : {}),
           created_at: now,
-        });
+        },
+        { actorId: userId },
+      );
+      for (const citation of metadata.citations) {
+        await orm.createRecordForService(
+          "chat.citation",
+          {
+            owner_id: userId,
+            conversation_id: conversationId,
+            message_id: String(record.id),
+            evidence_id: citation.evidenceId,
+            edition_id: citation.editionId,
+            edition_key: citation.editionKey,
+            surah: citation.surah,
+            ayah: citation.ayah,
+            created_at: now,
+          },
+          { actorId: userId },
+        );
       }
       await orm.updateRecordsForService(
         "chat.conversation",
@@ -606,6 +628,7 @@ export function createConversationStore(orm: QlOrm): ConversationStore {
             ? { title: content.trim().slice(0, 60) || "Percakapan baru" }
             : {}),
         },
+        { actorId: userId },
       );
       return {
         ...messageFromRecord(record),

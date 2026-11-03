@@ -58,7 +58,5 @@ export const workflowChange: QlModelDefinition = {
     ethics_digest: { type: "char", required: false, maxLength: 64 },
     is_not_fatwa_affirmed: { type: "boolean", required: false, default: false },
     owner_id: { type: "char", required: true, private: true },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };

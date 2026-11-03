@@ -3,13 +3,16 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 import { tmpdir } from "node:os";
+import { createClient } from "@libsql/client";
 import pg from "pg";
 import {
   createQlOrm,
   loadAddons,
+  normalizeModelDefinition,
   type QlComputedModelContext,
   type QlAddonManifest,
   type QlFieldDefinition,
+  type QlModelDefinition,
   QlModelRegistry,
 } from "./index.js";
 
@@ -274,7 +277,7 @@ void test("manifest seed data rejects private fields and owner-scoped models", (
 });
 
 void test("view declarations validate model and field names", () => {
-  const model = {
+  const model: QlModelDefinition = {
     name: "res.partner",
     description: "Contact",
     tableName: "res_partner",
@@ -1472,5 +1475,180 @@ void test("findMany filters records using parameterized SQL search options", asy
     assert.equal(matchedContent[0].title, "Kisah Nabi Ibrahim");
   } finally {
     runtime.close();
+  }
+});
+
+function auditManifest(tableName: string): QlAddonManifest {
+  return {
+    ...base,
+    name: "ql_audit_test",
+    models: [
+      {
+        name: "test.audit",
+        description: "Audit test model",
+        tableName,
+        fields: {
+          name: { type: "char" as const, required: true },
+        },
+      },
+    ],
+    access: [
+      {
+        model: "test.audit",
+        group: "user",
+        read: true,
+        write: true,
+        create: true,
+        unlink: true,
+      },
+    ],
+    views: [
+      {
+        name: "test.audit.list",
+        model: "test.audit",
+        type: "list" as const,
+        fields: ["name", "created_at", "updated_at"],
+      },
+    ],
+  };
+}
+
+void test("registry injects audit fields without mutating manifests and validates overrides", () => {
+  const model: QlModelDefinition = {
+    name: "test.audit",
+    description: "Audit test model",
+    tableName: "test_audit_registry",
+    fields: { name: { type: "char" as const, required: true } },
+  };
+  const manifest = {
+    ...base,
+    name: "ql_audit_registry",
+    models: [model],
+    access: [],
+    views: [
+      {
+        name: "test.audit.list",
+        model: "test.audit",
+        type: "list" as const,
+        fields: ["name", "created_at", "created_by"],
+      },
+    ],
+  };
+  const registry = new QlModelRegistry([manifest]);
+  const registered = registry.getModel("test.audit");
+  assert.equal(registered.fields.created_at?.type, "datetime");
+  assert.equal(registered.fields.updated_at?.type, "datetime");
+  assert.equal(registered.fields.created_by?.private, true);
+  assert.equal(registered.fields.updated_by?.private, true);
+  assert.equal(model.fields.created_at, undefined);
+
+  const normalized = normalizeModelDefinition(model);
+  assert.strictEqual(normalizeModelDefinition(normalized), normalized);
+
+  assert.throws(
+    () =>
+      normalizeModelDefinition({
+        ...model,
+        fields: {
+          ...model.fields,
+          created_at: { type: "char" as const },
+        },
+      }),
+    /audit field 'created_at' must be type 'datetime'/,
+  );
+});
+
+void test("create and update stamp audit fields and public writes cannot spoof them", async () => {
+  const runtime = await createQlOrm("file::memory:", [
+    auditManifest("test_audit_stamp"),
+  ]);
+  try {
+    const user = { id: "user-1", groups: ["user"] };
+    const created = await runtime.orm.create("test.audit", user, { name: "one" });
+    assert.equal(typeof created.created_at, "number");
+    assert.equal(typeof created.updated_at, "number");
+    assert.equal("created_by" in created, false);
+
+    const spoofed = await runtime.orm.create(
+      "test.audit",
+      user,
+      { name: "bad", created_at: 1 },
+    );
+    assert.equal(typeof spoofed.created_at, "number");
+    assert.notEqual(spoofed.created_at, 1);
+    await assert.rejects(
+      () =>
+        runtime.orm.update("test.audit", user, String(created.id), {
+          updated_at: 1,
+        }),
+      /At least one field is required/,
+    );
+    await assert.rejects(
+      () => runtime.orm.update("test.audit", user, String(created.id), {}),
+      /At least one field is required/,
+    );
+
+    const updated = await runtime.orm.update(
+      "test.audit",
+      user,
+      String(created.id),
+      { name: "two" },
+    );
+    assert.ok(updated);
+    assert.equal(typeof updated.updated_at, "number");
+
+    const serviceCreated = await runtime.orm.createRecordForService(
+      "test.audit",
+      { name: "three", created_at: 1234 },
+      { actorId: "admin-9" },
+    );
+    assert.equal(serviceCreated.created_at, 1234);
+    assert.equal(serviceCreated.created_by, "admin-9");
+    assert.equal(serviceCreated.updated_by, "admin-9");
+
+    const updatedCount = await runtime.orm.updateRecordsForService(
+      "test.audit",
+      { name: "three" },
+      { name: "four" },
+      { actorId: "admin-10" },
+    );
+    assert.equal(updatedCount, 1);
+    const [row] = await runtime.orm.findManyByService("test.audit", {
+      name: "four",
+    });
+    assert.equal(row?.updated_by, "admin-10");
+    assert.equal(typeof row?.updated_at, "number");
+
+    const userRows = await runtime.orm.findMany("test.audit", user);
+    assert.equal(Object.hasOwn(userRows[0], "created_by"), false);
+    assert.equal(Object.hasOwn(userRows[0], "updated_by"), false);
+  } finally {
+    runtime.close();
+  }
+});
+
+void test("schema sync backfills audit timestamps for rows that predate the columns", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "ql-orm-audit-"));
+  const url = `file:${join(dir, "audit.db").replace(/\\/g, "/")}`;
+  const client = createClient({ url });
+  try {
+    await client.execute(
+      "CREATE TABLE test_audit_backfill (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL)",
+    );
+    await client.execute(
+      "INSERT INTO test_audit_backfill (id, name) VALUES ('legacy-1', 'legacy')",
+    );
+  } finally {
+    client.close();
+  }
+  const runtime = await createQlOrm(url, [auditManifest("test_audit_backfill")]);
+  try {
+    const rows = await runtime.orm.findManyByService("test.audit", {});
+    assert.equal(rows.length, 1);
+    assert.equal(typeof rows[0]?.created_at, "number");
+    assert.equal(typeof rows[0]?.updated_at, "number");
+  } finally {
+    runtime.close();
+    await removeTempDir(dir);
   }
 });

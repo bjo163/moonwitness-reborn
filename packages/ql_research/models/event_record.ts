@@ -48,7 +48,5 @@ export const eventRecord: QlModelDefinition = {
     competing_accounts: { type: "text", maxLength: 4000 },
     uncertainty_notes: { type: "text", maxLength: 2000 },
     source_artifact_id: { type: "char", maxLength: 64 },
-    created_at: { type: "datetime", required: true },
-    updated_at: { type: "datetime", required: true },
   },
 };
