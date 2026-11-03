@@ -324,9 +324,6 @@ importers:
       ql_auth:
         specifier: workspace:*
         version: link:../ql_auth
-      ql_base:
-        specifier: workspace:*
-        version: link:../ql_base
       ql_orm:
         specifier: workspace:*
         version: link:../ql-orm
